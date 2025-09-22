@@ -66,7 +66,7 @@ export const LanguageSelect: React.FC<LanguageSelectProps> = ({ languages }) => 
   const navigate = useNavigate();
 
   const handleLanguageSelect = (languageCode: string) => {
-    navigate(`/sessions/${languageCode}`);
+    navigate(`/overview/${languageCode}`);
   };
 
   return (

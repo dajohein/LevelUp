@@ -25,7 +25,9 @@ export const calculateMasteryDecay = (
   lastPracticed: string | undefined,
   currentMastery: number
 ): number => {
-  if (!lastPracticed) return currentMastery;
+  if (!lastPracticed) {
+    return currentMastery;
+  }
 
   const hoursSinceLastPractice = Math.floor(
     (Date.now() - new Date(lastPracticed).getTime()) / (1000 * 60 * 60)
@@ -57,9 +59,17 @@ export const calculateMasteryDecay = (
 
   // Calculate decay amount
   const intervals = Math.floor(hoursSinceLastPractice / timeInterval);
-  const decayAmount = currentMastery * Math.pow(decayRate, intervals);
+  
+  // If no intervals have passed, no decay should occur
+  if (intervals === 0) {
+    return currentMastery;
+  }
+  
+  // Correct decay formula: each interval reduces mastery by decayRate percentage
+  const decayFactor = Math.pow(1 - decayRate, intervals);
+  const decayedMastery = currentMastery * decayFactor;
 
-  return Math.max(MASTERY_LEVELS.BEGINNER, currentMastery - decayAmount);
+  return Math.max(MASTERY_LEVELS.BEGINNER, decayedMastery);
 };
 
 // Calculate mastery gain based on current mastery and answer correctness

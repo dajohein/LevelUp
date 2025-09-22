@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getRandomWord } from '../services/wordService';
-import { calculateMasteryGain, shouldSwitchQuizMode } from '../services/masteryService';
+import { calculateMasteryGain } from '../services/masteryService';
 import { wordProgressStorage, gameStateStorage } from '../services/storageService';
 import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
 import type { GameState } from './types';
@@ -71,12 +71,14 @@ export const gameSlice = createSlice({
   reducers: {
     nextWord: state => {
       if (state.language) {
-        const { word, options } = getRandomWord(state.language, state.wordProgress);
+        const { word, options, quizMode } = getRandomWord(state.language, state.wordProgress, state.lastWordId);
         state.currentWord = word;
         state.currentOptions = options;
+        state.quizMode = quizMode; // Set quiz mode based on the selected word
         state.isCorrect = null;
         state.lastAnswer = undefined; // Clear previous answer
         state.capitalizationFeedback = undefined; // Clear capitalization feedback
+        state.lastWordId = word?.id; // Track this word for next selection
       }
     },
     checkAnswer: (state, action: PayloadAction<string>) => {
@@ -128,11 +130,6 @@ export const gameSlice = createSlice({
         timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
       };
 
-      // Check if quiz mode should switch based on new mastery level
-      if (shouldSwitchQuizMode(newMastery, state.quizMode)) {
-        state.quizMode = newMastery >= 50 ? 'open-answer' : 'multiple-choice';
-      }
-
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
         const modeMultiplier = state.quizMode === 'open-answer' ? 2 : 1;
@@ -143,11 +140,6 @@ export const gameSlice = createSlice({
         state.streak += 1;
         state.correctAnswers += 1;
         state.bestStreak = Math.max(state.streak, state.bestStreak);
-
-        // Check if we should switch quiz modes
-        if (shouldSwitchQuizMode(newMastery, state.quizMode)) {
-          state.quizMode = state.quizMode === 'multiple-choice' ? 'open-answer' : 'multiple-choice';
-        }
       } else {
         state.lives -= 1;
         state.streak = 0;

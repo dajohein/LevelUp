@@ -57,7 +57,7 @@ export const achievementsSlice = createSlice({
         state.unlockedAchievements.push(achievementId);
         const achievement = state.achievements.find(a => a.id === achievementId);
         if (achievement) {
-          achievement.unlockedAt = new Date();
+          achievement.unlockedAt = new Date().toISOString();
           state.latestUnlock = achievement;
         }
       }

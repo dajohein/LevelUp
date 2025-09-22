@@ -23,6 +23,7 @@ export interface GameState {
   totalAttempts: number;
   correctAnswers: number;
   lastAnswer?: string;
+  lastWordId?: string; // Track last word to prevent immediate repetition
   wordProgress: { [key: string]: WordProgress }; // Track progress per word
   capitalizationFeedback?: string; // Feedback for German capitalization errors
 }
@@ -36,7 +37,7 @@ export interface Achievement {
     type: 'score' | 'streak' | 'correctAnswers' | 'wordLevel';
     threshold: number;
   };
-  unlockedAt?: Date;
+  unlockedAt?: string; // ISO date string
 }
 
 export interface AchievementsState {

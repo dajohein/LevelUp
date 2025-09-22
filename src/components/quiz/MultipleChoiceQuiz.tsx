@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -18,7 +18,9 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   gap: ${props => props.theme.spacing.lg};
-  animation: ${fadeIn} 0.3s ease-out;
+  ${css`
+    animation: ${fadeIn} 0.3s ease-out;
+  `}
 `;
 
 const Word = styled.div`
@@ -81,7 +83,9 @@ const Option = styled.button<{ isCorrect?: boolean; isError?: boolean }>`
   color: ${props => props.theme.colors.text};
   cursor: pointer;
   transition: all 0.2s ease;
-  animation: ${fadeIn} 0.3s ease-out;
+  ${css`
+    animation: ${fadeIn} 0.3s ease-out;
+  `}
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
@@ -95,9 +99,9 @@ const Option = styled.button<{ isCorrect?: boolean; isError?: boolean }>`
 
   ${props =>
     props.isCorrect &&
-    `
-    animation: ${pulse} 0.5s ease-out;
-  `}
+    css`
+      animation: ${pulse} 0.5s ease-out;
+    `}
 `;
 
 const LevelIndicator = styled.div`

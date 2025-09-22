@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { LanguageSelect } from './components/LanguageSelect';
+import { LanguageOverview } from './components/LanguageOverview';
 import { SessionSelect } from './components/SessionSelect';
 import { SessionCompletion } from './components/SessionCompletion';
 import { Game } from './components/Game';
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <LanguageSelect languages={languages} />,
+  },
+  {
+    path: '/overview/:language',
+    element: <LanguageOverview />,
   },
   {
     path: '/sessions/:languageCode',

@@ -56,26 +56,43 @@ const AppTitle = styled.span`
 `;
 
 interface NavigationProps {
-  languageName: string;
-  languageFlag: string;
+  languageName?: string;
+  languageFlag?: string;
+  showOverviewButton?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ languageName, languageFlag }) => {
+export const Navigation: React.FC<NavigationProps> = ({ 
+  languageName, 
+  languageFlag, 
+  showOverviewButton = false 
+}) => {
   const navigate = useNavigate();
 
   const handleBackToLanguageSelection = () => {
     navigate('/');
   };
 
+  const handleBackToOverview = () => {
+    if (languageName) {
+      // Extract language code from name for navigation
+      const languageCode = languageName.toLowerCase() === 'german' ? 'de' : 
+                          languageName.toLowerCase() === 'spanish' ? 'es' : 
+                          languageName.toLowerCase();
+      navigate(`/overview/${languageCode}`);
+    }
+  };
+
   return (
     <NavigationBar>
-      <BackButton onClick={handleBackToLanguageSelection}>
-        ← <span>Languages</span>
+      <BackButton onClick={showOverviewButton ? handleBackToOverview : handleBackToLanguageSelection}>
+        ← <span>{showOverviewButton ? 'Overview' : 'Languages'}</span>
       </BackButton>
-      <LanguageTitle>
-        <FlagEmoji>{languageFlag}</FlagEmoji>
-        {languageName}
-      </LanguageTitle>
+      {languageName && languageFlag && (
+        <LanguageTitle>
+          <FlagEmoji>{languageFlag}</FlagEmoji>
+          {languageName}
+        </LanguageTitle>
+      )}
       <AppTitle>LevelUp</AppTitle>
     </NavigationBar>
   );

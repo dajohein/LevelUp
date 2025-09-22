@@ -715,8 +715,9 @@ export const Game: React.FC = () => {
   }
 
   // If we're in session mode but no session is active, redirect to session selection
-  const isSessionRoute = window.location.pathname.includes('/session');
-  if (isSessionRoute && !isSessionActive) {
+  // Only redirect if we're specifically on the /game/{lang}/session route, not session-complete
+  const isSessionGameRoute = window.location.pathname.endsWith('/session');
+  if (isSessionGameRoute && !isSessionActive) {
     navigate(`/sessions/${languageCode}`);
     return <Loading message="Redirecting to session selection..." />;
   }
@@ -831,7 +832,11 @@ export const Game: React.FC = () => {
 
   return (
     <>
-      <Navigation languageName={languageName} languageFlag={languageFlag} />
+      <Navigation 
+        languageName={languageName} 
+        languageFlag={languageFlag} 
+        showOverviewButton={true}
+      />
       <Progress />
       <GameContainer>
         {isSessionActive && currentSession && (

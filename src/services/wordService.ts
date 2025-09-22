@@ -25,6 +25,7 @@ export interface Word {
 export interface LanguageData {
   name: string;
   from: string;
+  flag: string;
   words: Word[];
 }
 
@@ -44,11 +45,13 @@ export const words: { [key: string]: LanguageData } = {
   es: {
     name: spanishData.name,
     from: spanishData.from,
+    flag: spanishData.flag,
     words: addIdsToWords(spanishData.words as Omit<Word, 'id'>[], 'es'),
   },
   de: {
     name: germanData.name,
     from: germanData.from,
+    flag: germanData.flag,
     words: addIdsToWords(germanData.words as Omit<Word, 'id'>[], 'de'),
   },
 };
@@ -76,17 +79,25 @@ const getRandomItems = <T extends { id: string }>(
 
 // Calculate priority for word selection (lower number = higher priority)
 const calculateWordPriority = (mastery: number, progress?: WordProgress): number => {
-  // Base priority is inverse of mastery (lower mastery = higher priority)
-  let priority = mastery;
-
   if (!progress) {
     // New words get highest priority
     return 0;
   }
 
-  // Heavily favor words with low mastery (below 70%)
-  if (mastery < 70) {
-    priority = mastery * 0.5; // Much higher priority for learning words
+  // Base priority is inverse of mastery - make this more aggressive
+  let priority = mastery;
+
+  // Much more heavily favor words with low mastery
+  if (mastery < 30) {
+    priority = mastery * 0.1; // Extremely high priority for struggling words
+  } else if (mastery < 50) {
+    priority = mastery * 0.3; // Very high priority for weak words
+  } else if (mastery < 70) {
+    priority = mastery * 0.6; // High priority for learning words
+  } else if (mastery < 90) {
+    priority = mastery * 1.0; // Normal priority for learned words
+  } else {
+    priority = mastery * 2.0; // Low priority for mastered words
   }
 
   // Add time-based boost for spaced repetition
@@ -104,13 +115,13 @@ const calculateWordPriority = (mastery: number, progress?: WordProgress): number
 
     // Boost priority if it's time for review
     if (hoursSinceLastPractice >= targetInterval) {
-      priority *= 0.3; // Significantly boost priority
+      priority *= 0.3; // Significantly boost priority (lower number)
     }
   }
 
-  // Reduce priority for incorrect answer streaks
+  // Heavily prioritize words with poor performance
   if (progress.timesIncorrect > progress.timesCorrect && progress.timesIncorrect > 2) {
-    priority *= 0.4; // Very high priority for problematic words
+    priority *= 0.2; // Very high priority for problematic words
   }
 
   return Math.max(0, priority);
@@ -118,10 +129,19 @@ const calculateWordPriority = (mastery: number, progress?: WordProgress): number
 
 export const getRandomWord = (
   languageCode: string,
-  wordProgress: { [key: string]: WordProgress }
-): { word: Word | null; options: string[] } => {
+  wordProgress: { [key: string]: WordProgress },
+  lastWordId?: string
+): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'open-answer' } => {
   const languageWords = getWordsForLanguage(languageCode);
-  if (languageWords.length === 0) return { word: null, options: [] };
+  if (languageWords.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
+
+  // If we only have one word, return it (can't avoid repetition)
+  if (languageWords.length === 1) {
+    const selectedWord = languageWords[0];
+    const direction = selectedWord.direction || 'definition-to-term';
+    const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+    return { word: selectedWord, options: [correctAnswer], quizMode: 'multiple-choice' };
+  }
 
   // Calculate current mastery for all words
   const wordsWithMastery = languageWords.map(word => {
@@ -138,34 +158,65 @@ export const getRandomWord = (
     };
   });
 
+  console.log('📊 Word mastery levels:');
+  wordsWithMastery.forEach(w => {
+    const progress = wordProgress[w.id];
+    console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%, XP=${progress?.xp || 0}, correct=${progress?.timesCorrect || 0}, incorrect=${progress?.timesIncorrect || 0}`);
+  });
+
+  // Filter out the last word to prevent immediate repetition
+  const availableWords = lastWordId 
+    ? wordsWithMastery.filter(w => w.id !== lastWordId)
+    : wordsWithMastery;
+
+  // If filtering left us with no words, use all words (shouldn't happen with >1 word)
+  const candidateWords = availableWords.length > 0 ? availableWords : wordsWithMastery;
+
   // Separate words by mastery level for systematic learning
-  const strugglingWords = wordsWithMastery.filter(w => w.currentMastery < 50);
-  const learningWords = wordsWithMastery.filter(
+  const strugglingWords = candidateWords.filter(w => w.currentMastery < 50);
+  const learningWords = candidateWords.filter(
     w => w.currentMastery >= 50 && w.currentMastery < 70
   );
-  const learnedWords = wordsWithMastery.filter(
+  const learnedWords = candidateWords.filter(
     w => w.currentMastery >= 70 && w.currentMastery < 90
   );
-  const masteredWords = wordsWithMastery.filter(w => w.currentMastery >= 90);
+  const masteredWords = candidateWords.filter(w => w.currentMastery >= 90);
 
-  // Priority system: focus on struggling and learning words
-  let candidatePool: typeof wordsWithMastery = [];
+  // Priority system: much more aggressively focus on struggling and learning words
+  let candidatePool: typeof candidateWords = [];
 
   if (strugglingWords.length > 0) {
-    // 70% chance to pick struggling words
-    candidatePool = Math.random() < 0.7 ? strugglingWords : [...strugglingWords, ...learningWords];
+    // 85% chance to pick struggling words exclusively
+    if (Math.random() < 0.85) {
+      candidatePool = strugglingWords;
+    } else {
+      candidatePool = [...strugglingWords, ...learningWords];
+    }
   } else if (learningWords.length > 0) {
-    // 60% chance to pick learning words, 40% learned words
-    candidatePool = Math.random() < 0.6 ? learningWords : [...learningWords, ...learnedWords];
+    // 75% chance to pick learning words exclusively, 25% include learned words
+    if (Math.random() < 0.75) {
+      candidatePool = learningWords;
+    } else {
+      candidatePool = [...learningWords, ...learnedWords];
+    }
   } else if (learnedWords.length > 0) {
-    // 50% chance learned words, 50% all words (for maintenance)
-    candidatePool = Math.random() < 0.5 ? learnedWords : wordsWithMastery;
+    // 60% chance learned words only, 40% include mastered for maintenance
+    if (Math.random() < 0.6) {
+      candidatePool = learnedWords;
+    } else {
+      candidatePool = [...learnedWords, ...masteredWords];
+    }
   } else {
     // All words are mastered - use spaced repetition
-    candidatePool = wordsWithMastery;
+    candidatePool = candidateWords;
   }
 
-  // Sort candidate pool by priority
+  // FAILSAFE: If pool is too small, expand it to ensure variety
+  if (candidatePool.length < 5 && candidateWords.length >= 5) {
+    candidatePool = candidateWords;
+  }
+
+  // Sort candidate pool by priority (ascending: lower number = higher priority)
   const sortedCandidates = candidatePool.sort((a, b) => {
     const aPriority = calculateWordPriority(a.currentMastery, wordProgress[a.id]);
     const bPriority = calculateWordPriority(b.currentMastery, wordProgress[b.id]);
@@ -173,11 +224,14 @@ export const getRandomWord = (
   });
 
   // Select from top priority words with weighted randomization
+  // Take the first 30% of candidates (highest priority)
   const topCandidates = sortedCandidates.slice(
     0,
     Math.max(1, Math.ceil(sortedCandidates.length * 0.3))
   );
-  const weights = topCandidates.map((_, index) => Math.pow(2, topCandidates.length - index));
+  
+  // Assign weights - FIRST items (highest priority) get highest weights
+  const weights = topCandidates.map((_, index) => Math.pow(2, topCandidates.length - index - 1));
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
   const randomValue = Math.random() * totalWeight;
 
@@ -197,7 +251,7 @@ export const getRandomWord = (
   // Generate incorrect options intelligently:
   // 1. Exclude mastered words from multiple choice (they shouldn't appear as distractors)
   // 2. Prefer words from similar mastery levels
-  const optionCandidates = wordsWithMastery.filter(
+  const optionCandidates = candidateWords.filter(
     w => w.id !== selectedWord.id && w.currentMastery < 90 // Exclude mastered words from being distractors
   );
 
@@ -215,10 +269,18 @@ export const getRandomWord = (
   const correctAnswer =
     direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
 
-  // Insert correct answer at random position
-  const options = [...incorrectOptions];
-  const correctPos = Math.floor(Math.random() * 4);
-  options.splice(correctPos, 0, correctAnswer);
+  // Determine quiz mode based on word's mastery level
+  const currentMastery = selectedWord.currentMastery;
+  const quizMode: 'multiple-choice' | 'open-answer' = currentMastery >= 50 ? 'open-answer' : 'multiple-choice';
+
+  // For open-answer mode, we don't need multiple choice options
+  const options = quizMode === 'open-answer' ? [] : (() => {
+    // Insert correct answer at random position for multiple choice
+    const opts = [...incorrectOptions];
+    const correctPos = Math.floor(Math.random() * 4);
+    opts.splice(correctPos, 0, correctAnswer);
+    return opts;
+  })();
 
   return {
     word: {
@@ -226,5 +288,6 @@ export const getRandomWord = (
       mastery: selectedWord.currentMastery,
     },
     options,
+    quizMode,
   };
 };
