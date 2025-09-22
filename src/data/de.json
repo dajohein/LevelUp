@@ -1,0 +1,294 @@
+{
+  "name": "German",
+  "from": "Dutch",
+  "words": [
+    {
+      "id": "1",
+      "term": "die Gitarre",
+      "definition": "de gitaar",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "2", 
+      "term": "die Stadt",
+      "definition": "de stad",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "3",
+      "term": "die Geige", 
+      "definition": "de viool",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "4",
+      "term": "das Schlagzeug",
+      "definition": "het drumstel", 
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "5",
+      "term": "das Hobby",
+      "definition": "de hobby",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "6",
+      "term": "das Klavier",
+      "definition": "de piano",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "7",
+      "term": "die Ferien",
+      "definition": "de vakantie",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "8",
+      "term": "Sport machen",
+      "definition": "aan sport doen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "9",
+      "term": "gefallen",
+      "definition": "bevallen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "10",
+      "term": "tanzen",
+      "definition": "dansen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "11",
+      "term": "Rad fahren",
+      "definition": "fietsen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "12",
+      "term": "gamen",
+      "definition": "gamen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "13",
+      "term": "Spaß machen",
+      "definition": "leuk zijn",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "14",
+      "term": "lesen",
+      "definition": "lezen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "15",
+      "term": "ins Kino gehen",
+      "definition": "naar de bioscoop gaan",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "16",
+      "term": "ins Museum gehen",
+      "definition": "naar het museum gaan",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "17",
+      "term": "ins Schwimmbad gehen",
+      "definition": "naar het zwembad gaan",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "18",
+      "term": "Musik hören",
+      "definition": "naar muziek luisteren",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "19",
+      "term": "reiten",
+      "definition": "paardrijden",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "20",
+      "term": "Ski fahren",
+      "definition": "skiën",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "21",
+      "term": "spielen",
+      "definition": "spelen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "22",
+      "term": "Tennis spielen",
+      "definition": "tennissen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "23",
+      "term": "Fußball spielen",
+      "definition": "voetballen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "24",
+      "term": "singen",
+      "definition": "zingen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "25",
+      "term": "schwimmen",
+      "definition": "zwemmen",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "26",
+      "term": "mit",
+      "definition": "met",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "27",
+      "term": "oder",
+      "definition": "of",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "28",
+      "term": "manchmal",
+      "definition": "soms",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "29",
+      "term": "blöd",
+      "definition": "dom, stom",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "30",
+      "term": "interessant",
+      "definition": "interessant",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "31",
+      "term": "toll",
+      "definition": "leuk",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "32",
+      "term": "leicht",
+      "definition": "makkelijk",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "33",
+      "term": "schwierig",
+      "definition": "moeilijk",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "34",
+      "term": "schön",
+      "definition": "mooi",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "35",
+      "term": "langweilig",
+      "definition": "saai",
+      "direction": "definition-to-term"
+    },
+    {
+      "id": "36",
+      "term": "avontuurlijk",
+      "definition": "abenteuerlich",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "37",
+      "term": "voetballen",
+      "definition": "Wir kicken auf dem Fußballplatz.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "38",
+      "term": "op een gegeven moment",
+      "definition": "Irgendwann wurde uns das zu langweilig.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "39",
+      "term": "de voetbalclub",
+      "definition": "Wir sind in einem Fußballverein.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "40",
+      "term": "wisselen",
+      "definition": "Wir haben den Verein gewechselt.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "41",
+      "term": "de tegenstander",
+      "definition": "Finn kann seinen Gegner gut austricksen.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "42",
+      "term": "trainen",
+      "definition": "Wir trainieren einmal pro Woche.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "43",
+      "term": "buiten",
+      "definition": "Mit seinen Freunden spielt Finn draußen auf der Straße.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "44",
+      "term": "jammer",
+      "definition": "Schade, aber ich will lieber schlafen.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "45",
+      "term": "helaas",
+      "definition": "Heute geht es leider nicht, aber kommt doch morgen vorbei.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "46",
+      "term": "geen idee",
+      "definition": "Ich habe keine Ahnung, ab wann das Museum geöffnet ist.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "47",
+      "term": "zometeen, binnenkort",
+      "definition": "Ich überlege mir gleich eine Museumstour.",
+      "direction": "term-to-definition"
+    },
+    {
+      "id": "48",
+      "term": "af en toe, soms",
+      "definition": "Manchmal könntest du auch etwas Neues ausprobieren.",
+      "direction": "term-to-definition"
+    }
+  ]
+}
