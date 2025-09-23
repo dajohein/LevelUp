@@ -6,13 +6,13 @@ import { RootState } from '../store/store';
 import { setLanguage } from '../store/gameSlice';
 import { resetSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
+import { UserProfile } from './UserProfile';
 import { words } from '../services/wordService';
-import { ProgressImprovementAnimation } from './animations/ProgressImprovementAnimation';
 
 const OverviewContainer = styled.div`
   min-height: 100vh;
   background-color: ${props => props.theme.colors.background};
-  padding-top: 80px; /* Account for Navigation */
+  padding-top: 90px; /* Account for Navigation */
 `;
 
 const ContentWrapper = styled.div`
@@ -248,16 +248,11 @@ export const LanguageOverview: React.FC = () => {
   
   const { wordProgress } = useSelector((state: RootState) => state.game);
   const [filter, setFilter] = React.useState<MasteryFilter>('all');
-  const [showImprovements, setShowImprovements] = React.useState(false);
-  const [improvements, setImprovements] = React.useState<any[]>([]);
 
   // Check if we're coming from a session completion
   React.useEffect(() => {
     const state = location.state as any;
-    if (state?.fromSessionCompletion && state?.progressImprovements) {
-      setImprovements(state.progressImprovements);
-      setShowImprovements(true);
-      
+    if (state?.fromSessionCompletion) {
       // Reset the session if requested
       if (state.shouldResetSession) {
         dispatch(resetSession());
@@ -355,6 +350,8 @@ export const LanguageOverview: React.FC = () => {
           </LanguageTitle>
         </Header>
 
+        <UserProfile languageCode={language} />
+
         {stats && (
           <StatsGrid>
             <StatCard>
@@ -451,13 +448,6 @@ export const LanguageOverview: React.FC = () => {
           </EmptyState>
         )}
       </ContentWrapper>
-      
-      {showImprovements && improvements.length > 0 && (
-        <ProgressImprovementAnimation
-          improvements={improvements}
-          onComplete={() => setShowImprovements(false)}
-        />
-      )}
     </OverviewContainer>
   );
 };

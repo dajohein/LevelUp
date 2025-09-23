@@ -158,11 +158,14 @@ export const getRandomWord = (
     };
   });
 
-  console.log('📊 Word mastery levels:');
-  wordsWithMastery.forEach(w => {
-    const progress = wordProgress[w.id];
-    console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%, XP=${progress?.xp || 0}, correct=${progress?.timesCorrect || 0}, incorrect=${progress?.timesIncorrect || 0}`);
-  });
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📊 Word mastery levels:');
+    wordsWithMastery.forEach(w => {
+      const progress = wordProgress[w.id];
+      console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%, XP=${progress?.xp || 0}, correct=${progress?.timesCorrect || 0}, incorrect=${progress?.timesIncorrect || 0}`);
+    });
+  }
 
   // Filter out the last word to prevent immediate repetition
   const availableWords = lastWordId 

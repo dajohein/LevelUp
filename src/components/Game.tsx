@@ -17,7 +17,6 @@ import {
 import { useAudio } from '../features/audio/AudioContext';
 import { words } from '../services/wordService';
 import { Loading } from './feedback/Loading';
-import { Progress } from './feedback/Progress';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
@@ -25,6 +24,41 @@ import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
 import { Navigation } from './Navigation';
 import { LearningProgress } from './LearningProgress';
 import { StorageManagement } from './StorageManagement';
+import { LevelUpNotification } from './animations/LevelUpNotification';
+import { useLevelUpDetection } from '../hooks/useLevelUpDetection';
+import { keyframes } from '@emotion/react';
+
+// Session Progress Animations
+const countUp = keyframes`
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
+
+const pulseGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+`;
+
+const streakFire = keyframes`
+  0%, 100% { transform: scale(1) rotate(-1deg); }
+  50% { transform: scale(1.1) rotate(1deg); }
+`;
+
+const livesWarning = keyframes`
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    border-color: rgba(239, 68, 68, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+    border-color: rgba(239, 68, 68, 1);
+  }
+`;
+
+const progressShimmer = keyframes`
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+`;
 
 const GameContainer = styled.div`
   display: flex;
@@ -70,29 +104,172 @@ const SkipButtonContainer = styled.div`
 `;
 
 const SessionProgressBar = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: ${props => props.theme.spacing.md};
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(147, 51, 234, 0.1) 50%, 
+    rgba(236, 72, 153, 0.1) 100%
+  );
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 20px;
+  padding: ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.lg};
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: ${progressShimmer} 3s infinite;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: ${props => props.theme.spacing.md};
+    padding: ${props => props.theme.spacing.md};
+  }
 `;
 
-const ProgressItem = styled.div`
+const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
   text-align: center;
   color: ${props => props.theme.colors.text};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  min-width: 80px;
+
+  ${props => props.variant === 'score' && `
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    border-color: rgba(16, 185, 129, 0.3);
+    animation: ${pulseGlow} 2s infinite;
+  `}
+
+  ${props => props.variant === 'streak' && `
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+    border-color: rgba(245, 158, 11, 0.3);
+    animation: ${streakFire} 1s ease-in-out infinite;
+  `}
+
+  ${props => props.variant === 'words' && `
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+    border-color: rgba(59, 130, 246, 0.3);
+  `}
+
+  ${props => props.variant === 'time' && `
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+    border-color: rgba(139, 92, 246, 0.3);
+  `}
+
+  ${props => props.variant === 'lives' && `
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    border-color: rgba(239, 68, 68, 0.3);
+    animation: ${livesWarning} 2s ease-in-out infinite;
+  `}
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    min-width: 60px;
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+  }
 `;
 
-const ProgressValue = styled.div`
-  font-size: 1.2rem;
+const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
+  font-size: 1.5rem;
   font-weight: bold;
-  color: ${props => props.theme.colors.primary};
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  animation: ${countUp} 0.5s ease-out;
+
+  ${props => props.variant === 'score' && `
+    color: #10b981;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  `}
+
+  ${props => props.variant === 'streak' && `
+    color: #f59e0b;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  `}
+
+  ${props => props.variant === 'words' && `
+    color: #3b82f6;
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  `}
+
+  ${props => props.variant === 'time' && `
+    color: #8b5cf6;
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+  `}
+
+  ${props => props.variant === 'lives' && `
+    color: #ef4444;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  `}
+
+  &::before {
+    content: ${props => {
+      switch (props.variant) {
+        case 'score': return "'🏆'";
+        case 'streak': return "'🔥'";
+        case 'words': return "'📝'";
+        case 'time': return "'⏱️'";
+        case 'lives': return "'❤️'";
+        default: return "''";
+      }
+    }};
+    font-size: 1rem;
+    margin-right: 4px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+    
+    &::before {
+      font-size: 0.8rem;
+    }
+  }
 `;
 
 const ProgressLabel = styled.div`
   font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const Button = styled.button<{ disabled?: boolean }>`
@@ -463,9 +640,14 @@ export const Game: React.FC = () => {
   const [languageName, setLanguageName] = useState('');
   const [languageFlag, setLanguageFlag] = useState('');
   const [sessionTimer, setSessionTimer] = useState(0);
+  const [wordTimer, setWordTimer] = useState(0);
+  const [wordStartTime, setWordStartTime] = useState<number | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [bossDamageEffect, setBossDamageEffect] = useState(false);
   const { playCorrect, playIncorrect } = useAudio();
+  
+  // Level-up detection
+  const { showLevelUp, newLevel, totalXP, closeLevelUp } = useLevelUpDetection();
 
   // Language flags mapping
   const languageFlags: { [key: string]: string } = {
@@ -491,6 +673,8 @@ export const Game: React.FC = () => {
     if (isSessionActive && currentSession) {
       setSessionCompleted(false);
       setSessionTimer(0);
+      setWordTimer(0);
+      setWordStartTime(Date.now());
     }
   }, [isSessionActive, currentSession?.id]); // Reset when session starts or changes
 
@@ -509,7 +693,7 @@ export const Game: React.FC = () => {
 
           // Quick Dash: Speed bonus
           if (currentSession.id === 'quick-dash') {
-            timeBonus = Math.max(0, 50 - sessionTimer);
+            timeBonus = Math.max(0, 50 - wordTimer * 5); // Bonus based on word speed
             streakBonus = sessionProgress.currentStreak >= 3 ? 25 : 0;
           }
 
@@ -574,15 +758,6 @@ export const Game: React.FC = () => {
     const checkCompletion = () => {
       if (!currentSession || !isSessionActive || sessionCompleted) return;
 
-      console.log('Checking session completion:', {
-        wordsCompleted: sessionProgress.wordsCompleted,
-        targetWords: currentSession.targetWords,
-        incorrectAnswers: sessionProgress.incorrectAnswers,
-        allowedMistakes: currentSession.allowedMistakes,
-        timeLimit: currentSession.timeLimit,
-        sessionTimer: sessionTimer,
-      });
-
       const shouldComplete =
         // Target words reached (if not unlimited)
         (currentSession.targetWords !== -1 &&
@@ -594,7 +769,6 @@ export const Game: React.FC = () => {
           sessionProgress.incorrectAnswers >= currentSession.allowedMistakes);
 
       if (shouldComplete) {
-        console.log('Session should complete!');
         setSessionCompleted(true); // Prevent multiple completions
 
         // Add perfect accuracy bonus for Precision Mode
@@ -625,7 +799,6 @@ export const Game: React.FC = () => {
   useEffect(() => {
     if (isSessionActive && currentSession && !sessionCompleted && currentSession.timeLimit) {
       if (sessionTimer >= currentSession.timeLimit * 60) {
-        console.log('Session time limit exceeded!');
         setSessionCompleted(true);
         dispatch(completeSession());
         navigate(`/session-complete/${languageCode}`);
@@ -654,6 +827,18 @@ export const Game: React.FC = () => {
     return () => clearInterval(interval);
   }, [isSessionActive, sessionStartTime, dispatch]);
 
+  // Word timer for Quick Dash mode
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isSessionActive && currentSession?.id === 'quick-dash' && wordStartTime && !isTransitioning) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - wordStartTime) / 1000);
+        setWordTimer(elapsed);
+      }, 100); // Update more frequently for smooth UI
+    }
+    return () => clearInterval(interval);
+  }, [isSessionActive, currentSession?.id, wordStartTime, isTransitioning]);
+
   const resetState = () => {
     setIsTransitioning(false);
     setInputValue('');
@@ -668,6 +853,10 @@ export const Game: React.FC = () => {
     setTimeout(() => {
       resetState();
       dispatch(nextWord());
+      
+      // Reset word timer for new word
+      setWordTimer(0);
+      setWordStartTime(Date.now());
 
       // Increment words completed in session if session is active
       if (isSessionActive && currentSession) {
@@ -687,27 +876,16 @@ export const Game: React.FC = () => {
   };
 
   const getContextForDirection = (word: any) => {
-    if (!word.context) return undefined;
-
-    const direction = word.direction || 'definition-to-term';
-
-    // When showing Dutch word (definition-to-term): show Dutch context
-    // When showing German word (term-to-definition): show German context
-    // This way we don't give away the answer in the context
-
-    if (direction === 'definition-to-term') {
-      // Showing Dutch word, so show Dutch context with German translation
+    // If word has explicit context field, use it
+    if (word.context) {
       return {
-        sentence: word.context.translation, // Dutch context
-        translation: word.context.sentence, // German translation (shows after answering)
-      };
-    } else {
-      // Showing German word, so show German context with Dutch translation
-      return {
-        sentence: word.context.sentence, // German context
-        translation: word.context.translation, // Dutch translation (shows after answering)
+        sentence: word.context.sentence,
+        translation: word.context.translation
       };
     }
+    
+    // Fallback: no context available
+    return undefined;
   };
 
   if (!currentWord) {
@@ -762,7 +940,9 @@ export const Game: React.FC = () => {
     }
 
     // Calculate metrics for UI effects
-    const currentSpeed = sessionTimer > 0 ? Math.max(0, 100 - sessionTimer * 2) : 100;
+    const currentSpeed = currentSession.id === 'quick-dash' && wordTimer > 0 
+      ? Math.max(0, 100 - wordTimer * 10) // 10% per second decrease
+      : sessionTimer > 0 ? Math.max(0, 100 - sessionTimer * 2) : 100;
     const accuracy =
       sessionProgress.correctAnswers + sessionProgress.incorrectAnswers > 0
         ? Math.round(
@@ -837,35 +1017,34 @@ export const Game: React.FC = () => {
         languageFlag={languageFlag} 
         showOverviewButton={true}
       />
-      <Progress />
       <GameContainer>
         {isSessionActive && currentSession && (
           <SessionProgressBar>
-            <ProgressItem>
-              <ProgressValue>{sessionProgress.score}</ProgressValue>
+            <ProgressItem variant="score">
+              <ProgressValue variant="score">{sessionProgress.score}</ProgressValue>
               <ProgressLabel>Score</ProgressLabel>
             </ProgressItem>
-            <ProgressItem>
-              <ProgressValue>
+            <ProgressItem variant="words">
+              <ProgressValue variant="words">
                 {currentSession.targetWords === -1
                   ? sessionProgress.wordsCompleted
                   : `${sessionProgress.wordsCompleted}/${currentSession.targetWords}`}
               </ProgressValue>
               <ProgressLabel>Words</ProgressLabel>
             </ProgressItem>
-            <ProgressItem>
-              <ProgressValue>{sessionProgress.currentStreak}</ProgressValue>
+            <ProgressItem variant="streak">
+              <ProgressValue variant="streak">{sessionProgress.currentStreak}</ProgressValue>
               <ProgressLabel>Streak</ProgressLabel>
             </ProgressItem>
             {currentSession.timeLimit && (
-              <ProgressItem>
-                <ProgressValue>{formatTime(sessionTimer)}</ProgressValue>
+              <ProgressItem variant="time">
+                <ProgressValue variant="time">{formatTime(sessionTimer)}</ProgressValue>
                 <ProgressLabel>Time</ProgressLabel>
               </ProgressItem>
             )}
             {currentSession.allowedMistakes !== undefined && (
-              <ProgressItem>
-                <ProgressValue>
+              <ProgressItem variant="lives">
+                <ProgressValue variant="lives">
                   {currentSession.allowedMistakes - sessionProgress.incorrectAnswers}
                 </ProgressValue>
                 <ProgressLabel>Lives</ProgressLabel>
@@ -877,7 +1056,7 @@ export const Game: React.FC = () => {
         {/* Show learning progress when not in session mode */}
         {!isSessionActive && (
           <>
-            <LearningProgress />
+            <LearningProgress enhanced />
             <StorageManagement compact />
           </>
         )}
@@ -913,6 +1092,15 @@ export const Game: React.FC = () => {
         capitalizationFeedback={capitalizationFeedback}
       />
       <AchievementManager />
+      
+      {/* Level Up Notification */}
+      {showLevelUp && (
+        <LevelUpNotification
+          newLevel={newLevel}
+          totalXP={totalXP}
+          onClose={closeLevelUp}
+        />
+      )}
     </>
   );
 };

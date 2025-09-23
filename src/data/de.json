@@ -222,73 +222,121 @@
     {
       "id": "37",
       "term": "voetballen",
-      "definition": "Wir kicken auf dem Fußballplatz.",
+      "definition": "kicken",
+      "context": {
+        "sentence": "Wir kicken auf dem Fußballplatz.",
+        "translation": "We play football on the football field."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "38",
       "term": "op een gegeven moment",
-      "definition": "Irgendwann wurde uns das zu langweilig.",
+      "definition": "irgendwann",
+      "context": {
+        "sentence": "Irgendwann wurde uns das zu langweilig.",
+        "translation": "At some point it became too boring for us."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "39",
       "term": "de voetbalclub",
-      "definition": "Wir sind in einem Fußballverein.",
+      "definition": "der Fußballverein",
+      "context": {
+        "sentence": "Wir sind in einem Fußballverein.",
+        "translation": "We are in a football club."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "40",
       "term": "wisselen",
-      "definition": "Wir haben den Verein gewechselt.",
+      "definition": "wechseln",
+      "context": {
+        "sentence": "Wir haben den Verein gewechselt.",
+        "translation": "We switched clubs."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "41",
       "term": "de tegenstander",
-      "definition": "Finn kann seinen Gegner gut austricksen.",
+      "definition": "der Gegner",
+      "context": {
+        "sentence": "Finn kann seinen Gegner gut austricksen.",
+        "translation": "Finn can trick his opponent well."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "42",
       "term": "trainen",
-      "definition": "Wir trainieren einmal pro Woche.",
+      "definition": "trainieren",
+      "context": {
+        "sentence": "Wir trainieren einmal pro Woche.",
+        "translation": "We train once a week."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "43",
       "term": "buiten",
-      "definition": "Mit seinen Freunden spielt Finn draußen auf der Straße.",
+      "definition": "draußen",
+      "context": {
+        "sentence": "Mit seinen Freunden spielt Finn draußen auf der Straße.",
+        "translation": "Finn plays outside on the street with his friends."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "44",
       "term": "jammer",
-      "definition": "Schade, aber ich will lieber schlafen.",
+      "definition": "schade",
+      "context": {
+        "sentence": "Schade, aber ich will lieber schlafen.",
+        "translation": "Too bad, but I'd rather sleep."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "45",
       "term": "helaas",
-      "definition": "Heute geht es leider nicht, aber kommt doch morgen vorbei.",
+      "definition": "leider",
+      "context": {
+        "sentence": "Heute geht es leider nicht, aber kommt doch morgen vorbei.",
+        "translation": "Unfortunately it doesn't work today, but come by tomorrow."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "46",
       "term": "geen idee",
-      "definition": "Ich habe keine Ahnung, ab wann das Museum geöffnet ist.",
+      "definition": "keine Ahnung",
+      "context": {
+        "sentence": "Ich habe keine Ahnung, ab wann das Museum geöffnet ist.",
+        "translation": "I have no idea when the museum is open."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "47",
       "term": "zometeen, binnenkort",
-      "definition": "Ich überlege mir gleich eine Museumstour.",
+      "definition": "gleich",
+      "context": {
+        "sentence": "Ich überlege mir gleich eine Museumstour.",
+        "translation": "I'll think of a museum tour in a moment."
+      },
       "direction": "term-to-definition"
     },
     {
       "id": "48",
       "term": "af en toe, soms",
-      "definition": "Manchmal könntest du auch etwas Neues ausprobieren.",
+      "definition": "manchmal",
+      "context": {
+        "sentence": "Manchmal könntest du auch etwas Neues ausprobieren.",
+        "translation": "Sometimes you could also try something new."
+      },
       "direction": "term-to-definition"
     }
   ]

@@ -13,7 +13,7 @@ const Container = styled.div`
   align-items: center;
   min-height: 100vh;
   padding: ${props => props.theme.spacing.xl};
-  padding-top: calc(60px + ${props => props.theme.spacing.xl}); /* Account for fixed navigation */
+  padding-top: calc(70px + ${props => props.theme.spacing.xl}); /* Account for fixed navigation */
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
 `;

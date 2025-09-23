@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { resetSession } from '../store/sessionSlice';
-import { words } from '../services/wordService';
 
 const Container = styled.div`
   display: flex;
@@ -163,11 +162,11 @@ interface SessionCompletionProps {
 }
 
 export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCode }) => {
+  const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentSession, progress } = useSelector((state: RootState) => state.session);
-  const { wordProgress } = useSelector((state: RootState) => state.game);
-  const [isNavigating, setIsNavigating] = React.useState(false);
+  
+  const { progress, currentSession } = useSelector((state: RootState) => state.session);
 
   if (!currentSession && !isNavigating) {
     navigate(`/sessions/${languageCode}`);
@@ -186,38 +185,6 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
   const timePerWord =
     progress.wordsCompleted > 0 ? progress.timeElapsed / progress.wordsCompleted : 0;
 
-  // Calculate progress improvements (this is a simplified version)
-  // In a real implementation, you'd track pre-session and post-session progress
-  const calculateImprovements = () => {
-    const languageData = words[languageCode];
-    if (!languageData) return [];
-
-    // For demo purposes, let's create improvements for words that have progress
-    const improvements = Object.entries(wordProgress)
-      .filter(([, progress]) => progress.xp > 0)
-      .slice(0, 3) // Show top 3 recent improvements
-      .map(([wordId, progress]) => {
-        const word = languageData.words.find(w => w.id === wordId);
-        if (!word) return null;
-
-        // Simulate previous XP (in real app, you'd store this before session)
-        const previousXP = Math.max(0, progress.xp - 15);
-        const xpGain = progress.xp - previousXP;
-
-        return {
-          wordId,
-          term: word.term,
-          definition: word.definition,
-          previousXP,
-          newXP: progress.xp,
-          xpGain
-        };
-      })
-      .filter(Boolean);
-
-    return improvements;
-  };
-
   const achievements = [];
   if (accuracy === 100) achievements.push('🎯 Perfect Score');
   if (progress.longestStreak >= 10) achievements.push('🔥 10+ Streak');
@@ -226,24 +193,20 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
   if (isSuccess) achievements.push('⭐ Session Complete');
 
   const handleTryAgain = () => {
-    const improvements = calculateImprovements();
     setIsNavigating(true);
     navigate(`/overview/${languageCode}`, {
       state: {
         fromSessionCompletion: true,
-        progressImprovements: improvements,
         shouldResetSession: true
       }
     });
   };
 
   const handleNextSession = () => {
-    const improvements = calculateImprovements();
     setIsNavigating(true);
     navigate(`/overview/${languageCode}`, {
       state: {
         fromSessionCompletion: true,
-        progressImprovements: improvements,
         shouldResetSession: true
       }
     });
