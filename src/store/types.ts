@@ -1,6 +1,6 @@
 import { Word } from '../services/wordService';
 
-export type QuizMode = 'multiple-choice' | 'open-answer';
+export type QuizMode = 'multiple-choice' | 'letter-scramble' | 'open-answer';
 
 export interface WordProgress {
   wordId: string;

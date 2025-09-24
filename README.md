@@ -1,6 +1,6 @@
 # Language Level Up 🎮
 
-A modern, interactive language learning game that helps users master vocabulary through scientifically-proven methods including spaced repetition and active recall. Built with React, TypeScript, and Redux for a robust, scalable learning experience.
+A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
 ## 🎯 Features
 
@@ -12,11 +12,12 @@ A modern, interactive language learning game that helps users master vocabulary 
   - Implements spaced repetition with mastery-based progression
 
 ### Advanced Game Mechanics
-- **Dual Quiz System**
-  - Multiple choice questions for beginners (up to 50 XP)
-  - Open-ended questions for advanced learners (50+ XP)
-  - Automatic mode switching based on mastery
-  - German case sensitivity with partial credit
+- **Triple Quiz System**
+  - **Multiple Choice**: Visual recognition for beginners (up to 50 XP)
+  - **Letter Scramble**: Interactive word building with real-time feedback
+  - **Open-Ended**: Advanced text input for mastery (50+ XP)
+  - Intelligent mode selection based on word complexity and user mastery
+  - German case sensitivity with partial credit system
 
 ### Comprehensive Progress Tracking
 - **Persistent Learning Progress**
@@ -29,8 +30,10 @@ A modern, interactive language learning game that helps users master vocabulary 
 - **Modern User Experience**
   - Emotion-styled components with theming
   - Responsive design with mobile support
-  - Real-time feedback and animations
+  - **Keyboard & Touch Support**: Full keyboard navigation in Letter Scramble mode
+  - Real-time visual feedback and smooth animations
   - Achievement system with notifications
+  - Clean, distraction-free interface optimized for learning
 
 ## 🚀 Getting Started
 
@@ -83,6 +86,25 @@ A modern, interactive language learning game that helps users master vocabulary 
 - `npm run lint` - Run ESLint for code quality
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting
+
+## 🎮 How to Use
+
+1. **Select Language**: Choose from available language pairs (German ↔ Dutch, etc.)
+2. **Start Learning**: Begin with Multiple Choice mode for new words
+3. **Progress Through Modes**: 
+   - 📝 **Multiple Choice** → Visual recognition and immediate feedback
+   - 🔤 **Letter Scramble** → Interactive spelling with keyboard/touch support
+   - ✍️ **Open-Ended** → Advanced recall testing (unlocked at 50+ XP)
+4. **Track Progress**: Monitor your mastery levels and learning statistics
+5. **Earn Achievements**: Complete challenges and maintain learning streaks
+
+### 🎯 Letter Scramble Controls
+- **🖱️ Click letters** to add them to your answer
+- **⌨️ Type directly** - letters will auto-select from available options  
+- **⌫ Backspace** to remove the last letter
+- **🖱️ Click letters in your answer** to remove specific letters
+- **💡 Hint button** adds the next correct letter
+- **Real-time feedback** shows letter correctness as you type
 
 ## 📚 Documentation
 
@@ -137,11 +159,34 @@ LevelUp/
 
 ### Game Rules
 
-1. **Learning Progression**
-   - Start with multiple choice questions
-   - Automatic switch to open-ended at 50+ XP mastery
+1. **Learning Progression & Quiz Modes**
+
+   **📝 Multiple Choice Mode**
+   - Visual recognition for new vocabulary (0-49 XP)
+   - 4 randomized answer options
+   - Immediate feedback with correct answer highlighting
+   - Context clues hidden until after answering
+
+   **🔤 Letter Scramble Mode** 
+   - Interactive word building with scrambled letters
+   - **Dual Input Methods**: Click letters OR type directly with keyboard
+   - **Real-time Visual Feedback**: 
+     - 🟢 Green: Correct letter in correct position
+     - 🟠 Orange: Correct letter in wrong position  
+     - 🔴 Red: Wrong letter
+   - **Smart Features**: Backspace support, hint system, auto-completion detection
+   - Perfect for reinforcing spelling and word structure
+
+   **✍️ Open-Ended Mode**
+   - Advanced text input for mastery verification (50+ XP)
    - German case sensitivity with partial credit
-   - Continuous progress tracking
+   - Flexible answer validation (handles articles, variations)
+   - Context provided after answering to prevent spoilers
+
+   **🎯 Intelligent Mode Selection**
+   - Automatic progression based on mastery level
+   - Considers word complexity and user performance
+   - Balanced learning curve from recognition to production
 
 2. **Scoring System**
    ```typescript
@@ -210,18 +255,23 @@ To add a new language:
 1. Create a new JSON file in `src/data/` (e.g., `fr.json`)
 2. Follow the existing structure with unique IDs
 3. Add appropriate language metadata (name, flag emoji)
-4. Test with both quiz modes (multiple choice and open-ended)
+4. Test with all three quiz modes (multiple choice, letter scramble, and open-ended)
+5. Verify keyboard input works correctly for your language's character set
 
 ## 🛠️ Development Guide
 
 ### Technology Stack
 
-- **Frontend**: React 18 with TypeScript
-- **State Management**: Redux Toolkit with persistence
-- **Styling**: Emotion (CSS-in-JS) with theming
-- **Build Tool**: Vite for fast development and building
+- **Frontend**: React 18 with TypeScript and modern hooks
+- **State Management**: Redux Toolkit with localStorage persistence
+- **Styling**: Emotion (CSS-in-JS) with responsive theming and animations
+- **Build Tool**: Vite for fast development and optimized production builds
+- **User Interface**: 
+  - Interactive quiz components with real-time feedback
+  - Keyboard event handling for enhanced accessibility
+  - Smooth animations with CSS-in-JS keyframes
 - **Testing**: Vitest for unit testing
-- **Code Quality**: ESLint + Prettier for consistent code
+- **Code Quality**: ESLint + Prettier for consistent, maintainable code
 
 ### Testing
 
@@ -257,6 +307,18 @@ npm run test:watch     # Watch mode for development
 
 ### Configuration
 
+### Performance Optimizations
+
+The codebase includes several performance improvements for optimal user experience:
+
+- **Reduced Re-renders**: Eliminated circular dependencies in useEffect hooks
+- **Optimized Logging**: Smart debugging that only shows relevant information
+- **Efficient State Management**: Proper cleanup of event listeners and timeouts
+- **Styled Components**: Replaced inline styles with cached styled components
+- **Smart Quiz Selection**: Optimized word selection algorithm with mastery-based filtering
+
+### Configuration
+
 The application uses TypeScript configuration and environment-based settings:
 
 ```typescript
@@ -266,8 +328,9 @@ export const MASTERY_CONFIG = {
   MASTERY_THRESHOLD: 100,      // Maximum XP per word
   QUIZ_MODE_SWITCH: 50,        // XP threshold for open-ended mode
   
-  // XP gains
+  // XP gains by quiz mode
   CORRECT_GAIN_MC: 5,          // Multiple choice correct answer
+  CORRECT_GAIN_SCRAMBLE: 6,    // Letter scramble correct answer
   CORRECT_GAIN_OPEN: 8,        // Open-ended correct answer  
   INCORRECT_PENALTY: -2,       // Wrong answer penalty
   
@@ -339,7 +402,8 @@ export const MASTERY_CONFIG = {
 1. **New Language Support**
    - Create JSON file in `src/data/` following existing structure
    - Add appropriate language-specific rules in `answerValidation.ts`
-   - Test with both quiz modes
+   - Test with all quiz modes (multiple choice, letter scramble, open-ended)
+   - Ensure keyboard input compatibility for special characters
 
 2. **Game Mechanics**
    - Add logic to appropriate service files

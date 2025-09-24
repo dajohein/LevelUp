@@ -131,7 +131,7 @@ export const getRandomWord = (
   languageCode: string,
   wordProgress: { [key: string]: WordProgress },
   lastWordId?: string
-): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'open-answer' } => {
+): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
   const languageWords = getWordsForLanguage(languageCode);
   if (languageWords.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
 
@@ -158,13 +158,15 @@ export const getRandomWord = (
     };
   });
 
-  // Debug logging (only in development)
+  // Debug logging (only log struggling words to reduce spam)
   if (process.env.NODE_ENV === 'development') {
-    console.log('📊 Word mastery levels:');
-    wordsWithMastery.forEach(w => {
-      const progress = wordProgress[w.id];
-      console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%, XP=${progress?.xp || 0}, correct=${progress?.timesCorrect || 0}, incorrect=${progress?.timesIncorrect || 0}`);
-    });
+    const strugglingWords = wordsWithMastery.filter(w => w.currentMastery < 30);
+    if (strugglingWords.length > 0) {
+      console.log(`📊 Words needing practice (${strugglingWords.length}):`);
+      strugglingWords.forEach(w => {
+        console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%`);
+      });
+    }
   }
 
   // Filter out the last word to prevent immediate repetition
@@ -274,16 +276,34 @@ export const getRandomWord = (
 
   // Determine quiz mode based on word's mastery level
   const currentMastery = selectedWord.currentMastery;
-  const quizMode: 'multiple-choice' | 'open-answer' = currentMastery >= 50 ? 'open-answer' : 'multiple-choice';
+  let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  
+  // Determine quiz mode based on mastery level
+  if (currentMastery < 30) {
+    quizMode = 'multiple-choice';
+  } else if (currentMastery < 70) {
+    quizMode = 'letter-scramble';
+  } else {
+    quizMode = 'open-answer';
+  }
+  
+  // Normal logic (commented out for testing):
+  // if (currentMastery < 30) {
+  //   quizMode = 'multiple-choice';
+  // } else if (currentMastery < 70) {
+  //   quizMode = 'letter-scramble';
+  // } else {
+  //   quizMode = 'open-answer';
+  // }
 
-  // For open-answer mode, we don't need multiple choice options
-  const options = quizMode === 'open-answer' ? [] : (() => {
+  // For open-answer and letter-scramble modes, we don't need multiple choice options
+  const options = quizMode === 'multiple-choice' ? (() => {
     // Insert correct answer at random position for multiple choice
     const opts = [...incorrectOptions];
     const correctPos = Math.floor(Math.random() * 4);
     opts.splice(correctPos, 0, correctAnswer);
     return opts;
-  })();
+  })() : [];
 
   return {
     word: {

@@ -129,12 +129,14 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
       {context && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
-          <ContextSentence>{context.sentence}</ContextSentence>
           {isCorrect !== undefined ? (
-            <ContextTranslation>{context.translation}</ContextTranslation>
+            <>
+              <ContextSentence>{context.sentence}</ContextSentence>
+              <ContextTranslation>{context.translation}</ContextTranslation>
+            </>
           ) : (
             <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.6 }}>
-              Translation will appear after answering
+              Context will appear after answering
             </ContextTranslation>
           )}
         </ContextSection>

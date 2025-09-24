@@ -27,7 +27,7 @@ interface PersistentGameState {
   streak: number;
   correctAnswers: number;
   totalAttempts: number;
-  quizMode: 'multiple-choice' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
 }
 
 interface PersistentSessionState {

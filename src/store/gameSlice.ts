@@ -132,7 +132,7 @@ export const gameSlice = createSlice({
 
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
-        const modeMultiplier = state.quizMode === 'open-answer' ? 2 : 1;
+        const modeMultiplier = state.quizMode === 'open-answer' ? 2 : state.quizMode === 'letter-scramble' ? 1.5 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
         const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
 

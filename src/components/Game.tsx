@@ -21,12 +21,13 @@ import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
 import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
+import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { Navigation } from './Navigation';
 import { LearningProgress } from './LearningProgress';
 import { StorageManagement } from './StorageManagement';
 import { LevelUpNotification } from './animations/LevelUpNotification';
 import { useLevelUpDetection } from '../hooks/useLevelUpDetection';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 // Session Progress Animations
 const countUp = keyframes`
@@ -140,7 +141,9 @@ const SessionProgressBar = styled.div`
       rgba(255, 255, 255, 0.1),
       transparent
     );
-    animation: ${progressShimmer} 3s infinite;
+    ${css`
+      animation: ${progressShimmer} 3s infinite;
+    `}
   }
 
   @media (max-width: 768px) {
@@ -161,13 +164,13 @@ const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time
   position: relative;
   min-width: 80px;
 
-  ${props => props.variant === 'score' && `
+  ${props => props.variant === 'score' && css`
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
     border-color: rgba(16, 185, 129, 0.3);
     animation: ${pulseGlow} 2s infinite;
   `}
 
-  ${props => props.variant === 'streak' && `
+  ${props => props.variant === 'streak' && css`
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
     border-color: rgba(245, 158, 11, 0.3);
     animation: ${streakFire} 1s ease-in-out infinite;
@@ -183,7 +186,7 @@ const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time
     border-color: rgba(139, 92, 246, 0.3);
   `}
 
-  ${props => props.variant === 'lives' && `
+  ${props => props.variant === 'lives' && css`
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
     border-color: rgba(239, 68, 68, 0.3);
     animation: ${livesWarning} 2s ease-in-out infinite;
@@ -209,7 +212,9 @@ const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'tim
   align-items: center;
   justify-content: center;
   gap: 6px;
-  animation: ${countUp} 0.5s ease-out;
+  ${css`
+    animation: ${countUp} 0.5s ease-out;
+  `}
 
   ${props => props.variant === 'score' && `
     color: #10b981;
@@ -665,6 +670,8 @@ export const Game: React.FC = () => {
         setLanguageName(langData.name);
         setLanguageFlag(languageFlags[languageCode] || '');
       }
+      // Load the first word after setting the language
+      dispatch(nextWord());
     }
   }, [dispatch, languageCode]);
 
@@ -875,6 +882,11 @@ export const Game: React.FC = () => {
     return direction === 'definition-to-term' ? word.definition : word.term;
   };
 
+  const getAnswerWord = (word: any) => {
+    const direction = word.direction || 'definition-to-term'; // default to old behavior
+    return direction === 'definition-to-term' ? word.term : word.definition;
+  };
+
   const getContextForDirection = (word: any) => {
     // If word has explicit context field, use it
     if (word.context) {
@@ -920,6 +932,41 @@ export const Game: React.FC = () => {
           level={Math.floor((wordProgress[currentWord.id]?.xp || 0) / 100)}
           xp={wordProgress[currentWord.id]?.xp || 0}
           context={getContextForDirection(currentWord)}
+        />
+      ) : quizMode === 'letter-scramble' ? (
+        <LetterScrambleQuiz
+          word={currentWord.direction === 'definition-to-term' ? currentWord.term : currentWord.definition}
+          definition={currentWord.direction === 'definition-to-term' ? currentWord.definition : currentWord.term}
+          context={getContextForDirection(currentWord)}
+          currentWord={sessionProgress.wordsCompleted + 1}
+          totalWords={currentSession?.targetWords || 10}
+          disabled={isTransitioning}
+          onAnswer={(correct) => {
+            // Process the answer
+            if (correct) {
+              dispatch(checkAnswer(getAnswerWord(currentWord)));
+            } else {
+              dispatch(checkAnswer(''));
+            }
+            
+            // Set transitioning state and handle word progression
+            setIsTransitioning(true);
+            
+            // Wait for feedback display, then move to next word
+            setTimeout(() => {
+              resetState();
+              dispatch(nextWord());
+              
+              // Reset word timer for new word
+              setWordTimer(0);
+              setWordStartTime(Date.now());
+
+              // Increment words completed in session if session is active
+              if (isSessionActive && currentSession) {
+                dispatch(incrementWordsCompleted());
+              }
+            }, 2000); // Standard feedback duration to match other quiz types
+          }}
         />
       ) : (
         <OpenQuestionQuiz
