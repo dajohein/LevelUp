@@ -1,7 +1,8 @@
 // Import dependencies
-import spanishData from '../data/es.json';
-import germanData from '../data/de.json';
+import spanishModuleVocabularioBasico from '../data/es/vocabulario-basico.json';
+import germanModuleGrundwortschatz from '../data/de/grundwortschatz.json';
 import { calculateMasteryDecay } from './masteryService';
+import { getWordsForModule } from './moduleService';
 import type { WordProgress } from '../store/types';
 
 // Type definitions
@@ -43,16 +44,16 @@ const addIdsToWords = (words: Omit<Word, 'id'>[], langCode: string): Word[] => {
 
 export const words: { [key: string]: LanguageData } = {
   es: {
-    name: spanishData.name,
-    from: spanishData.from,
-    flag: spanishData.flag,
-    words: addIdsToWords(spanishData.words as Omit<Word, 'id'>[], 'es'),
+    name: 'Spanish',
+    from: 'Dutch',
+    flag: '🇪🇸',
+    words: addIdsToWords((spanishModuleVocabularioBasico.words as Omit<Word, 'id'>[]), 'es'),
   },
   de: {
-    name: germanData.name,
-    from: germanData.from,
-    flag: germanData.flag,
-    words: addIdsToWords(germanData.words as Omit<Word, 'id'>[], 'de'),
+    name: 'German',
+    from: 'Dutch',
+    flag: '🇩🇪',
+    words: addIdsToWords((germanModuleGrundwortschatz.words as Omit<Word, 'id'>[]), 'de'),
   },
 };
 
@@ -127,72 +128,81 @@ const calculateWordPriority = (mastery: number, progress?: WordProgress): number
   return Math.max(0, priority);
 };
 
-export const getRandomWord = (
+// Module-aware version for getting random words from a specific module
+export const getRandomWordFromModule = (
   languageCode: string,
+  moduleId: string,
   wordProgress: { [key: string]: WordProgress },
   lastWordId?: string
 ): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
-  const languageWords = getWordsForLanguage(languageCode);
-  if (languageWords.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
+  const moduleWords = getWordsForModule(languageCode, moduleId);
+  
+  if (moduleWords.length === 0) {
+    return { word: null, options: [], quizMode: 'multiple-choice' };
+  }
+
+  // If we only have one word in the module, return it with just the correct answer
+  if (moduleWords.length === 1) {
+    const selectedWord = moduleWords[0];
+    const direction = selectedWord.direction || 'definition-to-term';
+    const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+    return { word: selectedWord, options: [correctAnswer], quizMode: 'multiple-choice' };
+  }
+
+  // Use the same logic as getRandomWord but with module words instead of all language words
+  return getRandomWordFromWordList(moduleWords, wordProgress, lastWordId);
+};
+
+// Helper function to get random word from any word list
+const getRandomWordFromWordList = (
+  wordList: Word[],
+  wordProgress: { [key: string]: WordProgress },
+  lastWordId?: string
+): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
+  if (wordList.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
 
   // If we only have one word, return it (can't avoid repetition)
-  if (languageWords.length === 1) {
-    const selectedWord = languageWords[0];
+  if (wordList.length === 1) {
+    const selectedWord = wordList[0];
     const direction = selectedWord.direction || 'definition-to-term';
     const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
     return { word: selectedWord, options: [correctAnswer], quizMode: 'multiple-choice' };
   }
 
   // Calculate current mastery for all words
-  const wordsWithMastery = languageWords.map(word => {
+  const wordsWithMastery = wordList.map(word => {
     const progress = wordProgress[word.id];
     if (!progress) {
       return { ...word, currentMastery: 0 };
     }
 
-    const decayedMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp);
-
-    return {
-      ...word,
-      currentMastery: decayedMastery,
-    };
+    const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
+    return { ...word, currentMastery };
   });
-
-  // Debug logging (only log struggling words to reduce spam)
-  if (process.env.NODE_ENV === 'development') {
-    const strugglingWords = wordsWithMastery.filter(w => w.currentMastery < 30);
-    if (strugglingWords.length > 0) {
-      console.log(`📊 Words needing practice (${strugglingWords.length}):`);
-      strugglingWords.forEach(w => {
-        console.log(`${w.term}: mastery=${w.currentMastery.toFixed(1)}%`);
-      });
-    }
-  }
-
-  // Filter out the last word to prevent immediate repetition
+  
+  // Filter out the last word if provided to avoid repetition
   const availableWords = lastWordId 
     ? wordsWithMastery.filter(w => w.id !== lastWordId)
     : wordsWithMastery;
 
-  // If filtering left us with no words, use all words (shouldn't happen with >1 word)
   const candidateWords = availableWords.length > 0 ? availableWords : wordsWithMastery;
 
-  // Separate words by mastery level for systematic learning
-  const strugglingWords = candidateWords.filter(w => w.currentMastery < 50);
+  // Separate words by mastery levels for intelligent selection
+  const strugglingWords = candidateWords.filter(w => w.currentMastery < 30);
   const learningWords = candidateWords.filter(
-    w => w.currentMastery >= 50 && w.currentMastery < 70
+    w => w.currentMastery >= 30 && w.currentMastery < 70
   );
   const learnedWords = candidateWords.filter(
     w => w.currentMastery >= 70 && w.currentMastery < 90
   );
   const masteredWords = candidateWords.filter(w => w.currentMastery >= 90);
 
-  // Priority system: much more aggressively focus on struggling and learning words
   let candidatePool: typeof candidateWords = [];
-
+  
+  // Prioritize based on mastery levels and ensure struggling words get attention
   if (strugglingWords.length > 0) {
-    // 85% chance to pick struggling words exclusively
-    if (Math.random() < 0.85) {
+    // 60% chance to focus on struggling words, 40% chance to include others
+    if (Math.random() < 0.6) {
       candidatePool = strugglingWords;
     } else {
       candidatePool = [...strugglingWords, ...learningWords];
@@ -204,60 +214,41 @@ export const getRandomWord = (
     } else {
       candidatePool = [...learningWords, ...learnedWords];
     }
-  } else if (learnedWords.length > 0) {
-    // 60% chance learned words only, 40% include mastered for maintenance
-    if (Math.random() < 0.6) {
-      candidatePool = learnedWords;
-    } else {
-      candidatePool = [...learnedWords, ...masteredWords];
-    }
   } else {
-    // All words are mastered - use spaced repetition
+    // Fallback to all available words if no specific category is dominant
     candidatePool = candidateWords;
   }
 
-  // FAILSAFE: If pool is too small, expand it to ensure variety
-  if (candidatePool.length < 5 && candidateWords.length >= 5) {
+  // If no words in the preferred pool, fallback to all candidates
+  if (candidatePool.length === 0) {
     candidatePool = candidateWords;
   }
 
-  // Sort candidate pool by priority (ascending: lower number = higher priority)
-  const sortedCandidates = candidatePool.sort((a, b) => {
-    const aPriority = calculateWordPriority(a.currentMastery, wordProgress[a.id]);
-    const bPriority = calculateWordPriority(b.currentMastery, wordProgress[b.id]);
-    return aPriority - bPriority;
+  // Calculate priority scores for each candidate
+  const candidatesWithPriority = candidatePool.map(word => {
+    const progress = wordProgress[word.id];
+    return {
+      word,
+      priority: calculateWordPriority(word.currentMastery, progress),
+    };
   });
 
-  // Select from top priority words with weighted randomization
-  // Take the first 30% of candidates (highest priority)
-  const topCandidates = sortedCandidates.slice(
-    0,
-    Math.max(1, Math.ceil(sortedCandidates.length * 0.3))
-  );
-  
-  // Assign weights - FIRST items (highest priority) get highest weights
-  const weights = topCandidates.map((_, index) => Math.pow(2, topCandidates.length - index - 1));
-  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-  const randomValue = Math.random() * totalWeight;
+  // Sort by priority (lower numbers = higher priority)
+  candidatesWithPriority.sort((a, b) => a.priority - b.priority);
 
-  let currentWeight = 0;
-  let selectedIndex = 0;
-  for (let i = 0; i < weights.length; i++) {
-    currentWeight += weights[i];
-    if (randomValue <= currentWeight) {
-      selectedIndex = i;
-      break;
-    }
-  }
+  // Select from top candidates with some randomness
+  const topCandidatesCount = Math.min(3, candidatesWithPriority.length);
+  const topCandidates = candidatesWithPriority
+    .slice(0, topCandidatesCount)
+    .map(c => c.word);
 
+  const selectedIndex = Math.floor(Math.random() * topCandidates.length);
   const selectedWord = topCandidates[selectedIndex];
   const direction = selectedWord.direction || 'definition-to-term';
 
-  // Generate incorrect options intelligently:
-  // 1. Exclude mastered words from multiple choice (they shouldn't appear as distractors)
-  // 2. Prefer words from similar mastery levels
+  // Generate incorrect options intelligently
   const optionCandidates = candidateWords.filter(
-    w => w.id !== selectedWord.id && w.currentMastery < 90 // Exclude mastered words from being distractors
+    w => w.id !== selectedWord.id && w.currentMastery < 90
   );
 
   // If not enough non-mastered words, include some mastered ones
@@ -271,14 +262,12 @@ export const getRandomWord = (
   );
 
   // Get correct answer based on direction
-  const correctAnswer =
-    direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+  const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
 
   // Determine quiz mode based on word's mastery level
   const currentMastery = selectedWord.currentMastery;
   let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
   
-  // Determine quiz mode based on mastery level
   if (currentMastery < 30) {
     quizMode = 'multiple-choice';
   } else if (currentMastery < 70) {
@@ -286,19 +275,9 @@ export const getRandomWord = (
   } else {
     quizMode = 'open-answer';
   }
-  
-  // Normal logic (commented out for testing):
-  // if (currentMastery < 30) {
-  //   quizMode = 'multiple-choice';
-  // } else if (currentMastery < 70) {
-  //   quizMode = 'letter-scramble';
-  // } else {
-  //   quizMode = 'open-answer';
-  // }
 
-  // For open-answer and letter-scramble modes, we don't need multiple choice options
+  // For multiple choice, create options array
   const options = quizMode === 'multiple-choice' ? (() => {
-    // Insert correct answer at random position for multiple choice
     const opts = [...incorrectOptions];
     const correctPos = Math.floor(Math.random() * 4);
     opts.splice(correctPos, 0, correctAnswer);
@@ -308,9 +287,18 @@ export const getRandomWord = (
   return {
     word: {
       ...selectedWord,
-      mastery: selectedWord.currentMastery,
+      mastery: currentMastery,
     },
     options,
     quizMode,
   };
+};
+
+export const getRandomWord = (
+  languageCode: string,
+  wordProgress: { [key: string]: WordProgress },
+  lastWordId?: string
+): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
+  const languageWords = getWordsForLanguage(languageCode);
+  return getRandomWordFromWordList(languageWords, wordProgress, lastWordId);
 };

@@ -35,6 +35,28 @@ A modern, interactive language learning game featuring **three engaging quiz mod
   - Achievement system with notifications
   - Clean, distraction-free interface optimized for learning
 
+## 🏗️ Architecture & Data Management
+
+### Multi-Language Data Isolation
+The application implements **strict language separation** to prevent data contamination between different languages:
+
+- **Per-Language Storage**: Each language maintains isolated progress data (`de_progress`, `es_progress`)
+- **Redux State Separation**: Language-specific progress loading prevents cross-contamination
+- **Storage Safeguards**: Multiple validation layers ensure data integrity across browser sessions
+- **Migration-Safe Design**: Robust data migration utilities for format changes
+
+### Key Architectural Decisions
+1. **Language-Scoped Progress**: `wordProgressStorage.save(languageCode, progress)` ensures strict isolation
+2. **State Management**: Redux slices load only current language data, not mixed global state
+3. **Storage Validation**: Debug logging and integrity checks prevent silent data corruption
+4. **Reload Persistence**: Cross-tab synchronization maintains language separation after page reloads
+
+### Lessons Learned: Preventing Data Mixing
+- **Never merge cross-language data** in Redux state - always load language-specific subsets
+- **Implement storage-level validation** to catch contamination early with debug logging
+- **Use consistent language prefixing** in storage keys to prevent accidental merging
+- **Test browser reload scenarios** as they often expose hidden state persistence bugs
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -402,18 +424,104 @@ export const MASTERY_CONFIG = {
 1. **New Language Support**
    - Create JSON file in `src/data/` following existing structure
    - Add appropriate language-specific rules in `answerValidation.ts`
+   - **CRITICAL**: Implement proper language isolation in storage and Redux state
    - Test with all quiz modes (multiple choice, letter scramble, open-ended)
    - Ensure keyboard input compatibility for special characters
+   - **Test cross-language data separation** thoroughly, including browser reloads
 
 2. **Game Mechanics**
    - Add logic to appropriate service files
    - Update Redux slices for state management
+   - **Maintain language-scoped state loading** - never merge cross-language data
    - Create or update React components as needed
    - Add TypeScript types in `src/types/`
+   - **Implement storage validation** with debug logging for new data structures
 
-## 📝 License
+### Data Management Best Practices
+
+1. **Language Isolation Patterns**
+   ```typescript
+   // ✅ CORRECT: Language-scoped storage
+   const progress = wordProgressStorage.load(currentLanguage);
+   
+   // ❌ WRONG: Global mixed storage
+   const allProgress = wordProgressStorage.loadAll();
+   ```
+
+2. **Redux State Management**
+   ```typescript
+   // ✅ CORRECT: Load only current language
+   const languageProgress = wordProgressStorage.load(savedState.language);
+   
+   // ❌ WRONG: Load mixed progress into global state
+   const mixedProgress = { ...germanProgress, ...spanishProgress };
+   ```
+
+3. **Storage Validation**
+   ```typescript
+   // ✅ CORRECT: Add validation and logging
+   save: (languageCode: string, data: Record<string, WordProgress>) => {
+     logger.debug(`Saving ${Object.keys(data).length} items for ${languageCode}`);
+     // Validation logic...
+   }
+   ```
+
+## � Troubleshooting
+
+### Common Language Data Issues
+
+**Problem**: Language XP/levels showing identical values across different languages
+- **Cause**: Cross-language data contamination in Redux state or localStorage
+- **Solution**: Check `gameSlice.ts` loadPersistedState - ensure language-scoped loading
+- **Prevention**: Always use `wordProgressStorage.load(languageCode)` instead of mixed loading
+
+**Problem**: Data mixing after browser reload
+- **Cause**: Storage persistence loading mixed data into Redux state
+- **Solution**: Implement storage-level validation and language-specific state initialization
+- **Debug**: Enable storage debug logging to trace data flow
+
+**Problem**: XP/level in top navigation bar not updating when switching languages
+- **Cause**: Navigation component using mixed Redux state instead of language-specific data
+- **Solution**: Use `wordProgressStorage.load(currentLanguage)` instead of Redux `wordProgress`
+- **Fix**: Ensures top bar always shows current language's XP and level
+
+**Problem**: Word IDs colliding across languages
+- **Cause**: Same numeric IDs (1, 2, 3) used across different language modules
+- **Solution**: This is expected - language separation happens at storage level, not ID level
+- **Important**: Never rely on word IDs alone - always include language context
+
+### Data Management Tools
+
+**User-Friendly Reset Options:**
+1. Navigate to the **Profile page** (click "Manage Data" button on languages overview)
+2. Scroll to the **Language Data Management** section
+3. Choose your reset option:
+   - **Reset All [Language]**: Completely resets all progress for a language
+   - **Reset [Module Name]**: Resets progress for a specific module within a language
+
+**Safety Features:**
+- Confirmation dialogs prevent accidental data loss
+- Reset buttons are disabled when there's no progress to reset
+- Automatic page reload ensures all components refresh with clean data
+
+### Debug Tools
+```javascript
+// Browser console commands for debugging storage
+localStorage.getItem('levelup_word_progress_de'); // Check German progress
+localStorage.getItem('levelup_word_progress_es'); // Check Spanish progress
+
+// Enable debug logging in development
+localStorage.setItem('debug', 'true');
+```
+
+## �📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Documentation
+
+- **[Language Separation Architecture](docs/LANGUAGE_SEPARATION.md)**: Comprehensive guide on multi-language data isolation, debugging, and architectural patterns
+- **[Development Guidelines](.github/copilot/INSTRUCTION.md)**: Complete development instructions and best practices
 
 ## 🎯 Key Features Summary
 
@@ -423,5 +531,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **💾 Persistent Progress**: Cross-tab synchronized localStorage-based saving
 - **⚡ Modern Architecture**: React 18 + TypeScript + Redux Toolkit + Vite
 - **🎨 Polished UI**: Emotion-styled components with smooth animations
+- **🌍 Multi-Language Support**: Strict language data isolation preventing cross-contamination
 
 Built with ❤️ for effective language learning through scientifically-proven methods.

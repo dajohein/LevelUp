@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import {
@@ -93,7 +93,7 @@ const Avatar = styled.div<{ levelColor: string }>`
   font-size: 2.5rem;
   position: relative;
   border: 4px solid ${props => props.levelColor};
-  animation: ${pulseGlow} 3s ease-in-out infinite;
+  ${css`animation: ${pulseGlow} 3s ease-in-out infinite;`}
 
   &::after {
     content: '';
@@ -167,7 +167,7 @@ const StatCard = styled.div<{ highlight?: boolean }>`
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
 
-  ${props => props.highlight && `
+  ${props => props.highlight && css`
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
     animation: ${xpCountUp} 0.3s ease-out;
@@ -223,7 +223,7 @@ const ProgressBar = styled.div<{ percentage: number; levelColor: string; animate
   position: relative;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   
-  ${props => props.animate && `
+  ${props => props.animate && css`
     animation: ${progressFill} 1s ease-out;
     --target-width: ${props.percentage}%;
   `}

@@ -1,5 +1,6 @@
 // Persistent storage utilities for LevelUp language learning app
 import type { WordProgress } from '../store/types';
+import { logger } from './logger';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -52,7 +53,7 @@ const safeJSONParse = <T>(data: string | null, fallback: T): T => {
   try {
     return JSON.parse(data);
   } catch (error) {
-    console.warn('Failed to parse stored data:', error);
+    logger.warn('Failed to parse stored data:', error);
     return fallback;
   }
 };
@@ -62,7 +63,7 @@ const safeJSONStringify = (data: any): string => {
   try {
     return JSON.stringify(data);
   } catch (error) {
-    console.error('Failed to stringify data:', error);
+    logger.error('Failed to stringify data:', error);
     return '{}';
   }
 };
@@ -90,10 +91,25 @@ export const wordProgressStorage = {
         {}
       );
 
+      // Ensure we're only saving to the specific language key
       existingData[languageCode] = wordProgress;
+      
+      // Safeguard: Ensure Spanish is always separate from German
+      if (languageCode === 'de' && !existingData['es']) {
+        existingData['es'] = {}; // Ensure Spanish has its own empty space
+      } else if (languageCode === 'es' && !existingData['de']) {
+        existingData['de'] = {}; // Ensure German has its own empty space
+      }
+      
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+      
+      // Debug logging for language separation
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`Saved progress for ${languageCode}: ${Object.keys(wordProgress).length} entries`);
+        logger.debug(`Storage now has DE: ${Object.keys(existingData.de || {}).length}, ES: ${Object.keys(existingData.es || {}).length} entries`);
+      }
     } catch (error) {
-      console.error('Failed to save word progress:', error);
+      logger.error('Failed to save word progress:', error);
     }
   },
 
@@ -106,9 +122,16 @@ export const wordProgressStorage = {
         {}
       );
 
-      return data[languageCode] || {};
+      const result = data[languageCode] || {};
+      
+      // Debug logging for language separation
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`Loading progress for ${languageCode}: ${Object.keys(result).length} entries`);
+      }
+
+      return result;
     } catch (error) {
-      console.error('Failed to load word progress:', error);
+      logger.error('Failed to load word progress:', error);
       return {};
     }
   },
@@ -137,7 +160,7 @@ export const wordProgressStorage = {
         localStorage.removeItem(STORAGE_KEYS.WORD_PROGRESS);
       }
     } catch (error) {
-      console.error('Failed to clear word progress:', error);
+      logger.error('Failed to clear word progress:', error);
     }
   },
 };
@@ -150,7 +173,7 @@ export const gameStateStorage = {
     try {
       localStorage.setItem(STORAGE_KEYS.GAME_STATE, safeJSONStringify(gameState));
     } catch (error) {
-      console.error('Failed to save game state:', error);
+      logger.error('Failed to save game state:', error);
     }
   },
 
@@ -177,7 +200,7 @@ export const sessionStateStorage = {
     try {
       localStorage.setItem(STORAGE_KEYS.SESSION_STATE, safeJSONStringify(sessionState));
     } catch (error) {
-      console.error('Failed to save session state:', error);
+      logger.error('Failed to save session state:', error);
     }
   },
 
@@ -206,7 +229,7 @@ export const userPreferencesStorage = {
       const updated = { ...existing, ...preferences };
       localStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, safeJSONStringify(updated));
     } catch (error) {
-      console.error('Failed to save user preferences:', error);
+      logger.error('Failed to save user preferences:', error);
     }
   },
 
@@ -257,7 +280,7 @@ export const migrateData = (): void => {
   if (!versionStorage.needsMigration()) return;
 
   const storedVersion = versionStorage.getCurrentVersion();
-  console.log(`Migrating data from version ${storedVersion} to ${CURRENT_VERSION}`);
+  logger.info(`Migrating data from version ${storedVersion} to ${CURRENT_VERSION}`);
 
   try {
     // Add migration logic here for future versions
@@ -267,9 +290,9 @@ export const migrateData = (): void => {
     }
 
     versionStorage.setCurrentVersion();
-    console.log('Data migration completed successfully');
+    logger.info('Data migration completed successfully');
   } catch (error) {
-    console.error('Data migration failed:', error);
+    logger.error('Data migration failed:', error);
     // On migration failure, clear all data to prevent corruption
     clearAllData();
   }
@@ -283,7 +306,7 @@ export const clearAllData = (): void => {
     localStorage.removeItem(key);
   });
 
-  console.log('All stored data cleared');
+  logger.info('All stored data cleared');
 };
 
 export const getStorageInfo = (): { size: number; keys: string[] } => {
@@ -305,7 +328,7 @@ export { isLocalStorageAvailable };
 // Initialize storage system
 export const initializeStorage = (): void => {
   if (!isLocalStorageAvailable()) {
-    console.warn('localStorage is not available. Progress will not be saved.');
+    logger.warn('localStorage is not available. Progress will not be saved.');
     return;
   }
 
@@ -315,5 +338,5 @@ export const initializeStorage = (): void => {
   // Update last played timestamp
   userPreferencesStorage.save({ lastPlayed: new Date().toISOString() });
 
-  console.log('Storage system initialized');
+  logger.info('Storage system initialized');
 };

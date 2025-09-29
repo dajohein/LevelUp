@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 const fall = keyframes`
   0% { transform: translateY(-100vh) rotate(0deg); }
@@ -40,7 +40,7 @@ const ParticleElement = styled.div<{
   height: 10px;
   background-color: ${props => props.color};
   border-radius: ${() => (Math.random() > 0.5 ? '50%' : '0')};
-  animation: ${fall} ${props => props.speed}s linear forwards;
+  ${props => css`animation: ${fall} ${props.speed}s linear forwards;`}
   transform: scale(${props => props.scale});
 `;
 

@@ -1,9 +1,10 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { calculateLanguageXP, calculateCurrentLevel, getLevelInfo } from '../services/levelService';
+import { wordProgressStorage } from '../services/storageService';
 
 const NavigationBar = styled.nav`
   position: fixed;
@@ -155,48 +156,75 @@ const UserXP = styled.div`
 interface NavigationProps {
   languageName?: string;
   languageFlag?: string;
-  showOverviewButton?: boolean;
   showUserProfile?: boolean;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ 
   languageName, 
   languageFlag, 
-  showOverviewButton = false,
   showUserProfile = true
 }) => {
   const navigate = useNavigate();
-  const { wordProgress, language } = useSelector((state: RootState) => state.game);
+  const location = useLocation();
+  const params = useParams();
+  const { language } = useSelector((state: RootState) => state.game);
 
   // Calculate language-specific stats if we have a current language
   const currentLanguageCode = language;
   let currentLevel = 1;
   let levelInfo = getLevelInfo(1);
+  let languageSpecificProgress = {};
   
   if (currentLanguageCode) {
-    const languageXP = calculateLanguageXP(wordProgress, currentLanguageCode);
+    // CRITICAL FIX: Load language-specific progress, not mixed Redux state
+    languageSpecificProgress = wordProgressStorage.load(currentLanguageCode);
+    const languageXP = calculateLanguageXP(languageSpecificProgress, currentLanguageCode);
     currentLevel = calculateCurrentLevel(languageXP);
     levelInfo = getLevelInfo(currentLevel);
   }
 
-  const handleBackToLanguageSelection = () => {
-    navigate('/');
+  // Smart navigation based on current route
+  const getBackButtonConfig = () => {
+    const path = location.pathname;
+    const { languageCode } = params;
+
+    // If we're in a specific module progress view (/language/de/grundwortschatz)
+    if (path.match(/^\/language\/[^\/]+\/[^\/]+$/)) {
+      return {
+        label: 'Modules',
+        onClick: () => navigate(`/language/${languageCode}`)
+      };
+    }
+    
+    // If we're in a language modules view (/language/de)
+    if (path.match(/^\/language\/[^\/]+$/)) {
+      return {
+        label: 'Languages',
+        onClick: () => navigate('/')
+      };
+    }
+    
+    // If we're in sessions or game views with language context
+    if (languageCode && (path.includes('/sessions') || path.includes('/game'))) {
+      return {
+        label: 'Modules',
+        onClick: () => navigate(`/language/${languageCode}`)
+      };
+    }
+    
+    // Default to language selection
+    return {
+      label: 'Languages',
+      onClick: () => navigate('/')
+    };
   };
 
-  const handleBackToOverview = () => {
-    if (languageName) {
-      // Extract language code from name for navigation
-      const languageCode = languageName.toLowerCase() === 'german' ? 'de' : 
-                          languageName.toLowerCase() === 'spanish' ? 'es' : 
-                          languageName.toLowerCase();
-      navigate(`/overview/${languageCode}`);
-    }
-  };
+  const backButtonConfig = getBackButtonConfig();
 
   return (
     <NavigationBar>
-      <BackButton onClick={showOverviewButton ? handleBackToOverview : handleBackToLanguageSelection}>
-        ← <span>{showOverviewButton ? 'Overview' : 'Languages'}</span>
+      <BackButton onClick={backButtonConfig.onClick}>
+        ← <span>{backButtonConfig.label}</span>
       </BackButton>
       
       {languageName && languageFlag && (
@@ -208,15 +236,27 @@ export const Navigation: React.FC<NavigationProps> = ({
       
       {!languageName && !languageFlag && <AppTitle>🚀 LevelUp</AppTitle>}
 
-      {showUserProfile && Object.keys(wordProgress).length > 0 && currentLanguageCode && (
-        <UserProfileCompact>
+      {showUserProfile && Object.keys(languageSpecificProgress).length > 0 && currentLanguageCode && (
+        <UserProfileCompact onClick={() => navigate('/profile')}>
           <UserAvatar levelColor={levelInfo.color}>
             {levelInfo.emoji}
             <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
           </UserAvatar>
           <UserStats>
             <UserLevel>{levelInfo.title}</UserLevel>
-            <UserXP>{calculateLanguageXP(wordProgress, currentLanguageCode).toLocaleString()} XP</UserXP>
+            <UserXP>{calculateLanguageXP(languageSpecificProgress, currentLanguageCode).toLocaleString()} XP</UserXP>
+          </UserStats>
+        </UserProfileCompact>
+      )}
+      
+      {showUserProfile && (!Object.keys(languageSpecificProgress).length || !currentLanguageCode) && (
+        <UserProfileCompact onClick={() => navigate('/profile')}>
+          <UserAvatar levelColor="#4caf50">
+            👤
+          </UserAvatar>
+          <UserStats>
+            <UserLevel>Profile</UserLevel>
+            <UserXP>View Progress</UserXP>
           </UserStats>
         </UserProfileCompact>
       )}

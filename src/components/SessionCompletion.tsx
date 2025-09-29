@@ -159,9 +159,10 @@ const AchievementBadge = styled.div`
 
 interface SessionCompletionProps {
   languageCode: string;
+  moduleId?: string;
 }
 
-export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCode }) => {
+export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCode, moduleId }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -169,7 +170,8 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
   const { progress, currentSession } = useSelector((state: RootState) => state.session);
 
   if (!currentSession && !isNavigating) {
-    navigate(`/sessions/${languageCode}`);
+    const sessionRoute = moduleId ? `/sessions/${languageCode}/${moduleId}` : `/sessions/${languageCode}`;
+    navigate(sessionRoute);
     return null;
   }
 
@@ -194,7 +196,8 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   const handleTryAgain = () => {
     setIsNavigating(true);
-    navigate(`/overview/${languageCode}`, {
+    const sessionRoute = moduleId ? `/sessions/${languageCode}/${moduleId}` : `/sessions/${languageCode}`;
+    navigate(sessionRoute, {
       state: {
         fromSessionCompletion: true,
         shouldResetSession: true
@@ -204,7 +207,7 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   const handleNextSession = () => {
     setIsNavigating(true);
-    navigate(`/overview/${languageCode}`, {
+    navigate(`/language/${languageCode}`, {
       state: {
         fromSessionCompletion: true,
         shouldResetSession: true

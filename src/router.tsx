@@ -1,32 +1,47 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
-import { LanguageSelect } from './components/LanguageSelect';
+import { useSelector } from 'react-redux';
+import { RootState } from './store/store';
+import { LanguagesOverview } from './components/LanguagesOverview';
+import { ModuleOverview } from './components/ModuleOverview';
+import { ModuleProgressView } from './components/ModuleProgressView';
 import { LanguageOverview } from './components/LanguageOverview';
 import { SessionSelect } from './components/SessionSelect';
 import { SessionCompletion } from './components/SessionCompletion';
 import { Game } from './components/Game';
+import { UserProfilePage } from './components/UserProfilePage';
 
-const languages = [
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-];
 
-// Wrapper component to pass languageCode to SessionSelect
+
+// Wrapper component to pass languageCode and moduleId to SessionSelect
 const SessionSelectWrapper = () => {
-  const { languageCode } = useParams<{ languageCode: string }>();
-  return <SessionSelect languageCode={languageCode || ''} />;
+  const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
+  return <SessionSelect languageCode={languageCode || ''} moduleId={moduleId} />;
 };
 
-// Wrapper component to pass languageCode to SessionCompletion
+// Wrapper component to pass languageCode and moduleId to SessionCompletion
 const SessionCompletionWrapper = () => {
   const { languageCode } = useParams<{ languageCode: string }>();
-  return <SessionCompletion languageCode={languageCode || ''} />;
+  const moduleId = useSelector((state: RootState) => state.game.module);
+  return <SessionCompletion languageCode={languageCode || ''} moduleId={moduleId || undefined} />;
 };
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <LanguageSelect languages={languages} />,
+    element: <LanguagesOverview />,
+  },
+  {
+    path: '/profile',
+    element: <UserProfilePage />,
+  },
+  {
+    path: '/language/:languageCode',
+    element: <ModuleOverview />,
+  },
+  {
+    path: '/language/:languageCode/:moduleId',
+    element: <ModuleProgressView />,
   },
   {
     path: '/overview/:language',
@@ -37,11 +52,19 @@ export const router = createBrowserRouter([
     element: <SessionSelectWrapper />,
   },
   {
+    path: '/sessions/:languageCode/:moduleId',
+    element: <SessionSelectWrapper />,
+  },
+  {
     path: '/game/:languageCode',
     element: <Game />,
   },
   {
     path: '/game/:languageCode/session',
+    element: <Game />,
+  },
+  {
+    path: '/game/:languageCode/:moduleId',
     element: <Game />,
   },
   {

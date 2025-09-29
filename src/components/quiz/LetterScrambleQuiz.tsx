@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
+import { logger } from '../../services/logger';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -272,7 +273,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
   // Initialize scrambled letters
   useEffect(() => {
-    console.log('🔄 LetterScrambleQuiz: Resetting for new word:', word, 'definition:', definition);
+    logger.debug('🔄 LetterScrambleQuiz: Resetting for new word:', word, 'definition:', definition);
     const letters = word.toLowerCase().split('').map((letter, index) => ({
       letter,
       index,
@@ -287,7 +288,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     setIsCorrect(false);
     setHintsUsed(0);
     hasCheckedRef.current = false;
-    console.log('✨ LetterScrambleQuiz: State reset complete');
+    logger.debug('✨ LetterScrambleQuiz: State reset complete');
   }, [word, definition]);
 
   const addLetter = useCallback((letterIndex: number) => {
@@ -380,7 +381,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     }
     
     if (userAnswer.length === word.length && !showResult && userAnswer.length > 0 && !disabled && !hasCheckedRef.current) {
-      console.log('⏰ LetterScrambleQuiz: Checking completed word');
+      logger.debug('⏰ LetterScrambleQuiz: Checking completed word');
       checkTimeoutRef.current = setTimeout(() => {
         // Call checkAnswer directly without dependency
         if (hasCheckedRef.current) return;
@@ -390,7 +391,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         const targetWord = word.toLowerCase();
         const correct = userWord === targetWord;
         
-        console.log('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
+        logger.debug('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
         
         setIsCorrect(correct);
         setShowResult(true);

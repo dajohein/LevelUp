@@ -1,5 +1,5 @@
 import { WordProgress } from '../store/types';
-import { words } from './wordService';
+import { getModulesForLanguage } from './moduleService';
 
 // Level progression constants
 export const LEVEL_CONFIG = {
@@ -27,7 +27,8 @@ export const calculateLanguageXP = (
   wordProgress: Record<string, WordProgress>,
   languageCode: string
 ): number => {
-  const languageWords = words[languageCode]?.words || [];
+  const modules = getModulesForLanguage(languageCode);
+  const languageWords = modules.flatMap(module => module.words);
   return languageWords.reduce((total, word) => {
     const progress = wordProgress[word.id];
     return total + (progress ? progress.xp : 0);
@@ -139,7 +140,8 @@ export const calculateLanguageAchievementStats = (
   wordProgress: Record<string, WordProgress>,
   languageCode: string
 ) => {
-  const languageWords = words[languageCode]?.words || [];
+  const modules = getModulesForLanguage(languageCode);
+  const languageWords = modules.flatMap(module => module.words);
   const languageWordIds = languageWords.map(w => w.id);
   
   // Filter progress to only include words from this language

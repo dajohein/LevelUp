@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { startSession, sessionTypes, setLanguage } from '../store/sessionSlice';
+import { setCurrentModule } from '../store/gameSlice';
 import { Navigation } from './Navigation';
 import { words } from '../services/wordService';
 
@@ -247,9 +248,10 @@ const ChallengeStats = styled.div`
 
 interface SessionSelectProps {
   languageCode: string;
+  moduleId?: string;
 }
 
-export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode }) => {
+export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, moduleId }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { completedSessionsByLanguage, weeklyChallengeBylanguage } = useSelector(
@@ -293,7 +295,11 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode }) =>
 
   const handleSessionStart = (sessionId: string) => {
     dispatch(startSession(sessionId));
-    navigate(`/game/${languageCode}/session`);
+    if (moduleId) {
+      dispatch(setCurrentModule(moduleId));
+    }
+    const route = moduleId ? `/game/${languageCode}/${moduleId}` : `/game/${languageCode}/session`;
+    navigate(route);
   };
 
   const formatTime = (minutes?: number) => {

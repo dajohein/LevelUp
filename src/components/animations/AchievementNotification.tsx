@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 import { Achievement } from '@/store/achievementsSlice';
 import { Confetti } from './Confetti';
 
@@ -40,7 +40,7 @@ const Container = styled.div<{ isExiting: boolean }>`
   gap: ${props => props.theme.spacing.md};
   min-width: 300px;
   z-index: 1000;
-  animation: ${props => (props.isExiting ? slideOut : slideIn)} 0.5s ease-in-out forwards;
+  ${props => css`animation: ${props.isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards;`}
 `;
 
 const Icon = styled.div`

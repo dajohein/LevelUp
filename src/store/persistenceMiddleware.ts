@@ -6,6 +6,7 @@ import {
   gameStateStorage,
   sessionStateStorage,
 } from '../services/storageService';
+import { logger } from '../services/logger';
 
 // Debounce function to prevent excessive localStorage writes
 const debounce = (func: Function, wait: number) => {
@@ -116,7 +117,7 @@ export const persistenceMiddleware: Middleware<{}, RootState> = store => next =>
       }
     }
   } catch (error) {
-    console.error('Persistence middleware error:', error);
+    logger.error('Persistence middleware error:', error);
     // Don't throw - let the app continue working even if persistence fails
   }
 
@@ -154,7 +155,7 @@ export const setupStorageSync = (store: any) => {
         });
       }
     } catch (error) {
-      console.error('Storage sync error:', error);
+      logger.error('Storage sync error:', error);
     }
   };
 
@@ -203,7 +204,7 @@ export const persistenceUtils = {
         totalKB: Math.round((total / 1024) * 100) / 100,
       };
     } catch (error) {
-      console.error('Error getting storage info:', error);
+      logger.error('Error getting storage info:', error);
       return { sizes: {}, total: 0, totalKB: 0 };
     }
   },

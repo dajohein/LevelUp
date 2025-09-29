@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: scale(0.8); }
@@ -25,8 +25,7 @@ const Overlay = styled.div<{ isCorrect: boolean; show: boolean }>`
   align-items: center;
   opacity: 0;
   pointer-events: none;
-  animation: ${props => (props.show ? fadeIn : fadeOut)} ${props => (props.show ? '0.5s' : '1s')}
-    ease-out forwards;
+  ${props => css`animation: ${props.show ? fadeIn : fadeOut} ${props.show ? '0.5s' : '1s'} ease-out forwards;`}
 `;
 
 const FeedbackCard = styled.div<{ isCorrect: boolean }>`
@@ -38,7 +37,7 @@ const FeedbackCard = styled.div<{ isCorrect: boolean }>`
     ${props => (props.isCorrect ? props.theme.colors.success : props.theme.colors.error)};
   text-align: center;
   max-width: 400px;
-  animation: ${fadeIn} 0.3s ease-out forwards;
+  ${css`animation: ${fadeIn} 0.3s ease-out forwards;`}
 `;
 
 const FeedbackIcon = styled.div<{ isCorrect: boolean }>`

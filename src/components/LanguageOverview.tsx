@@ -6,7 +6,6 @@ import { RootState } from '../store/store';
 import { setLanguage } from '../store/gameSlice';
 import { resetSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
-import { UserProfile } from './UserProfile';
 import { words } from '../services/wordService';
 
 const OverviewContainer = styled.div`
@@ -349,8 +348,6 @@ export const LanguageOverview: React.FC = () => {
             {languageData.name}
           </LanguageTitle>
         </Header>
-
-        <UserProfile languageCode={language} />
 
         {stats && (
           <StatsGrid>

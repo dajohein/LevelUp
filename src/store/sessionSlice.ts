@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { sessionStateStorage } from '../services/storageService';
+import { logger } from '../services/logger';
 
 export interface SessionType {
   id: string;
@@ -161,7 +162,7 @@ const loadPersistedSessionState = (): Partial<SessionState> => {
       }),
     };
   } catch (error) {
-    console.error('Failed to load persisted session state:', error);
+    logger.error('Failed to load persisted session state:', error);
     return {};
   }
 };
@@ -176,7 +177,7 @@ const saveSessionState = (state: SessionState): void => {
       isActive: state.isSessionActive,
     });
   } catch (error) {
-    console.error('Failed to save session state:', error);
+    logger.error('Failed to save session state:', error);
   }
 };
 

@@ -1,0 +1,14 @@
+{
+  "name": "German",
+  "from": "Dutch",
+  "flag": "🇩🇪",
+  "modules": [
+    {
+      "id": "grundwortschatz",
+      "name": "Grundwortschatz",
+      "description": "Alle aktuellen deutschen Wörter.",
+      "icon": "📚",
+      "difficulty": "beginner"
+    }
+  ]
+}

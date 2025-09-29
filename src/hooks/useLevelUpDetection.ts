@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
+import type { WordProgress } from '../store/types';
 import { calculateLanguageXP, calculateCurrentLevel, checkLanguageLevelUp } from '../services/levelService';
 
 interface LevelUpState {
@@ -18,7 +19,7 @@ export const useLevelUpDetection = () => {
     newLevel: 0,
     totalXP: 0,
   });
-  const previousProgressRef = useRef<Record<string, any>>({});
+  const previousProgressRef = useRef<Record<string, WordProgress>>({});
 
   useEffect(() => {
     if (!language) return;

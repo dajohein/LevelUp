@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { words } from '../services/wordService';
@@ -119,7 +119,7 @@ const ProgressSegment = styled.div<{
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   
-  ${props => props.animate && `
+  ${props => props.animate && css`
     animation: ${progressGrow} ${1 + (props.delay || 0) * 0.2}s ease-out ${(props.delay || 0) * 0.1}s both;
     --target-width: ${props.width}%;
   `}

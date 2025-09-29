@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getRandomWord } from '../services/wordService';
+import { getRandomWord, getRandomWordFromModule } from '../services/wordService';
 import { calculateMasteryGain } from '../services/masteryService';
 import { wordProgressStorage, gameStateStorage } from '../services/storageService';
+import { logger } from '../services/logger';
 import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
 import type { GameState } from './types';
 
@@ -9,6 +10,18 @@ import type { GameState } from './types';
 const loadPersistedState = (): Partial<GameState> => {
   try {
     const savedState = gameStateStorage.load();
+    
+    // CRITICAL FIX: Don't load mixed wordProgress into global state
+    // Instead, load only the current language's progress
+    const currentLanguage = savedState.language;
+    let languageSpecificProgress = {};
+    
+    if (currentLanguage) {
+      // Load only the current language's progress
+      languageSpecificProgress = wordProgressStorage.load(currentLanguage);
+      logger.debug(`Loading progress for ${currentLanguage}: ${Object.keys(languageSpecificProgress).length} words`);
+    }
+    
     return {
       language: savedState.language || null,
       score: savedState.score || 0,
@@ -16,10 +29,10 @@ const loadPersistedState = (): Partial<GameState> => {
       correctAnswers: savedState.correctAnswers || 0,
       totalAttempts: savedState.totalAttempts || 0,
       quizMode: savedState.quizMode || 'multiple-choice',
-      wordProgress: savedState.wordProgress || {},
+      wordProgress: languageSpecificProgress,
     };
   } catch (error) {
-    console.error('Failed to load persisted game state:', error);
+    logger.error('Failed to load persisted game state:', error);
     return {};
   }
 };
@@ -29,6 +42,7 @@ const persistedState = loadPersistedState();
 // Helper function to save game state to localStorage
 const saveGameState = (state: GameState): void => {
   try {
+    // CRITICAL FIX: Don't save mixed wordProgress to gameStateStorage
     gameStateStorage.save({
       language: state.language || undefined,
       score: state.score,
@@ -36,33 +50,35 @@ const saveGameState = (state: GameState): void => {
       correctAnswers: state.correctAnswers,
       totalAttempts: state.totalAttempts,
       quizMode: state.quizMode,
-      wordProgress: state.wordProgress,
+      // Don't save wordProgress here to prevent mixing
+      wordProgress: {}, 
     });
 
-    // Also save word progress separately for the current language
+    // Only save word progress separately for the current language
     if (state.language) {
       wordProgressStorage.save(state.language, state.wordProgress);
+      logger.debug(`Saved ${Object.keys(state.wordProgress).length} words for ${state.language}`);
     }
   } catch (error) {
-    console.error('Failed to save game state:', error);
+    logger.error('Failed to save game state:', error);
   }
 };
 
 const initialState: GameState = {
   currentWord: null,
   currentOptions: [],
-  quizMode: persistedState.quizMode || 'multiple-choice',
-  score: persistedState.score || 0,
+  quizMode: 'multiple-choice',
+  score: 0,
   isCorrect: null,
   lives: 3,
-  language: persistedState.language || null,
-  streak: persistedState.streak || 0,
+  language: null,
+  module: null,
+  streak: 0,
   bestStreak: 0,
-  totalAttempts: persistedState.totalAttempts || 0,
-  correctAnswers: persistedState.correctAnswers || 0,
-  wordProgress: persistedState.wordProgress || {},
-  lastAnswer: undefined,
-  capitalizationFeedback: undefined,
+  totalAttempts: 0,
+  correctAnswers: 0,
+  wordProgress: {},
+  ...persistedState,
 };
 
 export const gameSlice = createSlice({
@@ -71,14 +87,18 @@ export const gameSlice = createSlice({
   reducers: {
     nextWord: state => {
       if (state.language) {
-        const { word, options, quizMode } = getRandomWord(state.language, state.wordProgress, state.lastWordId);
+        // Get words based on whether we have a specific module or not
+        const { word, options, quizMode } = state.module 
+          ? getRandomWordFromModule(state.language, state.module, state.wordProgress, state.lastWordId)
+          : getRandomWord(state.language, state.wordProgress, state.lastWordId);
+        
         state.currentWord = word;
         state.currentOptions = options;
-        state.quizMode = quizMode; // Set quiz mode based on the selected word
+        state.quizMode = quizMode;
         state.isCorrect = null;
-        state.lastAnswer = undefined; // Clear previous answer
-        state.capitalizationFeedback = undefined; // Clear capitalization feedback
-        state.lastWordId = word?.id; // Track this word for next selection
+        state.lastAnswer = undefined;
+        state.capitalizationFeedback = undefined;
+        state.lastWordId = word?.id;
       }
     },
     checkAnswer: (state, action: PayloadAction<string>) => {
@@ -159,9 +179,9 @@ export const gameSlice = createSlice({
       state.isCorrect = null;
       state.lastAnswer = undefined;
 
-      // Load word progress for this language
+      // Load word progress for this language only (no merging)
       const savedWordProgress = wordProgressStorage.load(languageCode);
-      state.wordProgress = { ...state.wordProgress, ...savedWordProgress };
+      state.wordProgress = savedWordProgress;
 
       // Initialize first word
       const { word, options } = getRandomWord(languageCode, state.wordProgress);
@@ -171,14 +191,21 @@ export const gameSlice = createSlice({
       // Save updated state
       saveGameState(state);
     },
+    setCurrentModule: (state, action: PayloadAction<string | null>) => {
+      state.module = action.payload;
+      // Save updated state
+      saveGameState(state);
+    },
     resetGame: state => {
       // Reset game state while preserving word progress
       const preservedProgress = state.wordProgress;
       const preservedLanguage = state.language;
+      const preservedModule = state.module;
 
       Object.assign(state, initialState, {
         wordProgress: preservedProgress,
         language: preservedLanguage,
+        module: preservedModule,
       });
 
       // Get new word if language is set
@@ -194,6 +221,6 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { nextWord, checkAnswer, setLanguage, resetGame } = gameSlice.actions;
+export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame } = gameSlice.actions;
 
 export default gameSlice.reducer;

@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
-import { nextWord, checkAnswer, setLanguage } from '../store/gameSlice';
+import { nextWord, checkAnswer, setLanguage, setCurrentModule } from '../store/gameSlice';
 import {
   addCorrectAnswer,
   addIncorrectAnswer,
@@ -623,7 +623,7 @@ const BossHealthBar = styled.div<{ health: number }>`
 export const Game: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { languageCode } = useParams<{ languageCode: string }>();
+  const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
   const {
     currentWord,
     currentOptions,
@@ -664,6 +664,12 @@ export const Game: React.FC = () => {
     if (languageCode) {
       dispatch(setLanguage(languageCode));
       dispatch(setSessionLanguage(languageCode)); // Set session language separately
+      
+      // Set the current module if provided
+      if (moduleId) {
+        dispatch(setCurrentModule(moduleId));
+      }
+      
       // Get language name from wordService
       const langData = words[languageCode];
       if (langData) {
@@ -673,7 +679,7 @@ export const Game: React.FC = () => {
       // Load the first word after setting the language
       dispatch(nextWord());
     }
-  }, [dispatch, languageCode]);
+  }, [dispatch, languageCode, moduleId]);
 
   // Reset completion flag when session starts
   useEffect(() => {
@@ -1061,8 +1067,7 @@ export const Game: React.FC = () => {
     <>
       <Navigation 
         languageName={languageName} 
-        languageFlag={languageFlag} 
-        showOverviewButton={true}
+        languageFlag={languageFlag}
       />
       <GameContainer>
         {isSessionActive && currentSession && (

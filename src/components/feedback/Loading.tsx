@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 const spin = keyframes`
   0% { transform: rotate(0deg); }
@@ -21,7 +21,7 @@ const Spinner = styled.div`
   border: 5px solid ${props => props.theme.colors.surface};
   border-top: 5px solid ${props => props.theme.colors.primary};
   border-radius: 50%;
-  animation: ${spin} 1s linear infinite;
+  ${css`animation: ${spin} 1s linear infinite;`}
 `;
 
 const LoadingText = styled.p`

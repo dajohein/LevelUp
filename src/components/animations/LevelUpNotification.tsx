@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 import { getLevelInfo } from '../../services/levelService';
 
 // Animations
@@ -74,7 +74,7 @@ const Overlay = styled.div<{ isExiting: boolean }>`
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  animation: ${props => props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;
+  ${props => css`animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;`}
 `;
 
 const LevelUpCard = styled.div<{ levelColor: string }>`
@@ -85,7 +85,7 @@ const LevelUpCard = styled.div<{ levelColor: string }>`
   text-align: center;
   position: relative;
   min-width: 350px;
-  animation: ${glowPulse} 2s ease-in-out infinite;
+  ${css`animation: ${glowPulse} 2s ease-in-out infinite;`}
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 
   &::before {
@@ -114,7 +114,7 @@ const LevelUpTitle = styled.h1`
   font-weight: bold;
   margin: 0 0 1rem 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  animation: ${bounceIn} 0.6s ease-out 0.3s both;
+  ${css`animation: ${bounceIn} 0.6s ease-out 0.3s both;`}
 `;
 
 const NewLevelInfo = styled.div<{ levelColor: string }>`
@@ -123,7 +123,7 @@ const NewLevelInfo = styled.div<{ levelColor: string }>`
   justify-content: center;
   gap: 1rem;
   margin: 1.5rem 0;
-  animation: ${bounceIn} 0.6s ease-out 0.5s both;
+  ${css`animation: ${bounceIn} 0.6s ease-out 0.5s both;`}
 `;
 
 const LevelAvatar = styled.div<{ levelColor: string }>`
@@ -137,7 +137,7 @@ const LevelAvatar = styled.div<{ levelColor: string }>`
   font-size: 3rem;
   border: 4px solid ${props => props.levelColor};
   position: relative;
-  animation: ${bounceIn} 0.6s ease-out 0.4s both;
+  ${css`animation: ${bounceIn} 0.6s ease-out 0.4s both;`}
 
   &::after {
     content: '';
@@ -182,7 +182,7 @@ const LevelDescription = styled.p`
   color: #ccc;
   font-size: 1.1rem;
   margin: 1rem 0;
-  animation: ${bounceIn} 0.6s ease-out 0.7s both;
+  ${css`animation: ${bounceIn} 0.6s ease-out 0.7s both;`}
 `;
 
 const ContinueButton = styled.button<{ levelColor: string }>`
@@ -196,7 +196,7 @@ const ContinueButton = styled.button<{ levelColor: string }>`
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 1.5rem;
-  animation: ${bounceIn} 0.6s ease-out 0.9s both;
+  ${css`animation: ${bounceIn} 0.6s ease-out 0.9s both;`}
 
   &:hover {
     transform: translateY(-2px);
@@ -221,7 +221,7 @@ const ConfettiPiece = styled.div<{ color: string; delay: number; left: number }>
   background: ${props => props.color};
   left: ${props => props.left}%;
   top: -10px;
-  animation: ${confettiDrop} 3s linear ${props => props.delay}s infinite;
+  ${props => css`animation: ${confettiDrop} 3s linear ${props.delay}s infinite;`}
 `;
 
 interface LevelUpNotificationProps {

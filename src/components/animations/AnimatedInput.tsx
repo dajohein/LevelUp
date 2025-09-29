@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { keyframes, css } from '@emotion/react';
 
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
@@ -17,11 +17,11 @@ const InputWrapper = styled.div<{ isError?: boolean }>`
   position: relative;
   width: 100%;
   max-width: 400px;
-  animation: ${fadeIn} 0.3s ease-out;
+  ${css`animation: ${fadeIn} 0.3s ease-out;`}
 
   ${props =>
     props.isError &&
-    `
+    css`
     animation: ${shake} 0.3s ease-in-out;
   `}
 `;
@@ -75,7 +75,7 @@ const HintText = styled.div<{ isError?: boolean }>`
   left: 0;
   font-size: 0.8rem;
   color: ${props => (props.isError ? props.theme.colors.error : props.theme.colors.textSecondary)};
-  animation: ${fadeIn} 0.3s ease-out;
+  ${css`animation: ${fadeIn} 0.3s ease-out;`}
 `;
 
 interface AnimatedInputProps {
