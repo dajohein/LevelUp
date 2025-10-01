@@ -11,7 +11,7 @@ import { words } from '../services/wordService';
 const OverviewContainer = styled.div`
   min-height: 100vh;
   background-color: ${props => props.theme.colors.background};
-  padding-top: 90px; /* Account for Navigation */
+  padding-top: 90px; /* Account for Navigation (70px) + extra spacing */
 `;
 
 const ContentWrapper = styled.div`
@@ -27,6 +27,7 @@ const Header = styled.div`
 
 const LanguageTitle = styled.h1`
   color: ${props => props.theme.colors.text};
+  margin-top: 0;
   margin-bottom: ${props => props.theme.spacing.md};
   display: flex;
   align-items: center;
@@ -87,12 +88,13 @@ const WordCard = styled.div<{ masteryLevel: number }>`
   background-color: ${props => props.theme.colors.surface};
   padding: ${props => props.theme.spacing.md};
   border-radius: 8px;
-  border-left: 4px solid ${props => {
-    if (props.masteryLevel >= 80) return props.theme.colors.success;
-    if (props.masteryLevel >= 50) return props.theme.colors.primary;
-    if (props.masteryLevel >= 20) return '#ff9500'; // orange
-    return props.theme.colors.error;
-  }};
+  border-left: 4px solid
+    ${props => {
+      if (props.masteryLevel >= 80) return props.theme.colors.success;
+      if (props.masteryLevel >= 50) return props.theme.colors.primary;
+      if (props.masteryLevel >= 20) return '#ff9500'; // orange
+      return props.theme.colors.error;
+    }};
   transition: all 0.2s ease;
 
   &:hover {
@@ -171,30 +173,18 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   transition: all 0.2s ease;
   min-width: 200px;
 
-  background-color: ${props => 
-    props.variant === 'secondary' 
-      ? props.theme.colors.surface 
-      : props.theme.colors.primary
-  };
-  color: ${props => 
-    props.variant === 'secondary' 
-      ? props.theme.colors.text 
-      : props.theme.colors.background
-  };
-  border: 2px solid ${props => 
-    props.variant === 'secondary' 
-      ? props.theme.colors.primary 
-      : 'transparent'
-  };
+  background-color: ${props =>
+    props.variant === 'secondary' ? props.theme.colors.surface : props.theme.colors.primary};
+  color: ${props =>
+    props.variant === 'secondary' ? props.theme.colors.text : props.theme.colors.background};
+  border: 2px solid
+    ${props => (props.variant === 'secondary' ? props.theme.colors.primary : 'transparent')};
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    background-color: ${props => 
-      props.variant === 'secondary' 
-        ? props.theme.colors.primary 
-        : props.theme.colors.secondary
-    };
+    background-color: ${props =>
+      props.variant === 'secondary' ? props.theme.colors.primary : props.theme.colors.secondary};
     color: ${props => props.theme.colors.background};
   }
 
@@ -221,12 +211,8 @@ const FilterButton = styled.button<{ active: boolean }>`
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
   border: 2px solid ${props => props.theme.colors.primary};
   border-radius: 20px;
-  background-color: ${props => 
-    props.active ? props.theme.colors.primary : 'transparent'
-  };
-  color: ${props => 
-    props.active ? props.theme.colors.background : props.theme.colors.primary
-  };
+  background-color: ${props => (props.active ? props.theme.colors.primary : 'transparent')};
+  color: ${props => (props.active ? props.theme.colors.background : props.theme.colors.primary)};
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
@@ -244,7 +230,7 @@ export const LanguageOverview: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
-  
+
   const { wordProgress } = useSelector((state: RootState) => state.game);
   const [filter, setFilter] = React.useState<MasteryFilter>('all');
 
@@ -256,7 +242,7 @@ export const LanguageOverview: React.FC = () => {
       if (state.shouldResetSession) {
         dispatch(resetSession());
       }
-      
+
       // Clear the state to prevent showing again on refresh
       navigate(location.pathname, { replace: true });
     }
@@ -275,16 +261,17 @@ export const LanguageOverview: React.FC = () => {
     const totalWords = languageData.words.length;
     const studiedWords = Object.keys(wordProgress).length;
     const masteredWords = Object.values(wordProgress).filter(p => p.xp >= 80).length;
-    const averageXP = studiedWords > 0 
-      ? Math.round(Object.values(wordProgress).reduce((sum, p) => sum + p.xp, 0) / studiedWords)
-      : 0;
+    const averageXP =
+      studiedWords > 0
+        ? Math.round(Object.values(wordProgress).reduce((sum, p) => sum + p.xp, 0) / studiedWords)
+        : 0;
 
     return {
       totalWords,
       studiedWords,
       masteredWords,
       averageXP,
-      completionRate: Math.round((masteredWords / totalWords) * 100)
+      completionRate: Math.round((masteredWords / totalWords) * 100),
     };
   }, [languageData, wordProgress]);
 
@@ -294,7 +281,13 @@ export const LanguageOverview: React.FC = () => {
 
     const wordsWithProgress = languageData.words.map(word => ({
       ...word,
-      progress: wordProgress[word.id] || { wordId: word.id, xp: 0, lastPracticed: '', timesCorrect: 0, timesIncorrect: 0 }
+      progress: wordProgress[word.id] || {
+        wordId: word.id,
+        xp: 0,
+        lastPracticed: '',
+        timesCorrect: 0,
+        timesIncorrect: 0,
+      },
     }));
 
     switch (filter) {
@@ -329,9 +322,7 @@ export const LanguageOverview: React.FC = () => {
         <ContentWrapper>
           <EmptyState>
             <h2>Language not found</h2>
-            <ActionButton onClick={() => navigate('/')}>
-              Back to Language Selection
-            </ActionButton>
+            <ActionButton onClick={() => navigate('/')}>Back to Language Selection</ActionButton>
           </EmptyState>
         </ContentWrapper>
       </OverviewContainer>
@@ -375,51 +366,47 @@ export const LanguageOverview: React.FC = () => {
         )}
 
         <ActionSection>
-          <ActionButton onClick={handleStartSession}>
-            🎯 Start New Session
-          </ActionButton>
+          <ActionButton onClick={handleStartSession}>🎯 Start New Session</ActionButton>
           <ActionButton variant="secondary" onClick={handleContinueLearning}>
             📚 Continue Learning
           </ActionButton>
         </ActionSection>
 
-        <SectionTitle>
-          📖 Vocabulary Progress
-        </SectionTitle>
+        <SectionTitle>📖 Vocabulary Progress</SectionTitle>
 
         <FilterSection>
-          <FilterButton 
-            active={filter === 'all'} 
-            onClick={() => setFilter('all')}
-          >
+          <FilterButton active={filter === 'all'} onClick={() => setFilter('all')}>
             All Words ({languageData.words.length})
           </FilterButton>
-          <FilterButton 
-            active={filter === 'learning'} 
-            onClick={() => setFilter('learning')}
-          >
-            Learning ({languageData.words.filter(w => {
-              const progress = wordProgress[w.id];
-              return progress && progress.xp > 0 && progress.xp < 50;
-            }).length})
+          <FilterButton active={filter === 'learning'} onClick={() => setFilter('learning')}>
+            Learning (
+            {
+              languageData.words.filter(w => {
+                const progress = wordProgress[w.id];
+                return progress && progress.xp > 0 && progress.xp < 50;
+              }).length
+            }
+            )
           </FilterButton>
-          <FilterButton 
-            active={filter === 'practiced'} 
-            onClick={() => setFilter('practiced')}
-          >
-            Practiced ({languageData.words.filter(w => {
-              const progress = wordProgress[w.id];
-              return progress && progress.xp >= 50 && progress.xp < 80;
-            }).length})
+          <FilterButton active={filter === 'practiced'} onClick={() => setFilter('practiced')}>
+            Practiced (
+            {
+              languageData.words.filter(w => {
+                const progress = wordProgress[w.id];
+                return progress && progress.xp >= 50 && progress.xp < 80;
+              }).length
+            }
+            )
           </FilterButton>
-          <FilterButton 
-            active={filter === 'mastered'} 
-            onClick={() => setFilter('mastered')}
-          >
-            Mastered ({languageData.words.filter(w => {
-              const progress = wordProgress[w.id];
-              return progress && progress.xp >= 80;
-            }).length})
+          <FilterButton active={filter === 'mastered'} onClick={() => setFilter('mastered')}>
+            Mastered (
+            {
+              languageData.words.filter(w => {
+                const progress = wordProgress[w.id];
+                return progress && progress.xp >= 80;
+              }).length
+            }
+            )
           </FilterButton>
         </FilterSection>
 
@@ -431,9 +418,7 @@ export const LanguageOverview: React.FC = () => {
                 <WordDefinition>{word.definition}</WordDefinition>
                 <MasteryInfo>
                   <MasteryBar level={word.progress.xp} />
-                  <MasteryLevel level={word.progress.xp}>
-                    {word.progress.xp} XP
-                  </MasteryLevel>
+                  <MasteryLevel level={word.progress.xp}>{word.progress.xp} XP</MasteryLevel>
                 </MasteryInfo>
               </WordCard>
             ))}

@@ -51,7 +51,11 @@ const Hero = styled.section`
 `;
 
 const AppIcon = styled.div`
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.secondary} 100%);
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
   border-radius: 50%;
   width: 80px;
   height: 80px;

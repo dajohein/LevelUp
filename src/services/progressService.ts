@@ -15,7 +15,7 @@ export interface LanguageProgress {
 export const calculateLanguageProgress = (languageCode: string): LanguageProgress => {
   const languages = getAvailableLanguages();
   const language = languages.find(l => l.code === languageCode);
-  
+
   if (!language) {
     return {
       totalWords: 0,
@@ -23,13 +23,13 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
       averageMastery: 0,
       completedModules: 0,
       totalModules: 0,
-      recentActivity: false
+      recentActivity: false,
     };
   }
 
   // Get word progress for this language
   const wordProgress = wordProgressStorage.load(languageCode);
-  
+
   let totalWords = 0;
   let practicedWords = 0;
   let totalMastery = 0;
@@ -49,7 +49,7 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
       if (progress) {
         practicedWords++;
         modulePracticedWords++;
-        
+
         // Calculate current mastery with decay
         const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
         totalMastery += currentMastery;
@@ -65,9 +65,10 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
 
     // Consider module completed if 80% of words are at 70% mastery or higher
     if (moduleWords.length > 0) {
-      const moduleAverageMastery = modulePracticedWords > 0 ? moduleTotalMastery / modulePracticedWords : 0;
+      const moduleAverageMastery =
+        modulePracticedWords > 0 ? moduleTotalMastery / modulePracticedWords : 0;
       const practiceRatio = modulePracticedWords / moduleWords.length;
-      
+
       if (practiceRatio >= 0.8 && moduleAverageMastery >= 70) {
         completedModules++;
       }
@@ -75,13 +76,13 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
   });
 
   const averageMastery = practicedWords > 0 ? totalMastery / practicedWords : 0;
-  
+
   // Check recent activity
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   let recentActivity = false;
   let lastPracticedString: string | undefined = undefined;
-  
+
   if (lastPracticedTimestamp) {
     const lastPracticedDate = new Date(lastPracticedTimestamp);
     recentActivity = lastPracticedDate > sevenDaysAgo;
@@ -95,17 +96,17 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
     completedModules,
     totalModules: language.info.modules.length,
     lastPracticed: lastPracticedString,
-    recentActivity
+    recentActivity,
   };
 };
 
 export const getAllLanguageProgress = (): { [key: string]: LanguageProgress } => {
   const languages = getAvailableLanguages();
   const progress: { [key: string]: LanguageProgress } = {};
-  
+
   languages.forEach(({ code }) => {
     progress[code] = calculateLanguageProgress(code);
   });
-  
+
   return progress;
 };

@@ -34,7 +34,9 @@ export const getAvailableLanguages = (): Array<{ code: string; info: LanguageInf
 };
 
 export const getLanguageInfo = (languageCode: string): LanguageInfo | null => {
-  return availableLanguages[languageCode as keyof typeof availableLanguages] as LanguageInfo || null;
+  return (
+    (availableLanguages[languageCode as keyof typeof availableLanguages] as LanguageInfo) || null
+  );
 };
 
 export const getModule = (languageCode: string, moduleId: string): Module | null => {
@@ -51,7 +53,7 @@ export const getModulesForLanguage = (languageCode: string): Module[] => {
   if (!languageInfo) return [];
 
   const modules: Module[] = [];
-  
+
   for (const moduleInfo of languageInfo.modules) {
     const module = getModule(languageCode, moduleInfo.id);
     if (module) {
@@ -80,7 +82,7 @@ export const getModuleStats = (
 } => {
   const words = getWordsForModule(languageCode, moduleId);
   const totalWords = words.length;
-  
+
   if (totalWords === 0) {
     return {
       totalWords: 0,
@@ -92,6 +94,7 @@ export const getModuleStats = (
   }
 
   let completedWords = 0;
+  let wordsWithProgress = 0;
   let totalMastery = 0;
 
   words.forEach(word => {
@@ -99,22 +102,27 @@ export const getModuleStats = (
     if (progress) {
       const mastery = progress.xp || 0;
       totalMastery += mastery;
-      
+
+      if (mastery > 0) {
+        wordsWithProgress++;
+      }
+
       // Consider a word "completed" if it has been practiced and has some XP
-      if (mastery >= 50) {
+      // Lowered threshold from 50 to 20 to be more realistic
+      if (mastery >= 20) {
         completedWords++;
       }
     }
   });
 
   const averageMastery = Math.round(totalMastery / totalWords);
-  const completionPercentage = Math.round((completedWords / totalWords) * 100);
+  const practicePercentage = Math.round((wordsWithProgress / totalWords) * 100);
 
   return {
     totalWords,
     completedWords,
     averageMastery,
-    wordsLearned: completedWords,
-    completionPercentage,
+    wordsLearned: wordsWithProgress, // Changed to use wordsWithProgress instead of completedWords
+    completionPercentage: practicePercentage, // Use practice percentage for more realistic progress
   };
 };

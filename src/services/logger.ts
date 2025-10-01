@@ -2,12 +2,12 @@ export enum LogLevel {
   ERROR = 0,
   WARN = 1,
   INFO = 2,
-  DEBUG = 3
+  DEBUG = 3,
 }
 
 class Logger {
   private level: LogLevel = process.env.NODE_ENV === 'production' ? LogLevel.ERROR : LogLevel.DEBUG;
-  
+
   private log(level: LogLevel, message: string, ...args: any[]) {
     if (level <= this.level) {
       const timestamp = new Date().toISOString();

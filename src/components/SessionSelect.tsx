@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -6,28 +6,58 @@ import { RootState } from '../store/store';
 import { startSession, sessionTypes, setLanguage } from '../store/sessionSlice';
 import { setCurrentModule } from '../store/gameSlice';
 import { Navigation } from './Navigation';
+import { SessionAnalytics } from './SessionAnalytics';
 import { words } from '../services/wordService';
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
   min-height: 100vh;
-  padding: ${props => props.theme.spacing.xl};
-  padding-top: calc(70px + ${props => props.theme.spacing.xl}); /* Account for fixed navigation */
+  padding-top: 90px; /* Account for Navigation (70px) + extra spacing */
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  padding: ${props => props.theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const Sidebar = styled.div`
+  width: 350px;
+  padding: ${props => props.theme.spacing.lg};
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const MobileAnalytics = styled.div`
+  display: none;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: ${props => props.theme.spacing.lg};
+  
+  @media (max-width: 1024px) {
+    display: block;
+  }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.lg};
+  max-width: 800px;
 `;
 
 const Title = styled.h1`
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  margin-bottom: ${props => props.theme.spacing.sm};
+  margin-bottom: ${props => props.theme.spacing.xs};
   background: linear-gradient(45deg, #4caf50, #81c784);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -35,16 +65,16 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.p`
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: ${props => props.theme.colors.textSecondary};
   margin: 0;
 `;
 
 const SessionGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: ${props => props.theme.spacing.lg};
-  max-width: 1200px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: ${props => props.theme.spacing.md};
+  max-width: 800px;
   width: 100%;
 `;
 
@@ -52,11 +82,13 @@ const SessionCard = styled.div<{ difficulty: string; isCompleted: boolean }>`
   background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: ${props => props.theme.spacing.lg};
-  cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
+  display: flex;
+  gap: ${props => props.theme.spacing.md};
+  min-height: 200px;
 
   ${props =>
     props.isCompleted &&
@@ -66,7 +98,7 @@ const SessionCard = styled.div<{ difficulty: string; isCompleted: boolean }>`
   `}
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     border-color: ${props => {
       switch (props.difficulty) {
@@ -111,16 +143,88 @@ const SessionCard = styled.div<{ difficulty: string; isCompleted: boolean }>`
 const SessionHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  margin-bottom: ${props => props.theme.spacing.md};
+  gap: ${props => props.theme.spacing.sm};
+  margin-bottom: ${props => props.theme.spacing.sm};
+`;
+
+const SessionContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const SessionActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${props => props.theme.spacing.sm};
+  min-width: 140px;
+  text-align: center;
+`;
+
+const PracticeButton = styled.button<{ difficulty: string }>`
+  background: ${props => {
+    switch (props.difficulty) {
+      case 'beginner':
+        return 'linear-gradient(45deg, #4CAF50, #66BB6A)';
+      case 'intermediate':
+        return 'linear-gradient(45deg, #FF9800, #FFB74D)';
+      case 'advanced':
+        return 'linear-gradient(45deg, #F44336, #EF5350)';
+      case 'expert':
+        return 'linear-gradient(45deg, #9C27B0, #BA68C8)';
+      default:
+        return 'linear-gradient(45deg, #4CAF50, #66BB6A)';
+    }
+  }};
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 100%;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const ScoreDisplay = styled.div`
+  text-align: center;
+  margin-bottom: ${props => props.theme.spacing.xs};
+`;
+
+const ScoreValue = styled.div`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.primary};
+  line-height: 1;
+`;
+
+const ScoreLabel = styled.div`
+  font-size: 0.7rem;
+  color: ${props => props.theme.colors.textSecondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 `;
 
 const SessionEmoji = styled.span`
-  font-size: 2.5rem;
+  font-size: 2rem;
 `;
 
 const SessionTitle = styled.h3`
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   margin: 0;
   flex: 1;
@@ -138,15 +242,16 @@ const CompletedBadge = styled.div`
 
 const SessionDescription = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  margin-bottom: ${props => props.theme.spacing.lg};
-  line-height: 1.5;
+  margin-bottom: ${props => props.theme.spacing.md};
+  line-height: 1.4;
+  font-size: 0.9rem;
 `;
 
 const SessionStats = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: ${props => props.theme.spacing.md};
-  margin-bottom: ${props => props.theme.spacing.lg};
+  gap: ${props => props.theme.spacing.sm};
+  margin-bottom: ${props => props.theme.spacing.md};
 `;
 
 const StatItem = styled.div`
@@ -223,27 +328,28 @@ const RuleItem = styled.div`
 
 const WeeklyChallenge = styled.div`
   background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
-  border-radius: 16px;
-  padding: ${props => props.theme.spacing.lg};
+  border-radius: 12px;
+  padding: ${props => props.theme.spacing.md};
   text-align: center;
   color: white;
-  margin-bottom: ${props => props.theme.spacing.xl};
-  box-shadow: 0 8px 24px rgba(156, 39, 176, 0.3);
+  margin-bottom: ${props => props.theme.spacing.lg};
+  box-shadow: 0 6px 20px rgba(156, 39, 176, 0.3);
+  max-width: 800px;
 `;
 
 const ChallengeTitle = styled.h2`
-  font-size: 1.8rem;
-  margin-bottom: ${props => props.theme.spacing.sm};
+  font-size: 1.4rem;
+  margin-bottom: ${props => props.theme.spacing.xs};
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: ${props => props.theme.spacing.sm};
+  gap: ${props => props.theme.spacing.xs};
 `;
 
 const ChallengeStats = styled.div`
   display: flex;
   justify-content: space-around;
-  margin-top: ${props => props.theme.spacing.md};
+  margin-top: ${props => props.theme.spacing.sm};
 `;
 
 interface SessionSelectProps {
@@ -257,14 +363,11 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
   const { completedSessionsByLanguage, weeklyChallengeBylanguage } = useSelector(
     (state: RootState) => state.session
   );
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize language data when component loads
   useEffect(() => {
     if (languageCode) {
       dispatch(setLanguage(languageCode));
-      // Small delay to ensure Redux state is updated
-      setTimeout(() => setIsInitialized(true), 100);
     }
   }, [dispatch, languageCode]);
 
@@ -276,11 +379,6 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
     currentScore: 0,
     rank: 0,
   };
-
-  // Don't render until initialized
-  if (!isInitialized) {
-    return <div>Loading...</div>;
-  }
 
   // Language flags mapping
   const languageFlags: { [key: string]: string } = {
@@ -311,10 +409,20 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
     <>
       <Navigation languageName={languageName} languageFlag={languageFlag} />
       <Container>
-        <Header>
-          <Title>Choose Your Challenge</Title>
-          <Subtitle>Pick a session type and start your learning journey!</Subtitle>
-        </Header>
+        <MainContent>
+          <Header>
+            <Title>Choose Your Challenge</Title>
+            <Subtitle>Pick a session type and start your learning journey!</Subtitle>
+          </Header>
+
+          {/* Mobile Analytics - shown on small screens */}
+          <MobileAnalytics>
+            <SessionAnalytics
+              languageCode={languageCode}
+              showRecommendations={false}
+              showWeeklyProgress={false}
+            />
+          </MobileAnalytics>
 
         {weeklyChallenge && weeklyChallenge.isActive && (
           <WeeklyChallenge>
@@ -352,55 +460,53 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
                 key={session.id}
                 difficulty={session.difficulty}
                 isCompleted={isCompleted}
-                onClick={() => handleSessionStart(session.id)}
               >
-                <SessionHeader>
-                  <SessionEmoji>{session.emoji}</SessionEmoji>
-                  <SessionTitle>{session.name}</SessionTitle>
-                  {isCompleted && <CompletedBadge>✓ Done</CompletedBadge>}
-                </SessionHeader>
+                <SessionContent>
+                  <SessionHeader>
+                    <SessionEmoji>{session.emoji}</SessionEmoji>
+                    <SessionTitle>{session.name}</SessionTitle>
+                    {isCompleted && <CompletedBadge>✓ Done</CompletedBadge>}
+                  </SessionHeader>
 
-                <SessionDescription>{session.description}</SessionDescription>
+                  <SessionDescription>{session.description}</SessionDescription>
 
-                <SessionStats>
-                  <StatItem>
-                    <StatValue>{session.targetWords === -1 ? '∞' : session.targetWords}</StatValue>
-                    <StatLabel>Words</StatLabel>
-                  </StatItem>
-                  <StatItem>
-                    <StatValue>{formatTime(session.timeLimit)}</StatValue>
-                    <StatLabel>Time Limit</StatLabel>
-                  </StatItem>
-                </SessionStats>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  <DifficultyBadge difficulty={session.difficulty}>
-                    {session.difficulty}
-                  </DifficultyBadge>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4CAF50' }}>
-                      {session.requiredScore} pts
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
+                    <DifficultyBadge difficulty={session.difficulty}>
+                      {session.difficulty}
+                    </DifficultyBadge>
+                    <div style={{ fontSize: '0.85rem', color: '#888' }}>
+                      {session.targetWords === -1 ? '∞' : session.targetWords} words • {formatTime(session.timeLimit)}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#888' }}>Target Score</div>
                   </div>
-                </div>
+                </SessionContent>
 
-                <SpecialRules>
-                  {session.specialRules?.map((rule, index) => (
-                    <RuleItem key={index}>{rule}</RuleItem>
-                  ))}
-                </SpecialRules>
+                <SessionActions>
+                  <ScoreDisplay>
+                    <ScoreValue>{session.requiredScore}</ScoreValue>
+                    <ScoreLabel>Target Score</ScoreLabel>
+                  </ScoreDisplay>
+                  
+                  <PracticeButton
+                    difficulty={session.difficulty}
+                    onClick={() => handleSessionStart(session.id)}
+                  >
+                    Start Practice
+                  </PracticeButton>
+                </SessionActions>
               </SessionCard>
             );
           })}
         </SessionGrid>
+        </MainContent>
+        
+        {/* Desktop Sidebar Analytics */}
+        <Sidebar>
+          <SessionAnalytics
+            languageCode={languageCode}
+            showRecommendations={true}
+            showWeeklyProgress={true}
+          />
+        </Sidebar>
       </Container>
     </>
   );

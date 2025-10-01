@@ -2,7 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import type { WordProgress } from '../store/types';
-import { calculateLanguageXP, calculateCurrentLevel, checkLanguageLevelUp } from '../services/levelService';
+import {
+  calculateLanguageXP,
+  calculateCurrentLevel,
+  checkLanguageLevelUp,
+} from '../services/levelService';
 
 interface LevelUpState {
   showLevelUp: boolean;
@@ -20,23 +24,31 @@ export const useLevelUpDetection = () => {
     totalXP: 0,
   });
   const previousProgressRef = useRef<Record<string, WordProgress>>({});
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
     if (!language) return;
 
     const currentProgress = { ...wordProgress };
     const previousProgress = previousProgressRef.current;
-    
-    // Only check for level up if we have previous progress and progress has changed
+
+    // On first run, just store the current progress without checking for level up
+    if (!isInitializedRef.current) {
+      previousProgressRef.current = currentProgress;
+      isInitializedRef.current = true;
+      return;
+    }
+
+    // Only check for level up if we have previous progress and it's actually different
     if (Object.keys(previousProgress).length > 0) {
       const hasLeveledUp = checkLanguageLevelUp(previousProgress, currentProgress, language);
-      
+
       if (hasLeveledUp) {
         const oldXP = calculateLanguageXP(previousProgress, language);
         const newXP = calculateLanguageXP(currentProgress, language);
         const oldLevel = calculateCurrentLevel(oldXP);
         const newLevel = calculateCurrentLevel(newXP);
-        
+
         setLevelUpState({
           showLevelUp: true,
           oldLevel,
@@ -45,7 +57,7 @@ export const useLevelUpDetection = () => {
         });
       }
     }
-    
+
     // Update previous progress reference
     previousProgressRef.current = currentProgress;
   }, [wordProgress, language]);

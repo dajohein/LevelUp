@@ -40,7 +40,10 @@ const ParticleElement = styled.div<{
   height: 10px;
   background-color: ${props => props.color};
   border-radius: ${() => (Math.random() > 0.5 ? '50%' : '0')};
-  ${props => css`animation: ${fall} ${props.speed}s linear forwards;`}
+  ${props =>
+    css`
+      animation: ${fall} ${props.speed}s linear forwards;
+    `}
   transform: scale(${props => props.scale});
 `;
 

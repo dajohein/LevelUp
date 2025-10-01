@@ -47,13 +47,13 @@ export const words: { [key: string]: LanguageData } = {
     name: 'Spanish',
     from: 'Dutch',
     flag: '🇪🇸',
-    words: addIdsToWords((spanishModuleVocabularioBasico.words as Omit<Word, 'id'>[]), 'es'),
+    words: addIdsToWords(spanishModuleVocabularioBasico.words as Omit<Word, 'id'>[], 'es'),
   },
   de: {
     name: 'German',
     from: 'Dutch',
     flag: '🇩🇪',
-    words: addIdsToWords((germanModuleGrundwortschatz.words as Omit<Word, 'id'>[]), 'de'),
+    words: addIdsToWords(germanModuleGrundwortschatz.words as Omit<Word, 'id'>[], 'de'),
   },
 };
 
@@ -134,9 +134,13 @@ export const getRandomWordFromModule = (
   moduleId: string,
   wordProgress: { [key: string]: WordProgress },
   lastWordId?: string
-): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
+): {
+  word: Word | null;
+  options: string[];
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+} => {
   const moduleWords = getWordsForModule(languageCode, moduleId);
-  
+
   if (moduleWords.length === 0) {
     return { word: null, options: [], quizMode: 'multiple-choice' };
   }
@@ -145,7 +149,8 @@ export const getRandomWordFromModule = (
   if (moduleWords.length === 1) {
     const selectedWord = moduleWords[0];
     const direction = selectedWord.direction || 'definition-to-term';
-    const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+    const correctAnswer =
+      direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
     return { word: selectedWord, options: [correctAnswer], quizMode: 'multiple-choice' };
   }
 
@@ -158,14 +163,19 @@ const getRandomWordFromWordList = (
   wordList: Word[],
   wordProgress: { [key: string]: WordProgress },
   lastWordId?: string
-): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
+): {
+  word: Word | null;
+  options: string[];
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+} => {
   if (wordList.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
 
   // If we only have one word, return it (can't avoid repetition)
   if (wordList.length === 1) {
     const selectedWord = wordList[0];
     const direction = selectedWord.direction || 'definition-to-term';
-    const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+    const correctAnswer =
+      direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
     return { word: selectedWord, options: [correctAnswer], quizMode: 'multiple-choice' };
   }
 
@@ -179,9 +189,9 @@ const getRandomWordFromWordList = (
     const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
     return { ...word, currentMastery };
   });
-  
+
   // Filter out the last word if provided to avoid repetition
-  const availableWords = lastWordId 
+  const availableWords = lastWordId
     ? wordsWithMastery.filter(w => w.id !== lastWordId)
     : wordsWithMastery;
 
@@ -189,16 +199,12 @@ const getRandomWordFromWordList = (
 
   // Separate words by mastery levels for intelligent selection
   const strugglingWords = candidateWords.filter(w => w.currentMastery < 30);
-  const learningWords = candidateWords.filter(
-    w => w.currentMastery >= 30 && w.currentMastery < 70
-  );
-  const learnedWords = candidateWords.filter(
-    w => w.currentMastery >= 70 && w.currentMastery < 90
-  );
+  const learningWords = candidateWords.filter(w => w.currentMastery >= 30 && w.currentMastery < 70);
+  const learnedWords = candidateWords.filter(w => w.currentMastery >= 70 && w.currentMastery < 90);
   const masteredWords = candidateWords.filter(w => w.currentMastery >= 90);
 
   let candidatePool: typeof candidateWords = [];
-  
+
   // Prioritize based on mastery levels and ensure struggling words get attention
   if (strugglingWords.length > 0) {
     // 60% chance to focus on struggling words, 40% chance to include others
@@ -238,9 +244,7 @@ const getRandomWordFromWordList = (
 
   // Select from top candidates with some randomness
   const topCandidatesCount = Math.min(3, candidatesWithPriority.length);
-  const topCandidates = candidatesWithPriority
-    .slice(0, topCandidatesCount)
-    .map(c => c.word);
+  const topCandidates = candidatesWithPriority.slice(0, topCandidatesCount).map(c => c.word);
 
   const selectedIndex = Math.floor(Math.random() * topCandidates.length);
   const selectedWord = topCandidates[selectedIndex];
@@ -262,12 +266,13 @@ const getRandomWordFromWordList = (
   );
 
   // Get correct answer based on direction
-  const correctAnswer = direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
+  const correctAnswer =
+    direction === 'definition-to-term' ? selectedWord.term : selectedWord.definition;
 
   // Determine quiz mode based on word's mastery level
   const currentMastery = selectedWord.currentMastery;
   let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
-  
+
   if (currentMastery < 30) {
     quizMode = 'multiple-choice';
   } else if (currentMastery < 70) {
@@ -277,12 +282,15 @@ const getRandomWordFromWordList = (
   }
 
   // For multiple choice, create options array
-  const options = quizMode === 'multiple-choice' ? (() => {
-    const opts = [...incorrectOptions];
-    const correctPos = Math.floor(Math.random() * 4);
-    opts.splice(correctPos, 0, correctAnswer);
-    return opts;
-  })() : [];
+  const options =
+    quizMode === 'multiple-choice'
+      ? (() => {
+          const opts = [...incorrectOptions];
+          const correctPos = Math.floor(Math.random() * 4);
+          opts.splice(correctPos, 0, correctAnswer);
+          return opts;
+        })()
+      : [];
 
   return {
     word: {
@@ -298,7 +306,11 @@ export const getRandomWord = (
   languageCode: string,
   wordProgress: { [key: string]: WordProgress },
   lastWordId?: string
-): { word: Word | null; options: string[]; quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' } => {
+): {
+  word: Word | null;
+  options: string[];
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+} => {
   const languageWords = getWordsForLanguage(languageCode);
   return getRandomWordFromWordList(languageWords, wordProgress, lastWordId);
 };

@@ -9,7 +9,7 @@ import { Navigation } from './Navigation';
 const Container = styled.div`
   min-height: 100vh;
   background-color: ${props => props.theme.colors.background};
-  padding-top: 90px;
+  padding-top: 90px; /* Account for Navigation (70px) + extra spacing */
 `;
 
 const ContentWrapper = styled.div`
@@ -32,8 +32,6 @@ const ModuleTitle = styled.h1`
   gap: ${props => props.theme.spacing.md};
   font-size: 2.5rem;
 `;
-
-
 
 const ModuleDescription = styled.p`
   color: ${props => props.theme.colors.textSecondary};
@@ -79,14 +77,15 @@ const WordCard = styled.div<{ mastery: number }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-left: 4px solid ${props => {
-    if (props.mastery >= 80) return '#4caf50';
-    if (props.mastery >= 50) return '#ff9800';
-    if (props.mastery >= 20) return '#f44336';
-    return '#666';
-  }};
+  border-left: 4px solid
+    ${props => {
+      if (props.mastery >= 80) return '#4caf50';
+      if (props.mastery >= 50) return '#ff9800';
+      if (props.mastery >= 20) return '#f44336';
+      return '#666';
+    }};
   transition: all 0.3s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
@@ -163,7 +162,7 @@ const Button = styled.button`
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background: ${props => props.theme.colors.secondary};
     transform: translateY(-2px);
@@ -189,19 +188,21 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
 
   const wordsWithProgress = useMemo(() => {
     if (!module) return [];
-    
-    return module.words.map(word => {
-      const progress = wordProgress[word.id];
-      const xp = progress?.xp || 0;
-      const mastery = Math.min(100, xp); // XP directly translates to mastery percentage
-      
-      return {
-        ...word,
-        mastery,
-        xp,
-        practiced: !!progress,
-      };
-    }).sort((a, b) => b.mastery - a.mastery); // Sort by mastery level, highest first
+
+    return module.words
+      .map(word => {
+        const progress = wordProgress[word.id];
+        const xp = progress?.xp || 0;
+        const mastery = Math.min(100, xp); // XP directly translates to mastery percentage
+
+        return {
+          ...word,
+          mastery,
+          xp,
+          practiced: !!progress,
+        };
+      })
+      .sort((a, b) => b.mastery - a.mastery); // Sort by mastery level, highest first
   }, [module, wordProgress]);
 
   if (!module || !stats || !languageCode || !moduleId) {
@@ -218,21 +219,24 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
   return (
     <Container>
       <Navigation />
-      
+
       <ContentWrapper>
         <Header>
           <ModuleTitle>
             {module.icon} {module.name}
           </ModuleTitle>
           <ModuleDescription>{module.description}</ModuleDescription>
-          
+
           <ActionButtons>
             <Button onClick={() => navigate(`/sessions/${languageCode}/${moduleId}`)}>
               🎯 Start Practice Session
             </Button>
-            <Button 
+            <Button
               onClick={() => navigate(`/sessions/${languageCode}`)}
-              style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
             >
               🔀 Mixed Practice
             </Button>
@@ -241,7 +245,9 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
 
         <StatsOverview>
           <StatCard>
-            <StatValue>{stats.wordsLearned}/{stats.totalWords}</StatValue>
+            <StatValue>
+              {stats.wordsLearned}/{stats.totalWords}
+            </StatValue>
             <StatLabel>Words Learned</StatLabel>
           </StatCard>
           <StatCard>
@@ -255,7 +261,7 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
         </StatsOverview>
 
         <WordsList>
-          {wordsWithProgress.map((word) => (
+          {wordsWithProgress.map(word => (
             <WordCard key={word.id} mastery={word.mastery}>
               <WordInfo>
                 <WordTerm>{word.term}</WordTerm>

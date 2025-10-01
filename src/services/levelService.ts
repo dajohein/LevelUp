@@ -56,9 +56,11 @@ export const calculateCurrentLevel = (totalXP: number): number => {
 };
 
 // Calculate XP needed for next level
-export const calculateXPForNextLevel = (totalXP: number): { current: number; needed: number; percentage: number } => {
+export const calculateXPForNextLevel = (
+  totalXP: number
+): { current: number; needed: number; percentage: number } => {
   const currentLevel = calculateCurrentLevel(totalXP);
-  
+
   if (currentLevel >= LEVEL_CONFIG.MAX_LEVEL) {
     return { current: totalXP, needed: 0, percentage: 100 };
   }
@@ -79,7 +81,7 @@ export const calculateXPForNextLevel = (totalXP: number): { current: number; nee
   return {
     current: currentLevelXP,
     needed: nextLevelXPRequired,
-    percentage
+    percentage,
   };
 };
 
@@ -123,7 +125,9 @@ export const calculateLearningStreak = (wordProgress: Record<string, WordProgres
   for (let i = 1; i < progressDates.length; i++) {
     const currentDate = new Date(progressDates[i - 1]);
     const previousDate = new Date(progressDates[i]);
-    const dayDifference = Math.floor((currentDate.getTime() - previousDate.getTime()) / (24 * 60 * 60 * 1000));
+    const dayDifference = Math.floor(
+      (currentDate.getTime() - previousDate.getTime()) / (24 * 60 * 60 * 1000)
+    );
 
     if (dayDifference === 1) {
       streak++;
@@ -143,7 +147,7 @@ export const calculateLanguageAchievementStats = (
   const modules = getModulesForLanguage(languageCode);
   const languageWords = modules.flatMap(module => module.words);
   const languageWordIds = languageWords.map(w => w.id);
-  
+
   // Filter progress to only include words from this language
   const languageProgress: Record<string, WordProgress> = Object.entries(wordProgress)
     .filter(([wordId]) => languageWordIds.includes(wordId))

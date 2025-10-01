@@ -21,7 +21,9 @@ const Spinner = styled.div`
   border: 5px solid ${props => props.theme.colors.surface};
   border-top: 5px solid ${props => props.theme.colors.primary};
   border-radius: 50%;
-  ${css`animation: ${spin} 1s linear infinite;`}
+  ${css`
+    animation: ${spin} 1s linear infinite;
+  `}
 `;
 
 const LoadingText = styled.p`

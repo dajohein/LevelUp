@@ -30,7 +30,9 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   gap: ${props => props.theme.spacing.lg};
-  ${css`animation: ${fadeIn} 0.3s ease-out;`}
+  ${css`
+    animation: ${fadeIn} 0.3s ease-out;
+  `}
   width: 100%;
   max-width: 600px;
 `;
@@ -92,36 +94,51 @@ const AnswerDisplay = styled.div`
   margin-bottom: ${props => props.theme.spacing.md};
 `;
 
-const AnswerLetter = styled.div<{ isCorrect?: boolean; isWrong?: boolean; isWrongPosition?: boolean }>`
+const AnswerLetter = styled.div<{
+  isCorrect?: boolean;
+  isWrong?: boolean;
+  isWrongPosition?: boolean;
+}>`
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => 
-    props.isCorrect ? '#10b981' : 
-    props.isWrong ? '#ef4444' : 
-    props.isWrongPosition ? '#f59e0b' :
-    props.theme.colors.primary};
+  background-color: ${props =>
+    props.isCorrect
+      ? '#10b981'
+      : props.isWrong
+      ? '#ef4444'
+      : props.isWrongPosition
+      ? '#f59e0b'
+      : props.theme.colors.primary};
   color: white;
   border-radius: ${props => props.theme.borderRadius.sm};
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
-  ${css`animation: ${letterPop} 0.3s ease-out;`}
-
-  ${props => props.isCorrect && css`
-    animation: ${successGlow} 0.5s ease-out;
+  ${css`
+    animation: ${letterPop} 0.3s ease-out;
   `}
 
-  ${props => props.isWrong && css`
-    animation: ${letterShake} 0.5s ease-out;
-  `}
+  ${props =>
+    props.isCorrect &&
+    css`
+      animation: ${successGlow} 0.5s ease-out;
+    `}
 
-  ${props => props.isWrongPosition && css`
-    animation: ${letterShake} 0.3s ease-out;
-  `}
+  ${props =>
+    props.isWrong &&
+    css`
+      animation: ${letterShake} 0.5s ease-out;
+    `}
+
+  ${props =>
+    props.isWrongPosition &&
+    css`
+      animation: ${letterShake} 0.3s ease-out;
+    `}
 
   &:hover {
     transform: scale(1.05);
@@ -147,20 +164,23 @@ const LetterTile = styled.div<{ isUsed?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => props.isUsed ? 
-    'rgba(75, 85, 99, 0.5)' : 
-    'rgba(59, 130, 246, 0.8)'};
+  background-color: ${props =>
+    props.isUsed ? 'rgba(75, 85, 99, 0.5)' : 'rgba(59, 130, 246, 0.8)'};
   color: white;
   border-radius: ${props => props.theme.borderRadius.sm};
   font-size: 1.3rem;
   font-weight: bold;
-  cursor: ${props => props.isUsed ? 'not-allowed' : 'pointer'};
+  cursor: ${props => (props.isUsed ? 'not-allowed' : 'pointer')};
   transition: all 0.2s ease;
-  opacity: ${props => props.isUsed ? 0.4 : 1};
-  ${css`animation: ${letterPop} 0.3s ease-out;`}
+  opacity: ${props => (props.isUsed ? 0.4 : 1)};
+  ${css`
+    animation: ${letterPop} 0.3s ease-out;
+  `}
 
   &:hover {
-    ${props => !props.isUsed && `
+    ${props =>
+      !props.isUsed &&
+      `
       transform: scale(1.1);
       box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
       background-color: rgba(59, 130, 246, 1);
@@ -192,22 +212,27 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
-  ${props => props.variant === 'clear' ? `
+
+  ${props =>
+    props.variant === 'clear'
+      ? `
     background-color: rgba(239, 68, 68, 0.8);
     color: white;
     &:hover {
       background-color: rgba(239, 68, 68, 1);
       transform: translateY(-1px);
     }
-  ` : props.variant === 'hint' ? `
+  `
+      : props.variant === 'hint'
+      ? `
     background-color: rgba(245, 158, 11, 0.8);
     color: white;
     &:hover {
       background-color: rgba(245, 158, 11, 1);
       transform: translateY(-1px);
     }
-  ` : `
+  `
+      : `
     background-color: ${props.theme.colors.primary};
     color: white;
     &:hover {
@@ -245,7 +270,7 @@ const ProgressBar = styled.div<{ progress: number }>`
 
 interface LetterScrambleQuizProps {
   word: string; // The answer the user needs to build
-  definition: string; // The question/prompt shown to the user  
+  definition: string; // The question/prompt shown to the user
   context?: {
     sentence: string;
     translation: string;
@@ -266,7 +291,9 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   disabled = false,
 }) => {
   const [userAnswer, setUserAnswer] = useState<string[]>([]);
-  const [availableLetters, setAvailableLetters] = useState<{ letter: string; index: number; used: boolean }[]>([]);
+  const [availableLetters, setAvailableLetters] = useState<
+    { letter: string; index: number; used: boolean }[]
+  >([]);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -274,12 +301,15 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   // Initialize scrambled letters
   useEffect(() => {
     logger.debug('🔄 LetterScrambleQuiz: Resetting for new word:', word, 'definition:', definition);
-    const letters = word.toLowerCase().split('').map((letter, index) => ({
-      letter,
-      index,
-      used: false
-    }));
-    
+    const letters = word
+      .toLowerCase()
+      .split('')
+      .map((letter, index) => ({
+        letter,
+        index,
+        used: false,
+      }));
+
     // Shuffle the letters
     const shuffled = [...letters].sort(() => Math.random() - 0.5);
     setAvailableLetters(shuffled);
@@ -291,31 +321,37 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     logger.debug('✨ LetterScrambleQuiz: State reset complete');
   }, [word, definition]);
 
-  const addLetter = useCallback((letterIndex: number) => {
-    const letter = availableLetters[letterIndex];
-    if (letter.used) {
-      return;
-    }
-    setUserAnswer(prev => [...prev, letter.letter]);
-    setAvailableLetters(prev => 
-      prev.map((l, i) => i === letterIndex ? { ...l, used: true } : l)
-    );
-  }, [availableLetters]);
-
-  const removeLetter = useCallback((answerIndex: number) => {
-    const removedLetter = userAnswer[answerIndex];
-    setUserAnswer(prev => prev.filter((_, i) => i !== answerIndex));
-    
-    // Find the first unused letter tile with this letter and mark it as available
-    setAvailableLetters(prev => {
-      const updatedLetters = [...prev];
-      const letterToRestore = updatedLetters.find(l => l.letter === removedLetter && l.used);
-      if (letterToRestore) {
-        letterToRestore.used = false;
+  const addLetter = useCallback(
+    (letterIndex: number) => {
+      const letter = availableLetters[letterIndex];
+      if (letter.used) {
+        return;
       }
-      return updatedLetters;
-    });
-  }, [userAnswer]);
+      setUserAnswer(prev => [...prev, letter.letter]);
+      setAvailableLetters(prev =>
+        prev.map((l, i) => (i === letterIndex ? { ...l, used: true } : l))
+      );
+    },
+    [availableLetters]
+  );
+
+  const removeLetter = useCallback(
+    (answerIndex: number) => {
+      const removedLetter = userAnswer[answerIndex];
+      setUserAnswer(prev => prev.filter((_, i) => i !== answerIndex));
+
+      // Find the first unused letter tile with this letter and mark it as available
+      setAvailableLetters(prev => {
+        const updatedLetters = [...prev];
+        const letterToRestore = updatedLetters.find(l => l.letter === removedLetter && l.used);
+        if (letterToRestore) {
+          letterToRestore.used = false;
+        }
+        return updatedLetters;
+      });
+    },
+    [userAnswer]
+  );
 
   const clearAnswer = useCallback(() => {
     setUserAnswer([]);
@@ -323,45 +359,54 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   }, []);
 
   // Check if a letter at a specific position is correct
-  const getLetterStatus = useCallback((position: number) => {
-    if (position >= userAnswer.length) return 'empty';
-    if (showResult) {
-      return isCorrect ? 'correct' : 'wrong';
-    }
-    
-    const userLetter = userAnswer[position]?.toLowerCase();
-    const targetLetter = word.toLowerCase()[position];
-    
-    if (userLetter === targetLetter) {
-      return 'correct-position';
-    } else {
-      return 'wrong-position';
-    }
-  }, [userAnswer, word, showResult, isCorrect]);
+  const getLetterStatus = useCallback(
+    (position: number) => {
+      if (position >= userAnswer.length) return 'empty';
+      if (showResult) {
+        return isCorrect ? 'correct' : 'wrong';
+      }
+
+      const userLetter = userAnswer[position]?.toLowerCase();
+      const targetLetter = word.toLowerCase()[position];
+
+      if (userLetter === targetLetter) {
+        return 'correct-position';
+      } else {
+        return 'wrong-position';
+      }
+    },
+    [userAnswer, word, showResult, isCorrect]
+  );
 
   // Keyboard support
-  const handleLetterKeyDown = useCallback((e: React.KeyboardEvent, letterIndex: number) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      addLetter(letterIndex);
-    }
-  }, [addLetter]);
-
-  const handleAnswerKeyDown = useCallback((e: React.KeyboardEvent, answerIndex: number) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (userAnswer[answerIndex]) {
-        removeLetter(answerIndex);
+  const handleLetterKeyDown = useCallback(
+    (e: React.KeyboardEvent, letterIndex: number) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        addLetter(letterIndex);
       }
-    }
-  }, [userAnswer, removeLetter]);
+    },
+    [addLetter]
+  );
+
+  const handleAnswerKeyDown = useCallback(
+    (e: React.KeyboardEvent, answerIndex: number) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (userAnswer[answerIndex]) {
+          removeLetter(answerIndex);
+        }
+      }
+    },
+    [userAnswer, removeLetter]
+  );
 
   const giveHint = useCallback(() => {
     if (hintsUsed >= word.length || userAnswer.length >= word.length) return;
-    
+
     const correctLetter = word.toLowerCase()[userAnswer.length];
     const availableLetter = availableLetters.find(l => l.letter === correctLetter && !l.used);
-    
+
     if (availableLetter) {
       const letterIndex = availableLetters.indexOf(availableLetter);
       addLetter(letterIndex);
@@ -379,28 +424,34 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
       clearTimeout(checkTimeoutRef.current);
       checkTimeoutRef.current = null;
     }
-    
-    if (userAnswer.length === word.length && !showResult && userAnswer.length > 0 && !disabled && !hasCheckedRef.current) {
+
+    if (
+      userAnswer.length === word.length &&
+      !showResult &&
+      userAnswer.length > 0 &&
+      !disabled &&
+      !hasCheckedRef.current
+    ) {
       logger.debug('⏰ LetterScrambleQuiz: Checking completed word');
       checkTimeoutRef.current = setTimeout(() => {
         // Call checkAnswer directly without dependency
         if (hasCheckedRef.current) return;
-        
+
         hasCheckedRef.current = true;
         const userWord = userAnswer.join('').toLowerCase();
         const targetWord = word.toLowerCase();
         const correct = userWord === targetWord;
-        
+
         logger.debug('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
-        
+
         setIsCorrect(correct);
         setShowResult(true);
         onAnswer(correct);
-        
+
         checkTimeoutRef.current = null;
       }, 300);
     }
-    
+
     // Cleanup on unmount or when dependencies change
     return () => {
       if (checkTimeoutRef.current) {
@@ -416,7 +467,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      
+
       // Handle backspace to remove last letter
       if (key === 'backspace') {
         event.preventDefault();
@@ -430,12 +481,12 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
       // Handle letter keys
       if (key.length === 1 && /[a-zA-Z ]/.test(key)) {
         event.preventDefault();
-        
+
         // Find an unused letter that matches the typed key
-        const availableLetter = availableLetters.find(l => 
-          l.letter.toLowerCase() === key && !l.used
+        const availableLetter = availableLetters.find(
+          l => l.letter.toLowerCase() === key && !l.used
         );
-        
+
         if (availableLetter) {
           const letterIndex = availableLetters.indexOf(availableLetter);
           addLetter(letterIndex);
@@ -445,7 +496,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
     // Add event listener
     document.addEventListener('keydown', handleKeyDown);
-    
+
     // Cleanup
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -457,7 +508,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   return (
     <Container>
       <Word>{definition}</Word>
-      
+
       {context && (
         <ContextSection>
           {showResult ? (
@@ -466,9 +517,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
               <ContextTranslation>{context.translation}</ContextTranslation>
             </>
           ) : (
-            <ContextPlaceholder>
-              Context will appear after answering
-            </ContextPlaceholder>
+            <ContextPlaceholder>Context will appear after answering</ContextPlaceholder>
           )}
         </ContextSection>
       )}
@@ -484,9 +533,11 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
                 isWrong={status === 'wrong'}
                 isWrongPosition={status === 'wrong-position'}
                 onClick={() => !disabled && userAnswer[index] && removeLetter(index)}
-                onKeyDown={(e) => handleAnswerKeyDown(e, index)}
+                onKeyDown={e => handleAnswerKeyDown(e, index)}
                 role="button"
-                aria-label={userAnswer[index] ? `Remove letter ${userAnswer[index]}` : 'Empty position'}
+                aria-label={
+                  userAnswer[index] ? `Remove letter ${userAnswer[index]}` : 'Empty position'
+                }
                 tabIndex={userAnswer[index] ? 0 : -1}
               >
                 {userAnswer[index] || '_'}
@@ -504,9 +555,13 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
                 if (disabled) return;
                 addLetter(index);
               }}
-              onKeyDown={(e) => handleLetterKeyDown(e, index)}
+              onKeyDown={e => handleLetterKeyDown(e, index)}
               role="button"
-              aria-label={letter.used ? `Letter ${letter.letter.toUpperCase()} already used` : `Add letter ${letter.letter.toUpperCase()}`}
+              aria-label={
+                letter.used
+                  ? `Letter ${letter.letter.toUpperCase()} already used`
+                  : `Add letter ${letter.letter.toUpperCase()}`
+              }
               aria-disabled={letter.used}
               tabIndex={letter.used ? -1 : 0}
             >
@@ -519,8 +574,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
           <ActionButton variant="clear" onClick={clearAnswer} disabled={disabled}>
             Clear All
           </ActionButton>
-          <ActionButton 
-            variant="hint" 
+          <ActionButton
+            variant="hint"
             onClick={giveHint}
             disabled={disabled || hintsUsed >= word.length || userAnswer.length >= word.length}
           >
@@ -536,7 +591,9 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
       </AnswerContainer>
 
       <ProgressContainer>
-        <span>Question {currentWord} of {totalWords}</span>
+        <span>
+          Question {currentWord} of {totalWords}
+        </span>
         <ProgressBar progress={progress} />
       </ProgressContainer>
     </Container>

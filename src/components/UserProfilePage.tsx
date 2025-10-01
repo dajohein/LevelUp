@@ -10,7 +10,7 @@ import { StorageManagement } from './StorageManagement';
 const Container = styled.div`
   min-height: 100vh;
   background-color: ${props => props.theme.colors.background};
-  padding-top: 90px;
+  padding-top: 90px; /* Account for Navigation (70px) + extra spacing */
 `;
 
 const ContentWrapper = styled.div`
@@ -167,8 +167,8 @@ const ActivityIndicator = styled.div<{ active: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${props => props.active ? '#4caf50' : 'rgba(255, 255, 255, 0.3)'};
-  box-shadow: ${props => props.active ? '0 0 8px rgba(76, 175, 80, 0.6)' : 'none'};
+  background: ${props => (props.active ? '#4caf50' : 'rgba(255, 255, 255, 0.3)')};
+  box-shadow: ${props => (props.active ? '0 0 8px rgba(76, 175, 80, 0.6)' : 'none')};
 `;
 
 export const UserProfilePage: React.FC = () => {
@@ -181,7 +181,7 @@ export const UserProfilePage: React.FC = () => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -190,37 +190,39 @@ export const UserProfilePage: React.FC = () => {
   };
 
   // Calculate overall stats
-  const totalStats = languages.reduce((acc, { code }) => {
-    const progress = progressData[code];
-    if (progress) {
-      acc.totalWords += progress.totalWords;
-      acc.practicedWords += progress.practicedWords;
-      acc.totalModules += progress.totalModules;
-      acc.completedModules += progress.completedModules;
-      if (progress.recentActivity) acc.activeLanguages += 1;
-    } else {
-      const language = languages.find(l => l.code === code);
-      if (language) {
-        acc.totalModules += language.info.modules.length;
+  const totalStats = languages.reduce(
+    (acc, { code }) => {
+      const progress = progressData[code];
+      if (progress) {
+        acc.totalWords += progress.totalWords;
+        acc.practicedWords += progress.practicedWords;
+        acc.totalModules += progress.totalModules;
+        acc.completedModules += progress.completedModules;
+        if (progress.recentActivity) acc.activeLanguages += 1;
+      } else {
+        const language = languages.find(l => l.code === code);
+        if (language) {
+          acc.totalModules += language.info.modules.length;
+        }
       }
+      return acc;
+    },
+    {
+      totalWords: 0,
+      practicedWords: 0,
+      totalModules: 0,
+      completedModules: 0,
+      activeLanguages: 0,
     }
-    return acc;
-  }, {
-    totalWords: 0,
-    practicedWords: 0,
-    totalModules: 0,
-    completedModules: 0,
-    activeLanguages: 0
-  });
+  );
 
-  const overallProgress = totalStats.totalWords > 0 
-    ? (totalStats.practicedWords / totalStats.totalWords) * 100 
-    : 0;
+  const overallProgress =
+    totalStats.totalWords > 0 ? (totalStats.practicedWords / totalStats.totalWords) * 100 : 0;
 
   return (
     <Container>
       <Navigation />
-      
+
       <ContentWrapper>
         <Header>
           <Title>
@@ -233,14 +235,14 @@ export const UserProfilePage: React.FC = () => {
         <ProfileGrid>
           {/* Overall User Profile Widget */}
           <UserProfileWidget compact={false} />
-          
+
           {/* Language Progress Section */}
           <LanguageProgressSection>
             <SectionTitle>
               <FaChartLine />
               Language Progress
             </SectionTitle>
-            
+
             {/* Overall Stats */}
             <LanguageCard style={{ marginBottom: '24px', background: 'rgba(76, 175, 80, 0.1)' }}>
               <LanguageHeader>
@@ -251,7 +253,7 @@ export const UserProfilePage: React.FC = () => {
                 </LanguageInfo>
                 <ActivityIndicator active={totalStats.activeLanguages > 0} />
               </LanguageHeader>
-              
+
               <ProgressStats>
                 <StatCard>
                   <StatValue>{totalStats.practicedWords}</StatValue>
@@ -270,13 +272,18 @@ export const UserProfilePage: React.FC = () => {
                   <StatLabel>Total Progress</StatLabel>
                 </StatCard>
               </ProgressStats>
-              
+
               <ProgressBar>
-                <ProgressFill width={overallProgress} color="linear-gradient(90deg, #4caf50 0%, #81c784 100%)" />
+                <ProgressFill
+                  width={overallProgress}
+                  color="linear-gradient(90deg, #4caf50 0%, #81c784 100%)"
+                />
               </ProgressBar>
               <ProgressLabel>
                 <span>Progress</span>
-                <span>{totalStats.practicedWords} / {totalStats.totalWords} words</span>
+                <span>
+                  {totalStats.practicedWords} / {totalStats.totalWords} words
+                </span>
               </ProgressLabel>
             </LanguageCard>
 
@@ -289,12 +296,13 @@ export const UserProfilePage: React.FC = () => {
                   averageMastery: 0,
                   completedModules: 0,
                   totalModules: info.modules.length,
-                  recentActivity: false
+                  recentActivity: false,
                 };
 
-                const languageProgress = progress.totalWords > 0 
-                  ? (progress.practicedWords / progress.totalWords) * 100 
-                  : 0;
+                const languageProgress =
+                  progress.totalWords > 0
+                    ? (progress.practicedWords / progress.totalWords) * 100
+                    : 0;
 
                 return (
                   <LanguageCard key={code}>
@@ -306,7 +314,7 @@ export const UserProfilePage: React.FC = () => {
                       </LanguageInfo>
                       <ActivityIndicator active={progress.recentActivity} />
                     </LanguageHeader>
-                    
+
                     <ProgressStats>
                       <StatCard>
                         <StatValue>{Math.round(progress.averageMastery)}%</StatValue>
@@ -330,25 +338,31 @@ export const UserProfilePage: React.FC = () => {
                         <StatLabel>{formatLastPracticed(progress.lastPracticed)}</StatLabel>
                       </StatCard>
                     </ProgressStats>
-                    
+
                     <ProgressBar>
-                      <ProgressFill 
-                        width={languageProgress} 
-                        color={progress.averageMastery > 70 ? 'linear-gradient(90deg, #4caf50 0%, #81c784 100%)' : 
-                               progress.averageMastery > 40 ? 'linear-gradient(90deg, #ff9800 0%, #ffb74d 100%)' :
-                               'linear-gradient(90deg, #2196f3 0%, #64b5f6 100%)'} 
+                      <ProgressFill
+                        width={languageProgress}
+                        color={
+                          progress.averageMastery > 70
+                            ? 'linear-gradient(90deg, #4caf50 0%, #81c784 100%)'
+                            : progress.averageMastery > 40
+                            ? 'linear-gradient(90deg, #ff9800 0%, #ffb74d 100%)'
+                            : 'linear-gradient(90deg, #2196f3 0%, #64b5f6 100%)'
+                        }
                       />
                     </ProgressBar>
                     <ProgressLabel>
                       <span>Progress</span>
-                      <span>{progress.practicedWords} / {progress.totalWords} words</span>
+                      <span>
+                        {progress.practicedWords} / {progress.totalWords} words
+                      </span>
                     </ProgressLabel>
                   </LanguageCard>
                 );
               })}
             </LanguageGrid>
           </LanguageProgressSection>
-          
+
           <StorageManagement />
         </ProfileGrid>
       </ContentWrapper>

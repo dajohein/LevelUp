@@ -12,7 +12,11 @@ const NavigationBar = styled.nav`
   left: 0;
   right: 0;
   height: 70px;
-  background: linear-gradient(135deg, ${props => props.theme.colors.surface} 0%, ${props => props.theme.colors.background} 100%);
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.surface} 0%,
+    ${props => props.theme.colors.background} 100%
+  );
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(76, 175, 80, 0.2);
   color: ${props => props.theme.colors.text};
@@ -80,7 +84,11 @@ const AppTitle = styled.div`
   font-size: 1.3rem;
   font-weight: 600;
   color: ${props => props.theme.colors.text};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.secondary} 100%);
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -109,7 +117,11 @@ const UserAvatar = styled.div<{ levelColor: string }>`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, ${props => props.levelColor} 0%, ${props => props.theme.colors.secondary} 100%);
+  background: linear-gradient(
+    135deg,
+    ${props => props.levelColor} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,7 +135,11 @@ const UserLevelBadge = styled.div<{ levelColor: string }>`
   position: absolute;
   bottom: -6px;
   right: -6px;
-  background: linear-gradient(135deg, ${props => props.levelColor} 0%, ${props => props.theme.colors.secondary} 100%);
+  background: linear-gradient(
+    135deg,
+    ${props => props.levelColor} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
   color: white;
   border-radius: 12px;
   padding: 2px 8px;
@@ -159,26 +175,48 @@ interface NavigationProps {
   showUserProfile?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ 
-  languageName, 
-  languageFlag, 
-  showUserProfile = true
+export const Navigation: React.FC<NavigationProps> = ({
+  languageName,
+  languageFlag,
+  showUserProfile = true,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
   const { language } = useSelector((state: RootState) => state.game);
 
-  // Calculate language-specific stats if we have a current language
+  // Determine if we should show global or language-specific stats
+  const isGlobalView = location.pathname === '/';
   const currentLanguageCode = language;
+  
   let currentLevel = 1;
   let levelInfo = getLevelInfo(1);
-  let languageSpecificProgress = {};
-  
-  if (currentLanguageCode) {
-    // CRITICAL FIX: Load language-specific progress, not mixed Redux state
-    languageSpecificProgress = wordProgressStorage.load(currentLanguageCode);
-    const languageXP = calculateLanguageXP(languageSpecificProgress, currentLanguageCode);
+  let userProgress = {};
+  let totalXP = 0;
+
+  if (isGlobalView) {
+    // On languages overview - show global stats across all languages
+    const allProgressData = wordProgressStorage.loadAll();
+    
+    // Calculate total XP across all languages
+    Object.values(allProgressData).forEach(languageProgress => {
+      if (languageProgress && typeof languageProgress === 'object') {
+        totalXP += Object.values(languageProgress).reduce((sum, progress) => sum + (progress?.xp || 0), 0);
+      }
+    });
+    
+    // Use global XP to determine level
+    currentLevel = calculateCurrentLevel(totalXP);
+    levelInfo = getLevelInfo(currentLevel);
+    
+    // Check if user has any progress at all
+    const hasAnyProgress = totalXP > 0;
+    userProgress = hasAnyProgress ? { hasProgress: true } : {};
+  } else if (currentLanguageCode) {
+    // On language-specific pages - show language-specific stats
+    userProgress = wordProgressStorage.load(currentLanguageCode);
+    const languageXP = calculateLanguageXP(userProgress, currentLanguageCode);
+    totalXP = languageXP;
     currentLevel = calculateCurrentLevel(languageXP);
     levelInfo = getLevelInfo(currentLevel);
   }
@@ -188,34 +226,39 @@ export const Navigation: React.FC<NavigationProps> = ({
     const path = location.pathname;
     const { languageCode } = params;
 
+    // If we're on the root path (language selection), don't show back button
+    if (path === '/') {
+      return null;
+    }
+
     // If we're in a specific module progress view (/language/de/grundwortschatz)
     if (path.match(/^\/language\/[^\/]+\/[^\/]+$/)) {
       return {
         label: 'Modules',
-        onClick: () => navigate(`/language/${languageCode}`)
+        onClick: () => navigate(`/language/${languageCode}`),
       };
     }
-    
+
     // If we're in a language modules view (/language/de)
     if (path.match(/^\/language\/[^\/]+$/)) {
       return {
         label: 'Languages',
-        onClick: () => navigate('/')
+        onClick: () => navigate('/'),
       };
     }
-    
+
     // If we're in sessions or game views with language context
     if (languageCode && (path.includes('/sessions') || path.includes('/game'))) {
       return {
         label: 'Modules',
-        onClick: () => navigate(`/language/${languageCode}`)
+        onClick: () => navigate(`/language/${languageCode}`),
       };
     }
-    
+
     // Default to language selection
     return {
       label: 'Languages',
-      onClick: () => navigate('/')
+      onClick: () => navigate('/'),
     };
   };
 
@@ -223,44 +266,46 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <NavigationBar>
-      <BackButton onClick={backButtonConfig.onClick}>
-        ← <span>{backButtonConfig.label}</span>
-      </BackButton>
-      
+      {backButtonConfig && (
+        <BackButton onClick={backButtonConfig.onClick}>
+          ← <span>{backButtonConfig.label}</span>
+        </BackButton>
+      )}
+
       {languageName && languageFlag && (
         <LanguageTitle>
           <FlagEmoji>{languageFlag}</FlagEmoji>
           <LanguageName>{languageName}</LanguageName>
         </LanguageTitle>
       )}
-      
+
       {!languageName && !languageFlag && <AppTitle>🚀 LevelUp</AppTitle>}
 
-      {showUserProfile && Object.keys(languageSpecificProgress).length > 0 && currentLanguageCode && (
-        <UserProfileCompact onClick={() => navigate('/profile')}>
-          <UserAvatar levelColor={levelInfo.color}>
-            {levelInfo.emoji}
-            <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
-          </UserAvatar>
-          <UserStats>
-            <UserLevel>{levelInfo.title}</UserLevel>
-            <UserXP>{calculateLanguageXP(languageSpecificProgress, currentLanguageCode).toLocaleString()} XP</UserXP>
-          </UserStats>
-        </UserProfileCompact>
-      )}
-      
-      {showUserProfile && (!Object.keys(languageSpecificProgress).length || !currentLanguageCode) && (
-        <UserProfileCompact onClick={() => navigate('/profile')}>
-          <UserAvatar levelColor="#4caf50">
-            👤
-          </UserAvatar>
-          <UserStats>
-            <UserLevel>Profile</UserLevel>
-            <UserXP>View Progress</UserXP>
-          </UserStats>
-        </UserProfileCompact>
-      )}
-      
+      {showUserProfile &&
+        ((isGlobalView && Object.keys(userProgress).length > 0) || (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
+          <UserProfileCompact onClick={() => navigate('/profile')}>
+            <UserAvatar levelColor={levelInfo.color}>
+              {levelInfo.emoji}
+              <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
+            </UserAvatar>
+            <UserStats>
+              <UserLevel>{levelInfo.title}</UserLevel>
+              <UserXP>{totalXP.toLocaleString()} XP</UserXP>
+            </UserStats>
+          </UserProfileCompact>
+        )}
+
+      {showUserProfile &&
+        ((isGlobalView && Object.keys(userProgress).length === 0) || (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
+          <UserProfileCompact onClick={() => navigate('/profile')}>
+            <UserAvatar levelColor="#4caf50">👤</UserAvatar>
+            <UserStats>
+              <UserLevel>Profile</UserLevel>
+              <UserXP>View Progress</UserXP>
+            </UserStats>
+          </UserProfileCompact>
+        )}
+
       {!showUserProfile && <AppTitle>🚀 LevelUp</AppTitle>}
     </NavigationBar>
   );

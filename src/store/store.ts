@@ -6,7 +6,6 @@ import sessionReducer from './sessionSlice';
 import type { GameState } from './types';
 import type { AchievementsState } from './types';
 import type { SessionState } from './sessionSlice';
-import { achievementsMiddleware } from './achievementsMiddleware';
 import { persistenceMiddleware } from './persistenceMiddleware';
 
 const reducer = {
@@ -26,7 +25,6 @@ export const store: Store<StoreState> = configureStore({
   middleware: getDefaultMiddleware => {
     const middleware = getDefaultMiddleware();
     return middleware
-      .concat(achievementsMiddleware as Middleware<any, StoreState>)
       .concat(persistenceMiddleware as Middleware<any, StoreState>);
   },
 });

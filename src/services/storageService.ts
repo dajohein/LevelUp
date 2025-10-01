@@ -93,20 +93,26 @@ export const wordProgressStorage = {
 
       // Ensure we're only saving to the specific language key
       existingData[languageCode] = wordProgress;
-      
+
       // Safeguard: Ensure Spanish is always separate from German
       if (languageCode === 'de' && !existingData['es']) {
         existingData['es'] = {}; // Ensure Spanish has its own empty space
       } else if (languageCode === 'es' && !existingData['de']) {
         existingData['de'] = {}; // Ensure German has its own empty space
       }
-      
+
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
-      
+
       // Debug logging for language separation
       if (process.env.NODE_ENV === 'development') {
-        logger.debug(`Saved progress for ${languageCode}: ${Object.keys(wordProgress).length} entries`);
-        logger.debug(`Storage now has DE: ${Object.keys(existingData.de || {}).length}, ES: ${Object.keys(existingData.es || {}).length} entries`);
+        logger.debug(
+          `Saved progress for ${languageCode}: ${Object.keys(wordProgress).length} entries`
+        );
+        logger.debug(
+          `Storage now has DE: ${Object.keys(existingData.de || {}).length}, ES: ${
+            Object.keys(existingData.es || {}).length
+          } entries`
+        );
       }
     } catch (error) {
       logger.error('Failed to save word progress:', error);
@@ -123,11 +129,8 @@ export const wordProgressStorage = {
       );
 
       const result = data[languageCode] || {};
-      
-      // Debug logging for language separation
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(`Loading progress for ${languageCode}: ${Object.keys(result).length} entries`);
-      }
+
+      // Removed debug logging to prevent console spam during frequent loads
 
       return result;
     } catch (error) {

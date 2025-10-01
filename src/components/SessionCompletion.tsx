@@ -4,71 +4,91 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { resetSession } from '../store/sessionSlice';
+import { SessionAnalytics } from './SessionAnalytics';
+import { Confetti } from './animations/Confetti';
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   min-height: 100vh;
-  padding: ${props => props.theme.spacing.xl};
+  padding: ${props => props.theme.spacing.lg} ${props => props.theme.spacing.md};
+  padding-top: ${props => props.theme.spacing.xl};
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
   text-align: center;
+  gap: ${props => props.theme.spacing.lg};
 `;
 
 const ResultCard = styled.div<{ isSuccess: boolean }>`
   background: ${props => props.theme.colors.surface};
-  border-radius: 20px;
-  padding: ${props => props.theme.spacing.xl};
-  max-width: 600px;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  max-width: 500px;
   width: 100%;
-  border: 3px solid
+  border: 2px solid
     ${props => (props.isSuccess ? props.theme.colors.success : props.theme.colors.error)};
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: ${props => (props.isSuccess 
+      ? `linear-gradient(90deg, ${props.theme.colors.success}, ${props.theme.colors.primary})` 
+      : `linear-gradient(90deg, ${props.theme.colors.error}, #ff6b6b)`)};
+  }
 `;
 
 const ResultEmoji = styled.div`
-  font-size: 4rem;
-  margin-bottom: ${props => props.theme.spacing.lg};
+  font-size: 3rem;
+  margin-bottom: ${props => props.theme.spacing.md};
 `;
 
 const ResultTitle = styled.h1<{ isSuccess: boolean }>`
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing.sm};
   color: ${props => (props.isSuccess ? props.theme.colors.success : props.theme.colors.error)};
 `;
 
 const ResultSubtitle = styled.p`
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: ${props => props.theme.colors.textSecondary};
-  margin-bottom: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: ${props => props.theme.spacing.lg};
-  margin-bottom: ${props => props.theme.spacing.xl};
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
 const StatItem = styled.div`
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: ${props => props.theme.spacing.lg};
+  border-radius: 10px;
+  padding: ${props => props.theme.spacing.md};
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const StatValue = styled.div`
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: ${props => props.theme.colors.primary};
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const PerformanceSection = styled.div`
@@ -104,40 +124,48 @@ const PerformanceBar = styled.div<{ percentage: number; color: string }>`
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing.md};
+  gap: ${props => props.theme.spacing.sm};
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: ${props => props.theme.spacing.md};
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
-  font-size: 1.1rem;
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 150px;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  position: relative;
+  overflow: hidden;
 
   ${props =>
     props.variant === 'primary'
       ? `
     background: linear-gradient(45deg, ${props.theme.colors.primary}, ${props.theme.colors.secondary});
     color: white;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    }
+    
+    &:active {
+      transform: translateY(0);
     }
   `
       : `
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     color: ${props.theme.colors.text};
-    border: 2px solid ${props.theme.colors.textSecondary};
+    border: 1px solid rgba(255, 255, 255, 0.2);
     
     &:hover {
+      background: rgba(255, 255, 255, 0.1);
       border-color: ${props.theme.colors.primary};
-      background: rgba(76, 175, 80, 0.1);
     }
   `}
 `;
@@ -150,11 +178,17 @@ const AchievementBadge = styled.div`
   display: inline-block;
   background: linear-gradient(45deg, #ffd700, #ffa500);
   color: #333;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 16px;
   font-weight: 600;
-  margin: 4px;
-  font-size: 0.9rem;
+  margin: 2px;
+  font-size: 0.8rem;
+`;
+
+const AnalyticsContainer = styled.div`
+  width: 100%;
+  max-width: 500px;
+  margin-top: ${props => props.theme.spacing.md};
 `;
 
 interface SessionCompletionProps {
@@ -166,11 +200,13 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
   const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const { progress, currentSession } = useSelector((state: RootState) => state.session);
 
   if (!currentSession && !isNavigating) {
-    const sessionRoute = moduleId ? `/sessions/${languageCode}/${moduleId}` : `/sessions/${languageCode}`;
+    const sessionRoute = moduleId
+      ? `/sessions/${languageCode}/${moduleId}`
+      : `/sessions/${languageCode}`;
     navigate(sessionRoute);
     return null;
   }
@@ -196,12 +232,14 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   const handleTryAgain = () => {
     setIsNavigating(true);
-    const sessionRoute = moduleId ? `/sessions/${languageCode}/${moduleId}` : `/sessions/${languageCode}`;
+    const sessionRoute = moduleId
+      ? `/sessions/${languageCode}/${moduleId}`
+      : `/sessions/${languageCode}`;
     navigate(sessionRoute, {
       state: {
         fromSessionCompletion: true,
-        shouldResetSession: true
-      }
+        shouldResetSession: true,
+      },
     });
   };
 
@@ -210,8 +248,8 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
     navigate(`/language/${languageCode}`, {
       state: {
         fromSessionCompletion: true,
-        shouldResetSession: true
-      }
+        shouldResetSession: true,
+      },
     });
   };
 
@@ -228,6 +266,9 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   return (
     <Container>
+      {/* Confetti for successful session completion */}
+      {isSuccess && <Confetti count={100} duration={5000} />}
+      
       <ResultCard isSuccess={isSuccess}>
         <ResultEmoji>{isSuccess ? '🎉' : '💪'}</ResultEmoji>
 
@@ -319,6 +360,15 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
           <Button onClick={handleBackToLanguages}>🌍 Change Language</Button>
         </ButtonGroup>
       </ResultCard>
+
+      {/* Enhanced Learning Analytics - Moved below buttons for better UX */}
+      <AnalyticsContainer>
+        <SessionAnalytics
+          languageCode={languageCode}
+          showRecommendations={true}
+          showWeeklyProgress={true}
+        />
+      </AnalyticsContainer>
     </Container>
   );
 };

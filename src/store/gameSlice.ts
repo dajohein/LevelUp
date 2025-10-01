@@ -10,18 +10,18 @@ import type { GameState } from './types';
 const loadPersistedState = (): Partial<GameState> => {
   try {
     const savedState = gameStateStorage.load();
-    
+
     // CRITICAL FIX: Don't load mixed wordProgress into global state
     // Instead, load only the current language's progress
     const currentLanguage = savedState.language;
     let languageSpecificProgress = {};
-    
+
     if (currentLanguage) {
       // Load only the current language's progress
       languageSpecificProgress = wordProgressStorage.load(currentLanguage);
-      logger.debug(`Loading progress for ${currentLanguage}: ${Object.keys(languageSpecificProgress).length} words`);
+      // Removed debug logging to prevent console spam
     }
-    
+
     return {
       language: savedState.language || null,
       score: savedState.score || 0,
@@ -51,7 +51,7 @@ const saveGameState = (state: GameState): void => {
       totalAttempts: state.totalAttempts,
       quizMode: state.quizMode,
       // Don't save wordProgress here to prevent mixing
-      wordProgress: {}, 
+      wordProgress: {},
     });
 
     // Only save word progress separately for the current language
@@ -88,10 +88,15 @@ export const gameSlice = createSlice({
     nextWord: state => {
       if (state.language) {
         // Get words based on whether we have a specific module or not
-        const { word, options, quizMode } = state.module 
-          ? getRandomWordFromModule(state.language, state.module, state.wordProgress, state.lastWordId)
+        const { word, options, quizMode } = state.module
+          ? getRandomWordFromModule(
+              state.language,
+              state.module,
+              state.wordProgress,
+              state.lastWordId
+            )
           : getRandomWord(state.language, state.wordProgress, state.lastWordId);
-        
+
         state.currentWord = word;
         state.currentOptions = options;
         state.quizMode = quizMode;
@@ -152,7 +157,8 @@ export const gameSlice = createSlice({
 
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
-        const modeMultiplier = state.quizMode === 'open-answer' ? 2 : state.quizMode === 'letter-scramble' ? 1.5 : 1;
+        const modeMultiplier =
+          state.quizMode === 'open-answer' ? 2 : state.quizMode === 'letter-scramble' ? 1.5 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
         const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
 
@@ -221,6 +227,7 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame } = gameSlice.actions;
+export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame } =
+  gameSlice.actions;
 
 export default gameSlice.reducer;

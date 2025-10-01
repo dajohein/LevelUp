@@ -11,8 +11,6 @@ import { SessionCompletion } from './components/SessionCompletion';
 import { Game } from './components/Game';
 import { UserProfilePage } from './components/UserProfilePage';
 
-
-
 // Wrapper component to pass languageCode and moduleId to SessionSelect
 const SessionSelectWrapper = () => {
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();

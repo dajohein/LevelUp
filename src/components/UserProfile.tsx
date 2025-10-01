@@ -29,14 +29,15 @@ const progressFill = keyframes`
 
 // Styled Components
 const ProfileContainer = styled.div<{ compact?: boolean }>`
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.1) 0%, 
-    rgba(147, 51, 234, 0.1) 50%, 
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(147, 51, 234, 0.1) 50%,
     rgba(236, 72, 153, 0.1) 100%
   );
   border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: 20px;
-  padding: ${props => props.compact ? props.theme.spacing.md : props.theme.spacing.xl};
+  padding: ${props => (props.compact ? props.theme.spacing.md : props.theme.spacing.xl)};
   margin: ${props => props.theme.spacing.md} 0;
   position: relative;
   overflow: hidden;
@@ -54,12 +55,7 @@ const ProfileContainer = styled.div<{ compact?: boolean }>`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
     transition: left 0.5s ease;
   }
 
@@ -93,7 +89,9 @@ const Avatar = styled.div<{ levelColor: string }>`
   font-size: 2.5rem;
   position: relative;
   border: 4px solid ${props => props.levelColor};
-  ${css`animation: ${pulseGlow} 3s ease-in-out infinite;`}
+  ${css`
+    animation: ${pulseGlow} 3s ease-in-out infinite;
+  `}
 
   &::after {
     content: '';
@@ -111,7 +109,9 @@ const Avatar = styled.div<{ levelColor: string }>`
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -154,7 +154,8 @@ const UserSubtitle = styled.p`
 
 const StatsGrid = styled.div<{ compact?: boolean }>`
   display: grid;
-  grid-template-columns: ${props => props.compact ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(120px, 1fr))'};
+  grid-template-columns: ${props =>
+    props.compact ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(120px, 1fr))'};
   gap: ${props => props.theme.spacing.md};
   margin-bottom: ${props => props.theme.spacing.lg};
 `;
@@ -167,11 +168,13 @@ const StatCard = styled.div<{ highlight?: boolean }>`
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
 
-  ${props => props.highlight && css`
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.3);
-    animation: ${xpCountUp} 0.3s ease-out;
-  `}
+  ${props =>
+    props.highlight &&
+    css`
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      animation: ${xpCountUp} 0.3s ease-out;
+    `}
 
   &:hover {
     transform: translateY(-2px);
@@ -222,11 +225,13 @@ const ProgressBar = styled.div<{ percentage: number; levelColor: string; animate
   border-radius: 25px;
   position: relative;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  ${props => props.animate && css`
-    animation: ${progressFill} 1s ease-out;
-    --target-width: ${props.percentage}%;
-  `}
+
+  ${props =>
+    props.animate &&
+    css`
+      animation: ${progressFill} 1s ease-out;
+      --target-width: ${props.percentage}%;
+    `}
 
   &::after {
     content: '';
@@ -235,18 +240,15 @@ const ProgressBar = styled.div<{ percentage: number; levelColor: string; animate
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transform: translateX(-100%);
     animation: shimmer 2s infinite;
   }
 
   @keyframes shimmer {
-    100% { transform: translateX(100%); }
+    100% {
+      transform: translateX(100%);
+    }
   }
 `;
 
@@ -263,14 +265,16 @@ const AchievementBadge = styled.div<{ earned: boolean; color: string }>`
   font-size: 0.8rem;
   font-weight: bold;
   border: 2px solid ${props => props.color};
-  color: ${props => props.earned ? 'white' : props.color};
-  background: ${props => props.earned ? props.color : 'transparent'};
-  opacity: ${props => props.earned ? 1 : 0.5};
+  color: ${props => (props.earned ? 'white' : props.color)};
+  background: ${props => (props.earned ? props.color : 'transparent')};
+  opacity: ${props => (props.earned ? 1 : 0.5)};
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 
-  ${props => props.earned && `
+  ${props =>
+    props.earned &&
+    `
     box-shadow: 0 0 15px ${props.color}40;
   `}
 
@@ -285,17 +289,17 @@ interface UserProfileProps {
   languageCode?: string;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ 
-  compact = false, 
+export const UserProfile: React.FC<UserProfileProps> = ({
+  compact = false,
   showAchievements = true,
-  languageCode 
+  languageCode,
 }) => {
   const { wordProgress, language } = useSelector((state: RootState) => state.game);
   const [animateProgress, setAnimateProgress] = useState(false);
 
   // Use provided languageCode or current language from store
   const currentLanguage = languageCode || language;
-  
+
   if (!currentLanguage) {
     return null; // Don't render if no language is selected
   }
@@ -314,11 +318,41 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
   // Achievement thresholds based on language-specific progress
   const achievements = [
-    { id: 'first-steps', label: '🌱 First Steps', threshold: 1, color: '#10b981', achieved: stats.studiedWords >= 1 },
-    { id: 'dedicated', label: '🔥 Dedicated', threshold: 7, color: '#f59e0b', achieved: stats.learningStreak >= 7 },
-    { id: 'scholar', label: '📚 Scholar', threshold: 20, color: '#3b82f6', achieved: stats.studiedWords >= 20 },
-    { id: 'master', label: '🎯 Master', threshold: 10, color: '#8b5cf6', achieved: stats.masteredWords >= 10 },
-    { id: 'perfectionist', label: '✨ Perfectionist', threshold: 5, color: '#ec4899', achieved: stats.perfectWords >= 5 },
+    {
+      id: 'first-steps',
+      label: '🌱 First Steps',
+      threshold: 1,
+      color: '#10b981',
+      achieved: stats.studiedWords >= 1,
+    },
+    {
+      id: 'dedicated',
+      label: '🔥 Dedicated',
+      threshold: 7,
+      color: '#f59e0b',
+      achieved: stats.learningStreak >= 7,
+    },
+    {
+      id: 'scholar',
+      label: '📚 Scholar',
+      threshold: 20,
+      color: '#3b82f6',
+      achieved: stats.studiedWords >= 20,
+    },
+    {
+      id: 'master',
+      label: '🎯 Master',
+      threshold: 10,
+      color: '#8b5cf6',
+      achieved: stats.masteredWords >= 10,
+    },
+    {
+      id: 'perfectionist',
+      label: '✨ Perfectionist',
+      threshold: 5,
+      color: '#ec4899',
+      achieved: stats.perfectWords >= 5,
+    },
   ];
 
   if (compact) {
@@ -332,16 +366,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </Avatar>
           </AvatarContainer>
           <UserInfo>
-            <UserTitle levelColor={levelInfo.color}>
-              {levelInfo.title}
-            </UserTitle>
+            <UserTitle levelColor={levelInfo.color}>{levelInfo.title}</UserTitle>
             <UserSubtitle>{languageXP.toLocaleString()} XP</UserSubtitle>
           </UserInfo>
         </ProfileHeader>
-        
+
         <ProgressBarContainer>
-          <ProgressBar 
-            percentage={xpProgress.percentage} 
+          <ProgressBar
+            percentage={xpProgress.percentage}
             levelColor={levelInfo.color}
             animate={animateProgress}
           />
@@ -363,18 +395,22 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           <UserTitle levelColor={levelInfo.color}>
             {levelInfo.title} {levelInfo.emoji}
           </UserTitle>
-          <UserSubtitle>Level {currentLevel} • {languageXP.toLocaleString()} XP</UserSubtitle>
+          <UserSubtitle>
+            Level {currentLevel} • {languageXP.toLocaleString()} XP
+          </UserSubtitle>
         </UserInfo>
       </ProfileHeader>
 
       <XPProgressSection>
         <ProgressLabel>
           <span>Progress to Level {currentLevel + 1}</span>
-          <span>{xpProgress.current.toLocaleString()} / {xpProgress.needed.toLocaleString()} XP</span>
+          <span>
+            {xpProgress.current.toLocaleString()} / {xpProgress.needed.toLocaleString()} XP
+          </span>
         </ProgressLabel>
         <ProgressBarContainer>
-          <ProgressBar 
-            percentage={xpProgress.percentage} 
+          <ProgressBar
+            percentage={xpProgress.percentage}
             levelColor={levelInfo.color}
             animate={animateProgress}
           />
@@ -402,7 +438,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
       {showAchievements && (
         <AchievementsBadges>
-          {achievements.map((achievement) => (
+          {achievements.map(achievement => (
             <AchievementBadge
               key={achievement.id}
               earned={achievement.achieved}

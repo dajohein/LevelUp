@@ -17,13 +17,15 @@ const InputWrapper = styled.div<{ isError?: boolean }>`
   position: relative;
   width: 100%;
   max-width: 400px;
-  ${css`animation: ${fadeIn} 0.3s ease-out;`}
+  ${css`
+    animation: ${fadeIn} 0.3s ease-out;
+  `}
 
   ${props =>
     props.isError &&
     css`
-    animation: ${shake} 0.3s ease-in-out;
-  `}
+      animation: ${shake} 0.3s ease-in-out;
+    `}
 `;
 
 const StyledInput = styled.input<{ isCorrect?: boolean; isError?: boolean }>`
@@ -75,7 +77,9 @@ const HintText = styled.div<{ isError?: boolean }>`
   left: 0;
   font-size: 0.8rem;
   color: ${props => (props.isError ? props.theme.colors.error : props.theme.colors.textSecondary)};
-  ${css`animation: ${fadeIn} 0.3s ease-out;`}
+  ${css`
+    animation: ${fadeIn} 0.3s ease-out;
+  `}
 `;
 
 interface AnimatedInputProps {

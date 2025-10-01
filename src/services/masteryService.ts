@@ -59,12 +59,12 @@ export const calculateMasteryDecay = (
 
   // Calculate decay amount
   const intervals = Math.floor(hoursSinceLastPractice / timeInterval);
-  
+
   // If no intervals have passed, no decay should occur
   if (intervals === 0) {
     return currentMastery;
   }
-  
+
   // Correct decay formula: each interval reduces mastery by decayRate percentage
   const decayFactor = Math.pow(1 - decayRate, intervals);
   const decayedMastery = currentMastery * decayFactor;

@@ -74,7 +74,10 @@ const Overlay = styled.div<{ isExiting: boolean }>`
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  ${props => css`animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;`}
+  ${props =>
+    css`
+      animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;
+    `}
 `;
 
 const LevelUpCard = styled.div<{ levelColor: string }>`
@@ -85,7 +88,9 @@ const LevelUpCard = styled.div<{ levelColor: string }>`
   text-align: center;
   position: relative;
   min-width: 350px;
-  ${css`animation: ${glowPulse} 2s ease-in-out infinite;`}
+  ${css`
+    animation: ${glowPulse} 2s ease-in-out infinite;
+  `}
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 
   &::before {
@@ -104,7 +109,9 @@ const LevelUpCard = styled.div<{ levelColor: string }>`
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -114,7 +121,9 @@ const LevelUpTitle = styled.h1`
   font-weight: bold;
   margin: 0 0 1rem 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  ${css`animation: ${bounceIn} 0.6s ease-out 0.3s both;`}
+  ${css`
+    animation: ${bounceIn} 0.6s ease-out 0.3s both;
+  `}
 `;
 
 const NewLevelInfo = styled.div<{ levelColor: string }>`
@@ -123,7 +132,9 @@ const NewLevelInfo = styled.div<{ levelColor: string }>`
   justify-content: center;
   gap: 1rem;
   margin: 1.5rem 0;
-  ${css`animation: ${bounceIn} 0.6s ease-out 0.5s both;`}
+  ${css`
+    animation: ${bounceIn} 0.6s ease-out 0.5s both;
+  `}
 `;
 
 const LevelAvatar = styled.div<{ levelColor: string }>`
@@ -137,7 +148,9 @@ const LevelAvatar = styled.div<{ levelColor: string }>`
   font-size: 3rem;
   border: 4px solid ${props => props.levelColor};
   position: relative;
-  ${css`animation: ${bounceIn} 0.6s ease-out 0.4s both;`}
+  ${css`
+    animation: ${bounceIn} 0.6s ease-out 0.4s both;
+  `}
 
   &::after {
     content: '';
@@ -182,7 +195,9 @@ const LevelDescription = styled.p`
   color: #ccc;
   font-size: 1.1rem;
   margin: 1rem 0;
-  ${css`animation: ${bounceIn} 0.6s ease-out 0.7s both;`}
+  ${css`
+    animation: ${bounceIn} 0.6s ease-out 0.7s both;
+  `}
 `;
 
 const ContinueButton = styled.button<{ levelColor: string }>`
@@ -196,7 +211,9 @@ const ContinueButton = styled.button<{ levelColor: string }>`
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 1.5rem;
-  ${css`animation: ${bounceIn} 0.6s ease-out 0.9s both;`}
+  ${css`
+    animation: ${bounceIn} 0.6s ease-out 0.9s both;
+  `}
 
   &:hover {
     transform: translateY(-2px);
@@ -221,7 +238,10 @@ const ConfettiPiece = styled.div<{ color: string; delay: number; left: number }>
   background: ${props => props.color};
   left: ${props => props.left}%;
   top: -10px;
-  ${props => css`animation: ${confettiDrop} 3s linear ${props.delay}s infinite;`}
+  ${props =>
+    css`
+      animation: ${confettiDrop} 3s linear ${props.delay}s infinite;
+    `}
 `;
 
 interface LevelUpNotificationProps {
@@ -262,15 +282,16 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
 
   const levelMessages = {
     5: "You're getting the hang of this!",
-    10: "Your dedication is paying off!",
-    15: "Impressive language skills!",
+    10: 'Your dedication is paying off!',
+    15: 'Impressive language skills!',
     20: "You're becoming a true polyglot!",
-    30: "Expert level achieved!",
-    40: "Language mastery in progress!",
-    50: "Grandmaster status unlocked!",
+    30: 'Expert level achieved!',
+    40: 'Language mastery in progress!',
+    50: 'Grandmaster status unlocked!',
   };
 
-  const message = levelMessages[newLevel as keyof typeof levelMessages] || 
+  const message =
+    levelMessages[newLevel as keyof typeof levelMessages] ||
     `Amazing progress! Level ${newLevel} achieved!`;
 
   return (
@@ -288,20 +309,16 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
         </ConfettiContainer>
 
         <LevelUpTitle>🎉 LEVEL UP! 🎉</LevelUpTitle>
-        
+
         <NewLevelInfo levelColor={levelInfo.color}>
           <LevelAvatar levelColor={levelInfo.color}>
             {levelInfo.emoji}
             <LevelNumber levelColor={levelInfo.color}>{newLevel}</LevelNumber>
           </LevelAvatar>
-          <LevelTitleName levelColor={levelInfo.color}>
-            {levelInfo.title}
-          </LevelTitleName>
+          <LevelTitleName levelColor={levelInfo.color}>{levelInfo.title}</LevelTitleName>
         </NewLevelInfo>
 
-        <LevelDescription>
-          {message}
-        </LevelDescription>
+        <LevelDescription>{message}</LevelDescription>
 
         <LevelDescription>
           <strong>{totalXP.toLocaleString()} Total XP</strong>

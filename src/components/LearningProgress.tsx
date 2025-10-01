@@ -13,22 +13,21 @@ const progressGrow = keyframes`
 `;
 
 const Container = styled.div<{ enhanced?: boolean }>`
-  background: ${props => props.enhanced ? 
-    'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)' :
-    'rgba(255, 255, 255, 0.1)'
-  };
-  border: ${props => props.enhanced ? 
-    '2px solid rgba(59, 130, 246, 0.2)' :
-    'none'
-  };
-  border-radius: ${props => props.enhanced ? '16px' : '12px'};
+  background: ${props =>
+    props.enhanced
+      ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)'
+      : 'rgba(255, 255, 255, 0.1)'};
+  border: ${props => (props.enhanced ? '2px solid rgba(59, 130, 246, 0.2)' : 'none')};
+  border-radius: ${props => (props.enhanced ? '16px' : '12px')};
   padding: ${props => props.theme.spacing.md};
   margin: ${props => props.theme.spacing.md} 0;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.enhanced &&
+    `
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
@@ -59,13 +58,15 @@ const Container = styled.div<{ enhanced?: boolean }>`
 const Title = styled.h3<{ enhanced?: boolean }>`
   color: ${props => props.theme.colors.text};
   margin: 0 0 ${props => props.theme.spacing.sm} 0;
-  font-size: ${props => props.enhanced ? '1.3rem' : '1rem'};
-  font-weight: ${props => props.enhanced ? '700' : '500'};
+  font-size: ${props => (props.enhanced ? '1.3rem' : '1rem')};
+  font-weight: ${props => (props.enhanced ? '700' : '500')};
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.enhanced &&
+    `
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -74,21 +75,20 @@ const Title = styled.h3<{ enhanced?: boolean }>`
 `;
 
 const ProgressBar = styled.div<{ enhanced?: boolean }>`
-  background: ${props => props.enhanced ? 
-    'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0.2))' :
-    'rgba(0, 0, 0, 0.2)'
-  };
-  border-radius: ${props => props.enhanced ? '20px' : '8px'};
-  height: ${props => props.enhanced ? '24px' : '20px'};
+  background: ${props =>
+    props.enhanced
+      ? 'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0.2))'
+      : 'rgba(0, 0, 0, 0.2)'};
+  border-radius: ${props => (props.enhanced ? '20px' : '8px')};
+  height: ${props => (props.enhanced ? '24px' : '20px')};
   overflow: hidden;
   margin: ${props => props.theme.spacing.xs} 0;
   position: relative;
-  box-shadow: ${props => props.enhanced ? 
-    'inset 0 2px 4px rgba(0, 0, 0, 0.2)' :
-    'none'
-  };
+  box-shadow: ${props => (props.enhanced ? 'inset 0 2px 4px rgba(0, 0, 0, 0.2)' : 'none')};
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.enhanced &&
+    `
     &::before {
       content: '';
       position: absolute;
@@ -102,29 +102,32 @@ const ProgressBar = styled.div<{ enhanced?: boolean }>`
   `}
 `;
 
-const ProgressSegment = styled.div<{ 
-  width: number; 
-  color: string; 
-  enhanced?: boolean; 
+const ProgressSegment = styled.div<{
+  width: number;
+  color: string;
+  enhanced?: boolean;
   animate?: boolean;
   delay?: number;
 }>`
   height: 100%;
   width: ${props => props.width}%;
-  background: ${props => props.enhanced ? 
-    `linear-gradient(135deg, ${props.color}, ${props.color}cc)` :
-    props.color
-  };
+  background: ${props =>
+    props.enhanced ? `linear-gradient(135deg, ${props.color}, ${props.color}cc)` : props.color};
   display: inline-block;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  
-  ${props => props.animate && css`
-    animation: ${progressGrow} ${1 + (props.delay || 0) * 0.2}s ease-out ${(props.delay || 0) * 0.1}s both;
-    --target-width: ${props.width}%;
-  `}
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.animate &&
+    css`
+      animation: ${progressGrow} ${1 + (props.delay || 0) * 0.2}s ease-out
+        ${(props.delay || 0) * 0.1}s both;
+      --target-width: ${props.width}%;
+    `}
+
+  ${props =>
+    props.enhanced &&
+    `
     &::after {
       content: '';
       position: absolute;
@@ -151,36 +154,36 @@ const ProgressSegment = styled.div<{
 const Legend = styled.div<{ enhanced?: boolean }>`
   display: flex;
   flex-wrap: wrap;
-  gap: ${props => props.enhanced ? props.theme.spacing.md : props.theme.spacing.sm};
+  gap: ${props => (props.enhanced ? props.theme.spacing.md : props.theme.spacing.sm)};
   margin-top: ${props => props.theme.spacing.xs};
-  justify-content: ${props => props.enhanced ? 'center' : 'flex-start'};
+  justify-content: ${props => (props.enhanced ? 'center' : 'flex-start')};
 `;
 
 const LegendItem = styled.div<{ color: string; enhanced?: boolean }>`
   display: flex;
   align-items: center;
-  font-size: ${props => props.enhanced ? '0.9rem' : '0.8rem'};
+  font-size: ${props => (props.enhanced ? '0.9rem' : '0.8rem')};
   color: ${props => props.theme.colors.text};
-  padding: ${props => props.enhanced ? '6px 12px' : '4px 8px'};
-  border-radius: ${props => props.enhanced ? '20px' : '4px'};
-  background: ${props => props.enhanced ? 'rgba(255, 255, 255, 0.05)' : 'transparent'};
-  border: ${props => props.enhanced ? `1px solid ${props.color}40` : 'none'};
+  padding: ${props => (props.enhanced ? '6px 12px' : '4px 8px')};
+  border-radius: ${props => (props.enhanced ? '20px' : '4px')};
+  background: ${props => (props.enhanced ? 'rgba(255, 255, 255, 0.05)' : 'transparent')};
+  border: ${props => (props.enhanced ? `1px solid ${props.color}40` : 'none')};
   transition: all 0.3s ease;
 
   &::before {
     content: '';
-    width: ${props => props.enhanced ? '16px' : '12px'};
-    height: ${props => props.enhanced ? '16px' : '12px'};
-    background: ${props => props.enhanced ? 
-      `linear-gradient(135deg, ${props.color}, ${props.color}cc)` :
-      props.color
-    };
-    border-radius: ${props => props.enhanced ? '50%' : '2px'};
-    margin-right: ${props => props.enhanced ? '8px' : '6px'};
-    box-shadow: ${props => props.enhanced ? `0 0 8px ${props.color}40` : 'none'};
+    width: ${props => (props.enhanced ? '16px' : '12px')};
+    height: ${props => (props.enhanced ? '16px' : '12px')};
+    background: ${props =>
+      props.enhanced ? `linear-gradient(135deg, ${props.color}, ${props.color}cc)` : props.color};
+    border-radius: ${props => (props.enhanced ? '50%' : '2px')};
+    margin-right: ${props => (props.enhanced ? '8px' : '6px')};
+    box-shadow: ${props => (props.enhanced ? `0 0 8px ${props.color}40` : 'none')};
   }
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.enhanced &&
+    `
     &:hover {
       transform: translateY(-1px);
       background: rgba(255, 255, 255, 0.1);
@@ -191,22 +194,27 @@ const LegendItem = styled.div<{ color: string; enhanced?: boolean }>`
 
 const Stats = styled.div<{ enhanced?: boolean }>`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(${props => props.enhanced ? '100px' : '80px'}, 1fr));
-  gap: ${props => props.enhanced ? props.theme.spacing.md : props.theme.spacing.xs};
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(${props => (props.enhanced ? '100px' : '80px')}, 1fr)
+  );
+  gap: ${props => (props.enhanced ? props.theme.spacing.md : props.theme.spacing.xs)};
   margin-top: ${props => props.theme.spacing.sm};
 `;
 
 const StatItem = styled.div<{ enhanced?: boolean }>`
   text-align: center;
-  font-size: ${props => props.enhanced ? '0.9rem' : '0.8rem'};
+  font-size: ${props => (props.enhanced ? '0.9rem' : '0.8rem')};
   color: ${props => props.theme.colors.textSecondary};
-  padding: ${props => props.enhanced ? '12px' : '8px'};
-  border-radius: ${props => props.enhanced ? '12px' : '4px'};
-  background: ${props => props.enhanced ? 'rgba(255, 255, 255, 0.05)' : 'transparent'};
-  border: ${props => props.enhanced ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
+  padding: ${props => (props.enhanced ? '12px' : '8px')};
+  border-radius: ${props => (props.enhanced ? '12px' : '4px')};
+  background: ${props => (props.enhanced ? 'rgba(255, 255, 255, 0.05)' : 'transparent')};
+  border: ${props => (props.enhanced ? '1px solid rgba(255, 255, 255, 0.1)' : 'none')};
   transition: all 0.3s ease;
 
-  ${props => props.enhanced && `
+  ${props =>
+    props.enhanced &&
+    `
     &:hover {
       transform: translateY(-2px);
       background: rgba(255, 255, 255, 0.1);
@@ -216,12 +224,14 @@ const StatItem = styled.div<{ enhanced?: boolean }>`
 `;
 
 const StatValue = styled.div<{ enhanced?: boolean; color?: string }>`
-  font-size: ${props => props.enhanced ? '1.5rem' : '1.2rem'};
+  font-size: ${props => (props.enhanced ? '1.5rem' : '1.2rem')};
   font-weight: bold;
   color: ${props => props.color || props.theme.colors.primary};
-  margin-bottom: ${props => props.enhanced ? '6px' : '4px'};
-  
-  ${props => props.enhanced && `
+  margin-bottom: ${props => (props.enhanced ? '6px' : '4px')};
+
+  ${props =>
+    props.enhanced &&
+    `
     background: linear-gradient(135deg, ${props.color || '#3b82f6'}, ${props.color || '#3b82f6'}cc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -234,9 +244,9 @@ interface LearningProgressProps {
   enhanced?: boolean;
 }
 
-export const LearningProgress: React.FC<LearningProgressProps> = ({ 
-  compact = false, 
-  enhanced = false 
+export const LearningProgress: React.FC<LearningProgressProps> = ({
+  compact = false,
+  enhanced = false,
 }) => {
   const { wordProgress, language } = useSelector((state: RootState) => state.game);
   const [animateProgress, setAnimateProgress] = useState(false);
@@ -300,37 +310,37 @@ export const LearningProgress: React.FC<LearningProgressProps> = ({
     return (
       <Container enhanced={enhanced}>
         <ProgressBar enhanced={enhanced}>
-          <ProgressSegment 
-            width={percentages.new} 
-            color={colors.new} 
+          <ProgressSegment
+            width={percentages.new}
+            color={colors.new}
             enhanced={enhanced}
             animate={animateProgress}
             delay={0}
           />
-          <ProgressSegment 
-            width={percentages.struggling} 
-            color={colors.struggling} 
+          <ProgressSegment
+            width={percentages.struggling}
+            color={colors.struggling}
             enhanced={enhanced}
             animate={animateProgress}
             delay={1}
           />
-          <ProgressSegment 
-            width={percentages.learning} 
-            color={colors.learning} 
+          <ProgressSegment
+            width={percentages.learning}
+            color={colors.learning}
             enhanced={enhanced}
             animate={animateProgress}
             delay={2}
           />
-          <ProgressSegment 
-            width={percentages.learned} 
-            color={colors.learned} 
+          <ProgressSegment
+            width={percentages.learned}
+            color={colors.learned}
             enhanced={enhanced}
             animate={animateProgress}
             delay={3}
           />
-          <ProgressSegment 
-            width={percentages.mastered} 
-            color={colors.mastered} 
+          <ProgressSegment
+            width={percentages.mastered}
+            color={colors.mastered}
             enhanced={enhanced}
             animate={animateProgress}
             delay={4}
@@ -342,41 +352,39 @@ export const LearningProgress: React.FC<LearningProgressProps> = ({
 
   return (
     <Container enhanced={enhanced}>
-      <Title enhanced={enhanced}>
-        {enhanced ? '🎯 Learning Progress' : 'Learning Progress'}
-      </Title>
+      <Title enhanced={enhanced}>{enhanced ? '🎯 Learning Progress' : 'Learning Progress'}</Title>
       <ProgressBar enhanced={enhanced}>
-        <ProgressSegment 
-          width={percentages.new} 
-          color={colors.new} 
+        <ProgressSegment
+          width={percentages.new}
+          color={colors.new}
           enhanced={enhanced}
           animate={animateProgress}
           delay={0}
         />
-        <ProgressSegment 
-          width={percentages.struggling} 
-          color={colors.struggling} 
+        <ProgressSegment
+          width={percentages.struggling}
+          color={colors.struggling}
           enhanced={enhanced}
           animate={animateProgress}
           delay={1}
         />
-        <ProgressSegment 
-          width={percentages.learning} 
-          color={colors.learning} 
+        <ProgressSegment
+          width={percentages.learning}
+          color={colors.learning}
           enhanced={enhanced}
           animate={animateProgress}
           delay={2}
         />
-        <ProgressSegment 
-          width={percentages.learned} 
-          color={colors.learned} 
+        <ProgressSegment
+          width={percentages.learned}
+          color={colors.learned}
           enhanced={enhanced}
           animate={animateProgress}
           delay={3}
         />
-        <ProgressSegment 
-          width={percentages.mastered} 
-          color={colors.mastered} 
+        <ProgressSegment
+          width={percentages.mastered}
+          color={colors.mastered}
           enhanced={enhanced}
           animate={animateProgress}
           delay={4}
