@@ -1,6 +1,7 @@
 import type { Module, LanguageInfo, WordProgress } from '../store/types';
 import type { Word } from './wordService';
 import { logger } from './logger';
+import { DataIntegrityError } from '../utils/errorHandling';
 
 // Import language info files
 import deLanguageInfo from '../data/de/index.json';
@@ -42,7 +43,11 @@ export const getLanguageInfo = (languageCode: string): LanguageInfo | null => {
 export const getModule = (languageCode: string, moduleId: string): Module | null => {
   const moduleData = moduleRegistry[languageCode]?.[moduleId];
   if (!moduleData) {
-    logger.warn(`Module ${moduleId} not found for language ${languageCode}`);
+    const dataError = new DataIntegrityError(
+      `Module ${moduleId} not found for language ${languageCode}`,
+      { languageCode, moduleId }
+    );
+    logger.warn(dataError.message, dataError.context);
     return null;
   }
   return moduleData as Module;

@@ -1,6 +1,7 @@
 // Persistent storage utilities for LevelUp language learning app
 import type { WordProgress } from '../store/types';
 import { logger } from './logger';
+import { StorageError } from '../utils/errorHandling';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -53,7 +54,8 @@ const safeJSONParse = <T>(data: string | null, fallback: T): T => {
   try {
     return JSON.parse(data);
   } catch (error) {
-    logger.warn('Failed to parse stored data:', error);
+    const storageError = new StorageError('Failed to parse stored data', { data, error });
+    logger.warn(storageError.message, storageError.context);
     return fallback;
   }
 };
@@ -63,7 +65,8 @@ const safeJSONStringify = (data: any): string => {
   try {
     return JSON.stringify(data);
   } catch (error) {
-    logger.error('Failed to stringify data:', error);
+    const storageError = new StorageError('Failed to stringify data', { data, error });
+    logger.error(storageError.message, storageError.context);
     return '{}';
   }
 };
@@ -75,7 +78,9 @@ const isLocalStorageAvailable = (): boolean => {
     localStorage.setItem(test, test);
     localStorage.removeItem(test);
     return true;
-  } catch {
+  } catch (error) {
+    const storageError = new StorageError('localStorage not available', { error });
+    logger.warn(storageError.userMessage || 'Storage not available', storageError.context);
     return false;
   }
 };

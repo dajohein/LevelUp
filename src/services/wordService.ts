@@ -2,6 +2,7 @@
 import { calculateMasteryDecay } from './masteryService';
 import { getWordsForModule, getAvailableLanguages } from './moduleService';
 import type { WordProgress } from '../store/types';
+import { DataIntegrityError } from '../utils/errorHandling';
 
 // Type definitions
 interface Context {
@@ -56,7 +57,11 @@ const getLanguageData = (languageCode: string): LanguageData | null => {
       words: allWords,
     };
   } catch (error) {
-    console.warn(`Could not load language data for ${languageCode}:`, error);
+    const dataError = new DataIntegrityError(
+      `Could not load language data for ${languageCode}`,
+      { languageCode, error }
+    );
+    console.warn(dataError.userMessage, dataError.context);
     return null;
   }
 };
