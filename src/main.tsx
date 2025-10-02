@@ -8,7 +8,6 @@ import { router } from './router';
 import { theme } from './styles/theme';
 import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
-import { PerformanceMonitor } from './components/debug/PerformanceMonitor';
 import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
 import { initializeStorage } from './services/storageService';
 import { setupStorageSync } from './store/persistenceMiddleware';
@@ -33,7 +32,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <OfflineBanner />
             <RouterProvider router={router} />
             <PWAManager />
-            <PerformanceMonitor />
           </AudioProvider>
         </ErrorBoundary>
       </ThemeProvider>
