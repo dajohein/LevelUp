@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "icons:generate": "bash scripts/pwa/generate-icons.sh",
+    "clean": "rm -rf dist node_modules/.vite"
   },
   "dependencies": {
     "@emotion/react": "^11.11.0",
