@@ -9,8 +9,11 @@ import { theme } from './styles/theme';
 import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PerformanceMonitor } from './components/debug/PerformanceMonitor';
+import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
+import { PWADebugPanel } from './components/pwa/PWATestPanel';
 import { initializeStorage } from './services/storageService';
 import { setupStorageSync } from './store/persistenceMiddleware';
+import { registerPWA } from './services/pwaService';
 import './index.css';
 
 // Initialize the storage system
@@ -19,13 +22,19 @@ initializeStorage();
 // Setup cross-tab synchronization
 setupStorageSync(store);
 
+// Register PWA service worker
+registerPWA();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary>
           <AudioProvider>
+            <OfflineBanner />
             <RouterProvider router={router} />
+            <PWAManager />
+            <PWADebugPanel />
             <PerformanceMonitor />
           </AudioProvider>
         </ErrorBoundary>
