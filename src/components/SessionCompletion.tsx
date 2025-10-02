@@ -31,7 +31,7 @@ const ResultCard = styled.div<{ isSuccess: boolean }>`
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -39,9 +39,10 @@ const ResultCard = styled.div<{ isSuccess: boolean }>`
     left: 0;
     right: 0;
     height: 4px;
-    background: ${props => (props.isSuccess 
-      ? `linear-gradient(90deg, ${props.theme.colors.success}, ${props.theme.colors.primary})` 
-      : `linear-gradient(90deg, ${props.theme.colors.error}, #ff6b6b)`)};
+    background: ${props =>
+      props.isSuccess
+        ? `linear-gradient(90deg, ${props.theme.colors.success}, ${props.theme.colors.primary})`
+        : `linear-gradient(90deg, ${props.theme.colors.error}, #ff6b6b)`};
   }
 `;
 
@@ -268,7 +269,7 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
     <Container>
       {/* Confetti for successful session completion */}
       {isSuccess && <Confetti count={100} duration={5000} />}
-      
+
       <ResultCard isSuccess={isSuccess}>
         <ResultEmoji>{isSuccess ? '🎉' : '💪'}</ResultEmoji>
 

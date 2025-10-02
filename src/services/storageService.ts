@@ -94,13 +94,6 @@ export const wordProgressStorage = {
       // Ensure we're only saving to the specific language key
       existingData[languageCode] = wordProgress;
 
-      // Safeguard: Ensure Spanish is always separate from German
-      if (languageCode === 'de' && !existingData['es']) {
-        existingData['es'] = {}; // Ensure Spanish has its own empty space
-      } else if (languageCode === 'es' && !existingData['de']) {
-        existingData['de'] = {}; // Ensure German has its own empty space
-      }
-
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
 
       // Debug logging for language separation

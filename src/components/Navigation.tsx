@@ -188,7 +188,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   // Determine if we should show global or language-specific stats
   const isGlobalView = location.pathname === '/';
   const currentLanguageCode = language;
-  
+
   let currentLevel = 1;
   let levelInfo = getLevelInfo(1);
   let userProgress = {};
@@ -197,18 +197,21 @@ export const Navigation: React.FC<NavigationProps> = ({
   if (isGlobalView) {
     // On languages overview - show global stats across all languages
     const allProgressData = wordProgressStorage.loadAll();
-    
+
     // Calculate total XP across all languages
     Object.values(allProgressData).forEach(languageProgress => {
       if (languageProgress && typeof languageProgress === 'object') {
-        totalXP += Object.values(languageProgress).reduce((sum, progress) => sum + (progress?.xp || 0), 0);
+        totalXP += Object.values(languageProgress).reduce(
+          (sum, progress) => sum + (progress?.xp || 0),
+          0
+        );
       }
     });
-    
+
     // Use global XP to determine level
     currentLevel = calculateCurrentLevel(totalXP);
     levelInfo = getLevelInfo(currentLevel);
-    
+
     // Check if user has any progress at all
     const hasAnyProgress = totalXP > 0;
     userProgress = hasAnyProgress ? { hasProgress: true } : {};
@@ -282,7 +285,8 @@ export const Navigation: React.FC<NavigationProps> = ({
       {!languageName && !languageFlag && <AppTitle>🚀 LevelUp</AppTitle>}
 
       {showUserProfile &&
-        ((isGlobalView && Object.keys(userProgress).length > 0) || (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
+        ((isGlobalView && Object.keys(userProgress).length > 0) ||
+          (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
           <UserProfileCompact onClick={() => navigate('/profile')}>
             <UserAvatar levelColor={levelInfo.color}>
               {levelInfo.emoji}
@@ -296,7 +300,8 @@ export const Navigation: React.FC<NavigationProps> = ({
         )}
 
       {showUserProfile &&
-        ((isGlobalView && Object.keys(userProgress).length === 0) || (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
+        ((isGlobalView && Object.keys(userProgress).length === 0) ||
+          (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
           <UserProfileCompact onClick={() => navigate('/profile')}>
             <UserAvatar levelColor="#4caf50">👤</UserAvatar>
             <UserStats>

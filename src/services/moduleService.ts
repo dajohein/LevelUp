@@ -10,13 +10,13 @@ import esLanguageInfo from '../data/es/index.json';
 import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 
-// Available languages registry
+// Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
   de: deLanguageInfo,
   es: esLanguageInfo,
 } as const;
 
-// Module registry for dynamic imports
+// Module registry for static imports (restored for browser compatibility)
 const moduleRegistry: Record<string, Record<string, any>> = {
   de: {
     grundwortschatz: deGrundwortschatz,

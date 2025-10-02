@@ -4,7 +4,34 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 
 ## 🧠 Intelligent Learning System
 
-**Revolutionary learning experience with scientific spaced repetition!**
+**Revolutionary learnin## 🔧 Development Notes
+
+### Language Data Isolation
+
+The application implements **strict language separation** to prevent data contamination:
+
+- **Per-Language Storage**: Each language maintains isolated progress (`de_progress`, `es_progre## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🎯 Key Features Summaryedux State Separation**: Language-specific progress loading prevents cross-contamination  
+- **Storage Safeguards**: Multiple validation layers ensure data integrity
+- **Migration-Safe Design**: Robust data migration utilities for format changes
+
+**Critical Architecture Rules:**
+```typescript
+// ✅ CORRECT: Language-scoped storage
+wordProgressStorage.save('de', germanProgress);
+wordProgressStorage.save('es', spanishProgress);
+
+// ✅ CORRECT: Load only current language data
+const languageProgress = wordProgressStorage.load(currentLanguage);
+
+// ❌ WRONG: Never merge cross-language data
+const mixedProgress = { ...germanProgress, ...spanishProgress };
+```
+
+## 🛠 Troubleshooting experience with scientific spaced repetition!**
 
 ### 🎯 Problem Solved
 - **Before**: Boring progression through 50 multiple choice → 50 letter scramble → 50 open questions
@@ -137,25 +164,11 @@ const LEARNING_PHASES = {
 };
 ```
 
-### Multi-Language Data Isolation
-The application implements **strict language separation** to prevent data contamination between different languages:
-
-- **Per-Language Storage**: Each language maintains isolated progress data (`de_progress`, `es_progress`)
-- **Redux State Separation**: Language-specific progress loading prevents cross-contamination
-- **Storage Safeguards**: Multiple validation layers ensure data integrity across browser sessions
-- **Migration-Safe Design**: Robust data migration utilities for format changes
-
 ### Key Architectural Decisions
-1. **Language-Scoped Progress**: `wordProgressStorage.save(languageCode, progress)` ensures strict isolation
-2. **State Management**: Redux slices load only current language data, not mixed global state
-3. **Storage Validation**: Debug logging and integrity checks prevent silent data corruption
-4. **Reload Persistence**: Cross-tab synchronization maintains language separation after page reloads
-
-### Lessons Learned: Preventing Data Mixing
-- **Never merge cross-language data** in Redux state - always load language-specific subsets
-- **Implement storage-level validation** to catch contamination early with debug logging
-- **Use consistent language prefixing** in storage keys to prevent accidental merging
-- **Test browser reload scenarios** as they often expose hidden state persistence bugs
+1. **Language-Scoped Progress**: Ensures strict data isolation between languages
+2. **State Management**: Redux slices load only current language data
+3. **Storage Validation**: Debug logging and integrity checks prevent data corruption
+4. **Reload Persistence**: Cross-tab synchronization maintains language separation
 
 ## 🚀 Getting Started
 
@@ -238,6 +251,48 @@ LevelUp uses an advanced spaced repetition learning system to optimize your voca
 - **Real-time feedback** shows letter correctness as you type
 
 ## 📚 Documentation
+
+### Development & Configuration
+
+#### Language-Agnostic Architecture
+
+The codebase is fully language-agnostic with configurable validation rules:
+
+**Language Configuration Structure:**
+```
+src/data/{language-code}/
+├── index.json              # Language metadata
+└── {module-name}.json      # Module content and words
+```
+
+**Adding New Languages:**
+1. Create language directory: `src/data/{code}/`
+2. Add language metadata: `src/data/{code}/index.json`
+3. Add module files: `src/data/{code}/{module}.json`
+4. Optionally configure rules in `src/config/languageRules.ts`
+
+**Language Rules Configuration:**
+```typescript
+// src/config/languageRules.ts
+const languageRulesConfig: Record<string, LanguageRules> = {
+  de: {
+    caseSensitive: true,
+    capitalizationRequired: true,
+    articles: ['der', 'die', 'das', 'den', 'dem', 'des'],
+    feedback: {
+      capitalizationError: 'German nouns need to be capitalized!'
+    }
+  },
+  es: {
+    caseSensitive: false,
+    capitalizationRequired: false
+  }
+};
+```
+
+**Validation Tools:**
+- `scripts/validate-languages.cjs` - Basic configuration validation
+- `scripts/comprehensive-validation.cjs` - Full integration testing
 
 ### Architecture Overview
 

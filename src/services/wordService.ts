@@ -1,8 +1,6 @@
 // Import dependencies
-import spanishModuleVocabularioBasico from '../data/es/vocabulario-basico.json';
-import germanModuleGrundwortschatz from '../data/de/grundwortschatz.json';
 import { calculateMasteryDecay } from './masteryService';
-import { getWordsForModule } from './moduleService';
+import { getWordsForModule, getAvailableLanguages } from './moduleService';
 import type { WordProgress } from '../store/types';
 
 // Type definitions
@@ -34,31 +32,54 @@ export interface WordList {
   [key: string]: LanguageData;
 }
 
-// Add unique IDs to words
-const addIdsToWords = (words: Omit<Word, 'id'>[], langCode: string): Word[] => {
-  return words.map((word, index) => ({
-    ...word,
-    id: `${langCode}-${index}`,
-  }));
+// Dynamic language data loading
+const getLanguageData = (languageCode: string): LanguageData | null => {
+  try {
+    const languages = getAvailableLanguages();
+    const language = languages.find(l => l.code === languageCode);
+
+    if (!language) {
+      return null;
+    }
+
+    // Get all words from all modules for this language
+    const allWords: Word[] = [];
+    for (const moduleInfo of language.info.modules) {
+      const moduleWords = getWordsForModule(languageCode, moduleInfo.id);
+      allWords.push(...moduleWords);
+    }
+
+    return {
+      name: language.info.name,
+      from: language.info.from,
+      flag: language.info.flag,
+      words: allWords,
+    };
+  } catch (error) {
+    console.warn(`Could not load language data for ${languageCode}:`, error);
+    return null;
+  }
 };
 
-export const words: { [key: string]: LanguageData } = {
-  es: {
-    name: 'Spanish',
-    from: 'Dutch',
-    flag: '🇪🇸',
-    words: addIdsToWords(spanishModuleVocabularioBasico.words as Omit<Word, 'id'>[], 'es'),
-  },
-  de: {
-    name: 'German',
-    from: 'Dutch',
-    flag: '🇩🇪',
-    words: addIdsToWords(germanModuleGrundwortschatz.words as Omit<Word, 'id'>[], 'de'),
-  },
-};
+// Dynamic words object - loads language data on demand
+export const words: { [key: string]: LanguageData } = new Proxy(
+  {} as { [key: string]: LanguageData },
+  {
+    get(target: { [key: string]: LanguageData }, prop: string): LanguageData | undefined {
+      if (!target[prop]) {
+        const languageData = getLanguageData(prop);
+        if (languageData) {
+          target[prop] = languageData;
+        }
+      }
+      return target[prop];
+    },
+  }
+);
 
 export const getWordsForLanguage = (languageCode: string): Word[] => {
-  return words[languageCode]?.words || [];
+  const languageData = getLanguageData(languageCode);
+  return languageData?.words || [];
 };
 
 // Get n random items from an array, excluding the one with excludeId

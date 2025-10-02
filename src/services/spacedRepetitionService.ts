@@ -348,14 +348,16 @@ export const interleaveSessionWords = (
   ];
 
   // Add bi-directional learning support: randomly assign direction ONLY if not already present
-  // This preserves intentional directions (like German) while adding bi-directional support for others (like Spanish)
+  // This preserves intentional directions while adding bi-directional support for others
   const wordsWithDirection = allWords.map(wordData => ({
     ...wordData,
     word: {
       ...wordData.word,
       // Only assign random direction if no direction is explicitly set
-      direction: wordData.word.direction || (Math.random() < 0.5 ? 'definition-to-term' : 'term-to-definition')
-    }
+      direction:
+        wordData.word.direction ||
+        (Math.random() < 0.5 ? 'definition-to-term' : 'term-to-definition'),
+    },
   }));
 
   // Shuffle array using Fisher-Yates algorithm for true randomness
@@ -364,7 +366,9 @@ export const interleaveSessionWords = (
     [wordsWithDirection[i], wordsWithDirection[j]] = [wordsWithDirection[j], wordsWithDirection[i]];
   }
 
-  logger.debug(`🔀 Interleaved ${wordsWithDirection.length} words for varied practice with bi-directional support`);
+  logger.debug(
+    `🔀 Interleaved ${wordsWithDirection.length} words for varied practice with bi-directional support`
+  );
 
   return wordsWithDirection;
 };

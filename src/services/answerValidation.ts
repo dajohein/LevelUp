@@ -1,58 +1,23 @@
-// Utility functions for language-specific answer validation
+// Language-agnostic answer validation using configurable rules
+import {
+  getLanguageRules,
+  shouldBeCapitalized,
+  extractMainNoun,
+  getCapitalizationFeedbackMessage,
+} from '../config/languageRules';
 
 export interface AnswerValidation {
   isCorrect: boolean;
   capitalizationCorrect: boolean;
-  capitalizationPenalty: number; // 0-1, where 1 means no penalty
+  capitalizationPenalty: number; // 0.5-1.0, where 1.0 = no penalty
 }
 
-// Check if a word should be capitalized in German (nouns, proper nouns, sentence beginnings)
-const shouldBeCapitalizedInGerman = (word: string): boolean => {
-  // Common German articles that indicate the word is a noun
-  const germanArticles = ['der', 'die', 'das', 'den', 'dem', 'des'];
-
-  // Check if the word starts with an article (indicating it's a noun phrase)
-  const wordLower = word.toLowerCase();
-  for (const article of germanArticles) {
-    if (wordLower.startsWith(article + ' ')) {
-      return true; // The noun part should be capitalized
-    }
-  }
-
-  // If it's a single word, assume it's a noun if it's being tested in German
-  // In German vocabulary learning, most single words being tested are nouns
-  if (!word.includes(' ')) {
-    return true; // Single words in German vocabulary are usually nouns
-  }
-
-  // Check for common German noun patterns in phrases
-  const germanNounPatterns = [
-    /\b(der|die|das|den|dem|des)\s+[a-z]/i, // Article + noun
-    /\b[A-Z][a-z]*(?:ung|heit|keit|schaft|tum|nis|chen|lein)\b/i, // Common noun endings
-    /\b[A-Z][a-z]*(?:er|in)\b/i, // Person/profession endings
-  ];
-
-  return germanNounPatterns.some(pattern => pattern.test(word));
-};
-
-// Extract the main noun from a German phrase
-const extractMainNoun = (phrase: string): string => {
-  const words = phrase.split(' ');
-  const germanArticles = ['der', 'die', 'das', 'den', 'dem', 'des'];
-
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i].toLowerCase();
-    if (germanArticles.includes(word) && i + 1 < words.length) {
-      return words[i + 1]; // Return the word after the article
-    }
-  }
-
-  // If no article found, assume the first word is the main noun
-  return words[0];
-};
-
-// Check capitalization for German answers
-const checkGermanCapitalization = (userAnswer: string, correctAnswer: string): AnswerValidation => {
+// Check capitalization for languages that require it
+const checkCapitalization = (
+  userAnswer: string,
+  correctAnswer: string,
+  language: string
+): AnswerValidation => {
   const userLower = userAnswer.toLowerCase();
   const correctLower = correctAnswer.toLowerCase();
 
@@ -71,28 +36,36 @@ const checkGermanCapitalization = (userAnswer: string, correctAnswer: string): A
   let capitalizationCorrect = userAnswer === correctAnswer;
   let capitalizationPenalty = 1.0;
 
-  if (!capitalizationCorrect && shouldBeCapitalizedInGerman(correctAnswer)) {
+  if (!capitalizationCorrect && shouldBeCapitalized(correctAnswer, language)) {
     // Check if the main noun is correctly capitalized
-    const userMainNoun = extractMainNoun(userAnswer);
-    const correctMainNoun = extractMainNoun(correctAnswer);
+    const userMainNoun = extractMainNoun(userAnswer, language);
+    const correctMainNoun = extractMainNoun(correctAnswer, language);
 
-    const mainNounCorrect = userMainNoun === correctMainNoun;
+    if (userMainNoun.toLowerCase() === correctMainNoun.toLowerCase()) {
+      const isMainNounCapitalized = userMainNoun[0] === userMainNoun[0].toUpperCase();
 
-    if (mainNounCorrect) {
-      // Main noun is correctly capitalized, minor penalty
-      capitalizationPenalty = 0.9; // 10% penalty
+      if (isMainNounCapitalized) {
+        // Main noun is capitalized, but other parts might not be
+        capitalizationPenalty = 0.9; // Minor penalty
+      } else {
+        // Main noun is not capitalized
+        capitalizationPenalty = 0.7; // Moderate penalty
+      }
     } else {
-      // Main noun capitalization is wrong, moderate penalty
-      capitalizationPenalty = 0.7; // 30% penalty
+      // More complex capitalization issues
+      capitalizationPenalty = 0.6; // Major penalty
     }
 
-    // Check if other capitalizations are wrong too
+    // Count wrong capitalizations to apply additional penalties
     const userWords = userAnswer.split(' ');
     const correctWords = correctAnswer.split(' ');
     let wrongCapitalizations = 0;
 
     for (let i = 0; i < Math.min(userWords.length, correctWords.length); i++) {
-      if (userWords[i] !== correctWords[i]) {
+      if (
+        userWords[i].toLowerCase() === correctWords[i].toLowerCase() &&
+        userWords[i] !== correctWords[i]
+      ) {
         wrongCapitalizations++;
       }
     }
@@ -116,9 +89,11 @@ export const validateAnswer = (
   correctAnswer: string,
   language: string
 ): AnswerValidation => {
-  // For German, use case-sensitive validation
-  if (language === 'de') {
-    return checkGermanCapitalization(userAnswer, correctAnswer);
+  const rules = getLanguageRules(language);
+
+  // Use case-sensitive validation for languages that require it
+  if (rules.caseSensitive) {
+    return checkCapitalization(userAnswer, correctAnswer, language);
   }
 
   // For other languages, use case-insensitive validation
@@ -126,7 +101,7 @@ export const validateAnswer = (
 
   return {
     isCorrect,
-    capitalizationCorrect: true, // Not applicable for non-German
+    capitalizationCorrect: true, // Not applicable for case-insensitive languages
     capitalizationPenalty: 1.0,
   };
 };
@@ -136,17 +111,23 @@ export const getCapitalizationFeedback = (
   validation: AnswerValidation,
   language: string
 ): string | null => {
-  if (language !== 'de' || validation.capitalizationCorrect || !validation.isCorrect) {
+  const rules = getLanguageRules(language);
+
+  if (!rules.caseSensitive || validation.capitalizationCorrect || !validation.isCorrect) {
     return null;
   }
 
   const penaltyPercent = Math.round((1 - validation.capitalizationPenalty) * 100);
 
+  let severity: 'minor' | 'moderate' | 'major';
   if (validation.capitalizationPenalty >= 0.9) {
-    return `✓ Correct! Remember: German nouns are capitalized (-${penaltyPercent}% bonus)`;
+    severity = 'minor';
   } else if (validation.capitalizationPenalty >= 0.7) {
-    return `✓ Correct! Watch your capitalization: German nouns start with capital letters (-${penaltyPercent}% bonus)`;
+    severity = 'moderate';
   } else {
-    return `✓ Correct! Important: German nouns and articles must be properly capitalized (-${penaltyPercent}% bonus)`;
+    severity = 'major';
   }
+
+  const message = getCapitalizationFeedbackMessage(language, severity);
+  return message ? `${message} (-${penaltyPercent}% bonus)` : null;
 };

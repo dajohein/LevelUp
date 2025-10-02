@@ -1,6 +1,6 @@
 /**
  * Learning Card Component
- * 
+ *
  * Shows a new word with its translation and context before testing
  * Helps users learn the word before being quizzed on it
  */
@@ -95,13 +95,21 @@ const ProgressBar = styled.div`
 
 const ProgressFill = styled.div<{ progress: number }>`
   height: 100%;
-  background: linear-gradient(90deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.secondary});
+  background: linear-gradient(
+    90deg,
+    ${props => props.theme.colors.primary},
+    ${props => props.theme.colors.secondary}
+  );
   width: ${props => props.progress}%;
   transition: width 0.3s ease;
 `;
 
 const ContinueButton = styled.button`
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.secondary});
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary},
+    ${props => props.theme.colors.secondary}
+  );
   color: white;
   border: none;
   border-radius: 12px;
@@ -157,9 +165,9 @@ export const LearningCard: React.FC<LearningCardProps> = ({
     if (autoAdvance) {
       // Reset timer when autoAdvance or delay changes
       setTimeLeft(autoAdvanceDelay / 1000);
-      
+
       const timer = setTimeout(() => onContinueRef.current(), autoAdvanceDelay);
-      
+
       const countdown = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -209,9 +217,7 @@ export const LearningCard: React.FC<LearningCardProps> = ({
       <WordDisplay>
         <MainWord>{getQuestionWord(word)}</MainWord>
         <Translation>{getAnswerWord(word)}</Translation>
-        {word.context && (
-          <Context>"{word.context}"</Context>
-        )}
+        {word.context && <Context>"{word.context}"</Context>}
       </WordDisplay>
 
       <Progress>
@@ -223,14 +229,10 @@ export const LearningCard: React.FC<LearningCardProps> = ({
         </ProgressBar>
       </Progress>
 
-      <ContinueButton onClick={onContinue}>
-        Ready to Practice
-      </ContinueButton>
+      <ContinueButton onClick={onContinue}>Ready to Practice</ContinueButton>
 
       {autoAdvance && timeLeft > 0 && (
-        <Timer>
-          Auto-advancing in {timeLeft}s (click to continue now)
-        </Timer>
+        <Timer>Auto-advancing in {timeLeft}s (click to continue now)</Timer>
       )}
     </CardContainer>
   );

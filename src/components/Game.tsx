@@ -462,14 +462,12 @@ const PrecisionModeContainer = styled.div`
 
 const BossBattleContainer = styled.div<{ damage?: boolean }>`
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1e 100%);
-  border: 3px solid #8B0000;
+  border: 3px solid #8b0000;
   border-radius: 20px;
   padding: ${props => props.theme.spacing.lg};
   position: relative;
   animation: ${props => (props.damage ? 'bossShake 0.5s ease-in-out' : 'none')};
-  box-shadow: 
-    0 0 30px rgba(139, 0, 0, 0.4),
-    inset 0 0 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 30px rgba(139, 0, 0, 0.4), inset 0 0 50px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 
   &::before {
@@ -499,25 +497,47 @@ const BossBattleContainer = styled.div<{ damage?: boolean }>`
   }
 
   @keyframes bossShake {
-    0%, 100% { transform: translateX(0); }
-    10% { transform: translateX(-5px) rotate(-0.5deg); }
-    20% { transform: translateX(5px) rotate(0.5deg); }
-    30% { transform: translateX(-3px) rotate(-0.3deg); }
-    40% { transform: translateX(3px) rotate(0.3deg); }
-    50% { transform: translateX(-2px); }
-    60% { transform: translateX(2px); }
-    70% { transform: translateX(-1px); }
-    80% { transform: translateX(1px); }
-    90% { transform: translateX(0); }
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10% {
+      transform: translateX(-5px) rotate(-0.5deg);
+    }
+    20% {
+      transform: translateX(5px) rotate(0.5deg);
+    }
+    30% {
+      transform: translateX(-3px) rotate(-0.3deg);
+    }
+    40% {
+      transform: translateX(3px) rotate(0.3deg);
+    }
+    50% {
+      transform: translateX(-2px);
+    }
+    60% {
+      transform: translateX(2px);
+    }
+    70% {
+      transform: translateX(-1px);
+    }
+    80% {
+      transform: translateX(1px);
+    }
+    90% {
+      transform: translateX(0);
+    }
   }
 
   @keyframes swordGlow {
-    0%, 100% {
-      filter: drop-shadow(0 0 5px #8B0000);
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px #8b0000);
       transform: rotate(-10deg);
     }
     50% {
-      filter: drop-shadow(0 0 20px #DC143C);
+      filter: drop-shadow(0 0 20px #dc143c);
       transform: rotate(10deg);
     }
   }
@@ -641,41 +661,40 @@ const BossAvatar = styled.div<{ health: number }>`
   transform: translateY(-50%);
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #8B0000, #DC143C);
+  background: linear-gradient(135deg, #8b0000, #dc143c);
   border-radius: 50%;
-  border: 4px solid #FFD700;
+  border: 4px solid #ffd700;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  box-shadow: 
-    0 0 30px rgba(255, 215, 0, 0.6),
-    inset 0 0 20px rgba(0, 0, 0, 0.3);
-  animation: ${props => props.health < 30 ? 'bossEnraged 1s ease-in-out infinite' : 'bossBreathing 3s ease-in-out infinite'};
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3);
+  animation: ${props =>
+    props.health < 30
+      ? 'bossEnraged 1s ease-in-out infinite'
+      : 'bossBreathing 3s ease-in-out infinite'};
   z-index: 2;
-  
+
   &::before {
     content: '👹';
-    filter: drop-shadow(0 0 10px #8B0000);
+    filter: drop-shadow(0 0 10px #8b0000);
   }
-  
+
   @keyframes bossBreathing {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(-50%) scale(1);
-      box-shadow: 
-        0 0 30px rgba(255, 215, 0, 0.6),
-        inset 0 0 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3);
     }
     50% {
       transform: translateY(-50%) scale(1.05);
-      box-shadow: 
-        0 0 40px rgba(255, 215, 0, 0.8),
-        inset 0 0 30px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.4);
     }
   }
-  
+
   @keyframes bossEnraged {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(-50%) scale(1);
       filter: hue-rotate(0deg);
     }
@@ -694,14 +713,14 @@ const BossNamePlate = styled.div`
 const BossName = styled.div`
   font-size: 1.2rem;
   font-weight: bold;
-  color: #FFD700;
+  color: #ffd700;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   margin-bottom: 4px;
 `;
 
 const BossTitle = styled.div`
   font-size: 0.9rem;
-  color: #DC143C;
+  color: #dc143c;
   font-style: italic;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 `;
@@ -716,7 +735,7 @@ const HealthBarBackground = styled.div`
   height: 24px;
   background: linear-gradient(90deg, rgba(139, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
   border-radius: 12px;
-  border: 2px solid #8B0000;
+  border: 2px solid #8b0000;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 `;
@@ -724,15 +743,10 @@ const HealthBarBackground = styled.div`
 const HealthBarFill = styled.div<{ health: number }>`
   width: ${props => props.health}%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    #DC143C 0%, 
-    #FF4500 30%, 
-    #FFD700 70%, 
-    #32CD32 100%
-  );
+  background: linear-gradient(90deg, #dc143c 0%, #ff4500 30%, #ffd700 70%, #32cd32 100%);
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -748,7 +762,7 @@ const HealthBarFill = styled.div<{ health: number }>`
     );
     animation: healthShimmer 2s linear infinite;
   }
-  
+
   @keyframes healthShimmer {
     0% {
       transform: translateX(-100%);
@@ -766,7 +780,7 @@ const HealthText = styled.div<{ health: number }>`
   transform: translate(-50%, -50%);
   font-weight: bold;
   font-size: 0.9rem;
-  color: ${props => props.health > 30 ? '#FFFFFF' : '#FFD700'};
+  color: ${props => (props.health > 30 ? '#FFFFFF' : '#FFD700')};
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   z-index: 1;
@@ -779,18 +793,22 @@ const BossHealthBar = styled.div<{ health: number }>`
   padding: ${props => props.theme.spacing.md};
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(139, 0, 0, 0.6));
   border-radius: 20px;
-  border: 3px solid #8B0000;
-  box-shadow: 
-    0 0 20px rgba(139, 0, 0, 0.5),
-    inset 0 0 20px rgba(0, 0, 0, 0.5);
+  border: 3px solid #8b0000;
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5);
 `;
 
 export const Game: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
-  const { currentWord, currentOptions, quizMode, wordProgress, capitalizationFeedback, language: gameLanguage } =
-    useSelector((state: RootState) => state.game);
+  const {
+    currentWord,
+    currentOptions,
+    quizMode,
+    wordProgress,
+    capitalizationFeedback,
+    language: gameLanguage,
+  } = useSelector((state: RootState) => state.game);
   const {
     currentSession,
     progress: sessionProgress,
@@ -826,7 +844,6 @@ export const Game: React.FC = () => {
     handleEnhancedAnswer,
     getCurrentWordInfo,
     getSessionStats,
-    getLearningRecommendations,
     forceCompleteSession,
   } = useEnhancedGame(languageCode!, moduleId);
 
@@ -837,8 +854,10 @@ export const Game: React.FC = () => {
   useEffect(() => {
     const enhancedWordInfo = getCurrentWordInfo();
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    const currentQuestionKey = `${wordToUse?.id || 'unknown'}-${wordToUse ? getQuestionWord(wordToUse) : 'unknown'}`;
-    
+    const currentQuestionKey = `${wordToUse?.id || 'unknown'}-${
+      wordToUse ? getQuestionWord(wordToUse) : 'unknown'
+    }`;
+
     // Clear feedback if word has changed
     if (previousWordRef.current && previousWordRef.current !== currentQuestionKey) {
       setLastAnswerCorrect(null);
@@ -853,12 +872,20 @@ export const Game: React.FC = () => {
   useEffect(() => {
     if (isUsingSpacedRepetition && currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
-      if (enhancedWordInfo && enhancedWordInfo.wordType === 'group' && !enhancedWordInfo.isReviewWord) {
+      if (
+        enhancedWordInfo &&
+        enhancedWordInfo.wordType === 'group' &&
+        !enhancedWordInfo.isReviewWord
+      ) {
         // Check if this word is truly new (never practiced before)
         const currentWordProgress = wordProgress[currentWord.id];
-        const isTrulyNewWord = !currentWordProgress || 
-          calculateMasteryDecay(currentWordProgress.lastPracticed || '', currentWordProgress.xp || 0) < 20;
-        
+        const isTrulyNewWord =
+          !currentWordProgress ||
+          calculateMasteryDecay(
+            currentWordProgress.lastPracticed || '',
+            currentWordProgress.xp || 0
+          ) < 20;
+
         setShowLearningCard(isTrulyNewWord);
       } else {
         setShowLearningCard(false);
@@ -867,12 +894,6 @@ export const Game: React.FC = () => {
       setShowLearningCard(false);
     }
   }, [isUsingSpacedRepetition, currentWord, wordProgress, getCurrentWordInfo]); // Include all dependencies
-
-  // Language flags mapping
-  const languageFlags: { [key: string]: string } = {
-    es: '🇪🇸',
-    de: '🇩🇪',
-  };
 
   useEffect(() => {
     if (languageCode) {
@@ -884,11 +905,11 @@ export const Game: React.FC = () => {
         dispatch(setCurrentModule(moduleId));
       }
 
-      // Get language name from wordService
+      // Get language name and flag from dynamic language data
       const langData = words[languageCode];
       if (langData) {
         setLanguageName(langData.name);
-        setLanguageFlag(languageFlags[languageCode] || '');
+        setLanguageFlag(langData.flag);
       }
 
       // Load the first word after setting the language
@@ -961,12 +982,12 @@ export const Game: React.FC = () => {
     if (isSessionActive && currentSession && !sessionCompleted && currentSession.timeLimit) {
       if (sessionTimer >= currentSession.timeLimit * 60) {
         setSessionCompleted(true);
-        
+
         // Record analytics for enhanced learning system
         if (isUsingSpacedRepetition) {
           forceCompleteSession();
         }
-        
+
         dispatch(completeSession());
         navigate(`/session-complete/${languageCode}`);
       }
@@ -1023,13 +1044,15 @@ export const Game: React.FC = () => {
     setFeedbackWordInfo({
       originalWord: getQuestionWord(currentWordToUse),
       correctAnswer: getAnswerWord(currentWordToUse),
-      context: currentWordToUse?.context || ''
+      context: currentWordToUse?.context || '',
     });
 
     // Update local feedback state
     setLastAnswerCorrect(isCorrect);
     setLastSelectedAnswer(answer);
-    setFeedbackQuestionKey(`${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}`); // Track unique question instance
+    setFeedbackQuestionKey(
+      `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}`
+    ); // Track unique question instance
 
     // Play audio feedback
     if (isCorrect) {
@@ -1044,19 +1067,10 @@ export const Game: React.FC = () => {
       if (result.isComplete) {
         // Session completed - show recommendations and analytics
         setSessionCompleted(true);
-        const recommendations = getLearningRecommendations();
-        console.log('Enhanced session completed with recommendations:', recommendations);
-        console.log('Game languageCode from params:', languageCode);
-        console.log('Game language from Redux state:', gameLanguage);
-        
-        // Get the actual language code used by enhanced system
-        const enhancedStats = getSessionStats();
-        console.log('Enhanced system stats:', enhancedStats);
-        
+
         // Use the correct language code for navigation
         const actualLanguageCode = gameLanguage || languageCode;
-        console.log('Using language code for navigation:', actualLanguageCode);
-        
+
         // Complete the session in Redux store and navigate
         dispatch(completeSession());
         navigate(`/session-complete/${actualLanguageCode}`);
@@ -1064,18 +1078,21 @@ export const Game: React.FC = () => {
         // Move to next word
         setInputValue('');
         setIsTransitioning(true);
-        
+
         // Update session counter if answer was correct and we're in a session
         if (isCorrect && isSessionActive && currentSession) {
           dispatch(incrementWordsCompleted());
         }
 
-        setTimeout(() => {
-          setIsTransitioning(false);
-          setWordTimer(0);
-          setWordStartTime(Date.now());
-          // Note: feedback state is reset by useEffect when word changes
-        }, isCorrect ? 1200 : 3000); // Fast for correct, slower for incorrect to show feedback
+        setTimeout(
+          () => {
+            setIsTransitioning(false);
+            setWordTimer(0);
+            setWordStartTime(Date.now());
+            // Note: feedback state is reset by useEffect when word changes
+          },
+          isCorrect ? 1200 : 3000
+        ); // Fast for correct, slower for incorrect to show feedback
       }
     }
   };
@@ -1084,7 +1101,7 @@ export const Game: React.FC = () => {
   const checkAnswerCorrectness = (answer: string): boolean => {
     const enhancedWordInfo = getCurrentWordInfo();
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    
+
     if (!wordToUse) return false;
 
     const correctAnswer = getAnswerWord(wordToUse);
@@ -1151,96 +1168,99 @@ export const Game: React.FC = () => {
 
     // Generate unique key for current question
     const currentQuestionKey = `${wordToUse.id}-${getQuestionWord(wordToUse)}`;
-    
+
     // Only show feedback if it belongs to the current question instance
     const shouldShowFeedback = feedbackQuestionKey.startsWith(currentQuestionKey);
     const currentAnswerCorrect = shouldShowFeedback ? lastAnswerCorrect : null;
     const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
 
-    const quizContent = showLearningCard && isUsingSpacedRepetition ? (
-      <LearningCard
-        word={wordToUse}
-        currentIndex={getSessionStats()?.currentIndex || 0}
-        totalWords={getSessionStats()?.totalWords || 1}
-        onContinue={handleContinueFromLearningCard}
-        autoAdvance={true}
-        autoAdvanceDelay={4000} // 4 seconds to read the word
-      />
-    ) : (
-      <>
-        {quizModeToUse === 'multiple-choice' ? (
-          <MultipleChoiceQuiz
-            key={`mc-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-            word={getQuestionWord(wordToUse)}
-            options={optionsToUse}
-            onSelect={handleSubmit}
-            isCorrect={currentAnswerCorrect === true}
-            selectedOption={currentSelectedAnswer}
-            disabled={isTransitioning}
-            level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
-            xp={wordProgress[wordToUse.id]?.xp || 0}
-            context={getContextForDirection(wordToUse)}
-          />
-        ) : quizModeToUse === 'letter-scramble' ? (
-          <LetterScrambleQuiz
-            key={`ls-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-            word={
-              wordToUse.direction === 'definition-to-term' ? wordToUse.term : wordToUse.definition
-            }
-            definition={
-              wordToUse.direction === 'definition-to-term' ? wordToUse.definition : wordToUse.term
-            }
-            context={getContextForDirection(wordToUse)}
-            currentWord={(getSessionStats()?.currentIndex || 0) + 1}
-            totalWords={getSessionStats()?.totalWords || 10}
-            disabled={isTransitioning}
-            onAnswer={correct => {
-              // Track feedback and play audio
-              setLastAnswerCorrect(correct);
-              setFeedbackQuestionKey(`${wordToUse.id}-${getQuestionWord(wordToUse)}-${Date.now()}`); // Track unique question instance
-              if (correct) {
-                playCorrect();
-              } else {
-                playIncorrect();
+    const quizContent =
+      showLearningCard && isUsingSpacedRepetition ? (
+        <LearningCard
+          word={wordToUse}
+          currentIndex={getSessionStats()?.currentIndex || 0}
+          totalWords={getSessionStats()?.totalWords || 1}
+          onContinue={handleContinueFromLearningCard}
+          autoAdvance={true}
+          autoAdvanceDelay={4000} // 4 seconds to read the word
+        />
+      ) : (
+        <>
+          {quizModeToUse === 'multiple-choice' ? (
+            <MultipleChoiceQuiz
+              key={`mc-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
+              word={getQuestionWord(wordToUse)}
+              options={optionsToUse}
+              onSelect={handleSubmit}
+              isCorrect={currentAnswerCorrect === true}
+              selectedOption={currentSelectedAnswer}
+              disabled={isTransitioning}
+              level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
+              xp={wordProgress[wordToUse.id]?.xp || 0}
+              context={getContextForDirection(wordToUse)}
+            />
+          ) : quizModeToUse === 'letter-scramble' ? (
+            <LetterScrambleQuiz
+              key={`ls-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
+              word={
+                wordToUse.direction === 'definition-to-term' ? wordToUse.term : wordToUse.definition
               }
-
-              // Process answer through learning system
-              const result = handleEnhancedAnswer(correct);
-              setIsTransitioning(true);
-
-              setTimeout(() => {
-                if (
-                  result &&
-                  typeof result === 'object' &&
-                  'isComplete' in result &&
-                  result.isComplete
-                ) {
-                  setSessionCompleted(true);
+              definition={
+                wordToUse.direction === 'definition-to-term' ? wordToUse.definition : wordToUse.term
+              }
+              context={getContextForDirection(wordToUse)}
+              currentWord={(getSessionStats()?.currentIndex || 0) + 1}
+              totalWords={getSessionStats()?.totalWords || 10}
+              disabled={isTransitioning}
+              onAnswer={correct => {
+                // Track feedback and play audio
+                setLastAnswerCorrect(correct);
+                setFeedbackQuestionKey(
+                  `${wordToUse.id}-${getQuestionWord(wordToUse)}-${Date.now()}`
+                ); // Track unique question instance
+                if (correct) {
+                  playCorrect();
                 } else {
-                  setIsTransitioning(false);
-                  setWordTimer(0);
-                  setWordStartTime(Date.now());
-                  // Note: feedback state is reset by useEffect when word changes
+                  playIncorrect();
                 }
-              }, 2000);
-            }}
-          />
-        ) : (
-          <OpenQuestionQuiz
-            key={`oq-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-            word={getQuestionWord(wordToUse)}
-            userAnswer={inputValue}
-            onAnswerChange={setInputValue}
-            onSubmit={handleOpenQuestionSubmit}
-            isCorrect={currentAnswerCorrect === true}
-            disabled={isTransitioning}
-            level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
-            xp={wordProgress[wordToUse.id]?.xp || 0}
-            context={getContextForDirection(wordToUse)}
-          />
-        )}
-      </>
-    );
+
+                // Process answer through learning system
+                const result = handleEnhancedAnswer(correct);
+                setIsTransitioning(true);
+
+                setTimeout(() => {
+                  if (
+                    result &&
+                    typeof result === 'object' &&
+                    'isComplete' in result &&
+                    result.isComplete
+                  ) {
+                    setSessionCompleted(true);
+                  } else {
+                    setIsTransitioning(false);
+                    setWordTimer(0);
+                    setWordStartTime(Date.now());
+                    // Note: feedback state is reset by useEffect when word changes
+                  }
+                }, 2000);
+              }}
+            />
+          ) : (
+            <OpenQuestionQuiz
+              key={`oq-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
+              word={getQuestionWord(wordToUse)}
+              userAnswer={inputValue}
+              onAnswerChange={setInputValue}
+              onSubmit={handleOpenQuestionSubmit}
+              isCorrect={currentAnswerCorrect === true}
+              disabled={isTransitioning}
+              level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
+              xp={wordProgress[wordToUse.id]?.xp || 0}
+              context={getContextForDirection(wordToUse)}
+            />
+          )}
+        </>
+      );
 
     if (!isSessionActive || !currentSession) {
       return quizContent;

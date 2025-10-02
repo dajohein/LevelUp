@@ -45,7 +45,12 @@ export const AchievementManager: React.FC = () => {
     const hasCorrectAnswersIncreased = correctAnswers > previousValues.correctAnswers;
     const hasWordLevelIncreased = currentWordLevel > previousValues.wordLevel;
 
-    if (hasScoreIncreased || hasStreakIncreased || hasCorrectAnswersIncreased || hasWordLevelIncreased) {
+    if (
+      hasScoreIncreased ||
+      hasStreakIncreased ||
+      hasCorrectAnswersIncreased ||
+      hasWordLevelIncreased
+    ) {
       achievements.forEach(achievement => {
         if (!unlockedAchievements.includes(achievement.id)) {
           let shouldUnlock = false;
@@ -58,10 +63,12 @@ export const AchievementManager: React.FC = () => {
               shouldUnlock = streak >= achievement.condition.threshold && hasStreakIncreased;
               break;
             case 'correctAnswers':
-              shouldUnlock = correctAnswers >= achievement.condition.threshold && hasCorrectAnswersIncreased;
+              shouldUnlock =
+                correctAnswers >= achievement.condition.threshold && hasCorrectAnswersIncreased;
               break;
             case 'wordLevel':
-              shouldUnlock = currentWordLevel >= achievement.condition.threshold && hasWordLevelIncreased;
+              shouldUnlock =
+                currentWordLevel >= achievement.condition.threshold && hasWordLevelIncreased;
               break;
           }
 

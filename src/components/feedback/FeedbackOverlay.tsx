@@ -14,14 +14,14 @@ const fadeOut = keyframes`
 
 const Overlay = styled.div<{ isCorrect: boolean; show: boolean }>`
   position: fixed;
-  ${props => props.isCorrect ? 
-    'top: 2rem; left: 50%; transform: translateX(-50%); width: auto;' : 
-    'top: 0; left: 0; right: 0; bottom: 0;'}
-  background-color: ${props =>
-    props.isCorrect ? 'transparent' : `${props.theme.colors.error}33`};
+  ${props =>
+    props.isCorrect
+      ? 'top: 2rem; left: 50%; transform: translateX(-50%); width: auto;'
+      : 'top: 0; left: 0; right: 0; bottom: 0;'}
+  background-color: ${props => (props.isCorrect ? 'transparent' : `${props.theme.colors.error}33`)};
   display: flex;
   justify-content: center;
-  align-items: ${props => props.isCorrect ? 'flex-start' : 'center'};
+  align-items: ${props => (props.isCorrect ? 'flex-start' : 'center')};
   opacity: 0;
   pointer-events: none;
   z-index: 1000;
@@ -33,27 +33,27 @@ const Overlay = styled.div<{ isCorrect: boolean; show: boolean }>`
 
 const FeedbackCard = styled.div<{ isCorrect: boolean }>`
   background-color: ${props => props.theme.colors.background};
-  border-radius: ${props => props.isCorrect ? '12px' : '16px'};
-  padding: ${props => props.isCorrect ? '1rem 1.5rem' : '2rem'};
+  border-radius: ${props => (props.isCorrect ? '12px' : '16px')};
+  padding: ${props => (props.isCorrect ? '1rem 1.5rem' : '2rem')};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   border: 4px solid
     ${props => (props.isCorrect ? props.theme.colors.success : props.theme.colors.error)};
   text-align: center;
-  max-width: ${props => props.isCorrect ? '200px' : '400px'};
+  max-width: ${props => (props.isCorrect ? '200px' : '400px')};
   ${css`
     animation: ${fadeIn} 0.3s ease-out forwards;
   `}
 `;
 
 const FeedbackIcon = styled.div<{ isCorrect: boolean }>`
-  font-size: ${props => props.isCorrect ? '2rem' : '4rem'};
-  margin-bottom: ${props => props.isCorrect ? '0.5rem' : '1rem'};
+  font-size: ${props => (props.isCorrect ? '2rem' : '4rem')};
+  margin-bottom: ${props => (props.isCorrect ? '0.5rem' : '1rem')};
 `;
 
 const FeedbackTitle = styled.div<{ isCorrect: boolean }>`
-  font-size: ${props => props.isCorrect ? '1.2rem' : '1.5rem'};
+  font-size: ${props => (props.isCorrect ? '1.2rem' : '1.5rem')};
   font-weight: bold;
-  margin-bottom: ${props => props.isCorrect ? '0' : '1rem'};
+  margin-bottom: ${props => (props.isCorrect ? '0' : '1rem')};
   color: ${props => (props.isCorrect ? props.theme.colors.success : props.theme.colors.error)};
 `;
 
@@ -140,11 +140,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
             Correct answer: <strong>{correctAnswer}</strong>
           </CorrectAnswerText>
         )}
-        {!isCorrect && wordContext && (
-          <WordContextText>
-            Context: {wordContext}
-          </WordContextText>
-        )}
+        {!isCorrect && wordContext && <WordContextText>Context: {wordContext}</WordContextText>}
         {isCorrect && capitalizationFeedback && (
           <CapitalizationFeedback>{capitalizationFeedback}</CapitalizationFeedback>
         )}

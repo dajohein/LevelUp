@@ -31,7 +31,7 @@ const Sidebar = styled.div`
   padding: ${props => props.theme.spacing.lg};
   background: rgba(0, 0, 0, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
-  
+
   @media (max-width: 1024px) {
     display: none;
   }
@@ -42,7 +42,7 @@ const MobileAnalytics = styled.div`
   width: 100%;
   max-width: 800px;
   margin-bottom: ${props => props.theme.spacing.lg};
-  
+
   @media (max-width: 1024px) {
     display: block;
   }
@@ -247,29 +247,6 @@ const SessionDescription = styled.p`
   font-size: 0.9rem;
 `;
 
-const SessionStats = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${props => props.theme.spacing.sm};
-  margin-bottom: ${props => props.theme.spacing.md};
-`;
-
-const StatItem = styled.div`
-  text-align: center;
-`;
-
-const StatValue = styled.div`
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.primary};
-`;
-
-const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: ${props => props.theme.colors.textSecondary};
-  margin-top: 4px;
-`;
-
 const DifficultyBadge = styled.span<{ difficulty: string }>`
   display: inline-block;
   padding: 4px 12px;
@@ -305,25 +282,6 @@ const DifficultyBadge = styled.span<{ difficulty: string }>`
         return '#4CAF50';
     }
   }};
-`;
-
-const SpecialRules = styled.div`
-  margin-top: ${props => props.theme.spacing.md};
-`;
-
-const RuleItem = styled.div`
-  font-size: 0.85rem;
-  color: ${props => props.theme.colors.textSecondary};
-  margin-bottom: 4px;
-  padding-left: 16px;
-  position: relative;
-
-  &::before {
-    content: '•';
-    position: absolute;
-    left: 0;
-    color: ${props => props.theme.colors.primary};
-  }
 `;
 
 const WeeklyChallenge = styled.div`
@@ -380,16 +338,10 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
     rank: 0,
   };
 
-  // Language flags mapping
-  const languageFlags: { [key: string]: string } = {
-    es: '🇪🇸',
-    de: '🇩🇪',
-  };
-
-  // Get language name and flag
+  // Get language name and flag from dynamic language data
   const langData = words[languageCode];
   const languageName = langData?.name || '';
-  const languageFlag = languageFlags[languageCode] || '';
+  const languageFlag = langData?.flag || '';
 
   const handleSessionStart = (sessionId: string) => {
     dispatch(startSession(sessionId));
@@ -424,81 +376,89 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
             />
           </MobileAnalytics>
 
-        {weeklyChallenge && weeklyChallenge.isActive && (
-          <WeeklyChallenge>
-            <ChallengeTitle>⚔️ Weekly Boss Battle</ChallengeTitle>
-            <p>Ultimate challenge for true language warriors!</p>
-            <ChallengeStats>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                  {weeklyChallenge.currentScore}
-                </div>
-                <div style={{ opacity: 0.8 }}>Your Best</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                  #{weeklyChallenge.rank || '?'}
-                </div>
-                <div style={{ opacity: 0.8 }}>Rank</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                  {weeklyChallenge.targetScore}
-                </div>
-                <div style={{ opacity: 0.8 }}>Target</div>
-              </div>
-            </ChallengeStats>
-          </WeeklyChallenge>
-        )}
-
-        <SessionGrid>
-          {sessionTypes.map(session => {
-            const isCompleted = completedSessions.includes(session.id);
-
-            return (
-              <SessionCard
-                key={session.id}
-                difficulty={session.difficulty}
-                isCompleted={isCompleted}
-              >
-                <SessionContent>
-                  <SessionHeader>
-                    <SessionEmoji>{session.emoji}</SessionEmoji>
-                    <SessionTitle>{session.name}</SessionTitle>
-                    {isCompleted && <CompletedBadge>✓ Done</CompletedBadge>}
-                  </SessionHeader>
-
-                  <SessionDescription>{session.description}</SessionDescription>
-
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
-                    <DifficultyBadge difficulty={session.difficulty}>
-                      {session.difficulty}
-                    </DifficultyBadge>
-                    <div style={{ fontSize: '0.85rem', color: '#888' }}>
-                      {session.targetWords === -1 ? '∞' : session.targetWords} words • {formatTime(session.timeLimit)}
-                    </div>
+          {weeklyChallenge && weeklyChallenge.isActive && (
+            <WeeklyChallenge>
+              <ChallengeTitle>⚔️ Weekly Boss Battle</ChallengeTitle>
+              <p>Ultimate challenge for true language warriors!</p>
+              <ChallengeStats>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    {weeklyChallenge.currentScore}
                   </div>
-                </SessionContent>
+                  <div style={{ opacity: 0.8 }}>Your Best</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    #{weeklyChallenge.rank || '?'}
+                  </div>
+                  <div style={{ opacity: 0.8 }}>Rank</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    {weeklyChallenge.targetScore}
+                  </div>
+                  <div style={{ opacity: 0.8 }}>Target</div>
+                </div>
+              </ChallengeStats>
+            </WeeklyChallenge>
+          )}
 
-                <SessionActions>
-                  <ScoreDisplay>
-                    <ScoreValue>{session.requiredScore}</ScoreValue>
-                    <ScoreLabel>Target Score</ScoreLabel>
-                  </ScoreDisplay>
-                  
-                  <PracticeButton
-                    difficulty={session.difficulty}
-                    onClick={() => handleSessionStart(session.id)}
-                  >
-                    Start Practice
-                  </PracticeButton>
-                </SessionActions>
-              </SessionCard>
-            );
-          })}
-        </SessionGrid>
+          <SessionGrid>
+            {sessionTypes.map(session => {
+              const isCompleted = completedSessions.includes(session.id);
+
+              return (
+                <SessionCard
+                  key={session.id}
+                  difficulty={session.difficulty}
+                  isCompleted={isCompleted}
+                >
+                  <SessionContent>
+                    <SessionHeader>
+                      <SessionEmoji>{session.emoji}</SessionEmoji>
+                      <SessionTitle>{session.name}</SessionTitle>
+                      {isCompleted && <CompletedBadge>✓ Done</CompletedBadge>}
+                    </SessionHeader>
+
+                    <SessionDescription>{session.description}</SessionDescription>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '12px',
+                        marginBottom: '8px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <DifficultyBadge difficulty={session.difficulty}>
+                        {session.difficulty}
+                      </DifficultyBadge>
+                      <div style={{ fontSize: '0.85rem', color: '#888' }}>
+                        {session.targetWords === -1 ? '∞' : session.targetWords} words •{' '}
+                        {formatTime(session.timeLimit)}
+                      </div>
+                    </div>
+                  </SessionContent>
+
+                  <SessionActions>
+                    <ScoreDisplay>
+                      <ScoreValue>{session.requiredScore}</ScoreValue>
+                      <ScoreLabel>Target Score</ScoreLabel>
+                    </ScoreDisplay>
+
+                    <PracticeButton
+                      difficulty={session.difficulty}
+                      onClick={() => handleSessionStart(session.id)}
+                    >
+                      Start Practice
+                    </PracticeButton>
+                  </SessionActions>
+                </SessionCard>
+              );
+            })}
+          </SessionGrid>
         </MainContent>
-        
+
         {/* Desktop Sidebar Analytics */}
         <Sidebar>
           <SessionAnalytics

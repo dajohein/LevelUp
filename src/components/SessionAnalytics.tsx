@@ -5,7 +5,7 @@
  * Shows progress, recommendations, and learning insights
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { enhancedWordService } from '../services/enhancedWordService';
 import { learningCacheService } from '../services/cacheService';
@@ -168,33 +168,20 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   showRecommendations = true,
   showWeeklyProgress = true,
 }) => {
-  const [refreshKey, setRefreshKey] = useState(0);
-  
   // Force refresh analytics data after a brief delay to ensure it's loaded
   useEffect(() => {
     // Immediately reload analytics from localStorage
     learningCacheService.reloadAnalytics();
-    
+
     const timer = setTimeout(() => {
       learningCacheService.reloadAnalytics();
-      setRefreshKey(prev => prev + 1);
     }, 500); // 500ms delay to ensure session data is saved
-    
+
     return () => clearTimeout(timer);
   }, [languageCode]);
-  
+
   const analytics = enhancedWordService.getLearningAnalytics(languageCode);
   const recentSessions = enhancedWordService.getSessionHistory(languageCode, 5);
-  const cacheStats = learningCacheService.getCacheStats();
-
-  // Debug logging to see what data we have
-  console.log('SessionAnalytics Debug:', {
-    languageCode,
-    analytics,
-    recentSessionsCount: recentSessions.length,
-    cacheStats,
-    refreshKey
-  });
 
   if (!analytics && recentSessions.length === 0) {
     return (
@@ -223,19 +210,22 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
     if (!analytics || recentSessions.length < 2) {
       return { change: 0, trend: 'neutral' as const };
     }
-    
+
     const overallAccuracy = analytics.averageAccuracy * 100;
     const recentAccuracy = averageRecentAccuracy * 100;
     const change = recentAccuracy - overallAccuracy;
-    
+
     return {
       change: Math.abs(change),
-      trend: change > 2 ? 'up' as const : change < -2 ? 'down' as const : 'neutral' as const
+      trend: change > 2 ? ('up' as const) : change < -2 ? ('down' as const) : ('neutral' as const),
     };
   };
 
   const accuracyTrend = getAccuracyTrend();
-  const displayAccuracy = averageRecentAccuracy > 0 ? averageRecentAccuracy * 100 : (analytics?.averageAccuracy || 0) * 100;
+  const displayAccuracy =
+    averageRecentAccuracy > 0
+      ? averageRecentAccuracy * 100
+      : (analytics?.averageAccuracy || 0) * 100;
 
   return (
     <Container>

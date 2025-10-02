@@ -24,8 +24,7 @@ export const store: Store<StoreState> = configureStore({
   reducer,
   middleware: getDefaultMiddleware => {
     const middleware = getDefaultMiddleware();
-    return middleware
-      .concat(persistenceMiddleware as Middleware<any, StoreState>);
+    return middleware.concat(persistenceMiddleware as Middleware<any, StoreState>);
   },
 });
 

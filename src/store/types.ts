@@ -66,7 +66,7 @@ export interface GameState {
   lastAnswer?: string;
   lastWordId?: string; // Track last word to prevent immediate repetition
   wordProgress: { [key: string]: WordProgress }; // Track progress per word
-  capitalizationFeedback?: string; // Feedback for German capitalization errors
+  capitalizationFeedback?: string; // Feedback for language-specific capitalization errors
 }
 
 export interface Achievement {

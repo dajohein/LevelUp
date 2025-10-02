@@ -4,6 +4,42 @@
 
 LevelUp is a modern, interactive language learning application built with React, TypeScript, and Redux. It focuses on vocabulary acquisition through scientifically-proven methods including spaced repetition, active recall, and systematic learning algorithms. The application features German case sensitivity, persistent progress tracking, and adaptive quiz modes.
 
+## Language-Agnostic Architecture
+
+**NEW: The codebase is fully language-agnostic with configurable validation rules (October 2025)**
+
+### Key Architecture Changes
+1. **Dynamic Language Loading**: Languages are discovered automatically from `src/data/` directory
+2. **Configurable Validation Rules**: Language-specific behavior defined in `src/config/languageRules.ts`
+3. **No Hardcoded Language References**: Core logic is language-neutral
+4. **Extensible Design**: Adding new languages requires no code changes
+
+### Language Configuration Structure
+```
+src/data/{language-code}/
+├── index.json              # Language metadata
+└── {module-name}.json      # Module content and words
+```
+
+### Language Rules Configuration
+```typescript
+// src/config/languageRules.ts - Configure language behavior
+const languageRulesConfig: Record<string, LanguageRules> = {
+  de: {
+    caseSensitive: true,
+    capitalizationRequired: true,
+    articles: ['der', 'die', 'das', 'den', 'dem', 'des'],
+    feedback: {
+      capitalizationError: 'German nouns need to be capitalized!'
+    }
+  },
+  es: {
+    caseSensitive: false,
+    capitalizationRequired: false
+  }
+};
+```
+
 ## Core Principles
 
 1. **Learning-First Design**
@@ -351,9 +387,9 @@ const validateLanguageSeparation = (languageCode: string, data: any) => {
    };
    ```
 
-2. **Language-Specific Features**
+2. **Language-Specific Features with Configurable Rules**
    ```typescript
-   // German case sensitivity implementation
+   // Language-agnostic validation using configurable rules
    interface AnswerValidation {
      isCorrect: boolean;
      capitalizationCorrect: boolean;
@@ -365,8 +401,11 @@ const validateLanguageSeparation = (languageCode: string, data: any) => {
      correctAnswer: string, 
      language: string
    ): AnswerValidation => {
-     if (language === 'de') {
-       return checkGermanCapitalization(userAnswer, correctAnswer);
+     const rules = getLanguageRules(language);
+     
+     // Use configurable rules instead of hardcoded language checks
+     if (rules.caseSensitive) {
+       return checkCapitalization(userAnswer, correctAnswer, language);
      }
      // Standard case-insensitive validation
      return { 
@@ -673,8 +712,11 @@ export const performOneTimeMigration = () => {
 - [ ] Remove one-time migration files after successful deployment
 - [ ] Clean up temporary debug logging
 - [ ] Remove unused imports and dead code
+- [ ] Remove hardcoded language references
+- [ ] Consolidate temporary documentation files
 - [ ] Update documentation with lessons learned
 - [ ] Verify no temporary fixes remain in production code
+- [ ] Update Copilot instructions with architectural changes
 
 ## Continuous Improvement
 

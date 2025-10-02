@@ -206,8 +206,6 @@ const ActivityIndicator = styled.div<{ active: boolean }>`
   box-shadow: ${props => (props.active ? '0 0 8px rgba(76, 175, 80, 0.6)' : 'none')};
 `;
 
-
-
 export const LanguagesOverview: React.FC = () => {
   const navigate = useNavigate();
   const languages = getAvailableLanguages();
@@ -244,118 +242,118 @@ export const LanguagesOverview: React.FC = () => {
       <Navigation showUserProfile={true} />
       <Container>
         <Header>
-        <Title>
-          <FaGlobeAmericas />
-          Choose Your Language
-        </Title>
-        <Subtitle>
-          Master new languages through interactive learning. Track your progress, earn achievements,
-          and level up your skills across multiple languages!
-        </Subtitle>
+          <Title>
+            <FaGlobeAmericas />
+            Choose Your Language
+          </Title>
+          <Subtitle>
+            Master new languages through interactive learning. Track your progress, earn
+            achievements, and level up your skills across multiple languages!
+          </Subtitle>
 
-        {overallStats.totalXP > 0 && (
-          <StatsOverview>
-            <StatBadge>
-              <span>🏆</span>
-              {overallStats.totalXP.toLocaleString()} Total XP
-            </StatBadge>
-            <StatBadge>
-              <span>📚</span>
-              {overallStats.totalPracticed} / {overallStats.totalWords} Words Practiced
-            </StatBadge>
-            <StatBadge>
-              <span>🌍</span>
-              {overallStats.languagesStarted} Language
-              {overallStats.languagesStarted !== 1 ? 's' : ''} Started
-            </StatBadge>
-          </StatsOverview>
-        )}
-      </Header>
+          {overallStats.totalXP > 0 && (
+            <StatsOverview>
+              <StatBadge>
+                <span>🏆</span>
+                {overallStats.totalXP.toLocaleString()} Total XP
+              </StatBadge>
+              <StatBadge>
+                <span>📚</span>
+                {overallStats.totalPracticed} / {overallStats.totalWords} Words Practiced
+              </StatBadge>
+              <StatBadge>
+                <span>🌍</span>
+                {overallStats.languagesStarted} Language
+                {overallStats.languagesStarted !== 1 ? 's' : ''} Started
+              </StatBadge>
+            </StatsOverview>
+          )}
+        </Header>
 
-      <LanguageGrid>
-        {languages.map(({ code, info }) => {
-          // Load progress directly from storage for this specific language
-          const languageWordProgress = wordProgressStorage.load(code);
+        <LanguageGrid>
+          {languages.map(({ code, info }) => {
+            // Load progress directly from storage for this specific language
+            const languageWordProgress = wordProgressStorage.load(code);
 
-          // Get actual modules for this language
-          const actualModules = getModulesForLanguage(code);
+            // Get actual modules for this language
+            const actualModules = getModulesForLanguage(code);
 
-          // Calculate XP and level for this language
-          const languageXP = Object.values(languageWordProgress).reduce(
-            (sum, progress) => sum + (progress?.xp || 0),
-            0
-          );
-          const currentLevel = calculateCurrentLevel(languageXP);
-          const levelInfo = getLevelInfo(currentLevel);
+            // Calculate XP and level for this language
+            const languageXP = Object.values(languageWordProgress).reduce(
+              (sum, progress) => sum + (progress?.xp || 0),
+              0
+            );
+            const currentLevel = calculateCurrentLevel(languageXP);
+            const levelInfo = getLevelInfo(currentLevel);
 
-          // Debug: Log XP calculation for verification
+            // Debug: Log XP calculation for verification
 
-          // Calculate basic progress stats
-          const totalWords = actualModules.reduce(
-            (sum, module) => sum + (module.words?.length || 0),
-            0
-          );
-          const practicedWords = Object.keys(languageWordProgress).filter(wordId => {
-            const progress = languageWordProgress[wordId];
-            return progress && progress.xp > 0;
-          }).length;
+            // Calculate basic progress stats
+            const totalWords = actualModules.reduce(
+              (sum, module) => sum + (module.words?.length || 0),
+              0
+            );
+            const practicedWords = Object.keys(languageWordProgress).filter(wordId => {
+              const progress = languageWordProgress[wordId];
+              return progress && progress.xp > 0;
+            }).length;
 
-          const overallProgress = totalWords > 0 ? (practicedWords / totalWords) * 100 : 0;
-          const hasRecentActivity = Object.values(languageWordProgress).some(progress => {
-            if (!progress.lastPracticed) return false;
-            const lastPracticed = new Date(progress.lastPracticed);
-            if (isNaN(lastPracticed.getTime())) return false;
-            const daysSince = (Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24);
-            return daysSince < 7; // Active if practiced within last week
-          });
+            const overallProgress = totalWords > 0 ? (practicedWords / totalWords) * 100 : 0;
+            const hasRecentActivity = Object.values(languageWordProgress).some(progress => {
+              if (!progress.lastPracticed) return false;
+              const lastPracticed = new Date(progress.lastPracticed);
+              if (isNaN(lastPracticed.getTime())) return false;
+              const daysSince = (Date.now() - lastPracticed.getTime()) / (1000 * 60 * 60 * 24);
+              return daysSince < 7; // Active if practiced within last week
+            });
 
-          return (
-            <LanguageCard key={code} onClick={() => handleLanguageSelect(code)}>
-              <ActivityIndicator active={hasRecentActivity} />
+            return (
+              <LanguageCard key={code} onClick={() => handleLanguageSelect(code)}>
+                <ActivityIndicator active={hasRecentActivity} />
 
-              {languageXP > 0 && (
-                <LevelBadge>
-                  <span>{levelInfo.emoji}</span>
-                  Level {currentLevel}
-                </LevelBadge>
-              )}
-
-              <CardHeader>
-                <FlagEmoji data-flag>{info.flag}</FlagEmoji>
-                <LanguageName>{info.name}</LanguageName>
-                <LanguageFrom>from {info.from}</LanguageFrom>
-              </CardHeader>
-
-              <CardContent>
-                {languageXP > 0 ? (
-                  <ProgressSection>
-                    <XPInfo>⚡ {languageXP.toLocaleString()} XP</XPInfo>
-                    <QuickStats>
-                      <ProgressDot progress={overallProgress} />
-                      <span>{Math.round(overallProgress)}% completed</span>
-                    </QuickStats>
-                    <ModuleCount>
-                      {practicedWords} / {totalWords} words practiced
-                    </ModuleCount>
-                  </ProgressSection>
-                ) : (
-                  <ProgressSection>
-                    <QuickStats>
-                      <span>🚀</span>
-                      <span>Start your journey!</span>
-                    </QuickStats>
-                    <ModuleCount>
-                      {info.modules?.length || 0} module
-                      {(info.modules?.length || 0) !== 1 ? 's' : ''} available
-                    </ModuleCount>
-                  </ProgressSection>
+                {languageXP > 0 && (
+                  <LevelBadge>
+                    <span>{levelInfo.emoji}</span>
+                    Level {currentLevel}
+                  </LevelBadge>
                 )}
-              </CardContent>
-            </LanguageCard>
-          );
-        })}
-      </LanguageGrid>
-    </Container>
+
+                <CardHeader>
+                  <FlagEmoji data-flag>{info.flag}</FlagEmoji>
+                  <LanguageName>{info.name}</LanguageName>
+                  <LanguageFrom>from {info.from}</LanguageFrom>
+                </CardHeader>
+
+                <CardContent>
+                  {languageXP > 0 ? (
+                    <ProgressSection>
+                      <XPInfo>⚡ {languageXP.toLocaleString()} XP</XPInfo>
+                      <QuickStats>
+                        <ProgressDot progress={overallProgress} />
+                        <span>{Math.round(overallProgress)}% completed</span>
+                      </QuickStats>
+                      <ModuleCount>
+                        {practicedWords} / {totalWords} words practiced
+                      </ModuleCount>
+                    </ProgressSection>
+                  ) : (
+                    <ProgressSection>
+                      <QuickStats>
+                        <span>🚀</span>
+                        <span>Start your journey!</span>
+                      </QuickStats>
+                      <ModuleCount>
+                        {info.modules?.length || 0} module
+                        {(info.modules?.length || 0) !== 1 ? 's' : ''} available
+                      </ModuleCount>
+                    </ProgressSection>
+                  )}
+                </CardContent>
+              </LanguageCard>
+            );
+          })}
+        </LanguageGrid>
+      </Container>
     </>
   );
 };

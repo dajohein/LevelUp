@@ -121,7 +121,7 @@ export const gameSlice = createSlice({
       state.lastAnswer = action.payload;
       state.totalAttempts += 1;
 
-      // Store capitalization feedback for German
+      // Store capitalization feedback for languages that require it
       if (state.language === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
         const feedback = getCapitalizationFeedback(validation, state.language);
         state.capitalizationFeedback = feedback || undefined;
