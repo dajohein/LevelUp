@@ -10,7 +10,6 @@ import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PerformanceMonitor } from './components/debug/PerformanceMonitor';
 import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
-import { PWADebugPanel } from './components/pwa/PWATestPanel';
 import { initializeStorage } from './services/storageService';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
@@ -34,7 +33,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <OfflineBanner />
             <RouterProvider router={router} />
             <PWAManager />
-            <PWADebugPanel />
             <PerformanceMonitor />
           </AudioProvider>
         </ErrorBoundary>

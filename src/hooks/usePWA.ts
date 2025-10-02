@@ -151,7 +151,7 @@ export const usePushNotifications = () => {
     }
     
     // Check if VAPID key is configured (you would set this in environment variables)
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
     setVapidKeyAvailable(!!vapidKey);
   }, []);
 
@@ -168,7 +168,7 @@ export const usePushNotifications = () => {
     if (!('PushManager' in window) || !registration) return;
 
     // Get VAPID key from environment variables
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
     
     if (!vapidKey) {
       console.warn('VAPID key not configured. Push notifications require a VAPID key.');
@@ -188,6 +188,9 @@ export const usePushNotifications = () => {
       // Gracefully handle the error - PWA still works without push notifications
     }
   };
+
+  return { permission, requestPermission, subscribeToPush, subscription, vapidKeyAvailable };
+};
 
 // Background sync hook
 export const useBackgroundSync = () => {
@@ -216,19 +219,3 @@ export const useBackgroundSync = () => {
     syncSessions
   };
 };
-
-// Utility function for VAPID key conversion
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
