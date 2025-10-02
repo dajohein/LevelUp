@@ -14,4 +14,26 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // Optimize chunk splitting for better caching
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks for better caching
+          vendor: ['react', 'react-dom', '@reduxjs/toolkit', 'react-redux'],
+          router: ['react-router-dom'],
+          ui: ['@emotion/react', '@emotion/styled']
+        }
+      }
+    },
+    // Report bundle size
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 1000
+  },
+  // Development server optimizations
+  server: {
+    hmr: {
+      overlay: true
+    }
+  }
 });

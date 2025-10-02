@@ -8,6 +8,7 @@ import { router } from './router';
 import { theme } from './styles/theme';
 import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
+import { PerformanceMonitor } from './components/debug/PerformanceMonitor';
 import { initializeStorage } from './services/storageService';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import './index.css';
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <ErrorBoundary>
           <AudioProvider>
             <RouterProvider router={router} />
+            <PerformanceMonitor />
           </AudioProvider>
         </ErrorBoundary>
       </ThemeProvider>

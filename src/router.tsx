@@ -2,26 +2,37 @@ import { createBrowserRouter } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
-import { LanguagesOverview } from './components/LanguagesOverview';
-import { ModuleOverview } from './components/ModuleOverview';
-import { ModuleProgressView } from './components/ModuleProgressView';
-import { LanguageOverview } from './components/LanguageOverview';
-import { SessionSelect } from './components/SessionSelect';
-import { SessionCompletion } from './components/SessionCompletion';
-import { Game } from './components/Game';
-import { UserProfilePage } from './components/UserProfilePage';
+import {
+  LanguagesOverview,
+  ModuleProgressView,
+  LanguageOverview,
+  GameLazy,
+  UserProfilePageLazy,
+  ModuleOverviewLazy,
+  SessionSelectLazy,
+  SessionCompletionLazy,
+} from './utils/lazyComponents';
+import { LazyWrapper, GameSkeleton, ModuleSkeleton } from './components/feedback/LoadingSkeleton';
 
 // Wrapper component to pass languageCode and moduleId to SessionSelect
 const SessionSelectWrapper = () => {
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
-  return <SessionSelect languageCode={languageCode || ''} moduleId={moduleId} />;
+  return (
+    <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading session options...">
+      <SessionSelectLazy languageCode={languageCode || ''} moduleId={moduleId} />
+    </LazyWrapper>
+  );
 };
 
 // Wrapper component to pass languageCode and moduleId to SessionCompletion
 const SessionCompletionWrapper = () => {
   const { languageCode } = useParams<{ languageCode: string }>();
   const moduleId = useSelector((state: RootState) => state.game.module);
-  return <SessionCompletion languageCode={languageCode || ''} moduleId={moduleId || undefined} />;
+  return (
+    <LazyWrapper loadingText="Preparing your results...">
+      <SessionCompletionLazy languageCode={languageCode || ''} moduleId={moduleId || undefined} />
+    </LazyWrapper>
+  );
 };
 
 export const router = createBrowserRouter([
@@ -31,11 +42,19 @@ export const router = createBrowserRouter([
   },
   {
     path: '/profile',
-    element: <UserProfilePage />,
+    element: (
+      <LazyWrapper loadingText="Loading profile...">
+        <UserProfilePageLazy />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/language/:languageCode',
-    element: <ModuleOverview />,
+    element: (
+      <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading modules...">
+        <ModuleOverviewLazy />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/language/:languageCode/:moduleId',
@@ -55,18 +74,30 @@ export const router = createBrowserRouter([
   },
   {
     path: '/game/:languageCode',
-    element: <Game />,
+    element: (
+      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Starting game...">
+        <GameLazy />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/game/:languageCode/session',
-    element: <Game />,
+    element: (
+      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading session...">
+        <GameLazy />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/game/:languageCode/:moduleId',
-    element: <Game />,
+    element: (
+      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading module game...">
+        <GameLazy />
+      </LazyWrapper>
+    ),
   },
   {
-    path: '/session-complete/:languageCode',
+    path: '/completed/:languageCode',
     element: <SessionCompletionWrapper />,
   },
 ]);
