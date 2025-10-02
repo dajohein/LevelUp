@@ -114,7 +114,13 @@ export const PWAManager: React.FC = () => {
   const { syncProgress } = useBackgroundSync();
   
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
-  const [notificationEnabled, setNotificationEnabled] = useState(permission === 'granted');
+
+  // Reset notification prompt when permission is granted
+  React.useEffect(() => {
+    if (permission === 'granted') {
+      setShowNotificationPrompt(false);
+    }
+  }, [permission]);
 
   const handleInstall = async () => {
     await installApp();
@@ -127,7 +133,6 @@ export const PWAManager: React.FC = () => {
   const handleEnableNotifications = async () => {
     const result = await requestPermission();
     if (result === 'granted') {
-      setNotificationEnabled(true);
       setShowNotificationPrompt(false);
       
       // Subscribe to push notifications
@@ -171,7 +176,7 @@ export const PWAManager: React.FC = () => {
       </StatusBadge>
 
       {/* Notification Permission Prompt */}
-      {!notificationEnabled && !showNotificationPrompt && !isInstalled && (
+      {permission === 'default' && !showNotificationPrompt && !isInstalled && (
         <NotificationPanel>
           <NotificationTitle>📱 Stay on Track!</NotificationTitle>
           <NotificationText>
@@ -192,7 +197,7 @@ export const PWAManager: React.FC = () => {
       )}
 
       {/* Detailed Notification Prompt */}
-      {showNotificationPrompt && (
+      {showNotificationPrompt && permission === 'default' && (
         <NotificationPanel>
           <NotificationTitle>🔔 Learning Reminders</NotificationTitle>
           <NotificationText>
