@@ -16,6 +16,11 @@ const Container = styled.div`
   padding: ${props => props.theme.spacing.md};
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    border-radius: ${props => props.theme.borderRadius.sm};
+  }
 `;
 
 const Title = styled.h3`
@@ -32,6 +37,11 @@ const StatsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: ${props => props.theme.spacing.sm};
   margin-bottom: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${props => props.theme.spacing.xs};
+  }
 `;
 
 const StatCard = styled.div`
@@ -40,6 +50,10 @@ const StatCard = styled.div`
   padding: ${props => props.theme.spacing.sm};
   text-align: center;
   border: 1px solid ${props => props.theme.colors.primary}20;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs};
+  }
 `;
 
 const StatValue = styled.div`
@@ -47,6 +61,10 @@ const StatValue = styled.div`
   font-weight: bold;
   color: ${props => props.theme.colors.primary};
   margin-bottom: ${props => props.theme.spacing.xs};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.2rem;
+  }
 `;
 
 const StatLabel = styled.div`

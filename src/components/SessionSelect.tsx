@@ -16,6 +16,12 @@ const Container = styled.div`
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
   gap: ${props => props.theme.spacing.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: column;
+    padding-top: 70px;
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const MainContent = styled.div`
@@ -24,6 +30,10 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+  }
 `;
 
 const Sidebar = styled.div`
@@ -32,7 +42,7 @@ const Sidebar = styled.div`
   background: rgba(0, 0, 0, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     display: none;
   }
 `;
@@ -43,8 +53,12 @@ const MobileAnalytics = styled.div`
   max-width: 800px;
   margin-bottom: ${props => props.theme.spacing.lg};
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     display: block;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    margin-bottom: ${props => props.theme.spacing.md};
   }
 `;
 
@@ -62,6 +76,10 @@ const Title = styled.h1`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.8rem;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -76,6 +94,11 @@ const SessionGrid = styled.div`
   gap: ${props => props.theme.spacing.md};
   max-width: 800px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
+    gap: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const SessionCard = styled.div<{ difficulty: string; isCompleted: boolean }>`
@@ -89,6 +112,13 @@ const SessionCard = styled.div<{ difficulty: string; isCompleted: boolean }>`
   display: flex;
   gap: ${props => props.theme.spacing.md};
   min-height: 200px;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+    flex-direction: column;
+    min-height: auto;
+    gap: ${props => props.theme.spacing.sm};
+  }
 
   ${props =>
     props.isCompleted &&
@@ -161,6 +191,13 @@ const SessionActions = styled.div`
   gap: ${props => props.theme.spacing.sm};
   min-width: 140px;
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: row;
+    justify-content: space-between;
+    min-width: auto;
+    width: 100%;
+  }
 `;
 
 const PracticeButton = styled.button<{ difficulty: string }>`
@@ -188,6 +225,13 @@ const PracticeButton = styled.button<{ difficulty: string }>`
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    min-height: ${props => props.theme.touchTarget.minimum};
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+    font-size: 0.9rem;
+    flex: 1;
+  }
 
   &:hover {
     transform: translateY(-2px);

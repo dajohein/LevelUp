@@ -24,6 +24,11 @@ const Word = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const ProgressContainer = styled.div`
@@ -72,6 +77,11 @@ const ContextSection = styled.div`
   border-left: 4px solid ${props => props.theme.colors.primary};
   max-width: 600px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    margin: ${props => props.theme.spacing.xs} 0;
+  }
 `;
 
 const ContextSentence = styled.div`
@@ -79,6 +89,10 @@ const ContextSentence = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.xs};
   font-size: 1.1rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+  }
 `;
 
 const ContextTranslation = styled.div`

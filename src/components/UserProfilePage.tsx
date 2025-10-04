@@ -18,6 +18,10 @@ const ContentWrapper = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: ${props => props.theme.spacing.xl};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+  }
 `;
 
 const Header = styled.div`
@@ -33,6 +37,12 @@ const Title = styled.h1`
   align-items: center;
   justify-content: center;
   gap: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.8rem;
+    flex-direction: column;
+    gap: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const Subtitle = styled.p`
@@ -54,6 +64,10 @@ const LanguageProgressSection = styled.div`
   padding: ${props => props.theme.spacing.xl};
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.lg};
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -63,12 +77,22 @@ const SectionTitle = styled.h2`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.3rem;
+    gap: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const LanguageGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: ${props => props.theme.spacing.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const LanguageCard = styled.div`
@@ -77,6 +101,10 @@ const LanguageCard = styled.div`
   border-radius: 12px;
   padding: ${props => props.theme.spacing.lg};
   transition: all 0.3s ease;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);

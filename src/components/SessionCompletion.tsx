@@ -18,6 +18,12 @@ const Container = styled.div`
   color: ${props => props.theme.colors.text};
   text-align: center;
   gap: ${props => props.theme.spacing.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+    padding-top: ${props => props.theme.spacing.lg};
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const ResultCard = styled.div<{ isSuccess: boolean }>`
@@ -31,6 +37,11 @@ const ResultCard = styled.div<{ isSuccess: boolean }>`
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+    margin: 0 ${props => props.theme.spacing.sm};
+  }
 
   &::before {
     content: '';
@@ -49,6 +60,11 @@ const ResultCard = styled.div<{ isSuccess: boolean }>`
 const ResultEmoji = styled.div`
   font-size: 3rem;
   margin-bottom: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 2.5rem;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const ResultTitle = styled.h1<{ isSuccess: boolean }>`
@@ -56,6 +72,10 @@ const ResultTitle = styled.h1<{ isSuccess: boolean }>`
   font-weight: 700;
   margin-bottom: ${props => props.theme.spacing.sm};
   color: ${props => (props.isSuccess ? props.theme.colors.success : props.theme.colors.error)};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+  }
 `;
 
 const ResultSubtitle = styled.p`
@@ -69,6 +89,11 @@ const StatsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: ${props => props.theme.spacing.md};
   margin-bottom: ${props => props.theme.spacing.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const StatItem = styled.div`
@@ -76,6 +101,10 @@ const StatItem = styled.div`
   border-radius: 10px;
   padding: ${props => props.theme.spacing.md};
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const StatValue = styled.div`
@@ -83,6 +112,10 @@ const StatValue = styled.div`
   font-weight: 700;
   color: ${props => props.theme.colors.primary};
   margin-bottom: 2px;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.3rem;
+  }
 `;
 
 const StatLabel = styled.div`

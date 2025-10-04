@@ -44,11 +44,24 @@ const Container = styled.div<{ isExiting: boolean }>`
     css`
       animation: ${props.isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards;
     `}
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    bottom: 70px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    padding: ${props => props.theme.spacing.sm};
+    gap: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const Icon = styled.div`
   font-size: 2rem;
   line-height: 1;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Content = styled.div`
@@ -60,6 +73,10 @@ const Title = styled.h3`
   color: ${props => props.theme.colors.text};
   font-size: 1.1rem;
   font-weight: 600;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+  }
 `;
 
 const Description = styled.p`

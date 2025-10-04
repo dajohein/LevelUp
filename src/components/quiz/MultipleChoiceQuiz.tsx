@@ -29,6 +29,15 @@ const Word = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 1.8rem;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const ContextSection = styled.div`
@@ -39,6 +48,12 @@ const ContextSection = styled.div`
   border-left: 4px solid ${props => props.theme.colors.primary};
   max-width: 600px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    margin: ${props => props.theme.spacing.xs} 0;
+    border-left-width: 3px;
+  }
 `;
 
 const ContextSentence = styled.div`
@@ -68,6 +83,12 @@ const OptionsGrid = styled.div`
   gap: ${props => props.theme.spacing.md};
   max-width: 600px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
+    gap: ${props => props.theme.spacing.sm};
+    max-width: 400px;
+  }
 `;
 
 const Option = styled.button<{ isCorrect?: boolean; isError?: boolean }>`
@@ -83,6 +104,7 @@ const Option = styled.button<{ isCorrect?: boolean; isError?: boolean }>`
   color: ${props => props.theme.colors.text};
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: ${props => props.theme.touchTarget.comfortable};
   ${css`
     animation: ${fadeIn} 0.3s ease-out;
   `}
@@ -102,6 +124,17 @@ const Option = styled.button<{ isCorrect?: boolean; isError?: boolean }>`
     css`
       animation: ${pulse} 0.5s ease-out;
     `}
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.md};
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.sm};
+    font-size: 1rem;
+    min-height: ${props => props.theme.touchTarget.minimum};
+  }
 `;
 
 const LevelIndicator = styled.div`

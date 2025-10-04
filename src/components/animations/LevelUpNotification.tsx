@@ -93,6 +93,12 @@ const LevelUpCard = styled.div<{ levelColor: string }>`
   `}
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    min-width: 280px;
+    padding: 2rem;
+    margin: 0 1rem;
+  }
+
   &::before {
     content: '';
     position: absolute;

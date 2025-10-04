@@ -43,6 +43,11 @@ const Word = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.md};
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const ContextSection = styled.div`
@@ -53,6 +58,11 @@ const ContextSection = styled.div`
   border-left: 4px solid ${props => props.theme.colors.primary};
   max-width: 600px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    margin: ${props => props.theme.spacing.xs} 0;
+  }
 `;
 
 const ContextSentence = styled.div`
@@ -60,6 +70,10 @@ const ContextSentence = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.xs};
   font-size: 1.1rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+  }
 `;
 
 const ContextTranslation = styled.div`
@@ -122,6 +136,12 @@ const AnswerLetter = styled.div<{
     animation: ${letterPop} 0.3s ease-out;
   `}
 
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    width: ${props => props.theme.touchTarget.minimum};
+    height: ${props => props.theme.touchTarget.minimum};
+    font-size: 1.1rem;
+  }
+
   ${props =>
     props.isCorrect &&
     css`
@@ -156,6 +176,11 @@ const LetterPool = styled.div`
   border-radius: ${props => props.theme.borderRadius.md};
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.xs};
+    padding: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const LetterTile = styled.div<{ isUsed?: boolean }>`
@@ -176,6 +201,12 @@ const LetterTile = styled.div<{ isUsed?: boolean }>`
   ${css`
     animation: ${letterPop} 0.3s ease-out;
   `}
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    width: ${props => props.theme.touchTarget.comfortable};
+    height: ${props => props.theme.touchTarget.comfortable};
+    font-size: 1.2rem;
+  }
 
   &:hover {
     ${props =>
@@ -203,6 +234,12 @@ const ActionButtons = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing.sm};
   margin-top: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: column;
+    width: 100%;
+    gap: ${props => props.theme.spacing.xs};
+  }
 `;
 
 const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
@@ -212,6 +249,12 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    min-height: ${props => props.theme.touchTarget.minimum};
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+    width: 100%;
+  }
 
   ${props =>
     props.variant === 'clear'

@@ -29,6 +29,13 @@ const Overlay = styled.div<{ isCorrect: boolean; show: boolean }>`
     css`
       animation: ${props.show ? fadeIn : fadeOut} ${props.show ? '0.5s' : '1s'} ease-out forwards;
     `}
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    ${props =>
+      props.isCorrect
+        ? 'top: 1rem; left: 1rem; right: 1rem; transform: none; width: auto;'
+        : 'padding: 1rem;'}
+  }
 `;
 
 const FeedbackCard = styled.div<{ isCorrect: boolean }>`
@@ -43,11 +50,22 @@ const FeedbackCard = styled.div<{ isCorrect: boolean }>`
   ${css`
     animation: ${fadeIn} 0.3s ease-out forwards;
   `}
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    max-width: 100%;
+    padding: ${props => (props.isCorrect ? '0.75rem 1rem' : '1.5rem')};
+    margin: 0 1rem;
+  }
 `;
 
 const FeedbackIcon = styled.div<{ isCorrect: boolean }>`
   font-size: ${props => (props.isCorrect ? '2rem' : '4rem')};
   margin-bottom: ${props => (props.isCorrect ? '0.5rem' : '1rem')};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: ${props => (props.isCorrect ? '1.5rem' : '3rem')};
+    margin-bottom: ${props => (props.isCorrect ? '0.25rem' : '0.75rem')};
+  }
 `;
 
 const FeedbackTitle = styled.div<{ isCorrect: boolean }>`
@@ -55,6 +73,11 @@ const FeedbackTitle = styled.div<{ isCorrect: boolean }>`
   font-weight: bold;
   margin-bottom: ${props => (props.isCorrect ? '0' : '1rem')};
   color: ${props => (props.isCorrect ? props.theme.colors.success : props.theme.colors.error)};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: ${props => (props.isCorrect ? '1rem' : '1.25rem')};
+    margin-bottom: ${props => (props.isCorrect ? '0' : '0.75rem')};
+  }
 `;
 
 const CorrectAnswerText = styled.div`

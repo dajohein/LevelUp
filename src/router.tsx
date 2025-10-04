@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
+import { AppLayout } from './components/AppLayout';
+import { SettingsPage } from './components/SettingsPage';
 import {
   LanguagesOverview,
   ModuleProgressView,
@@ -38,66 +40,83 @@ const SessionCompletionWrapper = () => {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <LanguagesOverview />,
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: <LanguagesOverview />,
+      },
+      {
+        path: 'profile',
+        element: (
+          <LazyWrapper loadingText="Loading profile...">
+            <UserProfilePageLazy />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'language/:languageCode',
+        element: (
+          <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading modules...">
+            <ModuleOverviewLazy />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'language/:languageCode/:moduleId',
+        element: <ModuleProgressView />,
+      },
+      {
+        path: 'overview/:language',
+        element: <LanguageOverview />,
+      },
+      {
+        path: 'sessions/:languageCode',
+        element: <SessionSelectWrapper />,
+      },
+      {
+        path: 'sessions/:languageCode/:moduleId',
+        element: <SessionSelectWrapper />,
+      },
+      {
+        path: 'completed/:languageCode',
+        element: <SessionCompletionWrapper />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
+      },
+    ],
   },
-  {
-    path: '/profile',
-    element: (
-      <LazyWrapper loadingText="Loading profile...">
-        <UserProfilePageLazy />
-      </LazyWrapper>
-    ),
-  },
-  {
-    path: '/language/:languageCode',
-    element: (
-      <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading modules...">
-        <ModuleOverviewLazy />
-      </LazyWrapper>
-    ),
-  },
-  {
-    path: '/language/:languageCode/:moduleId',
-    element: <ModuleProgressView />,
-  },
-  {
-    path: '/overview/:language',
-    element: <LanguageOverview />,
-  },
-  {
-    path: '/sessions/:languageCode',
-    element: <SessionSelectWrapper />,
-  },
-  {
-    path: '/sessions/:languageCode/:moduleId',
-    element: <SessionSelectWrapper />,
-  },
+  // Game routes without bottom navigation for better focus
   {
     path: '/game/:languageCode',
     element: (
-      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Starting game...">
-        <GameLazy />
-      </LazyWrapper>
+      <AppLayout showBottomNav={false}>
+        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Starting game...">
+          <GameLazy />
+        </LazyWrapper>
+      </AppLayout>
     ),
   },
   {
     path: '/game/:languageCode/session',
     element: (
-      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading session...">
-        <GameLazy />
-      </LazyWrapper>
+      <AppLayout showBottomNav={false}>
+        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading session...">
+          <GameLazy />
+        </LazyWrapper>
+      </AppLayout>
     ),
   },
   {
     path: '/game/:languageCode/:moduleId',
     element: (
-      <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading module game...">
-        <GameLazy />
-      </LazyWrapper>
+      <AppLayout showBottomNav={false}>
+        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading module game...">
+          <GameLazy />
+        </LazyWrapper>
+      </AppLayout>
     ),
-  },
-  {
-    path: '/completed/:languageCode',
-    element: <SessionCompletionWrapper />,
   },
 ]);

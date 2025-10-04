@@ -7,17 +7,70 @@ body {
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Mobile optimizations */
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Prevent zoom on double tap */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 html {
   background-color: #121212;
+  /* Responsive font scaling */
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
 }
 
 #root {
   background-color: #121212;
   min-height: 100vh;
+  /* Mobile viewport optimization */
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Enhanced touch targets for mobile */
+button, 
+a, 
+[role="button"], 
+input[type="submit"], 
+input[type="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mobile-specific utility classes */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
 }

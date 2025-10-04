@@ -13,6 +13,12 @@ const StatisticsContainer = styled.div`
   display: flex;
   justify-content: space-around;
   z-index: 10;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    flex-wrap: wrap;
+    gap: ${props => props.theme.spacing.xs};
+  }
 `;
 
 const StatBox = styled.div`
@@ -22,18 +28,33 @@ const StatBox = styled.div`
   padding: ${props => props.theme.spacing.md};
   border-radius: ${props => props.theme.borderRadius.md};
   background-color: ${props => props.theme.colors.background};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    flex: 1;
+    min-width: 0;
+  }
 `;
 
 const StatLabel = styled.span`
   font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
   margin-bottom: ${props => props.theme.spacing.xs};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.7rem;
+    text-align: center;
+  }
 `;
 
 const StatValue = styled.span`
   font-size: 1.2rem;
   font-weight: bold;
   color: ${props => props.theme.colors.text};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+  }
 `;
 
 const ProgressBar = styled.div<{ value: number }>`
@@ -43,6 +64,11 @@ const ProgressBar = styled.div<{ value: number }>`
   border-radius: 2px;
   margin-top: ${props => props.theme.spacing.xs};
   overflow: hidden;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    width: 60px;
+    height: 3px;
+  }
 
   &::after {
     content: '';

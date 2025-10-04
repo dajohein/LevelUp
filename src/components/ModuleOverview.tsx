@@ -16,6 +16,12 @@ const OverviewContainer = styled.div`
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
   gap: ${props => props.theme.spacing.lg};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: column;
+    padding-top: 70px;
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const MainContent = styled.div`
@@ -24,6 +30,10 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+  }
 `;
 
 const Sidebar = styled.div`
@@ -63,6 +73,10 @@ const LanguageTitle = styled.h1`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.8rem;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -78,6 +92,11 @@ const ModulesGrid = styled.div`
   gap: ${props => props.theme.spacing.lg};
   max-width: 800px;
   width: 100%;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const ModuleCard = styled.div`
@@ -94,6 +113,13 @@ const ModuleCard = styled.div`
   width: 100%;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+    flex-direction: column;
+    min-height: auto;
+    gap: ${props => props.theme.spacing.sm};
+  }
 
   &::before {
     content: '';
@@ -134,6 +160,14 @@ const ModuleActions = styled.div`
   min-width: 140px;
   text-align: center;
   padding: ${props => props.theme.spacing.sm};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: row;
+    justify-content: space-between;
+    min-width: auto;
+    width: 100%;
+    padding: ${props => props.theme.spacing.xs};
+  }
 `;
 
 const ModuleIcon = styled.span`

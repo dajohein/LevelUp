@@ -66,6 +66,7 @@ const GameContainer = styled.div`
   flex-direction: column;
   align-items: center;
   min-height: calc(100vh - 120px); /* Full height minus fixed headers */
+  min-height: calc(100dvh - 120px); /* Dynamic viewport height for mobile */
   padding: ${props => props.theme.spacing.xl};
   padding-top: calc(
     120px + ${props => props.theme.spacing.lg}
@@ -73,7 +74,22 @@ const GameContainer = styled.div`
   padding-bottom: ${props => props.theme.spacing.xl};
   background-color: ${props => props.theme.colors.background};
   overflow-y: auto; /* Make content scrollable */
+  overflow-x: hidden;
   box-sizing: border-box;
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.md};
+    padding-top: calc(100px + ${props => props.theme.spacing.md});
+    padding-bottom: ${props => props.theme.spacing.lg};
+    min-height: calc(100dvh - 100px);
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    padding-top: calc(90px + ${props => props.theme.spacing.sm});
+    padding-bottom: ${props => props.theme.spacing.md};
+    min-height: calc(100dvh - 90px);
+  }
 `;
 
 const GameContent = styled.div`
@@ -90,6 +106,22 @@ const GameContent = styled.div`
   @media (max-height: 600px) {
     min-height: 200px;
     gap: ${props => props.theme.spacing.md};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    gap: ${props => props.theme.spacing.md};
+    min-height: 250px;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.sm};
+    min-height: 200px;
+    padding: 0 ${props => props.theme.spacing.xs};
+  }
+
+  @media (max-height: 500px) {
+    min-height: 150px;
+    gap: ${props => props.theme.spacing.xs};
   }
 `;
 
@@ -147,6 +179,25 @@ const SessionProgressBar = styled.div`
     gap: ${props => props.theme.spacing.md};
     padding: ${props => props.theme.spacing.md};
   }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+    margin-bottom: ${props => props.theme.spacing.xs};
+    border-radius: 8px;
+    border-width: 1px;
+    flex-direction: row !important;
+    justify-content: space-around;
+    gap: ${props => props.theme.spacing.xs};
+    min-height: auto;
+    
+    &:hover {
+      transform: none;
+    }
+    
+    &::before {
+      display: none;
+    }
+  }
 `;
 
 const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
@@ -202,6 +253,20 @@ const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time
     transform: translateY(-2px) scale(1.05);
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    min-width: 45px;
+    padding: ${props => props.theme.spacing.xs} 2px;
+    border-radius: 6px;
+    flex: 1;
+    border-width: 1px;
+    background: rgba(255, 255, 255, 0.03);
+    
+    &:hover {
+      transform: none;
+      background: rgba(255, 255, 255, 0.05);
+    }
   }
 
   @media (max-width: 768px) {
@@ -278,6 +343,17 @@ const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'tim
     margin-right: 4px;
   }
 
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.9rem;
+    margin-bottom: 1px;
+    gap: 1px;
+    
+    &::before {
+      font-size: 0.6rem;
+      margin-right: 1px;
+    }
+  }
+
   @media (max-width: 768px) {
     font-size: 1.2rem;
 
@@ -292,14 +368,14 @@ const ProgressLabel = styled.div`
   color: ${props => props.theme.colors.textSecondary};
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
+  font-weight: 500;
 
-  @media (max-width: 768px) {
-    font-size: 0.7rem;
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.6rem;
+    letter-spacing: 0.2px;
+    margin-top: 1px;
   }
-`;
-
-const Button = styled.button<{ disabled?: boolean }>`
+`;const Button = styled.button<{ disabled?: boolean }>`
   padding: 1rem 2rem;
   font-size: 1.2rem;
   border: none;
@@ -959,7 +1035,7 @@ export const Game: React.FC = () => {
         }
 
         dispatch(completeSession());
-        navigate(`/session-complete/${languageCode}`);
+        navigate(`/completed/${languageCode}`);
       }
     };
 
@@ -989,7 +1065,7 @@ export const Game: React.FC = () => {
         }
 
         dispatch(completeSession());
-        navigate(`/session-complete/${languageCode}`);
+        navigate(`/completed/${languageCode}`);
       }
     }
   }, [
@@ -1073,7 +1149,7 @@ export const Game: React.FC = () => {
 
         // Complete the session in Redux store and navigate
         dispatch(completeSession());
-        navigate(`/session-complete/${actualLanguageCode}`);
+        navigate(`/completed/${actualLanguageCode}`);
       } else {
         // Move to next word
         setInputValue('');
@@ -1145,7 +1221,7 @@ export const Game: React.FC = () => {
   }
 
   // If we're in session mode but no session is active, redirect to session selection
-  // Only redirect if we're specifically on the /game/{lang}/session route, not session-complete
+  // Only redirect if we're specifically on the /game/{lang}/session route, not completed
   const isSessionGameRoute = window.location.pathname.endsWith('/session');
   if (isSessionGameRoute && !isSessionActive) {
     navigate(`/sessions/${languageCode}`);

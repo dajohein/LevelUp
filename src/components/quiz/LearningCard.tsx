@@ -30,6 +30,13 @@ const CardContainer = styled.div`
   border: 2px solid ${props => props.theme.colors.primary};
   animation: ${slideIn} 0.5s ease-out;
   text-align: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: 1.5rem;
+    border-radius: 16px;
+    max-width: 100%;
+    margin: 0 ${props => props.theme.spacing.sm};
+  }
 `;
 
 const CardHeader = styled.div`
@@ -52,6 +59,10 @@ const MainWord = styled.div`
   font-weight: bold;
   color: ${props => props.theme.colors.text};
   margin-bottom: 0.5rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 2rem;
+  }
 `;
 
 const Translation = styled.div`
@@ -59,6 +70,10 @@ const Translation = styled.div`
   color: ${props => props.theme.colors.primary};
   margin-bottom: 1rem;
   font-weight: 500;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Context = styled.div`
@@ -70,6 +85,11 @@ const Context = styled.div`
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   border-left: 4px solid ${props => props.theme.colors.secondary};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
 `;
 
 const Progress = styled.div`
@@ -119,6 +139,13 @@ const ContinueButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(0, 100, 200, 0.3);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    min-height: ${props => props.theme.touchTarget.minimum};
+    padding: 1rem 1.5rem;
+    width: 100%;
+    font-size: 1rem;
+  }
 
   &:hover {
     transform: translateY(-2px);

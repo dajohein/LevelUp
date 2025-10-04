@@ -25,6 +25,18 @@ const Container = styled.div<{ enhanced?: boolean }>`
   overflow: hidden;
   transition: all 0.3s ease;
 
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.sm};
+    margin: ${props => props.theme.spacing.sm} 0;
+    border-radius: ${props => (props.enhanced ? '12px' : '8px')};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs};
+    margin: ${props => props.theme.spacing.xs} 0;
+    border-radius: ${props => (props.enhanced ? '8px' : '6px')};
+  }
+
   ${props =>
     props.enhanced &&
     `
@@ -64,6 +76,16 @@ const Title = styled.h3<{ enhanced?: boolean }>`
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
 
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: ${props => (props.enhanced ? '1.2rem' : '0.95rem')};
+    gap: ${props => props.theme.spacing.xs};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: ${props => (props.enhanced ? '1.1rem' : '0.9rem')};
+    margin: 0 0 ${props => props.theme.spacing.xs} 0;
+  }
+
   ${props =>
     props.enhanced &&
     `
@@ -85,6 +107,16 @@ const ProgressBar = styled.div<{ enhanced?: boolean }>`
   margin: ${props => props.theme.spacing.xs} 0;
   position: relative;
   box-shadow: ${props => (props.enhanced ? 'inset 0 2px 4px rgba(0, 0, 0, 0.2)' : 'none')};
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    height: ${props => (props.enhanced ? '20px' : '16px')};
+    border-radius: ${props => (props.enhanced ? '16px' : '6px')};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    height: ${props => (props.enhanced ? '16px' : '12px')};
+    border-radius: ${props => (props.enhanced ? '12px' : '4px')};
+  }
 
   ${props =>
     props.enhanced &&
@@ -157,6 +189,15 @@ const Legend = styled.div<{ enhanced?: boolean }>`
   gap: ${props => (props.enhanced ? props.theme.spacing.md : props.theme.spacing.sm)};
   margin-top: ${props => props.theme.spacing.xs};
   justify-content: ${props => (props.enhanced ? 'center' : 'flex-start')};
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    gap: ${props => (props.enhanced ? props.theme.spacing.sm : props.theme.spacing.xs)};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.xs};
+    justify-content: center;
+  }
 `;
 
 const LegendItem = styled.div<{ color: string; enhanced?: boolean }>`
@@ -170,6 +211,17 @@ const LegendItem = styled.div<{ color: string; enhanced?: boolean }>`
   border: ${props => (props.enhanced ? `1px solid ${props.color}40` : 'none')};
   transition: all 0.3s ease;
 
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: ${props => (props.enhanced ? '0.85rem' : '0.75rem')};
+    padding: ${props => (props.enhanced ? '4px 8px' : '3px 6px')};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: ${props => (props.enhanced ? '0.8rem' : '0.7rem')};
+    padding: ${props => (props.enhanced ? '3px 6px' : '2px 4px')};
+    border-radius: ${props => (props.enhanced ? '16px' : '3px')};
+  }
+
   &::before {
     content: '';
     width: ${props => (props.enhanced ? '16px' : '12px')};
@@ -179,6 +231,18 @@ const LegendItem = styled.div<{ color: string; enhanced?: boolean }>`
     border-radius: ${props => (props.enhanced ? '50%' : '2px')};
     margin-right: ${props => (props.enhanced ? '8px' : '6px')};
     box-shadow: ${props => (props.enhanced ? `0 0 8px ${props.color}40` : 'none')};
+
+    @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+      width: ${props => (props.enhanced ? '14px' : '10px')};
+      height: ${props => (props.enhanced ? '14px' : '10px')};
+      margin-right: ${props => (props.enhanced ? '6px' : '4px')};
+    }
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+      width: ${props => (props.enhanced ? '12px' : '8px')};
+      height: ${props => (props.enhanced ? '12px' : '8px')};
+      margin-right: ${props => (props.enhanced ? '4px' : '3px')};
+    }
   }
 
   ${props =>
