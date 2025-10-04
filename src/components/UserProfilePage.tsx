@@ -6,6 +6,7 @@ import { getAvailableLanguages } from '../services/moduleService';
 import { getAllLanguageProgress } from '../services/progressService';
 import { UserProfile as UserProfileWidget } from './UserProfile';
 import { StorageManagement } from './StorageManagement';
+import { DataTransfer } from './DataTransfer';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -362,6 +363,8 @@ export const UserProfilePage: React.FC = () => {
               })}
             </LanguageGrid>
           </LanguageProgressSection>
+
+          <DataTransfer />
 
           <StorageManagement />
         </ProfileGrid>
