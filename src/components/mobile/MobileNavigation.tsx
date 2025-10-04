@@ -106,44 +106,7 @@ const HamburgerButton = styled.button<{ isOpen: boolean }>`
   }
 `;
 
-// Back Button
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  color: ${props => props.theme.colors.primary};
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  min-height: ${props => props.theme.touchTarget.minimum};
-  white-space: nowrap;
 
-  &:hover {
-    background: rgba(76, 175, 80, 0.2);
-    border-color: ${props => props.theme.colors.primary};
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  .back-text {
-    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-      display: none;
-    }
-  }
-
-  .back-icon {
-    font-size: 1.2rem;
-  }
-`;
 
 // Center Section
 const CenterSection = styled.div`
@@ -374,16 +337,10 @@ const MenuIcon = styled.span`
 `;
 
 interface MobileNavigationProps {
-  showBackButton?: boolean;
-  backButtonLabel?: string;
-  onBackClick?: () => void;
   showUserProfile?: boolean;
 }
 
 export const MobileNavigation: React.FC<MobileNavigationProps> = ({
-  showBackButton = false,
-  backButtonLabel = 'Back',
-  onBackClick,
   showUserProfile = true,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -404,14 +361,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Handle back button
-  const handleBackClick = () => {
-    if (onBackClick) {
-      onBackClick();
-    } else {
-      navigate(-1);
-    }
-  };
+
 
   // Menu items
   const menuItems = [
@@ -430,13 +380,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             <span />
             <span />
           </HamburgerButton>
-
-          {showBackButton && (
-            <BackButton onClick={handleBackClick}>
-              <span className="back-icon">←</span>
-              <span className="back-text">{backButtonLabel}</span>
-            </BackButton>
-          )}
         </LeftSection>
 
         <CenterSection>

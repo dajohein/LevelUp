@@ -356,9 +356,6 @@ export const Navigation: React.FC<NavigationProps> = ({
   if (isMobile) {
     return (
       <MobileNavigation
-        showBackButton={!!backButtonConfig}
-        backButtonLabel={backButtonConfig?.label}
-        onBackClick={backButtonConfig?.onClick}
         showUserProfile={showUserProfile}
       />
     );
