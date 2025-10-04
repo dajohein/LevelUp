@@ -11,6 +11,11 @@ const PWAContainer = styled.div`
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+
+  /* Hide PWA button on mobile to avoid overlap with bottom navigation */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    display: none;
+  }
 `;
 
 const CompactButton = styled.button`
