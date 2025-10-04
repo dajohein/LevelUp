@@ -307,24 +307,28 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     return null; // Don't render if no languages are available
   }
 
-  // Get word progress data - prefer Redux store, fallback to localStorage
+  // Get word progress data - prefer localStorage for language-specific data
   const wordProgress = useMemo(() => {
-    // If Redux store has data for the current language, use it
+    // Always prefer localStorage for language-specific data to avoid mixing languages
+    // The Redux store might contain data for a different language than what we're displaying
+    try {
+      const localData = wordProgressStorage.load(currentLanguage);
+      
+      // If localStorage has data, use it (it's language-specific and reliable)
+      if (Object.keys(localData).length > 0) {
+        return localData;
+      }
+    } catch (error) {
+      console.warn('Failed to load word progress from localStorage:', error);
+    }
+    
+    // Only fall back to Redux if localStorage is empty
     const hasReduxData = Object.keys(reduxWordProgress).length > 0;
     if (hasReduxData) {
-      console.log(`UserProfile: Using Redux data for ${currentLanguage}, ${Object.keys(reduxWordProgress).length} words`);
       return reduxWordProgress;
     }
     
-    // Otherwise, load from localStorage for the current language
-    try {
-      const localData = wordProgressStorage.load(currentLanguage);
-      console.log(`UserProfile: Loaded from localStorage for ${currentLanguage}, ${Object.keys(localData).length} words`);
-      return localData;
-    } catch (error) {
-      console.warn('Failed to load word progress from localStorage:', error);
-      return {};
-    }
+    return {};
   }, [reduxWordProgress, currentLanguage]);
 
   const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
@@ -333,13 +337,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const xpProgress = calculateXPForNextLevel(languageXP);
   const levelInfo = getLevelInfo(currentLevel);
 
-  // Debug information
-  console.log(`UserProfile Stats for ${currentLanguage}:`, {
-    wordProgress: Object.keys(wordProgress).length,
-    languageXP,
-    currentLevel,
-    stats
-  });
+
 
   useEffect(() => {
     // Trigger progress animation on mount or language change

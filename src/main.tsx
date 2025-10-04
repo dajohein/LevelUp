@@ -17,6 +17,11 @@ import './index.css';
 // Initialize the storage system
 initializeStorage();
 
+// Load debug helpers in development
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/debugHelpers');
+}
+
 // Setup cross-tab synchronization
 setupStorageSync(store);
 

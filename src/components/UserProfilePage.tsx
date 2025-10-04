@@ -8,6 +8,40 @@ import { UserProfile as UserProfileWidget } from './UserProfile';
 import { StorageManagement } from './StorageManagement';
 import { DataTransfer } from './DataTransfer';
 
+// Debug helpers (only in development)
+const DebugSection = () => {
+  if (process.env.NODE_ENV !== 'development') return null;
+  
+  const createSampleData = async () => {
+    const { createSampleData } = await import('../utils/debugHelpers');
+    createSampleData();
+    window.location.reload(); // Reload to see the data
+  };
+  
+  const debugStorage = async () => {
+    const { debugStorage } = await import('../utils/debugHelpers');
+    debugStorage();
+  };
+  
+  return (
+    <div style={{ 
+      background: 'rgba(255, 0, 0, 0.1)', 
+      border: '1px solid red', 
+      padding: '16px', 
+      borderRadius: '8px',
+      marginBottom: '20px'
+    }}>
+      <h3 style={{ color: 'red', margin: '0 0 10px 0' }}>🛠️ Development Debug Tools</h3>
+      <button onClick={createSampleData} style={{ marginRight: '10px' }}>
+        Create Sample Data
+      </button>
+      <button onClick={debugStorage}>
+        Debug Storage
+      </button>
+    </div>
+  );
+};
+
 const Container = styled.div`
   min-height: 100vh;
   background-color: ${props => props.theme.colors.background};
@@ -260,6 +294,9 @@ export const UserProfilePage: React.FC = () => {
           </Title>
           <Subtitle>Track your learning progress across all languages</Subtitle>
         </Header>
+
+        {/* Only show debug tools in development */}
+        {process.env.NODE_ENV === 'development' && <DebugSection />}
 
         <ProfileGrid>
           {/* Overall User Profile Widget - Show stats for the language with most progress */}
