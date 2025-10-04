@@ -262,8 +262,18 @@ export const UserProfilePage: React.FC = () => {
         </Header>
 
         <ProfileGrid>
-          {/* Overall User Profile Widget */}
-          <UserProfileWidget compact={false} />
+          {/* Overall User Profile Widget - Show stats for the language with most progress */}
+          <UserProfileWidget 
+            compact={false} 
+            languageCode={
+              // Find the language with the most progress, or default to first available
+              Object.entries(progressData).length > 0 
+                ? Object.entries(progressData).reduce((mostActive, [code, progress]) => 
+                    (progress && progress.practicedWords > (progressData[mostActive]?.practicedWords || 0)) ? code : mostActive
+                  , Object.keys(progressData)[0] || languages[0]?.code)
+                : languages[0]?.code
+            }
+          />
 
           {/* Language Progress Section */}
           <LanguageProgressSection>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { useSelector } from 'react-redux';
@@ -10,6 +10,8 @@ import {
   calculateLanguageXP,
   calculateCurrentLevel,
 } from '../services/levelService';
+import { wordProgressStorage } from '../services/storageService';
+import { getAvailableLanguages } from '../services/moduleService';
 
 // Animations
 const xpCountUp = keyframes`
@@ -294,21 +296,50 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   showAchievements = true,
   languageCode,
 }) => {
-  const { wordProgress, language } = useSelector((state: RootState) => state.game);
+  const { wordProgress: reduxWordProgress, language } = useSelector((state: RootState) => state.game);
   const [animateProgress, setAnimateProgress] = useState(false);
 
-  // Use provided languageCode or current language from store
-  const currentLanguage = languageCode || language;
+  // Use provided languageCode, current language from store, or default to first available language
+  const availableLanguages = getAvailableLanguages();
+  const currentLanguage = languageCode || language || (availableLanguages.length > 0 ? availableLanguages[0].code : null);
 
   if (!currentLanguage) {
-    return null; // Don't render if no language is selected
+    return null; // Don't render if no languages are available
   }
+
+  // Get word progress data - prefer Redux store, fallback to localStorage
+  const wordProgress = useMemo(() => {
+    // If Redux store has data for the current language, use it
+    const hasReduxData = Object.keys(reduxWordProgress).length > 0;
+    if (hasReduxData) {
+      console.log(`UserProfile: Using Redux data for ${currentLanguage}, ${Object.keys(reduxWordProgress).length} words`);
+      return reduxWordProgress;
+    }
+    
+    // Otherwise, load from localStorage for the current language
+    try {
+      const localData = wordProgressStorage.load(currentLanguage);
+      console.log(`UserProfile: Loaded from localStorage for ${currentLanguage}, ${Object.keys(localData).length} words`);
+      return localData;
+    } catch (error) {
+      console.warn('Failed to load word progress from localStorage:', error);
+      return {};
+    }
+  }, [reduxWordProgress, currentLanguage]);
 
   const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
   const currentLevel = calculateCurrentLevel(languageXP);
   const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
   const xpProgress = calculateXPForNextLevel(languageXP);
   const levelInfo = getLevelInfo(currentLevel);
+
+  // Debug information
+  console.log(`UserProfile Stats for ${currentLanguage}:`, {
+    wordProgress: Object.keys(wordProgress).length,
+    languageXP,
+    currentLevel,
+    stats
+  });
 
   useEffect(() => {
     // Trigger progress animation on mount or language change
