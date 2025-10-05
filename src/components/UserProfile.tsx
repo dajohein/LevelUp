@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
+import { logger } from '../services/logger';
 import {
   calculateXPForNextLevel,
   getLevelInfo,
@@ -319,7 +320,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         return localData;
       }
     } catch (error) {
-      console.warn('Failed to load word progress from localStorage:', error);
+      logger.warn('Failed to load word progress from localStorage:', error);
     }
     
     // Only fall back to Redux if localStorage is empty
@@ -329,13 +330,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
     
     return {};
-  }, [reduxWordProgress, currentLanguage]);
+  }, [currentLanguage]); // Remove reduxWordProgress dependency to prevent frequent updates
 
-  const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
-  const currentLevel = calculateCurrentLevel(languageXP);
-  const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
-  const xpProgress = calculateXPForNextLevel(languageXP);
-  const levelInfo = getLevelInfo(currentLevel);
+  // Memoize expensive calculations
+  const profileData = useMemo(() => {
+    const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
+    const currentLevel = calculateCurrentLevel(languageXP);
+    const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
+    const xpProgress = calculateXPForNextLevel(languageXP);
+    const levelInfo = getLevelInfo(currentLevel);
+    
+    return { languageXP, currentLevel, stats, xpProgress, levelInfo };
+  }, [wordProgress, currentLanguage]);
+
+  const { languageXP, currentLevel, stats, xpProgress, levelInfo } = profileData;
 
 
 
@@ -481,3 +489,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     </ProfileContainer>
   );
 };
+
+// Memoize to prevent expensive recalculations on every parent update
+export default React.memo(UserProfile);

@@ -1,5 +1,5 @@
 import { getWordsForModule, getAvailableLanguages } from './moduleService';
-import { wordProgressStorage } from './storageService';
+import { DataMigrationService } from './dataMigrationService';
 import { calculateMasteryDecay } from './masteryService';
 
 export interface LanguageProgress {
@@ -27,8 +27,8 @@ export const calculateLanguageProgress = (languageCode: string): LanguageProgres
     };
   }
 
-  // Get word progress for this language
-  const wordProgress = wordProgressStorage.load(languageCode);
+  // Get word progress for this language with automatic migration
+  const wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
 
   let totalWords = 0;
   let practicedWords = 0;

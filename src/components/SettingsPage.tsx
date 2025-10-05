@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from './Navigation';
 import { MobileButton } from './mobile/MobileButton';
+import { logger } from '../services/logger';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -97,10 +98,10 @@ export const SettingsPage: React.FC = () => {
   const handleNavigation = (path: string) => {
     if (path === '/export') {
       // Trigger data export
-      console.log('Export data functionality coming soon');
+      logger.info('Export data functionality coming soon');
     } else if (path === '/import') {
       // Trigger data import
-      console.log('Import data functionality coming soon');
+      logger.info('Import data functionality coming soon');
     } else if (path === '/install') {
       // Trigger PWA install
       window.location.reload();

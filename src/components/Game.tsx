@@ -76,6 +76,7 @@ const GameContainer = styled.div`
   overflow-y: auto; /* Make content scrollable */
   overflow-x: hidden;
   box-sizing: border-box;
+  position: relative; /* For floating directional hint */
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     padding: ${props => props.theme.spacing.md};
@@ -969,7 +970,7 @@ export const Game: React.FC = () => {
     } else {
       setShowLearningCard(false);
     }
-  }, [isUsingSpacedRepetition, currentWord, wordProgress, getCurrentWordInfo]); // Include all dependencies
+  }, [isUsingSpacedRepetition, currentWord, wordProgress]); // Removed getCurrentWordInfo to prevent infinite loops
 
   useEffect(() => {
     if (languageCode) {

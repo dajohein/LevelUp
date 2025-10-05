@@ -72,6 +72,8 @@ class LearningCacheService {
   private wordGroupsCache: CachedWordGroups = {};
   private sessionHistory: SessionRecord[] = [];
   private analytics: LearningAnalytics = {};
+  private lastAnalyticsReload: number = 0;
+  private readonly ANALYTICS_CACHE_DURATION = 30000; // 30 seconds
 
   constructor() {
     this.loadFromStorage();
@@ -406,10 +408,18 @@ class LearningCacheService {
    * Force reload analytics data from localStorage
    */
   reloadAnalytics(): void {
+    const now = Date.now();
+    
+    // Prevent excessive reloads - only reload if cache is older than 30 seconds
+    if (now - this.lastAnalyticsReload < this.ANALYTICS_CACHE_DURATION) {
+      return;
+    }
+
     try {
       const cachedAnalytics = localStorage.getItem(CACHE_KEYS.LEARNING_ANALYTICS);
       if (cachedAnalytics) {
         this.analytics = JSON.parse(cachedAnalytics);
+        this.lastAnalyticsReload = now;
         logger.debug('📊 Analytics reloaded from storage');
       }
     } catch (error) {

@@ -4,6 +4,7 @@ import { FaUser, FaChartLine, FaTrophy, FaClock } from 'react-icons/fa';
 import { Navigation } from './Navigation';
 import { getAvailableLanguages } from '../services/moduleService';
 import { getAllLanguageProgress } from '../services/progressService';
+import { DirectionalStats } from './DirectionalStats';
 import { UserProfile as UserProfileWidget } from './UserProfile';
 import { StorageManagement } from './StorageManagement';
 import { DataTransfer } from './DataTransfer';
@@ -433,6 +434,9 @@ export const UserProfilePage: React.FC = () => {
                         {progress.practicedWords} / {progress.totalWords} words
                       </span>
                     </ProgressLabel>
+                    
+                    {/* Add directional analytics only for languages with substantial practice data and explicit directional learning */}
+                    {progress.practicedWords > 5 && <DirectionalStats languageCode={code} />}
                   </LanguageCard>
                 );
               })}

@@ -104,7 +104,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []); // Remove onComplete dependency to prevent re-renders when parent updates
 
   return (
     <>

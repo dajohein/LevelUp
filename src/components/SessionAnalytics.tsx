@@ -5,10 +5,11 @@
  * Shows progress, recommendations, and learning insights
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { enhancedWordService } from '../services/enhancedWordService';
 import { learningCacheService } from '../services/cacheService';
+import { DirectionalStats } from './DirectionalStats';
 
 const Container = styled.div`
   background: ${props => props.theme.colors.surface};
@@ -186,20 +187,34 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   showRecommendations = true,
   showWeeklyProgress = true,
 }) => {
-  // Force refresh analytics data after a brief delay to ensure it's loaded
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [sessionData, setSessionData] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<number>(0);
+
+  // Only reload analytics when truly necessary and cache the results
   useEffect(() => {
-    // Immediately reload analytics from localStorage
-    learningCacheService.reloadAnalytics();
+    if (!languageCode) return;
 
-    const timer = setTimeout(() => {
+    const now = Date.now();
+    const shouldUpdate = (now - lastUpdate) > 10000; // Only update every 10 seconds max
+
+    if (shouldUpdate) {
+      // Try to reload analytics data
       learningCacheService.reloadAnalytics();
-    }, 500); // 500ms delay to ensure session data is saved
+      
+      // Get fresh data
+      const analytics = enhancedWordService.getLearningAnalytics(languageCode);
+      const recentSessions = enhancedWordService.getSessionHistory(languageCode, 5);
+      
+      setAnalyticsData(analytics);
+      setSessionData(recentSessions);
+      setLastUpdate(now);
+    }
+  }, [languageCode, lastUpdate]);
 
-    return () => clearTimeout(timer);
-  }, [languageCode]);
-
-  const analytics = enhancedWordService.getLearningAnalytics(languageCode);
-  const recentSessions = enhancedWordService.getSessionHistory(languageCode, 5);
+  // Use cached data if available
+  const analytics = analyticsData || enhancedWordService.getLearningAnalytics(languageCode);
+  const recentSessions = sessionData.length > 0 ? sessionData : enhancedWordService.getSessionHistory(languageCode, 5);
 
   if (!analytics && recentSessions.length === 0) {
     return (
@@ -327,6 +342,12 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
           </RecommendationList>
         </RecommendationsSection>
       )}
+
+      {/* Add directional learning analytics */}
+      <DirectionalStats languageCode={languageCode} />
     </Container>
   );
 };
+
+// Memoize to prevent unnecessary re-renders when parent updates
+export default React.memo(SessionAnalytics);

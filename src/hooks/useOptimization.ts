@@ -77,19 +77,22 @@ export const useLanguageProgress = (languageCode: string): LanguageProgress & { 
   }, [languageCode, progress]);
 
   useEffect(() => {
-    const calculateProgress = async () => {
-      setIsLoading(true);
-      try {
-        // Add small delay to prevent blocking UI
-        await new Promise(resolve => setTimeout(resolve, 0));
-        setProgress(memoizedProgress);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (languageCode) {
-      calculateProgress();
+      setIsLoading(true);
+      
+      // Use requestIdleCallback for better performance if available
+      const callback = () => {
+        setProgress(memoizedProgress);
+        setIsLoading(false);
+      };
+      
+      if (window.requestIdleCallback) {
+        const handle = window.requestIdleCallback(callback);
+        return () => window.cancelIdleCallback(handle);
+      } else {
+        const timeout = setTimeout(callback, 0);
+        return () => clearTimeout(timeout);
+      }
     }
   }, [languageCode, memoizedProgress]);
 

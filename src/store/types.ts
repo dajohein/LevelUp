@@ -2,12 +2,52 @@ import { Word } from '../services/wordService';
 
 export type QuizMode = 'multiple-choice' | 'letter-scramble' | 'open-answer';
 
-export interface WordProgress {
-  wordId: string;
-  xp: number;
-  lastPracticed: string; // ISO date string
+// Enhanced directional progress tracking
+export interface DirectionalProgress {
   timesCorrect: number;
   timesIncorrect: number;
+  xp: number;
+  lastPracticed: string;
+  averageResponseTime?: number;
+  consecutiveCorrect?: number;
+  longestStreak?: number;
+  difficultyLevel?: 'easy' | 'medium' | 'hard';
+}
+
+// Legacy interface for backward compatibility
+export interface LegacyWordProgress {
+  wordId: string;
+  xp: number;
+  lastPracticed: string;
+  timesCorrect: number;
+  timesIncorrect: number;
+}
+
+// Enhanced WordProgress with backward compatibility
+export interface WordProgress {
+  wordId: string;
+  
+  // LEGACY FIELDS - PRESERVED FOR BACKWARD COMPATIBILITY
+  xp: number;                    // Original XP value
+  lastPracticed: string;         // ISO date string
+  timesCorrect: number;          // Original correct count
+  timesIncorrect: number;        // Original incorrect count
+  
+  // NEW FIELDS - OPTIONAL AND DEFAULTED
+  totalXp?: number;              // Aggregate XP across directions
+  firstLearned?: string;         // When word was first encountered
+  version?: number;              // Migration version (1=legacy, 2=enhanced)
+  
+  // ENHANCED TRACKING - OPTIONAL
+  directions?: {
+    'term-to-definition'?: DirectionalProgress;
+    'definition-to-term'?: DirectionalProgress;
+  };
+  
+  // METADATA - OPTIONAL
+  learningPhase?: 'introduction' | 'practice' | 'mastery' | 'maintenance';
+  tags?: string[];
+  customNotes?: string;
 }
 
 export interface Module {

@@ -164,6 +164,46 @@ export const wordProgressStorage = {
       logger.error('Failed to clear word progress:', error);
     }
   },
+
+  // Raw data access methods for migration purposes
+  loadRaw: (languageCode: string): { [key: string]: any } => {
+    if (!isLocalStorageAvailable()) return {};
+
+    try {
+      const data = safeJSONParse<PersistentWordProgress>(
+        localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
+        {}
+      );
+
+      return data[languageCode] || {};
+    } catch (error) {
+      logger.error('Failed to load raw word progress:', error);
+      return {};
+    }
+  },
+
+  saveRaw: (languageCode: string, data: { [key: string]: any }): void => {
+    if (!isLocalStorageAvailable()) return;
+
+    try {
+      // Load existing data for all languages
+      const existingData = safeJSONParse<any>(
+        localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
+        {}
+      );
+
+      // Update the specific language with raw data
+      existingData[languageCode] = data;
+
+      // Save back to localStorage
+      localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+
+      logger.debug(`💾 Saved raw data for ${languageCode}`);
+    } catch (error) {
+      logger.error('Failed to save raw word progress:', error);
+      throw new StorageError('Failed to save raw word progress', error as Record<string, any>);
+    }
+  },
 };
 
 // Game State Storage

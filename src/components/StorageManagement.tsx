@@ -204,8 +204,8 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
   useEffect(() => {
     updateStorageInfo();
 
-    // Update storage info periodically
-    const interval = setInterval(updateStorageInfo, 5000);
+    // Update storage info less frequently to reduce overhead
+    const interval = setInterval(updateStorageInfo, 30000); // Changed from 5s to 30s
     return () => clearInterval(interval);
   }, []);
 

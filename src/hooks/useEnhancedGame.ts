@@ -236,7 +236,7 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
     if (canUseEnhancedMode()) {
       initializeEnhancedSession();
     }
-  }, [canUseEnhancedMode, initializeEnhancedSession]);
+  }, [languageCode, moduleId]); // Only depend on external props, not internal functions
 
   return {
     // State

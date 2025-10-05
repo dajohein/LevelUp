@@ -6,8 +6,9 @@ import { RootState } from '../store/store';
 import { setLanguage, setCurrentModule } from '../store/gameSlice';
 import { resetSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
+import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
-import { wordProgressStorage } from '../services/storageService';
+import { DataMigrationService } from '../services/dataMigrationService';
 
 const OverviewContainer = styled.div`
   display: flex;
@@ -95,7 +96,8 @@ const ModulesGrid = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
-    gap: ${props => props.theme.spacing.md};
+    gap: ${props => props.theme.spacing.lg};
+    padding: 0 ${props => props.theme.spacing.sm};
   }
 `;
 
@@ -115,10 +117,13 @@ const ModuleCard = styled.div`
   overflow: hidden;
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.md};
+    padding: ${props => props.theme.spacing.lg};
     flex-direction: column;
     min-height: auto;
-    gap: ${props => props.theme.spacing.sm};
+    gap: ${props => props.theme.spacing.md};
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 
   &::before {
@@ -143,6 +148,12 @@ const ModuleHeader = styled.div`
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
   margin-bottom: ${props => props.theme.spacing.sm};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.md};
+    margin-bottom: ${props => props.theme.spacing.md};
+    flex-wrap: wrap;
+  }
 `;
 
 const ModuleContent = styled.div`
@@ -162,11 +173,13 @@ const ModuleActions = styled.div`
   padding: ${props => props.theme.spacing.sm};
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     min-width: auto;
     width: 100%;
-    padding: ${props => props.theme.spacing.xs};
+    padding: 0;
+    gap: ${props => props.theme.spacing.md};
+    margin-top: ${props => props.theme.spacing.md};
   }
 `;
 
@@ -182,12 +195,24 @@ const ModuleName = styled.h3`
   color: ${props => props.theme.colors.text};
   margin: 0;
   font-size: 1.3rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
 `;
 
 const ModuleDescription = styled.p`
   color: ${props => props.theme.colors.textSecondary};
   margin: ${props => props.theme.spacing.xs} 0;
   font-size: 0.9rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+    margin: ${props => props.theme.spacing.sm} 0 ${props => props.theme.spacing.md} 0;
+    line-height: 1.4;
+  }
 `;
 
 const DifficultyBadge = styled.span<{ difficulty: string }>`
@@ -209,6 +234,13 @@ const DifficultyBadge = styled.span<{ difficulty: string }>`
     }
   }};
   color: white;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.8rem;
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+    border-radius: ${props => props.theme.borderRadius.md};
+    margin-left: auto;
+  }
 `;
 
 const StatsContainer = styled.div`
@@ -217,22 +249,44 @@ const StatsContainer = styled.div`
   flex-direction: column;
   gap: ${props => props.theme.spacing.xs};
   margin-top: auto;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.sm};
+    margin-top: ${props => props.theme.spacing.md};
+    padding: ${props => props.theme.spacing.md};
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: ${props => props.theme.borderRadius.md};
+  }
 `;
 
 const StatRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs} 0;
+  }
 `;
 
 const StatLabel = styled.span`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+    font-weight: 500;
+  }
 `;
 
 const StatValue = styled.span`
   color: ${props => props.theme.colors.text};
   font-weight: 600;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
 `;
 
 const ModuleProgressBar = styled.div`
@@ -241,6 +295,13 @@ const ModuleProgressBar = styled.div`
   background-color: ${props => props.theme.colors.surface};
   border-radius: 3px;
   overflow: hidden;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const ProgressFill = styled.div<{ progress: number }>`
@@ -431,6 +492,11 @@ const ScoreValue = styled.div`
   font-size: 1.5rem;
   font-weight: bold;
   color: ${props => props.theme.colors.primary};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
 `;
 
 const ScoreLabel = styled.div`
@@ -461,6 +527,23 @@ const QuickPracticeButton = styled.button`
   &:active {
     transform: translateY(0);
   }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: 16px 24px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+    
+    &:hover {
+      transform: none;
+      background: linear-gradient(45deg, #43a047, #5cb860);
+    }
+    
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 `;
 
 const ViewDetailsButton = styled.button`
@@ -485,6 +568,28 @@ const ViewDetailsButton = styled.button`
 
   &:active {
     transform: translateY(0);
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    margin-bottom: 0;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    backdrop-filter: blur(10px);
+    
+    &:hover {
+      transform: none;
+      background: rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.7);
+    }
+    
+    &:active {
+      transform: scale(0.98);
+    }
   }
 `;
 
@@ -776,6 +881,13 @@ const LanguageAnalytics: React.FC<{ languageCode: string; modules: any[]; wordPr
           </div>
         </AnalyticsSubSection>
       )}
+
+      {/* Directional Learning Analytics - only show when relevant */}
+      {totalWordsLearned > 5 && (
+        <AnalyticsSubSection>
+          <DirectionalStats languageCode={languageCode} />
+        </AnalyticsSubSection>
+      )}
     </AnalyticsSection>
   );
 };
@@ -834,8 +946,8 @@ export const ModuleOverview: React.FC = () => {
       return reduxWordProgress;
     }
 
-    // Otherwise, load directly from storage for this language
-    return wordProgressStorage.load(languageCode);
+    // Load directly from storage for this language with automatic migration
+    return DataMigrationService.safeLoadWordProgress(languageCode);
   }, [languageCode, reduxWordProgress, currentLanguage]);
 
   // Ensure the Redux store has the correct language set when we navigate to this page

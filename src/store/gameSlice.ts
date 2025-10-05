@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getRandomWord, getRandomWordFromModule } from '../services/wordService';
 import { calculateMasteryGain } from '../services/masteryService';
 import { wordProgressStorage, gameStateStorage } from '../services/storageService';
+import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
 import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
 import type { GameState } from './types';
@@ -17,8 +18,8 @@ const loadPersistedState = (): Partial<GameState> => {
     let languageSpecificProgress = {};
 
     if (currentLanguage) {
-      // Load only the current language's progress
-      languageSpecificProgress = wordProgressStorage.load(currentLanguage);
+      // Load only the current language's progress with automatic migration
+      languageSpecificProgress = DataMigrationService.safeLoadWordProgress(currentLanguage);
       // Removed debug logging to prevent console spam
     }
 
@@ -129,7 +130,7 @@ export const gameSlice = createSlice({
         state.capitalizationFeedback = undefined;
       }
 
-      // Update word progress
+            // Update word progress with enhanced directional tracking
       const wordId = state.currentWord.id;
       const currentProgress = state.wordProgress[wordId] || {
         wordId,
@@ -137,6 +138,29 @@ export const gameSlice = createSlice({
         lastPracticed: new Date().toISOString(),
         timesCorrect: 0,
         timesIncorrect: 0,
+        version: 2, // Mark as enhanced format
+        totalXp: 0,
+        firstLearned: new Date().toISOString(),
+        directions: {
+          'term-to-definition': {
+            timesCorrect: 0,
+            timesIncorrect: 0,
+            xp: 0,
+            lastPracticed: new Date().toISOString(),
+            consecutiveCorrect: 0,
+            longestStreak: 0,
+          },
+          'definition-to-term': {
+            timesCorrect: 0,
+            timesIncorrect: 0,
+            xp: 0,
+            lastPracticed: new Date().toISOString(),
+            consecutiveCorrect: 0,
+            longestStreak: 0,
+          }
+        },
+        learningPhase: 'introduction',
+        tags: []
       };
 
       // Calculate new mastery
@@ -146,14 +170,53 @@ export const gameSlice = createSlice({
         state.quizMode
       );
 
-      // Update word progress
-      state.wordProgress[wordId] = {
+      // Update overall progress (maintaining backward compatibility)
+      const updatedProgress = {
         ...currentProgress,
         xp: newMastery,
         lastPracticed: new Date().toISOString(),
         timesCorrect: currentProgress.timesCorrect + (validation.isCorrect ? 1 : 0),
         timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
+        totalXp: newMastery,
+        version: 2,
       };
+
+      // Update directional progress if using enhanced format
+      if (updatedProgress.directions) {
+        const directionData = updatedProgress.directions[direction];
+        if (directionData) {
+          // Calculate directional mastery gain
+          const directionalMastery = calculateMasteryGain(
+            directionData.xp,
+            validation.isCorrect,
+            state.quizMode
+          );
+
+          // Update directional stats
+          updatedProgress.directions[direction] = {
+            ...directionData,
+            xp: directionalMastery,
+            lastPracticed: new Date().toISOString(),
+            timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
+            timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
+            consecutiveCorrect: validation.isCorrect ? (directionData.consecutiveCorrect || 0) + 1 : 0,
+            longestStreak: validation.isCorrect 
+              ? Math.max((directionData.longestStreak || 0), (directionData.consecutiveCorrect || 0) + 1)
+              : (directionData.longestStreak || 0)
+          };
+        }
+
+        // Update learning phase based on overall progress
+        if (updatedProgress.xp >= 80) {
+          updatedProgress.learningPhase = 'maintenance';
+        } else if (updatedProgress.xp >= 50) {
+          updatedProgress.learningPhase = 'mastery';
+        } else if (updatedProgress.xp > 0) {
+          updatedProgress.learningPhase = 'practice';
+        }
+      }
+
+      state.wordProgress[wordId] = updatedProgress;
 
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
@@ -185,8 +248,8 @@ export const gameSlice = createSlice({
       state.isCorrect = null;
       state.lastAnswer = undefined;
 
-      // Load word progress for this language only (no merging)
-      const savedWordProgress = wordProgressStorage.load(languageCode);
+      // Load word progress for this language only (no merging) with automatic migration
+      const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
       state.wordProgress = savedWordProgress;
 
       // Initialize first word

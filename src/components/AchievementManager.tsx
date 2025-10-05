@@ -96,3 +96,6 @@ export const AchievementManager: React.FC = () => {
     <AchievementNotification achievement={latestUnlock} onComplete={handleNotificationComplete} />
   ) : null;
 };
+
+// Memoize to prevent unnecessary re-renders
+export default React.memo(AchievementManager);

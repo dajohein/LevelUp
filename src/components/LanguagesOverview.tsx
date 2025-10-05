@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaGlobeAmericas } from 'react-icons/fa';
 import { getAvailableLanguages, getModulesForLanguage } from '../services/moduleService';
 import { calculateCurrentLevel, getLevelInfo } from '../services/levelService';
-import { wordProgressStorage } from '../services/storageService';
+import { DataMigrationService } from '../services/dataMigrationService';
 import { Navigation } from './Navigation';
 
 const Container = styled.div`
@@ -217,7 +217,7 @@ export const LanguagesOverview: React.FC = () => {
   // Calculate overall stats across all languages
   const overallStats = React.useMemo(() => {
     const allLanguagesProgress = languages.map(({ code }) => {
-      const progress = wordProgressStorage.load(code);
+      const progress = DataMigrationService.safeLoadWordProgress(code);
       const modules = getModulesForLanguage(code);
       const totalWords = modules.reduce((sum, module) => sum + (module.words?.length || 0), 0);
       const practicedWords = Object.keys(progress).filter(wordId => {
@@ -273,7 +273,7 @@ export const LanguagesOverview: React.FC = () => {
         <LanguageGrid>
           {languages.map(({ code, info }) => {
             // Load progress directly from storage for this specific language
-            const languageWordProgress = wordProgressStorage.load(code);
+            const languageWordProgress = DataMigrationService.safeLoadWordProgress(code);
 
             // Get actual modules for this language
             const actualModules = getModulesForLanguage(code);
