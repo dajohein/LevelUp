@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { wordProgressStorage } from '../services/storageService';
 import { calculateLanguageProgress, LanguageProgress } from '../services/progressService';
@@ -8,24 +8,24 @@ import { calculateLanguageProgress, LanguageProgress } from '../services/progres
  * Custom hook for managing word progress with automatic persistence and optimized updates
  */
 export const useOptimizedWordProgress = (languageCode: string) => {
+  const dispatch = useDispatch();
   const wordProgress = useSelector((state: RootState) => state.game.wordProgress);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced save to prevent excessive localStorage writes
+  // Save progress via Redux dispatch (no direct storage calls)
   const saveProgress = useCallback(async (progress: typeof wordProgress) => {
     try {
       setIsLoading(true);
       setError(null);
-      // Use setTimeout to batch multiple rapid saves
-      await new Promise(resolve => setTimeout(resolve, 0));
-      wordProgressStorage.save(languageCode, progress);
+      // Use Redux action to trigger centralized save
+      dispatch({ type: 'game/updateWordProgress', payload: progress });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save progress');
     } finally {
       setIsLoading(false);
     }
-  }, [languageCode]);
+  }, [dispatch]);
 
   const loadProgress = useCallback(async () => {
     try {

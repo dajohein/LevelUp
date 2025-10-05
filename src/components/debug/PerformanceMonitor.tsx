@@ -106,7 +106,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     };
 
     updateStorageUsage();
-    const interval = setInterval(updateStorageUsage, 5000);
+    const interval = setInterval(updateStorageUsage, 30000); // Reduced from 5s to 30s to match other optimizations
     return () => clearInterval(interval);
   }, []);
 

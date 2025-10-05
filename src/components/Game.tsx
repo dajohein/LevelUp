@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -878,6 +878,33 @@ export const Game: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
+  
+  // Optimize Redux selectors with memoization to prevent unnecessary re-renders
+  const gameState = useSelector((state: RootState) => ({
+    currentWord: state.game.currentWord,
+    currentOptions: state.game.currentOptions,
+    quizMode: state.game.quizMode,
+    wordProgress: state.game.wordProgress,
+    capitalizationFeedback: state.game.capitalizationFeedback,
+    language: state.game.language,
+  }), (left, right) => 
+    left.currentWord?.id === right.currentWord?.id &&
+    left.quizMode === right.quizMode &&
+    left.language === right.language &&
+    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  );
+  
+  const sessionState = useSelector((state: RootState) => ({
+    currentSession: state.session.currentSession,
+    progress: state.session.progress,
+    isSessionActive: state.session.isSessionActive,
+    sessionStartTime: state.session.sessionStartTime,
+  }), (left, right) =>
+    left.currentSession?.id === right.currentSession?.id &&
+    left.isSessionActive === right.isSessionActive &&
+    left.progress.wordsCompleted === right.progress.wordsCompleted
+  );
+
   const {
     currentWord,
     currentOptions,
@@ -885,13 +912,14 @@ export const Game: React.FC = () => {
     wordProgress,
     capitalizationFeedback,
     language: gameLanguage,
-  } = useSelector((state: RootState) => state.game);
+  } = gameState;
+  
   const {
     currentSession,
     progress: sessionProgress,
     isSessionActive,
     sessionStartTime,
-  } = useSelector((state: RootState) => state.session);
+  } = sessionState;
 
   const [inputValue, setInputValue] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -945,6 +973,19 @@ export const Game: React.FC = () => {
     previousWordRef.current = currentQuestionKey;
   }, [currentWord]); // Only depend on currentWord state, not functions // Only depend on currentWord, not the function
 
+  // Memoize expensive mastery calculation
+  const isTrulyNewWord = useMemo(() => {
+    if (!currentWord) return false;
+    
+    const currentWordProgress = wordProgress[currentWord.id];
+    if (!currentWordProgress) return true;
+    
+    return calculateMasteryDecay(
+      currentWordProgress.lastPracticed || '',
+      currentWordProgress.xp || 0
+    ) < 20;
+  }, [currentWord?.id, wordProgress]);
+
   // Check if we should show learning card for truly new words only
   useEffect(() => {
     if (isUsingSpacedRepetition && currentWord) {
@@ -954,15 +995,6 @@ export const Game: React.FC = () => {
         enhancedWordInfo.wordType === 'group' &&
         !enhancedWordInfo.isReviewWord
       ) {
-        // Check if this word is truly new (never practiced before)
-        const currentWordProgress = wordProgress[currentWord.id];
-        const isTrulyNewWord =
-          !currentWordProgress ||
-          calculateMasteryDecay(
-            currentWordProgress.lastPracticed || '',
-            currentWordProgress.xp || 0
-          ) < 20;
-
         setShowLearningCard(isTrulyNewWord);
       } else {
         setShowLearningCard(false);
@@ -970,7 +1002,7 @@ export const Game: React.FC = () => {
     } else {
       setShowLearningCard(false);
     }
-  }, [isUsingSpacedRepetition, currentWord, wordProgress]); // Removed getCurrentWordInfo to prevent infinite loops
+  }, [isUsingSpacedRepetition, currentWord, isTrulyNewWord]); // Use memoized value
 
   useEffect(() => {
     if (languageCode) {
@@ -1079,35 +1111,25 @@ export const Game: React.FC = () => {
     languageCode,
   ]);
 
-  // Timer for session tracking
+  // Optimized timer system - single timer for both session and word tracking
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSessionActive && sessionStartTime) {
       interval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-        setSessionTimer(elapsed);
+        const now = Date.now();
+        const sessionElapsed = Math.floor((now - sessionStartTime) / 1000);
+        setSessionTimer(sessionElapsed);
         dispatch(addTimeElapsed(1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isSessionActive, sessionStartTime, dispatch]);
 
-  // Word timer for Quick Dash mode
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (
-      isSessionActive &&
-      currentSession?.id === 'quick-dash' &&
-      wordStartTime &&
-      !isTransitioning
-    ) {
-      interval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - wordStartTime) / 1000);
-        setWordTimer(elapsed);
-      }, 100); // Update more frequently for smooth UI
+        // Update word timer for Quick Dash mode
+        if (currentSession?.id === 'quick-dash' && wordStartTime && !isTransitioning) {
+          const wordElapsed = Math.floor((now - wordStartTime) / 1000);
+          setWordTimer(wordElapsed);
+        }
+      }, 1000); // Single unified timer
     }
     return () => clearInterval(interval);
-  }, [isSessionActive, currentSession?.id, wordStartTime, isTransitioning]);
+  }, [isSessionActive, sessionStartTime, currentSession?.id, wordStartTime, isTransitioning, dispatch]);
 
   const handleSubmit = (answer: string) => {
     // Always use enhanced learning system

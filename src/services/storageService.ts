@@ -85,10 +85,25 @@ const isLocalStorageAvailable = (): boolean => {
   }
 };
 
-// Word Progress Storage
+// Word Progress Storage with duplicate save prevention
+let lastSaveData: { [key: string]: any } = {};
+let lastSaveTime: { [key: string]: number } = {};
+const SAVE_DEBOUNCE_MS = 100; // Prevent saves within 100ms of same data
+
 export const wordProgressStorage = {
   save: (languageCode: string, wordProgress: { [key: string]: WordProgress }): void => {
     if (!isLocalStorageAvailable()) return;
+
+    // Create a hash of the data to detect duplicates
+    const dataHash = JSON.stringify(wordProgress);
+    const now = Date.now();
+    const lastHash = lastSaveData[languageCode];
+    const lastTime = lastSaveTime[languageCode] || 0;
+
+    // Skip save if data is identical and within debounce window
+    if (dataHash === lastHash && (now - lastTime) < SAVE_DEBOUNCE_MS) {
+      return; // Skip duplicate save
+    }
 
     try {
       const existingData = safeJSONParse<PersistentWordProgress>(
@@ -101,7 +116,11 @@ export const wordProgressStorage = {
 
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
 
-      // Debug logging for language separation
+      // Update cache to prevent future duplicates
+      lastSaveData[languageCode] = dataHash;
+      lastSaveTime[languageCode] = now;
+
+      // Debug logging for language separation (only on actual saves)
       if (process.env.NODE_ENV === 'development') {
         logger.debug(
           `Saved progress for ${languageCode}: ${Object.keys(wordProgress).length} entries`

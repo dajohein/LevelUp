@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { persistenceUtils } from '../store/persistenceMiddleware';
 import {
@@ -187,7 +187,18 @@ interface StorageManagementProps {
 }
 
 export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = false }) => {
-  const { wordProgress, language } = useSelector((state: RootState) => state.game);
+  const dispatch = useDispatch();
+  
+  // Optimize Redux selectors with shallow comparison
+  const gameState = useSelector((state: RootState) => ({
+    wordProgress: state.game.wordProgress,
+    language: state.game.language
+  }), (left, right) => 
+    left.language === right.language &&
+    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  );
+  
+  const { wordProgress, language } = gameState;
   const { isSessionActive } = useSelector((state: RootState) => state.session);
 
   const [storageInfo, setStorageInfo] = useState<{ size: number; keys: string[] }>({
@@ -197,9 +208,9 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
   const [isClearing, setIsClearing] = useState(false);
   const [showDetails, setShowDetails] = useState(!compact);
 
-  const updateStorageInfo = () => {
+  const updateStorageInfo = React.useCallback(() => {
     setStorageInfo(getStorageInfo());
-  };
+  }, []);
 
   useEffect(() => {
     updateStorageInfo();
@@ -263,8 +274,8 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
           delete currentProgress[word.id];
         });
 
-        // Save the updated progress
-        wordProgressStorage.save(languageCode, currentProgress);
+        // Save the updated progress using centralized orchestrator
+        await dispatch({ type: 'game/updateWordProgress', payload: currentProgress });
 
         updateStorageInfo();
         logger.info(`✅ Reset completed for ${moduleName} module in ${languageName}`);

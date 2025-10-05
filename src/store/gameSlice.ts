@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getRandomWord, getRandomWordFromModule } from '../services/wordService';
 import { calculateMasteryGain } from '../services/masteryService';
-import { wordProgressStorage, gameStateStorage } from '../services/storageService';
+import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
 import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
@@ -55,11 +55,8 @@ const saveGameState = (state: GameState): void => {
       wordProgress: {},
     });
 
-    // Only save word progress separately for the current language
-    if (state.language) {
-      wordProgressStorage.save(state.language, state.wordProgress);
-      logger.debug(`Saved ${Object.keys(state.wordProgress).length} words for ${state.language}`);
-    }
+    // NOTE: Word progress is now only saved by persistenceMiddleware to prevent duplicates
+    // Removed duplicate wordProgressStorage.save() call to fix performance issue
   } catch (error) {
     logger.error('Failed to save game state:', error);
   }
@@ -287,10 +284,15 @@ export const gameSlice = createSlice({
       // Save reset state
       saveGameState(state);
     },
+    updateWordProgress: (state, action: PayloadAction<Record<string, any>>) => {
+      // Update word progress (used by components to trigger centralized saves)
+      state.wordProgress = action.payload;
+      // Don't call saveGameState here - let persistence middleware handle it
+    },
   },
 });
 
-export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame } =
+export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame, updateWordProgress } =
   gameSlice.actions;
 
 export default gameSlice.reducer;

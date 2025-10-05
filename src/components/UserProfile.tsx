@@ -297,12 +297,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   showAchievements = true,
   languageCode,
 }) => {
-  const { wordProgress: reduxWordProgress, language } = useSelector((state: RootState) => state.game);
+  // Optimize Redux selector to only update when relevant data changes
+  const gameData = useSelector((state: RootState) => ({
+    wordProgress: state.game.wordProgress,
+    language: state.game.language
+  }), (left, right) => 
+    left.language === right.language &&
+    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  );
+  
   const [animateProgress, setAnimateProgress] = useState(false);
 
   // Use provided languageCode, current language from store, or default to first available language
   const availableLanguages = getAvailableLanguages();
-  const currentLanguage = languageCode || language || (availableLanguages.length > 0 ? availableLanguages[0].code : null);
+  const currentLanguage = languageCode || gameData.language || (availableLanguages.length > 0 ? availableLanguages[0].code : null);
 
   if (!currentLanguage) {
     return null; // Don't render if no languages are available
@@ -324,9 +332,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
     
     // Only fall back to Redux if localStorage is empty
-    const hasReduxData = Object.keys(reduxWordProgress).length > 0;
+    const hasReduxData = Object.keys(gameData.wordProgress).length > 0;
     if (hasReduxData) {
-      return reduxWordProgress;
+      return gameData.wordProgress;
     }
     
     return {};

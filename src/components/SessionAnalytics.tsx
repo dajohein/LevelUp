@@ -296,7 +296,7 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
         <RecommendationsSection>
           <SectionTitle>🎯 Personalized Recommendations</SectionTitle>
           <RecommendationList>
-            {recentRecommendations.slice(0, 3).map((recommendation, index) => (
+            {recentRecommendations.slice(0, 3).map((recommendation: string, index: number) => (
               <RecommendationItem key={index}>{recommendation}</RecommendationItem>
             ))}
           </RecommendationList>
@@ -306,8 +306,8 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
       {showWeeklyProgress && analytics?.weeklyProgress && analytics.weeklyProgress.length > 0 && (
         <WeeklyProgressChart>
           <SectionTitle>📈 Weekly Progress</SectionTitle>
-          {analytics.weeklyProgress.slice(0, 4).map(week => {
-            const maxSessions = Math.max(...analytics.weeklyProgress.map(w => w.sessionsCompleted));
+          {analytics.weeklyProgress.slice(0, 4).map((week: any) => {
+            const maxSessions = Math.max(...analytics.weeklyProgress.map((w: any) => w.sessionsCompleted));
             const progressWidth =
               maxSessions > 0 ? (week.sessionsCompleted / maxSessions) * 100 : 0;
             const accuracyColor =
