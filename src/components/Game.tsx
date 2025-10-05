@@ -973,20 +973,40 @@ export const Game: React.FC = () => {
     previousWordRef.current = currentQuestionKey;
   }, [currentWord]); // Only depend on currentWord state, not functions // Only depend on currentWord, not the function
 
-  // Memoize expensive mastery calculation
-  const isTrulyNewWord = useMemo(() => {
-    if (!currentWord) return false;
+  // Memoize expensive mastery calculation and learning card decision
+  const wordLearningStatus = useMemo(() => {
+    if (!currentWord) return { isTrulyNewWord: false, needsReinforcement: false };
     
     const currentWordProgress = wordProgress[currentWord.id];
-    if (!currentWordProgress) return true;
     
-    return calculateMasteryDecay(
+    // Truly new word - never practiced before
+    if (!currentWordProgress) {
+      return { isTrulyNewWord: true, needsReinforcement: false };
+    }
+    
+    const currentMastery = calculateMasteryDecay(
       currentWordProgress.lastPracticed || '',
       currentWordProgress.xp || 0
-    ) < 20;
+    );
+    
+    // Check if word is truly new (very low mastery)
+    const isTrulyNewWord = currentMastery < 20;
+    
+    // Check if word needs reinforcement due to mistakes
+    const needsReinforcement = (
+      // Recent mistakes: more incorrect than correct answers
+      (currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect) ||
+      // Low consecutive correct count (less than 3 in a row)
+      ((currentWordProgress.directions?.['term-to-definition']?.consecutiveCorrect || 0) < 3 &&
+       (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
+      // Low mastery with some incorrect answers (needs practice)
+      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0)
+    );
+    
+    return { isTrulyNewWord, needsReinforcement };
   }, [currentWord?.id, wordProgress]);
 
-  // Check if we should show learning card for truly new words only
+  // Check if we should show learning card for new words or words needing reinforcement
   useEffect(() => {
     if (isUsingSpacedRepetition && currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
@@ -995,14 +1015,25 @@ export const Game: React.FC = () => {
         enhancedWordInfo.wordType === 'group' &&
         !enhancedWordInfo.isReviewWord
       ) {
-        setShowLearningCard(isTrulyNewWord);
+        // Show learning card for truly new words OR words that need reinforcement
+        const shouldShowCard = wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement;
+        setShowLearningCard(shouldShowCard);
+        
+        // Debug logging for development
+        if (process.env.NODE_ENV === 'development' && shouldShowCard) {
+          console.log(`📚 Learning card shown for word "${currentWord.term}":`, {
+            isNew: wordLearningStatus.isTrulyNewWord,
+            needsReinforcement: wordLearningStatus.needsReinforcement,
+            wordProgress: wordProgress[currentWord.id]
+          });
+        }
       } else {
         setShowLearningCard(false);
       }
     } else {
       setShowLearningCard(false);
     }
-  }, [isUsingSpacedRepetition, currentWord, isTrulyNewWord]); // Use memoized value
+  }, [isUsingSpacedRepetition, currentWord, wordLearningStatus]); // Use memoized status
 
   useEffect(() => {
     if (languageCode) {
@@ -1282,6 +1313,7 @@ export const Game: React.FC = () => {
           onContinue={handleContinueFromLearningCard}
           autoAdvance={true}
           autoAdvanceDelay={4000} // 4 seconds to read the word
+          reason={wordLearningStatus.isTrulyNewWord ? 'new' : 'reinforcement'}
         />
       ) : (
         <>

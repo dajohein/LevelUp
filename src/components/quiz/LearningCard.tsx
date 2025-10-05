@@ -170,6 +170,7 @@ interface LearningCardProps {
   onContinue: () => void;
   autoAdvance?: boolean;
   autoAdvanceDelay?: number;
+  reason?: 'new' | 'reinforcement'; // Why the learning card is shown
 }
 
 export const LearningCard: React.FC<LearningCardProps> = ({
@@ -179,6 +180,7 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   onContinue,
   autoAdvance = true,
   autoAdvanceDelay = 3000, // 3 seconds default
+  reason = 'new',
 }) => {
   const [timeLeft, setTimeLeft] = useState(autoAdvanceDelay / 1000);
   const onContinueRef = useRef(onContinue);
@@ -237,8 +239,17 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   return (
     <CardContainer>
       <CardHeader>
-        <span>📚</span>
-        Learning New Word
+        {reason === 'new' ? (
+          <>
+            <span>🌱</span>
+            Learning New Word
+          </>
+        ) : (
+          <>
+            <span>📝</span>
+            Practice Time - Let's Review!
+          </>
+        )}
       </CardHeader>
 
       <WordDisplay>
