@@ -9,13 +9,17 @@ import { theme } from './styles/theme';
 import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
-import { initializeStorage } from './services/storageService';
+import { initializeStorage } from './services/storage/storageInitializer';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
 import './index.css';
 
-// Initialize the storage system
-initializeStorage();
+// Initialize the enhanced storage system with server-side support
+initializeStorage({
+  enableRemoteStorage: true
+}).catch(error => {
+  console.warn('Storage initialization failed, falling back to local storage:', error);
+});
 
 // Load debug helpers in development
 if (process.env.NODE_ENV === 'development') {

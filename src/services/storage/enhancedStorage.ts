@@ -8,6 +8,7 @@
 import { asyncStorage } from './asyncStorage';
 import { smartCache } from './cache';
 import { compressionService } from './compression';
+import { remoteStorage } from './remoteStorage';
 import { StorageOptions, StorageResult } from './interfaces';
 import type { WordProgress } from '../../store/types';
 import { logger } from '../logger';
@@ -58,6 +59,9 @@ class EnhancedStorageService {
     this.analytics.operations++;
 
     try {
+      // Set the current language for remote storage
+      remoteStorage.setCurrentLanguage(languageCode);
+      
       const key = `word_progress_${languageCode}`;
       const options: StorageOptions = {
         compress: await this.shouldCompress(wordProgress),
@@ -98,6 +102,9 @@ class EnhancedStorageService {
     this.analytics.operations++;
 
     try {
+      // Set the current language for remote storage
+      remoteStorage.setCurrentLanguage(languageCode);
+      
       const key = `word_progress_${languageCode}`;
       const result = await asyncStorage.get<Record<string, WordProgress>>(key);
 

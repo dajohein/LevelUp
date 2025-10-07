@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { Outlet } from 'react-router-dom';
 import { MobileBottomNavigation } from './mobile/MobileBottomNavigation';
+import { StorageDebug } from './debug/StorageDebug';
 import { useViewport } from '../hooks/useViewport';
 
 const LayoutContainer = styled.div`
@@ -33,6 +34,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const { isMobile } = useViewport();
   const shouldShowBottomNav = showBottomNav && isMobile;
+  const [showStorageDebug, setShowStorageDebug] = useState(false);
+
+  // Toggle storage debug with Ctrl+Shift+S
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        setShowStorageDebug(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   return (
     <LayoutContainer>
@@ -40,6 +55,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {children || <Outlet />}
       </MainContent>
       {shouldShowBottomNav && <MobileBottomNavigation />}
+      {process.env.NODE_ENV === 'development' && (
+        <StorageDebug 
+          isVisible={showStorageDebug}
+          onClose={() => setShowStorageDebug(false)}
+        />
+      )}
     </LayoutContainer>
   );
 };

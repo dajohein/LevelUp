@@ -21,6 +21,7 @@ import {
 import { smartCache } from './cache';
 import { compressionService } from './compression';
 import { indexedDBStorage } from './indexedDB';
+import { remoteStorage } from './remoteStorage';
 import { logger } from '../logger';
 
 interface TierConfig {
@@ -87,6 +88,11 @@ export class TieredStorageService implements TieredStorageProvider {
 
   constructor(config: Partial<TieredStorageConfig> = {}) {
     this.config = { ...DEFAULT_TIERED_CONFIG, ...config };
+    
+    // Enable remote tier in production or when explicitly enabled
+    if (process.env.NODE_ENV === 'production' || config.tiers?.remote?.enabled) {
+      this.config.tiers.remote!.enabled = true;
+    }
   }
 
   /**
@@ -522,14 +528,28 @@ export class TieredStorageService implements TieredStorageProvider {
     }
   }
 
-  private async getFromRemote<T>(_key: string, _options: StorageOptions): Promise<StorageResult<T>> {
-    // Remote storage pending backend integration
-    return { success: false, error: 'Remote storage not yet implemented' };
+  private async getFromRemote<T>(key: string, options: StorageOptions): Promise<StorageResult<T>> {
+    try {
+      return await remoteStorage.get<T>(key, options);
+    } catch (error) {
+      logger.warn('Remote storage get failed:', error);
+      return { 
+        success: false, 
+        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
   }
 
-  private async setToRemote<T>(_key: string, _data: T, _options: StorageOptions): Promise<StorageResult<void>> {
-    // Remote storage pending backend integration
-    return { success: false, error: 'Remote storage not yet implemented' };
+  private async setToRemote<T>(key: string, data: T, options: StorageOptions): Promise<StorageResult<void>> {
+    try {
+      return await remoteStorage.set(key, data, options);
+    } catch (error) {
+      logger.warn('Remote storage set failed:', error);
+      return { 
+        success: false, 
+        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
   }
 
   private async getFromArchive<T>(_key: string, _options: StorageOptions): Promise<StorageResult<T>> {
@@ -554,6 +574,7 @@ export class TieredStorageService implements TieredStorageProvider {
         const result = await indexedDBStorage.delete(key);
         return result;
       case 'remote':
+        return await remoteStorage.delete(key);
       case 'archive':
         return { success: false, error: 'Not implemented' };
       default:

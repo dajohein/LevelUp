@@ -1,8 +1,76 @@
-# Language Validation Scripts
+# Development and Validation Scripts
 
-This directory contains validation scripts for the language configuration system.
+This directory contains scripts for development server management and language validation.
 
-## Scripts
+## Development Server Scripts
+
+### `dev-start.sh`
+Starts both storage server and Vite dev server as background services.
+**Usage:**
+```bash
+npm run dev:start
+# or
+./scripts/dev-start.sh
+```
+
+### `dev-stop.sh`
+Stops all development servers.
+**Usage:**
+```bash
+npm run dev:stop
+# or
+./scripts/dev-stop.sh
+```
+
+### `dev-restart.sh`
+Restarts the development environment.
+**Usage:**
+```bash
+npm run dev:restart
+# or
+./scripts/dev-restart.sh
+```
+
+### `dev-storage-server.cjs`
+Individual storage server for API endpoints.
+**Usage:**
+```bash
+npm run dev:storage
+# or
+node scripts/dev-storage-server.cjs
+```
+
+## Development Workflow
+
+**Best Practice for GitHub Codespaces:**
+
+1. **Start development environment:**
+   ```bash
+   npm run dev:start
+   ```
+
+2. **Check health:**
+   ```bash
+   npm run health:storage
+   ```
+
+3. **Access your app:**
+   - Web app: http://localhost:5173
+   - API health: http://localhost:5173/api/health
+   - API status: http://localhost:5173/api/status
+
+4. **View logs (if needed):**
+   ```bash
+   tail -f logs/storage.log  # Storage server logs
+   tail -f logs/vite.log     # Vite server logs
+   ```
+
+5. **Stop when done:**
+   ```bash
+   npm run dev:stop
+   ```
+
+## Language Validation Scripts
 
 ### `validate-languages.cjs`
 Basic validation script that checks:

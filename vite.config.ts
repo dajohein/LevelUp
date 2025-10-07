@@ -34,6 +34,14 @@ export default defineConfig({
   server: {
     hmr: {
       overlay: true
+    },
+    // Proxy API requests to the storage server
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 });
