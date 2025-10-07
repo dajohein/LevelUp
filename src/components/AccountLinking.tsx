@@ -67,7 +67,7 @@ const Input = styled.input`
   border-radius: 8px;
   text-align: center;
   font-family: 'Monaco', 'Menlo', monospace;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   
   &:focus {
@@ -205,7 +205,7 @@ export const AccountLinking: React.FC = () => {
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({ 
-        text: 'Account code generated! Share this code with your other device.', 
+        text: 'Secure account code generated! Share this 8-character code with your other device.', 
         type: 'success' 
       });
     } catch (error) {
@@ -249,9 +249,13 @@ export const AccountLinking: React.FC = () => {
 
   const formatTimeRemaining = (expires: number): string => {
     const remaining = Math.max(0, expires - Date.now());
-    const hours = Math.floor(remaining / (60 * 60 * 1000));
-    const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-    return `${hours}h ${minutes}m`;
+    const minutes = Math.floor(remaining / (60 * 1000));
+    const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+    
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
   };
 
   return (
@@ -267,8 +271,8 @@ export const AccountLinking: React.FC = () => {
       <Section>
         <SectionTitle>📱 Share Progress from This Device</SectionTitle>
         <Description>
-          Generate a code to link this device's progress with another device.
-          The code is valid for 24 hours.
+          Generate a secure code to link this device's progress with another device.
+          The code is valid for 1 hour and expires automatically.
         </Description>
         
         {accountCode ? (
@@ -295,10 +299,10 @@ export const AccountLinking: React.FC = () => {
         
         <Input
           type="text"
-          placeholder="Enter code (e.g., LEVEL-123456)"
+          placeholder="Enter code (e.g., A3B7K9M2)"
           value={linkCode}
           onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
-          maxLength={12}
+          maxLength={8}
         />
         
         <Button variant="secondary" onClick={linkDevice} disabled={loading || !linkCode.trim()}>

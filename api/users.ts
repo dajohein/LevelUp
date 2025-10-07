@@ -1,6 +1,20 @@
 /**
- * Vercel Serverless API for User Management
- * 
+ * Vercel Serverless API for Usinterface UserResponse {
+  success: boolean;
+  data?: {
+    userId?: string;
+    sessionToken?: string;
+    accountCode?: string;
+    expiresIn?: number; // Added for account code expiration
+    user?: any;
+    linkedDevices?: number;
+  };
+  error?: string;
+  metadata: {
+    timestamp: number;
+    action: string;
+  };
+}* 
  * Handles user authentication, profile management, and session handling
  */
 
@@ -53,13 +67,55 @@ interface UserResponse {
 // In production, replace with proper database
 const users = new Map<string, any>();
 const sessions = new Map<string, { userId: string; expires: number }>();
-const accountCodes = new Map<string, { userId: string; expires: number; used: boolean }>();
+const accountCodes = new Map<string, { 
+  userId: string; 
+  expires: number; 
+  used: boolean;
+  attempts: number;
+  createdAt: number;
+}>();
+const rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
 
-// Helper function to generate account code
+// Security constants
+const MAX_CODE_ATTEMPTS = 5; // Max attempts per code
+const MAX_RATE_LIMIT_ATTEMPTS = 10; // Max attempts per IP per hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const CODE_EXPIRY = 60 * 60 * 1000; // 1 hour (reduced from 24 hours)
+
+// Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
-  const prefix = 'LEVEL';
-  const numbers = Math.floor(100000 + Math.random() * 900000); // 6-digit number
-  return `${prefix}-${numbers}`;
+  // Use crypto.randomBytes for cryptographically secure randomness
+  const crypto = require('crypto');
+  
+  // Generate 6 random bytes and encode as base32-like string
+  // This gives us 8 characters from a 32-character alphabet
+  const bytes = crypto.randomBytes(6);
+  
+  // Use a custom alphabet excluding confusing characters (0, O, I, 1, etc.)
+  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let result = '';
+  
+  // Convert bytes to base32-like encoding
+  let value = 0;
+  let bits = 0;
+  
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    
+    while (bits >= 5) {
+      result += alphabet[(value >> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  
+  // Add remaining bits if any
+  if (bits > 0) {
+    result += alphabet[(value << (5 - bits)) & 31];
+  }
+  
+  // Return first 8 characters for consistent length
+  return result.substring(0, 8);
 }
 
 // Helper function to generate session token
@@ -83,6 +139,45 @@ function createSession(userId: string): string {
   const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
   sessions.set(token, { userId, expires });
   return token;
+}
+
+// Helper function to check rate limiting
+function isRateLimited(identifier: string): boolean {
+  const now = Date.now();
+  const rateLimit = rateLimitMap.get(identifier);
+  
+  if (!rateLimit) {
+    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
+    return false;
+  }
+  
+  // Reset counter if window expired
+  if (now - rateLimit.lastAttempt > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
+    return false;
+  }
+  
+  // Check if over limit
+  if (rateLimit.attempts >= MAX_RATE_LIMIT_ATTEMPTS) {
+    return true;
+  }
+  
+  // Increment counter
+  rateLimit.attempts++;
+  rateLimit.lastAttempt = now;
+  rateLimitMap.set(identifier, rateLimit);
+  
+  return false;
+}
+
+// Helper function to get client identifier (IP-based)
+function getClientIdentifier(req: any): string {
+  // In production, use proper IP detection with proxy headers
+  return req.headers['x-forwarded-for'] || 
+         req.headers['x-real-ip'] || 
+         req.connection?.remoteAddress || 
+         req.socket?.remoteAddress ||
+         'unknown';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -244,14 +339,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        // Generate account code (valid for 24 hours)
+        // Check rate limiting for code generation
+        const clientId = getClientIdentifier(req);
+        if (isRateLimited(`generate_${clientId}`)) {
+          response.error = 'Too many code generation attempts. Please try again later.';
+          return res.status(429).json(response);
+        }
+
+        // Invalidate any existing unused codes for this user (security best practice)
+        for (const [code, data] of accountCodes.entries()) {
+          if (data.userId === userId && !data.used) {
+            accountCodes.delete(code);
+          }
+        }
+
+        // Generate cryptographically secure account code
         const accountCode = generateAccountCode();
-        const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+        const expires = Date.now() + CODE_EXPIRY; // 1 hour
         
-        accountCodes.set(accountCode, { userId, expires, used: false });
+        accountCodes.set(accountCode, { 
+          userId, 
+          expires, 
+          used: false,
+          attempts: 0,
+          createdAt: Date.now()
+        });
 
         response.success = true;
-        response.data = { accountCode };
+        response.data = { 
+          accountCode,
+          expiresIn: CODE_EXPIRY / 1000 // Return seconds for client
+        };
         break;
       }
 
@@ -261,14 +379,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const codeData = accountCodes.get(request.accountCode);
+        // Normalize the code (uppercase, remove spaces)
+        const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
+
+        // Check rate limiting for link attempts
+        const clientId = getClientIdentifier(req);
+        if (isRateLimited(`link_${clientId}`)) {
+          response.error = 'Too many linking attempts. Please try again later.';
+          return res.status(429).json(response);
+        }
+
+        const codeData = accountCodes.get(normalizedCode);
         if (!codeData) {
           response.error = 'Invalid account code';
           return res.status(400).json(response);
         }
 
+        // Check code-specific attempt limit
+        codeData.attempts = (codeData.attempts || 0) + 1;
+        if (codeData.attempts > MAX_CODE_ATTEMPTS) {
+          accountCodes.delete(normalizedCode);
+          response.error = 'Too many attempts for this code. Code has been invalidated.';
+          return res.status(400).json(response);
+        }
+
         if (codeData.expires < Date.now()) {
-          accountCodes.delete(request.accountCode);
+          accountCodes.delete(normalizedCode);
           response.error = 'Account code has expired';
           return res.status(400).json(response);
         }
@@ -278,9 +414,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        // Mark code as used
+        // Mark code as used and update attempts
         codeData.used = true;
-        accountCodes.set(request.accountCode, codeData);
+        accountCodes.set(normalizedCode, codeData);
+        
+        // Clean up the code after successful use (single-use only)
+        setTimeout(() => {
+          accountCodes.delete(normalizedCode);
+        }, 5000); // 5 second grace period for response
 
         // Get the user associated with the code
         const user = users.get(codeData.userId);
