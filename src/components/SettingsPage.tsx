@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from './Navigation';
 import { MobileButton } from './mobile/MobileButton';
+import { AccountLinking } from './AccountLinking';
 import { logger } from '../services/logger';
 
 const Container = styled.div`
@@ -92,8 +93,49 @@ const ComingSoon = styled.div`
   font-style: italic;
 `;
 
+const Modal = styled.div<{ isOpen: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: ${props => props.isOpen ? 'flex' : 'none'};
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: ${props => props.theme.spacing.md};
+`;
+
+const ModalContent = styled.div`
+  background: ${props => props.theme.colors.background};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: ${props => props.theme.colors.textSecondary};
+  z-index: 1;
+  
+  &:hover {
+    color: ${props => props.theme.colors.text};
+  }
+`;
+
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showAccountLinking, setShowAccountLinking] = useState(false);
 
   const handleNavigation = (path: string) => {
     if (path === '/export') {
@@ -105,6 +147,8 @@ export const SettingsPage: React.FC = () => {
     } else if (path === '/install') {
       // Trigger PWA install
       window.location.reload();
+    } else if (path === '/account-linking') {
+      setShowAccountLinking(true);
     } else {
       navigate(path);
     }
@@ -138,6 +182,29 @@ export const SettingsPage: React.FC = () => {
               fullWidth
             >
               Export Learning Data
+            </MobileButton>
+          </OptionsGrid>
+        </SectionCard>
+
+        <SectionCard>
+          <SectionTitle>
+            <span>🔗</span>
+            Cross-Device Sync
+          </SectionTitle>
+          <OptionsGrid>
+            <MobileButton
+              variant="primary"
+              onClick={() => handleNavigation('/account-linking')}
+              fullWidth
+            >
+              Link Your Devices
+            </MobileButton>
+            <MobileButton
+              variant="outline"
+              onClick={() => handleNavigation('/import')}
+              fullWidth
+            >
+              Import from Device
             </MobileButton>
           </OptionsGrid>
         </SectionCard>
@@ -192,6 +259,15 @@ export const SettingsPage: React.FC = () => {
           More settings and customization options coming soon! 🚀
         </ComingSoon>
       </Content>
+
+      <Modal isOpen={showAccountLinking}>
+        <ModalContent>
+          <CloseButton onClick={() => setShowAccountLinking(false)}>
+            ×
+          </CloseButton>
+          <AccountLinking />
+        </ModalContent>
+      </Modal>
     </Container>
   );
 };

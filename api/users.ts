@@ -21,9 +21,10 @@ interface VercelResponse {
 import { randomUUID } from 'crypto';
 
 interface UserRequest {
-  action: 'create' | 'get' | 'update' | 'authenticate';
+  action: 'create' | 'get' | 'update' | 'authenticate' | 'generateCode' | 'linkDevice';
   userId?: string;
   sessionToken?: string;
+  accountCode?: string;
   userData?: {
     username?: string;
     email?: string;
@@ -37,7 +38,9 @@ interface UserResponse {
   data?: {
     userId?: string;
     sessionToken?: string;
+    accountCode?: string;
     user?: any;
+    linkedDevices?: number;
   };
   error?: string;
   metadata?: {
@@ -50,6 +53,14 @@ interface UserResponse {
 // In production, replace with proper database
 const users = new Map<string, any>();
 const sessions = new Map<string, { userId: string; expires: number }>();
+const accountCodes = new Map<string, { userId: string; expires: number; used: boolean }>();
+
+// Helper function to generate account code
+function generateAccountCode(): string {
+  const prefix = 'LEVEL';
+  const numbers = Math.floor(100000 + Math.random() * 900000); // 6-digit number
+  return `${prefix}-${numbers}`;
+}
 
 // Helper function to generate session token
 function generateSessionToken(): string {
@@ -217,6 +228,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.data = {
           userId,
           user
+        };
+        break;
+      }
+
+      case 'generateCode': {
+        if (!request.sessionToken) {
+          response.error = 'sessionToken is required to generate account code';
+          return res.status(400).json(response);
+        }
+
+        const userId = validateSession(request.sessionToken);
+        if (!userId) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+
+        // Generate account code (valid for 24 hours)
+        const accountCode = generateAccountCode();
+        const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+        
+        accountCodes.set(accountCode, { userId, expires, used: false });
+
+        response.success = true;
+        response.data = { accountCode };
+        break;
+      }
+
+      case 'linkDevice': {
+        if (!request.accountCode) {
+          response.error = 'accountCode is required to link device';
+          return res.status(400).json(response);
+        }
+
+        const codeData = accountCodes.get(request.accountCode);
+        if (!codeData) {
+          response.error = 'Invalid account code';
+          return res.status(400).json(response);
+        }
+
+        if (codeData.expires < Date.now()) {
+          accountCodes.delete(request.accountCode);
+          response.error = 'Account code has expired';
+          return res.status(400).json(response);
+        }
+
+        if (codeData.used) {
+          response.error = 'Account code has already been used';
+          return res.status(400).json(response);
+        }
+
+        // Mark code as used
+        codeData.used = true;
+        accountCodes.set(request.accountCode, codeData);
+
+        // Get the user associated with the code
+        const user = users.get(codeData.userId);
+        if (!user) {
+          response.error = 'Associated user not found';
+          return res.status(404).json(response);
+        }
+
+        // Create new session for this device
+        const newSessionToken = createSession(codeData.userId);
+
+        // Count linked devices (sessions)
+        let linkedDevices = 0;
+        for (const [_, sessionData] of sessions) {
+          if (sessionData.userId === codeData.userId && sessionData.expires > Date.now()) {
+            linkedDevices++;
+          }
+        }
+
+        response.success = true;
+        response.data = {
+          userId: codeData.userId,
+          sessionToken: newSessionToken,
+          user,
+          linkedDevices
         };
         break;
       }

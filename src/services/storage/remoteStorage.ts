@@ -24,6 +24,7 @@ interface RemoteUserSession {
   userId: string;
   sessionToken: string;
   isGuest: boolean;
+  linkedDevices?: number;
 }
 
 const DEFAULT_REMOTE_CONFIG: RemoteStorageConfig = {
@@ -574,6 +575,111 @@ export class RemoteStorageService implements AsyncStorageProvider {
           error: error instanceof Error ? error.message : 'Unknown error'
         }
       };
+    }
+  }
+
+  /**
+   * Generate account code for device linking
+   */
+  async generateAccountCode(): Promise<{ code: string; expires: number }> {
+    try {
+      const session = await this.getUserSession();
+      const result = await this.apiCall('/api/users', {
+        action: 'generateCode',
+        sessionToken: session.sessionToken
+      });
+
+      if (result.success) {
+        const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+        return {
+          code: result.data.accountCode,
+          expires
+        };
+      }
+
+      throw new Error(result.error || 'Failed to generate account code');
+    } catch (error) {
+      logger.error('Failed to generate account code:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Link current device to existing account using code
+   */
+  async linkDeviceWithCode(accountCode: string): Promise<{ success: boolean; linkedDevices: number }> {
+    try {
+      const result = await this.apiCall('/api/users', {
+        action: 'linkDevice',
+        accountCode: accountCode.toUpperCase()
+      });
+
+      if (result.success) {
+        // Update current session with linked account
+        this.userSession = {
+          userId: result.data.userId,
+          sessionToken: result.data.sessionToken,
+          isGuest: false, // No longer a guest account
+          linkedDevices: result.data.linkedDevices
+        };
+
+        // Update localStorage with new session
+        localStorage.setItem('levelup_remote_session', JSON.stringify(this.userSession));
+
+        logger.info('🔗 Device successfully linked to account', {
+          userId: this.userSession.userId,
+          linkedDevices: result.data.linkedDevices
+        });
+
+        return {
+          success: true,
+          linkedDevices: result.data.linkedDevices
+        };
+      }
+
+      throw new Error(result.error || 'Failed to link device');
+    } catch (error) {
+      logger.error('Failed to link device with code:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current user session with linked devices
+   */
+  async getCurrentSession(): Promise<RemoteUserSession | null> {
+    try {
+      return await this.getUserSession();
+    } catch (error) {
+      logger.error('Failed to get current session:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get progress data for a specific device (placeholder)
+   */
+  async getDeviceProgress(deviceId: string): Promise<Record<string, Record<string, any>>> {
+    try {
+      // This would be implemented when we have multi-device progress storage
+      logger.info(`Getting progress for device ${deviceId} (not yet implemented)`);
+      return {};
+      
+    } catch (error) {
+      logger.error('Failed to get device progress:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Check if current session is linked to other devices
+   */
+  async getLinkedDevicesCount(): Promise<number> {
+    try {
+      const session = await this.getUserSession();
+      return session.linkedDevices || 1; // At least current device
+    } catch {
+      return 0;
     }
   }
 
