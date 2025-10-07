@@ -26,3 +26,8 @@ coverage
 # System files
 .DS_Store
 Thumbs.db*.log
+
+# Development logs
+storage.log
+vite.log
+logs/
