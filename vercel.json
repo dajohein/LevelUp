@@ -6,10 +6,10 @@
   "installCommand": "npm install",
   "functions": {
     "api/storage.ts": {
-      "runtime": "@vercel/node@20.x"
+      "runtime": "nodejs20.x"
     },
     "api/users.ts": {
-      "runtime": "@vercel/node@20.x"
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
