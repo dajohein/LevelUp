@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import { LoadingButton } from './feedback/UnifiedLoading';
 import { remoteStorage } from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 
@@ -81,41 +82,6 @@ const Input = styled.input`
     text-transform: none;
     letter-spacing: normal;
     font-family: inherit;
-  }
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: 12px 24px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-  width: 100%;
-  margin-top: 12px;
-  
-  ${props => props.variant === 'primary' ? `
-    background: #3498db;
-    color: white;
-    
-    &:hover:not(:disabled) {
-      background: #2980b9;
-      transform: translateY(-1px);
-    }
-  ` : `
-    background: #ecf0f1;
-    color: #34495e;
-    
-    &:hover:not(:disabled) {
-      background: #d5dbdb;
-    }
-  `}
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
   }
 `;
 
@@ -285,9 +251,26 @@ export const AccountLinking: React.FC = () => {
             )}
           </>
         ) : (
-          <Button variant="primary" onClick={generateCode} disabled={loading}>
-            {loading ? 'Generating...' : 'Generate Account Code'}
-          </Button>
+          <LoadingButton 
+            onClick={generateCode} 
+            isLoading={loading}
+            loadingText="Generating..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              width: '100%',
+              marginTop: '12px',
+              background: '#3498db',
+              color: 'white'
+            }}
+          >
+            Generate Account Code
+          </LoadingButton>
         )}
       </Section>
 
@@ -305,9 +288,27 @@ export const AccountLinking: React.FC = () => {
           maxLength={8}
         />
         
-        <Button variant="secondary" onClick={linkDevice} disabled={loading || !linkCode.trim()}>
-          {loading ? 'Linking...' : 'Link This Device'}
-        </Button>
+        <LoadingButton 
+          onClick={linkDevice} 
+          isLoading={loading}
+          loadingText="Linking..."
+          disabled={!linkCode.trim()}
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.2s',
+            width: '100%',
+            marginTop: '12px',
+            background: '#ecf0f1',
+            color: '#34495e'
+          }}
+        >
+          Link This Device
+        </LoadingButton>
       </Section>
 
       {message && (

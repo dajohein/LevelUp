@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import React from 'react';
 import { RootState } from './store/store';
 import { AppLayout } from './components/AppLayout';
 import { SettingsPage } from './components/SettingsPage';
@@ -14,13 +15,23 @@ import {
   SessionSelectLazy,
   SessionCompletionLazy,
 } from './utils/lazyComponents';
-import { LazyWrapper, GameSkeleton, ModuleSkeleton } from './components/feedback/LoadingSkeleton';
+
+const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
+
+import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
 // Wrapper component to pass languageCode and moduleId to SessionSelect
 const SessionSelectWrapper = () => {
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
   return (
-    <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading session options...">
+    <LazyWrapper 
+      fallback={() => (
+        <div style={{ padding: '20px' }}>
+          <SkeletonLayout type="card" count={2} />
+        </div>
+      )}
+      loadingText="Loading session options..."
+    >
       <SessionSelectLazy languageCode={languageCode || ''} moduleId={moduleId} />
     </LazyWrapper>
   );
@@ -57,7 +68,14 @@ export const router = createBrowserRouter([
       {
         path: 'language/:languageCode',
         element: (
-          <LazyWrapper fallback={() => <ModuleSkeleton />} loadingText="Loading modules...">
+          <LazyWrapper 
+            fallback={() => (
+              <div style={{ padding: '20px' }}>
+                <SkeletonLayout type="card" count={2} />
+              </div>
+            )}
+            loadingText="Loading modules..."
+          >
             <ModuleOverviewLazy />
           </LazyWrapper>
         ),
@@ -69,6 +87,14 @@ export const router = createBrowserRouter([
       {
         path: 'overview/:language',
         element: <LanguageOverview />,
+      },
+      {
+        path: 'loading-demo',
+        element: (
+          <LazyWrapper loadingText="Loading demo...">
+            <LoadingStatesDemoLazy />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'sessions/:languageCode',
@@ -93,7 +119,14 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Starting game...">
+        <LazyWrapper 
+          fallback={() => (
+            <div style={{ padding: '20px' }}>
+              <SkeletonLayout type="game" />
+            </div>
+          )}
+          loadingText="Starting game..."
+        >
           <GameLazy />
         </LazyWrapper>
       </AppLayout>
@@ -103,7 +136,14 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode/session',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading session...">
+        <LazyWrapper 
+          fallback={() => (
+            <div style={{ padding: '20px' }}>
+              <SkeletonLayout type="game" />
+            </div>
+          )}
+          loadingText="Loading session..."
+        >
           <GameLazy />
         </LazyWrapper>
       </AppLayout>
@@ -113,7 +153,14 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode/:moduleId',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper fallback={() => <GameSkeleton />} loadingText="Loading module game...">
+        <LazyWrapper 
+          fallback={() => (
+            <div style={{ padding: '20px' }}>
+              <SkeletonLayout type="game" />
+            </div>
+          )}
+          loadingText="Loading module game..."
+        >
           <GameLazy />
         </LazyWrapper>
       </AppLayout>

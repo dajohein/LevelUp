@@ -15,7 +15,7 @@ import { useAudio } from '../features/audio/AudioContext';
 import { words } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
 import { useEnhancedGame } from '../hooks/useEnhancedGame';
-import { Loading } from './feedback/Loading';
+import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
@@ -1271,7 +1271,7 @@ export const Game: React.FC = () => {
   };
 
   if (!currentWord) {
-    return <Loading message="Loading words..." />;
+    return <UnifiedLoading text="Loading words..." />;
   }
 
   // If we're in session mode but no session is active, redirect to session selection
@@ -1279,7 +1279,7 @@ export const Game: React.FC = () => {
   const isSessionGameRoute = window.location.pathname.endsWith('/session');
   if (isSessionGameRoute && !isSessionActive) {
     navigate(`/sessions/${languageCode}`);
-    return <Loading message="Redirecting to session selection..." />;
+    return <UnifiedLoading text="Redirecting to session selection..." />;
   }
 
   const formatTime = (seconds: number) => {
