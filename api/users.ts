@@ -369,7 +369,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.data = { 
           accountCode,
           expiresIn: CODE_EXPIRY / 1000 // Return seconds for client
-        };
+        } as any; // Type assertion for Vercel response compatibility
         break;
       }
 

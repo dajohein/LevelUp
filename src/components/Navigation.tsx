@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,12 @@ import { calculateLanguageXP, calculateCurrentLevel, getLevelInfo } from '../ser
 import { wordProgressStorage } from '../services/storageService';
 import { MobileNavigation } from './mobile/MobileNavigation';
 import { useViewport } from '../hooks/useViewport';
+
+// Constants for better maintainability
+const Z_INDEX = {
+  NAVIGATION: 1000,
+  DROPDOWN: 1001,
+} as const;
 
 const NavigationBar = styled.nav`
   position: fixed;
@@ -27,7 +33,7 @@ const NavigationBar = styled.nav`
   justify-content: space-between;
   padding: 0 ${props => props.theme.spacing.xl};
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: ${Z_INDEX.NAVIGATION};
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     height: 60px;
@@ -48,115 +54,35 @@ const BackButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-  border-radius: 25px;
-  transition: all 0.3s ease;
+  border-radius: ${props => props.theme.borderRadius.md};
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
-  min-width: 120px;
-  min-height: ${props => props.theme.touchTarget.minimum};
-  justify-content: center;
+  text-decoration: none;
+  line-height: 1;
 
   &:hover {
     background: rgba(76, 175, 80, 0.2);
-    border-color: ${props => props.theme.colors.primary};
+    border-color: rgba(76, 175, 80, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
   }
 
-  &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    min-width: 100px;
-    padding: ${props => props.theme.spacing.sm};
+  span {
     font-size: 0.85rem;
-    
-    span {
+
+    @media (max-width: ${props => props.theme.breakpoints.tablet}) {
       display: none;
     }
   }
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    min-width: 40px;
-    padding: ${props => props.theme.spacing.xs};
-    border-radius: 50%;
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+    font-size: 0.8rem;
+    min-width: ${props => props.theme.touchTarget.minimum};
+    justify-content: center;
     
     &::before {
-      content: '←';
-      font-size: 1.2rem;
-    }
-  }
-`;
-
-const LanguageTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  background: rgba(76, 175, 80, 0.1);
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
-  border-radius: 30px;
-  border: 1px solid rgba(76, 175, 80, 0.2);
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-    gap: ${props => props.theme.spacing.sm};
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  }
-`;
-
-const LanguageName = styled.span`
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    font-size: 1rem;
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 0.9rem;
-    display: none; /* Show only flag on very small screens */
-  }
-`;
-
-const FlagEmoji = styled.span`
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1.3rem;
-  }
-`;
-
-const AppTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-  background: linear-gradient(
-    135deg,
-    ${props => props.theme.colors.primary} 0%,
-    ${props => props.theme.colors.secondary} 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    font-size: 1.1rem;
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1rem;
-    /* Show only emoji on very small screens */
-    &::after {
       content: '';
     }
     span {
@@ -165,34 +91,94 @@ const AppTitle = styled.div`
   }
 `;
 
-const UserProfileCompact = styled.div`
+const LanguageTitle = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.2);
-  border-radius: 35px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  min-height: ${props => props.theme.touchTarget.minimum};
-
-  &:hover {
-    background: rgba(76, 175, 80, 0.15);
-    border-color: rgba(76, 175, 80, 0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
-  }
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.primary};
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    padding: 6px 12px;
+    font-size: 1.1rem;
     gap: ${props => props.theme.spacing.sm};
   }
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: 4px 8px;
-    border-radius: 50%;
-    min-width: ${props => props.theme.touchTarget.minimum};
+    font-size: 1rem;
+  }
+`;
+
+const LanguageName = styled.span`
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.9rem;
+  }
+`;
+
+const FlagEmoji = styled.span`
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.3rem;
+  }
+`;
+
+const AppTitle = styled.div`
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary} 0%,
+    ${props => props.theme.colors.secondary} 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 1.3rem;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.2rem;
+  }
+`;
+
+const UserProfileCompact = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border-radius: ${props => props.theme.borderRadius.md};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(76, 175, 80, 0.05);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+
+  &:hover {
+    background: rgba(76, 175, 80, 0.1);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+    gap: ${props => props.theme.spacing.sm};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
   }
 `;
 
@@ -238,27 +224,26 @@ const UserLevelBadge = styled.div<{ levelColor: string }>`
   color: white;
   border-radius: 12px;
   padding: 2px 8px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border: 2px solid ${props => props.theme.colors.surface};
-  min-width: 24px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  line-height: 1;
+  min-width: 20px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     bottom: -4px;
     right: -4px;
     padding: 1px 6px;
-    font-size: 0.7rem;
-    min-width: 20px;
+    font-size: 0.65rem;
   }
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     bottom: -3px;
     right: -3px;
     padding: 1px 4px;
-    font-size: 0.65rem;
-    min-width: 18px;
+    font-size: 0.6rem;
   }
 `;
 
@@ -269,16 +254,21 @@ const UserStats = styled.div`
   gap: 2px;
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    display: none;
+    gap: 1px;
   }
 `;
 
 const UserLevel = styled.div`
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: ${props => props.theme.colors.text};
+  line-height: 1.2;
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 0.8rem;
   }
 `;
@@ -293,36 +283,71 @@ const UserXP = styled.div`
   }
 `;
 
-const SettingsButton = styled.button`
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  color: ${props => props.theme.colors.primary};
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+const DropdownMenu = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: ${props => props.theme.borderRadius.lg};
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  min-width: 200px;
+  z-index: ${Z_INDEX.DROPDOWN};
+  transform: ${props => props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
+  opacity: ${props => props.isOpen ? 1 : 0};
+  visibility: ${props => props.isOpen ? 'visible' : 'hidden'};
+  transition: all 0.2s ease;
+  
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    display: none; /* Use mobile navigation instead */
+  }
+`;
+
+const DropdownItem = styled.button`
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: ${props => props.theme.colors.text};
+  font-size: 0.9rem;
+  text-align: left;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  transition: all 0.2s ease;
-  margin-left: ${props => props.theme.spacing.sm};
-
-  &:hover {
-    background: rgba(76, 175, 80, 0.2);
-    border-color: rgba(76, 175, 80, 0.5);
-    transform: translateY(-1px);
+  gap: 12px;
+  transition: background 0.2s ease;
+  
+  &:first-of-type {
+    border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0 0;
   }
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
+  
+  &:last-of-type {
+    border-radius: 0 0 ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg};
   }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    display: none; /* Hide on mobile since mobile navigation has settings */
+  
+  &:hover,
+  &:focus-visible {
+    background: rgba(76, 175, 80, 0.1);
+    outline: none;
   }
+  
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.3);
+  }
+`;
+
+const DropdownDivider = styled.div`
+  height: 1px;
+  background: rgba(76, 175, 80, 0.2);
+  margin: 4px 0;
+`;
+
+const ProfileMenuContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
 `;
 
 const RightSection = styled.div`
@@ -337,37 +362,84 @@ interface NavigationProps {
   showUserProfile?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({
-  languageName,
-  languageFlag,
-  showUserProfile = true,
+export const Navigation: React.FC<NavigationProps> = ({ 
+  languageName, 
+  languageFlag, 
+  showUserProfile = true 
 }) => {
-  const { isMobile } = useViewport();
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
-  const { language } = useSelector((state: RootState) => state.game);
+  const { languageCode } = useParams<{ languageCode?: string }>();
+  const { isMobile } = useViewport();
+  const gameState = useSelector((state: RootState) => state.game);
+  const language = languageCode || gameState.language;
+  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Smart navigation based on current route
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+      
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isDropdownOpen]);
+
   const getBackButtonConfig = () => {
     const path = location.pathname;
-    const { languageCode } = params;
-
-    // If we're on the root path (language selection), don't show back button
+    
+    // No back button on the main languages page
     if (path === '/') {
       return null;
     }
 
-    // If we're in a specific module progress view (/language/de/grundwortschatz)
-    if (path.match(/^\/language\/[^\/]+\/[^\/]+$/)) {
+    // From profile, always go back to current language or languages
+    if (path === '/profile') {
+      if (language) {
+        return {
+          label: 'Back',
+          onClick: () => navigate(`/language/${language}`),
+        };
+      }
       return {
-        label: 'Modules',
-        onClick: () => navigate(`/language/${languageCode}`),
+        label: 'Languages',
+        onClick: () => navigate('/'),
       };
     }
 
-    // If we're in a language modules view (/language/de)
-    if (path.match(/^\/language\/[^\/]+$/)) {
+    // From settings, go back to where we came from
+    if (path === '/settings') {
+      return {
+        label: 'Back',
+        onClick: () => navigate(-1),
+      };
+    }
+
+    // From game or session pages, go back to language modules
+    if (path.includes('/game') || path.includes('/session')) {
+      if (languageCode) {
+        return {
+          label: 'Modules',
+          onClick: () => navigate(`/language/${languageCode}`),
+        };
+      }
       return {
         label: 'Languages',
         onClick: () => navigate('/'),
@@ -400,8 +472,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     );
   }
 
-  // Desktop navigation (existing code)
-  // Determine if we should show global or language-specific stats
+  // Desktop navigation
   const isGlobalView = location.pathname === '/';
   const currentLanguageCode = language;
 
@@ -410,35 +481,57 @@ export const Navigation: React.FC<NavigationProps> = ({
   let userProgress = {};
   let totalXP = 0;
 
-  if (isGlobalView) {
-    // On languages overview - show global stats across all languages
-    const allProgressData = wordProgressStorage.loadAll();
+  try {
+    if (isGlobalView) {
+      // On languages overview - show global stats across all languages
+      const allProgressData = wordProgressStorage.loadAll();
 
-    // Calculate total XP across all languages
-    Object.values(allProgressData).forEach(languageProgress => {
-      if (languageProgress && typeof languageProgress === 'object') {
-        totalXP += Object.values(languageProgress).reduce(
-          (sum, progress) => sum + (progress?.xp || 0),
-          0
-        );
-      }
-    });
+      // Calculate total XP across all languages
+      Object.values(allProgressData).forEach(languageProgress => {
+        if (languageProgress && typeof languageProgress === 'object') {
+          totalXP += Object.values(languageProgress).reduce(
+            (sum, progress) => sum + (progress?.xp || 0),
+            0
+          );
+        }
+      });
 
-    // Use global XP to determine level
-    currentLevel = calculateCurrentLevel(totalXP);
-    levelInfo = getLevelInfo(currentLevel);
+      // Use global XP to determine level
+      currentLevel = calculateCurrentLevel(totalXP);
+      levelInfo = getLevelInfo(currentLevel);
 
-    // Check if user has any progress at all
-    const hasAnyProgress = totalXP > 0;
-    userProgress = hasAnyProgress ? { hasProgress: true } : {};
-  } else if (currentLanguageCode) {
-    // On language-specific pages - show language-specific stats
-    userProgress = wordProgressStorage.load(currentLanguageCode);
-    const languageXP = calculateLanguageXP(userProgress, currentLanguageCode);
-    totalXP = languageXP;
-    currentLevel = calculateCurrentLevel(languageXP);
-    levelInfo = getLevelInfo(currentLevel);
+      // Check if user has any progress at all
+      const hasAnyProgress = totalXP > 0;
+      userProgress = hasAnyProgress ? { hasProgress: true } : {};
+    } else if (currentLanguageCode) {
+      // On language-specific pages - show language-specific stats
+      userProgress = wordProgressStorage.load(currentLanguageCode) || {};
+      const languageXP = calculateLanguageXP(userProgress, currentLanguageCode);
+      totalXP = languageXP;
+      currentLevel = calculateCurrentLevel(languageXP);
+      levelInfo = getLevelInfo(currentLevel);
+    }
+  } catch (error) {
+    console.warn('Failed to load user progress data:', error);
+    // Fallback to defaults already set above
   }
+
+  const handleProfileClick = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleDropdownItemClick = (action: () => void) => {
+    action();
+    setIsDropdownOpen(false);
+  };
+
+  const hasProgress = showUserProfile &&
+    ((isGlobalView && Object.keys(userProgress).length > 0) ||
+      (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0));
+
+  const hasNoProgress = showUserProfile &&
+    ((isGlobalView && Object.keys(userProgress).length === 0) ||
+      (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode)));
 
   return (
     <NavigationBar>
@@ -458,36 +551,53 @@ export const Navigation: React.FC<NavigationProps> = ({
       {!languageName && !languageFlag && <AppTitle>🚀 LevelUp</AppTitle>}
 
       <RightSection>
-        {showUserProfile &&
-          ((isGlobalView && Object.keys(userProgress).length > 0) ||
-            (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
-            <UserProfileCompact onClick={() => navigate('/profile')}>
-              <UserAvatar levelColor={levelInfo.color}>
-                {levelInfo.emoji}
-                <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
+        {(hasProgress || hasNoProgress) && (
+          <ProfileMenuContainer ref={dropdownRef}>
+            <UserProfileCompact 
+              onClick={handleProfileClick}
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+              aria-label="User profile menu"
+            >
+              <UserAvatar levelColor={hasProgress ? levelInfo.color : "#4caf50"}>
+                {hasProgress ? levelInfo.emoji : "👤"}
+                {hasProgress && (
+                  <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
+                )}
               </UserAvatar>
               <UserStats>
-                <UserLevel>{levelInfo.title}</UserLevel>
-                <UserXP>{totalXP.toLocaleString()} XP</UserXP>
+                <UserLevel>{hasProgress ? levelInfo.title : "Profile"}</UserLevel>
+                <UserXP>{hasProgress ? `${totalXP.toLocaleString()} XP` : "View Progress"}</UserXP>
               </UserStats>
             </UserProfileCompact>
-          )}
-
-        {showUserProfile &&
-          ((isGlobalView && Object.keys(userProgress).length === 0) ||
-            (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
-            <UserProfileCompact onClick={() => navigate('/profile')}>
-              <UserAvatar levelColor="#4caf50">👤</UserAvatar>
-              <UserStats>
-                <UserLevel>Profile</UserLevel>
-                <UserXP>View Progress</UserXP>
-              </UserStats>
-            </UserProfileCompact>
-          )}
-
-        <SettingsButton onClick={() => navigate('/settings')} title="Settings">
-          ⚙️
-        </SettingsButton>
+            
+            <DropdownMenu 
+              isOpen={isDropdownOpen}
+              role="menu"
+              aria-label="User navigation menu"
+            >
+              <DropdownItem 
+                onClick={() => handleDropdownItemClick(() => navigate('/profile'))}
+                role="menuitem"
+              >
+                👤 Profile
+              </DropdownItem>
+              <DropdownItem 
+                onClick={() => handleDropdownItemClick(() => navigate('/settings'))}
+                role="menuitem"
+              >
+                ⚙️ Settings
+              </DropdownItem>
+              <DropdownDivider role="separator" />
+              <DropdownItem 
+                onClick={() => handleDropdownItemClick(() => navigate('/'))}
+                role="menuitem"
+              >
+                🌍 Change Language
+              </DropdownItem>
+            </DropdownMenu>
+          </ProfileMenuContainer>
+        )}
       </RightSection>
     </NavigationBar>
   );
