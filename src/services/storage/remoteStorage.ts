@@ -178,6 +178,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`API call failed - Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -584,10 +586,22 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async generateAccountCode(): Promise<{ code: string; expires: number }> {
     try {
       const session = await this.getUserSession();
-      const result = await this.apiCall('/api/users', {
+      
+      // Debug logging
+      logger.info('Generating account code for session:', { 
+        userId: session.userId, 
+        hasSessionToken: !!session.sessionToken,
+        apiUrl: `${this.config.baseUrl}/api/users`
+      });
+      
+      const requestData = {
         action: 'generateCode',
         sessionToken: session.sessionToken
-      });
+      };
+      
+      logger.info('Request data:', requestData);
+      
+      const result = await this.apiCall('/api/users', requestData);
 
       if (result.success) {
         const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours

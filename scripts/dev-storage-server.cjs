@@ -19,6 +19,7 @@ app.use(express.json());
 const storage = new Map();
 const users = new Map();
 const sessions = new Map();
+const accountCodes = new Map(); // Add account codes storage
 
 // Helper functions (same as in the Vercel functions)
 function getStorageKey(userId, languageCode, key) {
@@ -47,6 +48,13 @@ function createSession(userId) {
   const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
   sessions.set(token, { userId, expires });
   return token;
+}
+
+// Helper function to generate account code
+function generateAccountCode() {
+  const prefix = 'LEVEL';
+  const numbers = Math.floor(100000 + Math.random() * 900000); // 6-digit number
+  return `${prefix}-${numbers}`;
 }
 
 // Storage API endpoint
@@ -283,6 +291,78 @@ app.post('/api/users', (req, res) => {
         response.data = {
           userId,
           user
+        };
+        break;
+      }
+
+      case 'generateCode': {
+        if (!request.sessionToken) {
+          response.error = 'sessionToken is required to generate account code';
+          return res.status(400).json(response);
+        }
+
+        const userId = validateSession(request.sessionToken);
+        if (!userId) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+
+        // Generate account code (valid for 24 hours)
+        const accountCode = generateAccountCode();
+        const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+        
+        accountCodes.set(accountCode, { userId, expires, used: false });
+
+        response.success = true;
+        response.data = { accountCode };
+        break;
+      }
+
+      case 'linkDevice': {
+        if (!request.accountCode) {
+          response.error = 'accountCode is required to link device';
+          return res.status(400).json(response);
+        }
+
+        const codeData = accountCodes.get(request.accountCode);
+        if (!codeData) {
+          response.error = 'Invalid account code';
+          return res.status(400).json(response);
+        }
+
+        if (codeData.expires < Date.now()) {
+          accountCodes.delete(request.accountCode);
+          response.error = 'Account code has expired';
+          return res.status(400).json(response);
+        }
+
+        if (codeData.used) {
+          response.error = 'Account code has already been used';
+          return res.status(400).json(response);
+        }
+
+        // Mark code as used
+        codeData.used = true;
+        accountCodes.set(request.accountCode, codeData);
+
+        // Create new session for the linked device
+        const newSessionToken = createSession(codeData.userId);
+        const user = users.get(codeData.userId);
+
+        if (!user) {
+          response.error = 'Original user not found';
+          return res.status(404).json(response);
+        }
+
+        // For development, simulate linked devices count
+        const linkedDevices = 2; // Current device + original device
+
+        response.success = true;
+        response.data = {
+          userId: codeData.userId,
+          sessionToken: newSessionToken,
+          user,
+          linkedDevices
         };
         break;
       }
