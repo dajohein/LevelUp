@@ -284,12 +284,51 @@ const UserLevel = styled.div`
 `;
 
 const UserXP = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
+  font-weight: 500;
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     font-size: 0.7rem;
   }
+`;
+
+const SettingsButton = styled.button`
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: ${props => props.theme.colors.primary};
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  margin-left: ${props => props.theme.spacing.sm};
+
+  &:hover {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.5);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    display: none; /* Hide on mobile since mobile navigation has settings */
+  }
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
 `;
 
 interface NavigationProps {
@@ -418,34 +457,38 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {!languageName && !languageFlag && <AppTitle>🚀 LevelUp</AppTitle>}
 
-      {showUserProfile &&
-        ((isGlobalView && Object.keys(userProgress).length > 0) ||
-          (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
-          <UserProfileCompact onClick={() => navigate('/profile')}>
-            <UserAvatar levelColor={levelInfo.color}>
-              {levelInfo.emoji}
-              <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
-            </UserAvatar>
-            <UserStats>
-              <UserLevel>{levelInfo.title}</UserLevel>
-              <UserXP>{totalXP.toLocaleString()} XP</UserXP>
-            </UserStats>
-          </UserProfileCompact>
-        )}
+      <RightSection>
+        {showUserProfile &&
+          ((isGlobalView && Object.keys(userProgress).length > 0) ||
+            (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0)) && (
+            <UserProfileCompact onClick={() => navigate('/profile')}>
+              <UserAvatar levelColor={levelInfo.color}>
+                {levelInfo.emoji}
+                <UserLevelBadge levelColor={levelInfo.color}>{currentLevel}</UserLevelBadge>
+              </UserAvatar>
+              <UserStats>
+                <UserLevel>{levelInfo.title}</UserLevel>
+                <UserXP>{totalXP.toLocaleString()} XP</UserXP>
+              </UserStats>
+            </UserProfileCompact>
+          )}
 
-      {showUserProfile &&
-        ((isGlobalView && Object.keys(userProgress).length === 0) ||
-          (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
-          <UserProfileCompact onClick={() => navigate('/profile')}>
-            <UserAvatar levelColor="#4caf50">👤</UserAvatar>
-            <UserStats>
-              <UserLevel>Profile</UserLevel>
-              <UserXP>View Progress</UserXP>
-            </UserStats>
-          </UserProfileCompact>
-        )}
+        {showUserProfile &&
+          ((isGlobalView && Object.keys(userProgress).length === 0) ||
+            (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode))) && (
+            <UserProfileCompact onClick={() => navigate('/profile')}>
+              <UserAvatar levelColor="#4caf50">👤</UserAvatar>
+              <UserStats>
+                <UserLevel>Profile</UserLevel>
+                <UserXP>View Progress</UserXP>
+              </UserStats>
+            </UserProfileCompact>
+          )}
 
-      {!showUserProfile && <AppTitle>🚀 LevelUp</AppTitle>}
+        <SettingsButton onClick={() => navigate('/settings')} title="Settings">
+          ⚙️
+        </SettingsButton>
+      </RightSection>
     </NavigationBar>
   );
 };
