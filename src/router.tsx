@@ -17,6 +17,7 @@ import {
 } from './utils/lazyComponents';
 
 const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
+const ComponentLibraryDemoLazy = React.lazy(() => import('./components/ComponentLibraryDemo'));
 
 import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
@@ -93,6 +94,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyWrapper loadingText="Loading demo...">
             <LoadingStatesDemoLazy />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'components-demo',
+        element: (
+          <LazyWrapper loadingText="Loading component library...">
+            <ComponentLibraryDemoLazy />
           </LazyWrapper>
         ),
       },

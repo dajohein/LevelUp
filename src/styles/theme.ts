@@ -4,10 +4,13 @@ export const theme = {
     secondary: '#2E7D32',
     background: '#121212',
     surface: '#1E1E1E',
+    surfaceHover: '#2A2A2A',
     text: '#FFFFFF',
     textSecondary: '#B0B0B0',
     error: '#CF6679',
+    errorHover: '#B85660',
     success: '#4CAF50',
+    border: '#333333',
   },
   spacing: {
     xs: '0.25rem',
@@ -16,12 +19,13 @@ export const theme = {
     lg: '1.5rem',
     xl: '2rem',
     xxl: '3rem',
-  },
+  } as const,
   borderRadius: {
     sm: '4px',
     md: '8px',
     lg: '12px',
     xl: '16px',
+    full: '50%',
   },
   breakpoints: {
     mobile: '480px',
@@ -67,7 +71,9 @@ export const theme = {
     },
   },
   touchTarget: {
-    minimum: '44px', // iOS/Android minimum recommended touch target
+    minimum: '44px',
     comfortable: '48px',
   },
 };
+
+export type ThemeType = typeof theme;
