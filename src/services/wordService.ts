@@ -163,7 +163,7 @@ export const getRandomWordFromModule = (
 ): {
   word: Word | null;
   options: string[];
-  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 } => {
   const moduleWords = getWordsForModule(languageCode, moduleId);
 
@@ -192,7 +192,7 @@ const getRandomWordFromWordList = (
 ): {
   word: Word | null;
   options: string[];
-  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 } => {
   if (wordList.length === 0) return { word: null, options: [], quizMode: 'multiple-choice' };
 
@@ -297,12 +297,20 @@ const getRandomWordFromWordList = (
 
   // Determine quiz mode based on word's mastery level
   const currentMastery = selectedWord.currentMastery;
-  let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 
-  if (currentMastery < 30) {
+  if (currentMastery < 20) {
     quizMode = 'multiple-choice';
-  } else if (currentMastery < 70) {
+  } else if (currentMastery < 40) {
     quizMode = 'letter-scramble';
+  } else if (currentMastery < 70) {
+    // Only use fill-in-the-blank for words that have context
+    const hasContext = selectedWord.context && selectedWord.context.sentence;
+    if (hasContext) {
+      quizMode = Math.random() < 0.5 ? 'fill-in-the-blank' : 'open-answer';
+    } else {
+      quizMode = 'open-answer';
+    }
   } else {
     quizMode = 'open-answer';
   }
@@ -335,7 +343,7 @@ export const getRandomWord = (
 ): {
   word: Word | null;
   options: string[];
-  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 } => {
   const languageWords = getWordsForLanguage(languageCode);
   return getRandomWordFromWordList(languageWords, wordProgress, lastWordId);

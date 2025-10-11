@@ -129,6 +129,16 @@ const hasContextData = (word: Word): boolean => {
 
 /**
  * Determines the appropriate quiz mode based on mastery level and learning phase
+ * 
+ * Progressive Difficulty System:
+ * - 0-30%: Multiple choice only (recognition)
+ * - 30-60%: Letter scramble + multiple choice (construction)  
+ * - 60-85%: Open answer + letter scramble (recall)
+ * - 85-90%: Open answer focus (mastery consolidation)
+ * - 90%+: Fill-in-the-blank introduced (ultimate context challenge)
+ * 
+ * Fill-in-the-blank is reserved for very high mastery words (90%+) to ensure
+ * users have demonstrated consistent performance before facing context challenges.
  */
 export const selectQuizMode = (
   mastery: number,
@@ -145,12 +155,13 @@ export const selectQuizMode = (
   // Check if word has context for fill-in-the-blank mode
   const canUseFillInBlank = word ? hasContextData(word) : false;
 
-  // For review sessions, prefer more challenging modes including fill-in-the-blank
+  // For review sessions, prefer more challenging modes but reserve fill-in-the-blank for very high mastery
   if (sessionContext === 'review' && mastery > LEARNING_CONSTANTS.LEARNING_THRESHOLD) {
-    if (canUseFillInBlank) {
+    if (canUseFillInBlank && mastery >= 85) {
+      // Only use fill-in-the-blank for review if mastery is very high (85%+)
       const rand = Math.random();
       if (rand < 0.35) return 'open-answer';
-      if (rand < 0.65) return 'fill-in-the-blank';
+      if (rand < 0.55) return 'fill-in-the-blank'; // Reduced from 65% to 55%
       return 'letter-scramble';
     } else {
       return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';
@@ -165,21 +176,20 @@ export const selectQuizMode = (
     return 'multiple-choice';
   }
   if (mastery < 85) {
-    if (canUseFillInBlank) {
-      const rand = Math.random();
-      if (rand < 0.3) return 'letter-scramble';
-      if (rand < 0.6) return 'open-answer';
-      return 'fill-in-the-blank';
-    } else {
-      return Math.random() < 0.5 ? 'letter-scramble' : 'open-answer';
-    }
+    // Removed fill-in-the-blank from this tier - too early for context challenges
+    const rand = Math.random();
+    if (rand < 0.3) return 'letter-scramble';
+    if (rand < 0.6) return 'open-answer';
+    return 'letter-scramble';
   }
 
-  // For mastered words, prefer challenging modes with context
-  if (canUseFillInBlank) {
+  // For high mastery words (85%+), introduce fill-in-the-blank as the ultimate challenge
+  // But only after user has shown consistent performance
+  if (canUseFillInBlank && mastery >= 90) {
+    // Require very high mastery (90%+) for fill-in-the-blank to ensure readiness
     const rand = Math.random();
-    if (rand < 0.35) return 'open-answer';
-    if (rand < 0.65) return 'fill-in-the-blank';
+    if (rand < 0.25) return 'fill-in-the-blank'; // Reduced from 30% to 25%
+    if (rand < 0.6) return 'open-answer';
     return 'letter-scramble';
   } else {
     return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';

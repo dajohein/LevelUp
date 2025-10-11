@@ -1304,8 +1304,11 @@ export const Game: React.FC = () => {
             setWordStartTime(Date.now());
             // Note: feedback state is reset by useEffect when word changes
           },
-          isCorrect ? 1200 : 3000
-        ); // Fast for correct, slower for incorrect to show feedback
+          // Fill-in-the-blank needs more time to read context and feedback
+          quizModeToUse === 'fill-in-the-blank' 
+            ? (isCorrect ? 2500 : 4500) // Longer for fill-in-the-blank
+            : (isCorrect ? 1200 : 3000)  // Normal timing for other modes
+        );
       }
     }
   };
@@ -1360,8 +1363,15 @@ export const Game: React.FC = () => {
 
   const getQuizQuestion = (word: any, quizMode: string): string => {
     if (isUnidirectionalMode(quizMode)) {
-      // Unidirectional modes always show Dutch as the question
-      return word.definition;
+      // Unidirectional modes: Show the source language as the question
+      // Use word direction to determine which field contains the source language
+      if (word.direction === 'term-to-definition') {
+        // term=Dutch (source), definition=German (target): show Dutch (term)
+        return word.term;
+      } else {
+        // definition-to-term (default): definition=Dutch (source), term=German (target): show Dutch (definition)
+        return word.definition;
+      }
     } else {
       // Bidirectional modes follow word direction
       return getQuestionWord(word);
@@ -1369,9 +1379,48 @@ export const Game: React.FC = () => {
   };
 
   const getQuizAnswer = (word: any, quizMode: string): string => {
-    if (isUnidirectionalMode(quizMode)) {
-      // Unidirectional modes always expect target language as answer
-      return word.term;
+    if (quizMode === 'fill-in-the-blank') {
+      // Fill-in-the-blank: We need to return the word that appears in the context sentence
+      // This could be either term or definition depending on the sentence language
+      if (word.context?.sentence) {
+        const sentence = word.context.sentence.toLowerCase();
+        const termLower = word.term.toLowerCase();
+        const definitionLower = word.definition.toLowerCase();
+        
+        // Check if term appears in sentence
+        if (sentence.includes(termLower)) {
+          return word.term;
+        }
+        // Check if definition appears in sentence
+        if (sentence.includes(definitionLower)) {
+          return word.definition;
+        }
+        
+        // Try without articles for term
+        const termWithoutArticle = word.term.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
+        if (sentence.includes(termWithoutArticle.toLowerCase())) {
+          return word.term;
+        }
+        
+        // Try without articles for definition
+        const definitionWithoutArticle = word.definition.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
+        if (sentence.includes(definitionWithoutArticle.toLowerCase())) {
+          return word.definition;
+        }
+      }
+      
+      // Fallback: return German word (term for German words, definition for Dutch words)
+      return word.term; // Default fallback
+    } else if (isUnidirectionalMode(quizMode)) {
+      // For learning German: All unidirectional modes should expect German answers
+      // Use the word direction to determine which field contains the German word
+      if (word.direction === 'term-to-definition') {
+        // term=Dutch, definition=German: return German (definition)
+        return word.definition;
+      } else {
+        // definition-to-term (default): term=German, definition=Dutch: return German (term)
+        return word.term;
+      }
     } else {
       // Bidirectional modes follow word direction
       return getAnswerWord(word);
@@ -1381,15 +1430,34 @@ export const Game: React.FC = () => {
   const getContextForDirection = (word: any) => {
     // If word has explicit context field, use it
     if (word.context) {
+      if (typeof word.context === 'string') {
+        return {
+          sentence: word.context,
+          translation: word.context,
+        };
+      }
       return {
-        sentence: word.context.sentence,
-        translation: word.context.translation,
+        sentence: word.context.sentence || '',
+        translation: word.context.translation || '',
       };
     }
 
     // Fallback: no context available
     return undefined;
   };
+
+  // Memoize context to prevent render loops - moved from renderThemedQuiz to fix hooks order
+  const contextForWord = useMemo(() => {
+    const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
+    const wordToUse = enhancedWordInfo?.word || currentWord;
+    
+    // Add null check to prevent error when word is not loaded yet
+    if (!wordToUse) {
+      return undefined;
+    }
+    
+    return getContextForDirection(wordToUse);
+  }, [currentWord?.id, currentWord?.context, isUsingSpacedRepetition, getCurrentWordInfo]);
 
   if (!currentWord) {
     return <UnifiedLoading text="Loading words..." />;
@@ -1419,7 +1487,9 @@ export const Game: React.FC = () => {
 
     // Session-specific quiz mode overrides
     if (currentSession?.id === 'fill-in-the-blank') {
-      quizModeToUse = 'fill-in-the-blank';
+      // Only use fill-in-the-blank if the word has context, otherwise fallback to open-answer
+      const hasContext = wordToUse.context && wordToUse.context.sentence;
+      quizModeToUse = hasContext ? 'fill-in-the-blank' : 'open-answer';
     }
 
     // Generate unique key for current question
@@ -1454,14 +1524,14 @@ export const Game: React.FC = () => {
               disabled={isTransitioning}
               level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
               xp={wordProgress[wordToUse.id]?.xp || 0}
-              context={getContextForDirection(wordToUse)}
+              context={contextForWord}
             />
           ) : quizModeToUse === 'letter-scramble' ? (
             <LetterScrambleQuiz
               key={`ls-${wordToUse.id}-${getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
               word={getQuizAnswer(wordToUse, quizModeToUse)} // Always scramble the target language word (German/Spanish)
               definition={getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as hint
-              context={getContextForDirection(wordToUse)}
+              context={contextForWord}
               currentWord={(getSessionStats()?.currentIndex || 0) + 1}
               totalWords={getSessionStats()?.totalWords || 10}
               disabled={isTransitioning}
@@ -1502,7 +1572,6 @@ export const Game: React.FC = () => {
             <FillInTheBlankQuiz
               key={`fib-${wordToUse.id}-${getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
               word={getQuizAnswer(wordToUse, quizModeToUse)} // Always ask for the target language (German/Spanish)
-              definition={getQuizQuestion(wordToUse, quizModeToUse)} // Show the Dutch translation as hint
               userAnswer={inputValue}
               onAnswerChange={setInputValue}
               onSubmit={handleOpenQuestionSubmit}
@@ -1510,7 +1579,7 @@ export const Game: React.FC = () => {
               disabled={isTransitioning}
               level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
               xp={wordProgress[wordToUse.id]?.xp || 0}
-              context={getContextForDirection(wordToUse)}
+              context={contextForWord}
               currentWord={(getSessionStats()?.currentIndex || 0) + 1}
               totalWords={getSessionStats()?.totalWords || 10}
             />
@@ -1525,7 +1594,7 @@ export const Game: React.FC = () => {
               disabled={isTransitioning}
               level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
               xp={wordProgress[wordToUse.id]?.xp || 0}
-              context={getContextForDirection(wordToUse)}
+              context={contextForWord}
             />
           )}
         </>
@@ -1707,7 +1776,13 @@ export const Game: React.FC = () => {
         isCorrect={lastAnswerCorrect}
         correctAnswer={feedbackWordInfo?.correctAnswer || ''}
         originalWord={feedbackWordInfo?.originalWord || ''}
-        wordContext={feedbackWordInfo?.context || ''}
+        wordContext={
+          feedbackWordInfo?.context
+            ? typeof feedbackWordInfo.context === 'string'
+              ? feedbackWordInfo.context
+              : (feedbackWordInfo.context as any)?.sentence || (feedbackWordInfo.context as any)?.translation || ''
+            : ''
+        }
         capitalizationFeedback={capitalizationFeedback}
       />
       <AchievementManager />

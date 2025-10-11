@@ -94,13 +94,6 @@ const BlankSpace = styled.span<{ isCorrect?: boolean; isError?: boolean }>`
   };
 `;
 
-const ContextTranslation = styled.div`
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.95rem;
-  font-style: italic;
-  margin-top: ${props => props.theme.spacing.sm};
-`;
-
 const InstructionText = styled.div`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
@@ -134,19 +127,8 @@ const ProgressBar = styled.div<{ progress: number }>`
   }
 `;
 
-const DefinitionHint = styled.div`
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: ${props => props.theme.borderRadius.sm};
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-  margin: ${props => props.theme.spacing.sm} 0;
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
-  border: 1px solid ${props => props.theme.colors.border || props.theme.colors.surface};
-`;
-
 interface FillInTheBlankQuizProps {
   word: string;
-  definition: string;
   userAnswer: string;
   onAnswerChange: (answer: string) => void;
   onSubmit: () => void;
@@ -163,7 +145,6 @@ interface FillInTheBlankQuizProps {
 
 const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
   word,
-  definition,
   userAnswer,
   onAnswerChange,
   onSubmit,
@@ -187,35 +168,67 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       };
     }
 
-    // Find the word in the sentence and replace it with a blank
     const sentence = context.sentence;
-    const wordToReplace = word.toLowerCase();
     const sentenceLower = sentence.toLowerCase();
     
-    // Try to find the exact word (accounting for articles and cases)
-    let wordIndex = sentenceLower.indexOf(wordToReplace);
+    // For fill-in-the-blank, we need to find which word (term or definition) appears in the sentence
+    // and remove it to create the blank. The user should fill in the same word that was removed.
     
-    // If not found, try without articles for German
+    // Try to find the word that was passed to this component (should be the target answer)
+    let wordToReplace = word.toLowerCase().trim();
+    let wordIndex = sentenceLower.indexOf(wordToReplace);
+    let actualWordLength = word.length;
+    
+    // If not found, try without articles
+    if (wordIndex === -1 && /^(der|die|das|ein|eine)\s+/.test(word)) {
+      const wordWithoutArticle = word.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
+      const withoutArticleIndex = sentenceLower.indexOf(wordWithoutArticle.toLowerCase());
+      if (withoutArticleIndex !== -1) {
+        wordIndex = withoutArticleIndex;
+        actualWordLength = wordWithoutArticle.length;
+        wordToReplace = wordWithoutArticle.toLowerCase();
+      }
+    }
+    
+    // If still not found, try splitting multi-word phrases
     if (wordIndex === -1) {
-      const wordWithoutArticle = word.replace(/^(der|die|das|ein|eine)\s+/i, '');
-      wordIndex = sentenceLower.indexOf(wordWithoutArticle.toLowerCase());
+      const words = word.split(/\s+/);
+      for (const singleWord of words) {
+        const cleanWord = singleWord.toLowerCase().trim();
+        if (cleanWord.length > 2) { // Only try meaningful words
+          const singleWordIndex = sentenceLower.indexOf(cleanWord);
+          if (singleWordIndex !== -1) {
+            wordIndex = singleWordIndex;
+            actualWordLength = cleanWord.length;
+            wordToReplace = cleanWord;
+            break;
+          }
+        }
+      }
     }
     
     if (wordIndex !== -1) {
-      const beforeBlank = sentence.substring(0, wordIndex);
-      const afterBlank = sentence.substring(wordIndex + word.length);
-      return { beforeBlank, afterBlank };
+      // Found the word in the sentence, create the blank
+      const before = String(sentence.substring(0, wordIndex)).trim();
+      const after = String(sentence.substring(wordIndex + actualWordLength)).trim();
+      
+      return { 
+        beforeBlank: before,
+        afterBlank: after
+      };
     }
     
-    // Fallback: put blank at the end
+    // If word can't be found in the sentence, show the sentence as instruction
+    // and provide a clear indication of what to fill in
     return {
-      beforeBlank: sentence + " _____ means ",
-      afterBlank: ""
+      beforeBlank: `Context: ${sentence}`,
+      afterBlank: `\n\nFill in the German word for: ${context.translation || 'the missing word'}`
     };
   };
 
   const { beforeBlank, afterBlank } = getSentenceWithBlank();
-  const showAnswer = isCorrect !== undefined;
+  // Only show answer after user has submitted and it's been validated
+  const showAnswer = isCorrect === true && disabled;
 
   return (
     <Container>
@@ -224,25 +237,17 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       <ContextSection>
         <ContextLabel>Complete the sentence</ContextLabel>
         <SentenceContainer>
-          {beforeBlank}
+          <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
           <BlankSpace isCorrect={isCorrect} isError={isError}>
-            {showAnswer ? word : "____"}
+            {showAnswer ? word : "_____"}
           </BlankSpace>
-          {afterBlank}
+          <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
         </SentenceContainer>
-        
-        {context?.translation && (
-          <ContextTranslation>{context.translation}</ContextTranslation>
-        )}
       </ContextSection>
 
       <InstructionText>
-        Type the correct word to fill in the blank
+        Type the correct German word to fill in the blank
       </InstructionText>
-
-      <DefinitionHint>
-        <strong>Hint:</strong> {definition}
-      </DefinitionHint>
 
       <AnimatedInput
         value={userAnswer}
@@ -270,4 +275,4 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
   );
 };
 
-export const FillInTheBlankQuiz = React.memo(FillInTheBlankQuizComponent);
+export const FillInTheBlankQuiz = FillInTheBlankQuizComponent;
