@@ -9,6 +9,29 @@ import { Navigation } from './Navigation';
 import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
 import { DataMigrationService } from '../services/dataMigrationService';
+// Import styled components from our library
+import { ModuleLayout } from '../styles/components/gameLayouts';
+import { Card, CardGrid } from '../styles/components/cards';
+import { BaseButton } from '../styles/components/buttons';
+import { ProgressBar as LibProgressBar } from '../styles/components/progress';
+import { DifficultyBadge as LibDifficultyBadge } from '../styles/components/badges';
+import { 
+  StatRow as LibStatRow, 
+  StatLabel as LibStatLabel, 
+  StatValue as LibStatValue, 
+  StatsContainer as LibStatsContainer 
+} from '../styles/components/dataDisplay';
+import {
+  Heading3,
+  BodyText
+} from '../styles/components/typography';
+import { 
+  ResponsiveContainer,
+  ResponsiveFlex,
+  ResponsiveStack,
+  ShowOnMobile,
+  Sidebar as LibSidebar
+} from '../styles/components/layouts';
 
 const OverviewContainer = styled.div`
   display: flex;
@@ -37,34 +60,6 @@ const MainContent = styled.div`
   }
 `;
 
-const Sidebar = styled.div`
-  width: 350px;
-  padding: ${props => props.theme.spacing.lg};
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-
-  @media (max-width: 1024px) {
-    display: none;
-  }
-`;
-
-const MobileAnalytics = styled.div`
-  display: none;
-  width: 100%;
-  max-width: 800px;
-  margin-bottom: ${props => props.theme.spacing.lg};
-
-  @media (max-width: 1024px) {
-    display: block;
-  }
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: ${props => props.theme.spacing.lg};
-  max-width: 800px;
-`;
-
 const LanguageTitle = styled.h1`
   font-size: 2.2rem;
   font-weight: 700;
@@ -78,88 +73,6 @@ const LanguageTitle = styled.h1`
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1.8rem;
   }
-`;
-
-const Subtitle = styled.p`
-  font-size: 1rem;
-  color: ${props => props.theme.colors.textSecondary};
-  margin: 0;
-  text-align: center;
-`;
-
-const ModulesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${props => props.theme.spacing.lg};
-  max-width: 800px;
-  width: 100%;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    grid-template-columns: 1fr;
-    gap: ${props => props.theme.spacing.lg};
-    padding: 0 ${props => props.theme.spacing.sm};
-  }
-`;
-
-const ModuleCard = styled.div`
-  background: ${props => props.theme.colors.surface};
-  border-radius: 16px;
-  padding: ${props => props.theme.spacing.lg};
-  text-align: left;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  border: 2px solid transparent;
-  display: flex;
-  gap: ${props => props.theme.spacing.md};
-  min-height: 200px;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.lg};
-    flex-direction: column;
-    min-height: auto;
-    gap: ${props => props.theme.spacing.md};
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #4caf50, #81c784);
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    border-color: #4caf50;
-  }
-`;
-
-const ModuleHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  margin-bottom: ${props => props.theme.spacing.sm};
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    gap: ${props => props.theme.spacing.md};
-    margin-bottom: ${props => props.theme.spacing.md};
-    flex-wrap: wrap;
-  }
-`;
-
-const ModuleContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 `;
 
 const ModuleActions = styled.div`
@@ -191,125 +104,17 @@ const ModuleInfo = styled.div`
   min-width: 0;
 `;
 
-const ModuleName = styled.h3`
-  color: ${props => props.theme.colors.text};
-  margin: 0;
-  font-size: 1.3rem;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.3;
-  }
-`;
 
-const ModuleDescription = styled.p`
-  color: ${props => props.theme.colors.textSecondary};
-  margin: ${props => props.theme.spacing.xs} 0;
-  font-size: 0.9rem;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1rem;
-    margin: ${props => props.theme.spacing.sm} 0 ${props => props.theme.spacing.md} 0;
-    line-height: 1.4;
-  }
-`;
 
-const DifficultyBadge = styled.span<{ difficulty: string }>`
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  background-color: ${props => {
-    switch (props.difficulty) {
-      case 'beginner':
-        return '#4caf50';
-      case 'intermediate':
-        return '#ff9800';
-      case 'advanced':
-        return '#f44336';
-      default:
-        return '#9e9e9e';
-    }
-  }};
-  color: white;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 0.8rem;
-    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-    border-radius: ${props => props.theme.borderRadius.md};
-    margin-left: auto;
-  }
-`;
 
-const StatsContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: ${props => props.theme.spacing.xs};
-  margin-top: auto;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    gap: ${props => props.theme.spacing.sm};
-    margin-top: ${props => props.theme.spacing.md};
-    padding: ${props => props.theme.spacing.md};
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: ${props => props.theme.borderRadius.md};
-  }
-`;
 
-const StatRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.xs} 0;
-  }
-`;
 
-const StatLabel = styled.span`
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1rem;
-    font-weight: 500;
-  }
-`;
-
-const StatValue = styled.span`
-  color: ${props => props.theme.colors.text};
-  font-weight: 600;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-`;
-
-const ModuleProgressBar = styled.div`
-  width: 100%;
-  height: 6px;
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: 3px;
-  overflow: hidden;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    height: 8px;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-`;
-
-const ProgressFill = styled.div<{ progress: number }>`
-  height: 100%;
-  background-color: ${props => props.theme.colors.primary};
-  width: ${props => props.progress}%;
-  transition: width 0.3s ease;
-`;
 
 const AnalyticsSection = styled.div`
   background: ${props => props.theme.colors.surface};
@@ -506,129 +311,7 @@ const ScoreLabel = styled.div`
   letter-spacing: 0.5px;
 `;
 
-const QuickPracticeButton = styled.button`
-  background: linear-gradient(45deg, #4caf50, #66bb6a);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  width: 100%;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: 16px 24px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-radius: 14px;
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
-    
-    &:hover {
-      transform: none;
-      background: linear-gradient(45deg, #43a047, #5cb860);
-    }
-    
-    &:active {
-      transform: scale(0.98);
-    }
-  }
-`;
-
-const ViewDetailsButton = styled.button`
-  background: linear-gradient(45deg, #3b82f6, #6366f1);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  margin-bottom: ${props => props.theme.spacing.sm};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(45deg, #2563eb, #4f46e5);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: 14px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 12px;
-    margin-bottom: 0;
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.5);
-    backdrop-filter: blur(10px);
-    
-    &:hover {
-      transform: none;
-      background: rgba(59, 130, 246, 0.3);
-      border-color: rgba(59, 130, 246, 0.7);
-    }
-    
-    &:active {
-      transform: scale(0.98);
-    }
-  }
-`;
-
-const MainMixedPracticeButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 16px;
-  padding: 16px 32px;
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-  margin-bottom: ${props => props.theme.spacing.lg};
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  justify-content: center;
-  min-width: 200px;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6b3fa0 100%);
-  }
-
-  &:active {
-    transform: translateY(-1px);
-  }
-
-  @media (max-width: 768px) {
-    padding: 14px 24px;
-    font-size: 1rem;
-    min-width: auto;
-    width: 100%;
-    max-width: 300px;
-  }
-`;
 
 const EmptyState = styled.div`
   text-align: center;
@@ -1015,26 +698,36 @@ export const ModuleOverview: React.FC = () => {
         languageFlag={language.flag}
         showUserProfile={true}
       />
-      <OverviewContainer>
+      <ModuleLayout>
         <MainContent>
-          <Header>
-            <LanguageTitle>Choose Your Module</LanguageTitle>
-            <Subtitle>Select a module to start your learning journey!</Subtitle>
-          </Header>
+          <ResponsiveContainer maxWidth="800px">
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <LanguageTitle>Choose Your Module</LanguageTitle>
+              <BodyText size="body" color="#B0B0B0" center>
+                Select a module to start your learning journey!
+              </BodyText>
+            </div>
+          </ResponsiveContainer>
 
           {/* Mixed Practice Button - prominently placed */}
-          <MainMixedPracticeButton onClick={handleMixedPractice}>
+          <BaseButton 
+            variant="primary" 
+            size="lg" 
+            onClick={handleMixedPractice}
+          >
             🎯 Mixed Practice
-          </MainMixedPracticeButton>
+          </BaseButton>
 
           {/* Mobile Analytics - shown on small screens */}
-          <MobileAnalytics>
-            <LanguageAnalytics
-              languageCode={languageCode!}
-              modules={modules}
-              wordProgress={wordProgress}
-            />
-          </MobileAnalytics>
+          <ShowOnMobile>
+            <ResponsiveContainer maxWidth="800px">
+              <LanguageAnalytics
+                languageCode={languageCode!}
+                modules={modules}
+                wordProgress={wordProgress}
+              />
+            </ResponsiveContainer>
+          </ShowOnMobile>
 
           {modules.length === 0 ? (
             <EmptyState>
@@ -1042,42 +735,50 @@ export const ModuleOverview: React.FC = () => {
               <p>Modules for this language are coming soon!</p>
             </EmptyState>
           ) : (
-            <ModulesGrid>
+            <CardGrid>
               {modules.map(module => {
                 const stats = getModuleStats(languageCode!, module.id, wordProgress);
 
                 return (
-                  <ModuleCard key={module.id}>
-                    <ModuleContent>
-                      <ModuleHeader>
+                  <Card key={module.id} variant="elevated">
+                    <ResponsiveStack>
+                      <ResponsiveFlex 
+                        direction={{ mobile: 'row', tablet: 'row', desktop: 'row' }}
+                        gap="0.5rem"
+                        align="center"
+                      >
                         <ModuleIcon>{module.icon}</ModuleIcon>
                         <ModuleInfo>
-                          <ModuleName>{module.name}</ModuleName>
-                          <ModuleDescription>{module.description}</ModuleDescription>
+                          <Heading3>{module.name}</Heading3>
+                          <BodyText size="small" color="#B0B0B0">
+                            {module.description}
+                          </BodyText>
                         </ModuleInfo>
-                        <DifficultyBadge difficulty={module.difficulty}>
+                        <LibDifficultyBadge difficulty={module.difficulty}>
                           {module.difficulty}
-                        </DifficultyBadge>
-                      </ModuleHeader>
+                        </LibDifficultyBadge>
+                      </ResponsiveFlex>
 
-                      <StatsContainer>
-                        <StatRow>
-                          <StatLabel>Words</StatLabel>
-                          <StatValue>
+                      <LibStatsContainer>
+                        <LibStatRow>
+                          <LibStatLabel>Words</LibStatLabel>
+                          <LibStatValue>
                             {stats.wordsLearned}/{stats.totalWords}
-                          </StatValue>
-                        </StatRow>
+                          </LibStatValue>
+                        </LibStatRow>
 
-                        <ModuleProgressBar>
-                          <ProgressFill progress={stats.completionPercentage} />
-                        </ModuleProgressBar>
+                        <LibProgressBar 
+                          value={stats.completionPercentage} 
+                          height="6px"
+                          animated
+                        />
 
-                        <StatRow>
-                          <StatLabel>Progress</StatLabel>
-                          <StatValue>{stats.completionPercentage}%</StatValue>
-                        </StatRow>
-                      </StatsContainer>
-                    </ModuleContent>
+                        <LibStatRow>
+                          <LibStatLabel>Progress</LibStatLabel>
+                          <LibStatValue>{stats.completionPercentage}%</LibStatValue>
+                        </LibStatRow>
+                      </LibStatsContainer>
+                    </ResponsiveStack>
 
                     <ModuleActions>
                       <ScoreDisplay>
@@ -1085,30 +786,38 @@ export const ModuleOverview: React.FC = () => {
                         <ScoreLabel>Progress</ScoreLabel>
                       </ScoreDisplay>
 
-                      <ViewDetailsButton onClick={e => handleViewModuleDetails(module.id, e)}>
+                      <BaseButton 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={e => handleViewModuleDetails(module.id, e)}
+                      >
                         📊 View Details
-                      </ViewDetailsButton>
+                      </BaseButton>
 
-                      <QuickPracticeButton onClick={e => handleModulePractice(module.id, e)}>
+                      <BaseButton 
+                        variant="primary" 
+                        size="sm" 
+                        onClick={e => handleModulePractice(module.id, e)}
+                      >
                         🎯 Practice
-                      </QuickPracticeButton>
+                      </BaseButton>
                     </ModuleActions>
-                  </ModuleCard>
+                  </Card>
                 );
               })}
-            </ModulesGrid>
+            </CardGrid>
           )}
         </MainContent>
 
         {/* Desktop Sidebar Analytics */}
-        <Sidebar>
+        <LibSidebar position="right">
           <LanguageAnalytics
             languageCode={languageCode!}
             modules={modules}
             wordProgress={wordProgress}
           />
-        </Sidebar>
-      </OverviewContainer>
+        </LibSidebar>
+      </ModuleLayout>
     </>
   );
 };

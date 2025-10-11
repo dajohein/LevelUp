@@ -343,3 +343,58 @@ export const Breakpoint = styled.div<{
     return '';
   }}
 `;
+
+// Sidebar component for desktop analytics and additional content
+export const Sidebar = styled.div<{
+  width?: string;
+  position?: 'left' | 'right';
+  hideBreakpoint?: 'mobile' | 'tablet' | 'desktop';
+  background?: string;
+  border?: boolean;
+}>`
+  width: ${props => props.width || '350px'};
+  padding: ${props => props.theme.spacing.lg};
+  background: ${props => props.background || 'rgba(0, 0, 0, 0.3)'};
+  
+  ${props => props.border !== false && css`
+    ${props.position === 'left' 
+      ? 'border-right: 1px solid rgba(255, 255, 255, 0.1);'
+      : 'border-left: 1px solid rgba(255, 255, 255, 0.1);'
+    }
+  `}
+  
+  /* Hide on specified breakpoint and below */
+  ${props => {
+    const hideBreakpoint = props.hideBreakpoint || 'desktop';
+    switch (hideBreakpoint) {
+      case 'mobile':
+        return css`
+          @media (max-width: ${props.theme.breakpoints.mobile}) {
+            display: none;
+          }
+        `;
+      case 'tablet':
+        return css`
+          @media (max-width: ${props.theme.breakpoints.tablet}) {
+            display: none;
+          }
+        `;
+      case 'desktop':
+        return css`
+          @media (max-width: ${props.theme.breakpoints.desktop}) {
+            display: none;
+          }
+        `;
+      default:
+        return css`
+          @media (max-width: ${props.theme.breakpoints.desktop}) {
+            display: none;
+          }
+        `;
+    }
+  }}
+  
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.md};
+  }
+`;

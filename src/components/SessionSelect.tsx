@@ -8,6 +8,7 @@ import { setCurrentModule } from '../store/gameSlice';
 import { Navigation } from './Navigation';
 import { SessionAnalytics } from './SessionAnalytics';
 import { words } from '../services/wordService';
+import { Sidebar as LibSidebar } from '../styles/components/layouts';
 
 const Container = styled.div`
   display: flex;
@@ -33,17 +34,6 @@ const MainContent = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.md};
-  }
-`;
-
-const Sidebar = styled.div`
-  width: 350px;
-  padding: ${props => props.theme.spacing.lg};
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    display: none;
   }
 `;
 
@@ -504,13 +494,13 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
         </MainContent>
 
         {/* Desktop Sidebar Analytics */}
-        <Sidebar>
+        <LibSidebar position="right">
           <SessionAnalytics
             languageCode={languageCode}
             showRecommendations={true}
             showWeeklyProgress={true}
           />
-        </Sidebar>
+        </LibSidebar>
       </Container>
     </>
   );

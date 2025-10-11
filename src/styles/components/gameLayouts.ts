@@ -14,6 +14,52 @@ export const GameContainer = styled.div<{ fullHeight?: boolean }>`
   overflow: hidden;
 `;
 
+// Game Content Container - main content area for quiz components
+export const GameContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 800px;
+  gap: ${props => props.theme.spacing.lg};
+  min-height: 300px;
+
+  @media (max-height: 600px) {
+    min-height: 200px;
+    gap: ${props => props.theme.spacing.md};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    gap: ${props => props.theme.spacing.md};
+    min-height: 250px;
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.sm};
+    min-height: 200px;
+    padding: 0 ${props => props.theme.spacing.xs};
+  }
+
+  @media (max-height: 500px) {
+    min-height: 150px;
+    gap: ${props => props.theme.spacing.xs};
+  }
+`;
+
+// Skip Button Container - positioned at bottom of game area
+export const SkipButtonContainer = styled.div`
+  margin-top: ${props => props.theme.spacing.lg};
+  padding: ${props => props.theme.spacing.md} 0;
+  flex-shrink: 0; /* Ensure skip button is always visible */
+
+  @media (max-height: 600px) {
+    margin-top: ${props => props.theme.spacing.md};
+    padding: ${props => props.theme.spacing.sm} 0;
+  }
+`;
+
 // Session Layout - matches SessionCompletion.tsx
 export const SessionLayout = styled.div`
   display: flex;
@@ -334,5 +380,204 @@ export const PWALayout = styled.div<{ hasStatusBar?: boolean }>`
   @supports (padding: max(0px)) {
     padding-left: max(${props => props.theme.spacing.md}, env(safe-area-inset-left));
     padding-right: max(${props => props.theme.spacing.md}, env(safe-area-inset-right));
+  }
+`;
+
+// Game Mode Containers - themed containers for different game modes
+export const QuickDashContainer = styled.div`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid #00d4aa;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(0, 212, 170, 0.1), transparent);
+    animation: lightning 3s linear infinite;
+  }
+
+  @keyframes lightning {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+`;
+
+export const DeepDiveContainer = styled.div`
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: 2px solid #0099cc;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+  box-shadow: 0 8px 32px rgba(79, 172, 254, 0.2);
+
+  &::after {
+    content: '🧠';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    opacity: 0.3;
+  }
+`;
+
+export const StreakChallengeContainer = styled.div<{ streak: number }>`
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  border: 2px solid #ff6b6b;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+  animation: ${props => (props.streak > 5 ? 'fireGlow 1s ease-in-out infinite alternate' : 'none')};
+
+  &::before {
+    content: '🔥';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    animation: ${props => (props.streak > 0 ? 'flameDance 2s ease-in-out infinite' : 'none')};
+  }
+
+  @keyframes fireGlow {
+    0% {
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+    }
+    100% {
+      box-shadow: 0 0 40px rgba(255, 107, 107, 0.6);
+    }
+  }
+
+  @keyframes flameDance {
+    0%,
+    100% {
+      transform: rotate(-5deg) scale(1);
+    }
+    50% {
+      transform: rotate(5deg) scale(1.1);
+    }
+  }
+`;
+
+export const PrecisionModeContainer = styled.div`
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border: 2px solid #00b4db;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+
+  &::before {
+    content: '🎯';
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    opacity: 0.4;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: 2px solid #00b4db;
+    border-radius: 50%;
+    opacity: 0.3;
+  }
+`;
+
+export const BossBattleContainer = styled.div<{ damage?: boolean }>`
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1e 100%);
+  border: 3px solid #8b0000;
+  border-radius: 20px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+  animation: ${props => (props.damage ? 'bossShake 0.5s ease-in-out' : 'none')};
+  box-shadow: 0 0 30px rgba(139, 0, 0, 0.4), inset 0 0 50px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      rgba(139, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '⚔️';
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    animation: swordGlow 3s ease-in-out infinite;
+    z-index: 1;
+  }
+
+  @keyframes bossShake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10% {
+      transform: translateX(-5px) rotate(-0.5deg);
+    }
+    20% {
+      transform: translateX(5px) rotate(0.5deg);
+    }
+    30% {
+      transform: translateX(-3px) rotate(-0.3deg);
+    }
+    40% {
+      transform: translateX(3px) rotate(0.3deg);
+    }
+    50% {
+      transform: translateX(-2px);
+    }
+    60% {
+      transform: translateX(2px);
+    }
+    70% {
+      transform: translateX(-1px);
+    }
+    80% {
+      transform: translateX(1px);
+    }
+    90% {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes swordGlow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px #8b0000);
+      transform: rotate(-10deg);
+    }
+    50% {
+      filter: drop-shadow(0 0 20px #dc143c);
+      transform: rotate(10deg);
+    }
   }
 `;
