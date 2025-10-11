@@ -33,9 +33,10 @@ export const LEARNING_CONSTANTS = {
 
   // Quiz mode distribution weights for variety
   QUIZ_MODE_WEIGHTS: {
-    'multiple-choice': 0.3, // 30% - recognition
-    'letter-scramble': 0.4, // 40% - construction
-    'open-answer': 0.3, // 30% - recall
+    'multiple-choice': 0.25, // 25% - recognition
+    'letter-scramble': 0.35, // 35% - construction
+    'open-answer': 0.25, // 25% - recall
+    'fill-in-the-blank': 0.15, // 15% - context-rich recall
   },
 
   // Review frequency based on mastery
@@ -64,12 +65,12 @@ export interface LearningSession {
   groupId: string;
   words: Array<{
     word: Word;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     difficulty: number;
   }>;
   reviewWords: Array<{
     word: Word;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     lastSeen: string;
   }>;
   sessionType: 'introduction' | 'practice' | 'review' | 'mixed';
@@ -120,12 +121,20 @@ export const calculateNextReviewTime = (
 };
 
 /**
+ * Checks if a word has context data suitable for fill-in-the-blank mode
+ */
+const hasContextData = (word: Word): boolean => {
+  return !!(word.context?.sentence && word.context?.translation);
+};
+
+/**
  * Determines the appropriate quiz mode based on mastery level and learning phase
  */
 export const selectQuizMode = (
   mastery: number,
-  sessionContext: 'introduction' | 'practice' | 'review'
-): 'multiple-choice' | 'letter-scramble' | 'open-answer' => {
+  sessionContext: 'introduction' | 'practice' | 'review',
+  word?: Word
+): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' => {
   const phase = getWordLearningPhase(mastery);
 
   // For introduction phase, always start with multiple choice
@@ -133,18 +142,48 @@ export const selectQuizMode = (
     return 'multiple-choice';
   }
 
-  // For review sessions, prefer more challenging modes
+  // Check if word has context for fill-in-the-blank mode
+  const canUseFillInBlank = word ? hasContextData(word) : false;
+
+  // For review sessions, prefer more challenging modes including fill-in-the-blank
   if (sessionContext === 'review' && mastery > LEARNING_CONSTANTS.LEARNING_THRESHOLD) {
-    return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';
+    if (canUseFillInBlank) {
+      const rand = Math.random();
+      if (rand < 0.35) return 'open-answer';
+      if (rand < 0.65) return 'fill-in-the-blank';
+      return 'letter-scramble';
+    } else {
+      return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';
+    }
   }
 
   // Normal mode selection based on mastery
   if (mastery < 30) return 'multiple-choice';
-  if (mastery < 60) return Math.random() < 0.6 ? 'letter-scramble' : 'multiple-choice';
-  if (mastery < 85) return Math.random() < 0.5 ? 'letter-scramble' : 'open-answer';
+  if (mastery < 60) {
+    const rand = Math.random();
+    if (rand < 0.6) return 'letter-scramble';
+    return 'multiple-choice';
+  }
+  if (mastery < 85) {
+    if (canUseFillInBlank) {
+      const rand = Math.random();
+      if (rand < 0.3) return 'letter-scramble';
+      if (rand < 0.6) return 'open-answer';
+      return 'fill-in-the-blank';
+    } else {
+      return Math.random() < 0.5 ? 'letter-scramble' : 'open-answer';
+    }
+  }
 
-  // For mastered words, prefer challenging modes
-  return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';
+  // For mastered words, prefer challenging modes with context
+  if (canUseFillInBlank) {
+    const rand = Math.random();
+    if (rand < 0.35) return 'open-answer';
+    if (rand < 0.65) return 'fill-in-the-blank';
+    return 'letter-scramble';
+  } else {
+    return Math.random() < 0.7 ? 'open-answer' : 'letter-scramble';
+  }
 };
 
 /**
@@ -282,7 +321,8 @@ export const createLearningSession = (
 
     const quizMode = selectQuizMode(
       currentMastery,
-      targetGroup.phase === 'introduction' ? 'introduction' : 'practice'
+      targetGroup.phase === 'introduction' ? 'introduction' : 'practice',
+      word
     );
 
     return {
@@ -300,7 +340,7 @@ export const createLearningSession = (
 
     return {
       word,
-      quizMode: selectQuizMode(currentMastery, 'review'),
+      quizMode: selectQuizMode(currentMastery, 'review', word),
       lastSeen: progress?.lastPracticed || new Date().toISOString(),
     };
   });
@@ -338,7 +378,7 @@ export const interleaveSessionWords = (
   session: LearningSession
 ): Array<{
   word: Word;
-  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
   type: 'group' | 'review';
   difficulty?: number;
 }> => {

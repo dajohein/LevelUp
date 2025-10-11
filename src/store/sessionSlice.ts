@@ -128,6 +128,22 @@ export const sessionTypes: SessionType[] = [
     ],
   },
   {
+    id: 'fill-in-the-blank',
+    name: 'Fill in the Blank',
+    description: 'Complete sentences by filling in the missing words. Context-rich learning!',
+    emoji: '📝',
+    targetWords: 15,
+    timeLimit: 12,
+    difficulty: 'intermediate',
+    requiredScore: 1200,
+    scoreMultiplier: 1.7,
+    specialRules: [
+      'Context sentences for better understanding',
+      'Complete word accuracy required',
+      'Language comprehension bonus +25',
+    ],
+  },
+  {
     id: 'boss-battle',
     name: 'Boss Battle',
     description: 'Weekly ultimate challenge. Face the hardest words and climb the leaderboard!',
@@ -274,6 +290,9 @@ const sessionSlice = createSlice({
       } else if (state.currentSession?.id === 'deep-dive') {
         // Add context bonus for deep dive
         points += contextBonus;
+      } else if (state.currentSession?.id === 'fill-in-the-blank') {
+        // Add language comprehension bonus for fill-in-the-blank
+        points += contextBonus || 25; // Default 25 point bonus for context-rich learning
       } else if (state.currentSession?.id === 'boss-battle') {
         // Progressive difficulty bonus
         const difficultyMultiplier = 1 + state.progress.wordsCompleted * 0.1;

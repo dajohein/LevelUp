@@ -23,7 +23,7 @@ export interface EnhancedGameState {
   } | null;
   currentWordInfo: {
     word: any;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     options: string[];
     isReviewWord: boolean;
     wordType: 'group' | 'review';

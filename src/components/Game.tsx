@@ -8,6 +8,7 @@ import {
   addTimeElapsed,
   completeSession,
   incrementWordsCompleted,
+  addCorrectAnswer,
   addPerfectAccuracyBonus,
   setLanguage as setSessionLanguage,
 } from '../store/sessionSlice';
@@ -21,6 +22,7 @@ import { AchievementManager } from './AchievementManager';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
 import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
 import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
+import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
 import { Navigation } from './Navigation';
 import { LearningProgress } from './LearningProgress';
@@ -537,6 +539,41 @@ const PrecisionModeContainer = styled.div`
   }
 `;
 
+const FillInTheBlankContainer = styled.div`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid #6c5ce7;
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.lg};
+  position: relative;
+  box-shadow: 0 8px 32px rgba(108, 92, 231, 0.2);
+
+  &::before {
+    content: '📝';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.8rem;
+    opacity: 0.4;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    width: 40px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent 0%, #a29bfe 50%, transparent 100%);
+    border-radius: 2px;
+    animation: contextGlow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes contextGlow {
+    0% { opacity: 0.3; transform: scaleX(0.8); }
+    100% { opacity: 0.7; transform: scaleX(1.2); }
+  }
+`;
+
 const BossBattleContainer = styled.div<{ damage?: boolean }>`
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1e 100%);
   border: 3px solid #8b0000;
@@ -728,6 +765,35 @@ const BrainMeter = styled.div<{ knowledge: number }>`
     50% {
       transform: scale(1.1);
     }
+  }
+`;
+
+const ContextMeter = styled.div<{ contextualWords: number }>`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  background: rgba(108, 92, 231, 0.1);
+  border: 1px solid #6c5ce7;
+  border-radius: 20px;
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing.md};
+
+  &::before {
+    content: '📝';
+    font-size: 1.2rem;
+    animation: contextPulse 3s ease-in-out infinite;
+  }
+
+  &::after {
+    content: 'Context: ${props => props.contextualWords} words';
+    font-weight: bold;
+    color: #6c5ce7;
+  }
+
+  @keyframes contextPulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    33% { transform: scale(1.05) rotate(1deg); }
+    66% { transform: scale(1.02) rotate(-1deg); }
   }
 `;
 
@@ -1169,13 +1235,25 @@ export const Game: React.FC = () => {
     // Get current word info to track feedback BEFORE any state changes
     const enhancedWordInfo = getCurrentWordInfo();
     const currentWordToUse = enhancedWordInfo?.word || currentWord;
+    const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
 
     // Capture feedback information immediately before any transitions
-    setFeedbackWordInfo({
-      originalWord: getQuestionWord(currentWordToUse),
-      correctAnswer: getAnswerWord(currentWordToUse),
-      context: currentWordToUse?.context || '',
-    });
+    // Use centralized business logic for consistent feedback display
+    if (isUnidirectionalMode(quizModeToUse)) {
+      // Unidirectional modes: Show Dutch as question, target language as answer
+      setFeedbackWordInfo({
+        originalWord: getQuizQuestion(currentWordToUse, quizModeToUse), // Dutch translation
+        correctAnswer: getQuizAnswer(currentWordToUse, quizModeToUse), // Target language word
+        context: currentWordToUse?.context || '',
+      });
+    } else {
+      // Bidirectional modes: Follow word direction
+      setFeedbackWordInfo({
+        originalWord: getQuestionWord(currentWordToUse),
+        correctAnswer: getAnswerWord(currentWordToUse),
+        context: currentWordToUse?.context || '',
+      });
+    }
 
     // Update local feedback state
     setLastAnswerCorrect(isCorrect);
@@ -1212,6 +1290,11 @@ export const Game: React.FC = () => {
         // Update session counter if answer was correct and we're in a session
         if (isCorrect && isSessionActive && currentSession) {
           dispatch(incrementWordsCompleted());
+          if (currentSession.id === 'fill-in-the-blank') {
+            dispatch(addCorrectAnswer({ contextBonus: 25 }));
+          } else {
+            dispatch(addCorrectAnswer({}));
+          }
         }
 
         setTimeout(
@@ -1234,7 +1317,10 @@ export const Game: React.FC = () => {
 
     if (!wordToUse) return false;
 
-    const correctAnswer = getAnswerWord(wordToUse);
+    // Use centralized business logic for determining correct answer
+    const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
+    const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
+      
     return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
   };
 
@@ -1255,6 +1341,41 @@ export const Game: React.FC = () => {
   const getAnswerWord = (word: any) => {
     const direction = word.direction || 'definition-to-term'; // default to old behavior
     return direction === 'definition-to-term' ? word.term : word.definition;
+  };
+
+  /**
+   * Business Logic: Quiz Mode Directionality
+   * 
+   * UNIDIRECTIONAL MODES (always Dutch → Target Language):
+   * - letter-scramble: User constructs target language word from letters
+   * - open-answer: User types target language word from Dutch prompt
+   * - fill-in-the-blank: User fills target language word in context
+   * 
+   * BIDIRECTIONAL MODES (respects word.direction):
+   * - multiple-choice: Recognition works in both directions
+   */
+  const isUnidirectionalMode = (quizMode: string): boolean => {
+    return ['letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(quizMode);
+  };
+
+  const getQuizQuestion = (word: any, quizMode: string): string => {
+    if (isUnidirectionalMode(quizMode)) {
+      // Unidirectional modes always show Dutch as the question
+      return word.definition;
+    } else {
+      // Bidirectional modes follow word direction
+      return getQuestionWord(word);
+    }
+  };
+
+  const getQuizAnswer = (word: any, quizMode: string): string => {
+    if (isUnidirectionalMode(quizMode)) {
+      // Unidirectional modes always expect target language as answer
+      return word.term;
+    } else {
+      // Bidirectional modes follow word direction
+      return getAnswerWord(word);
+    }
   };
 
   const getContextForDirection = (word: any) => {
@@ -1293,8 +1414,13 @@ export const Game: React.FC = () => {
     // Get word info from enhanced system if available
     const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
+    let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
     const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
+
+    // Session-specific quiz mode overrides
+    if (currentSession?.id === 'fill-in-the-blank') {
+      quizModeToUse = 'fill-in-the-blank';
+    }
 
     // Generate unique key for current question
     const currentQuestionKey = `${wordToUse.id}-${getQuestionWord(wordToUse)}`;
@@ -1319,8 +1445,8 @@ export const Game: React.FC = () => {
         <>
           {quizModeToUse === 'multiple-choice' ? (
             <MultipleChoiceQuiz
-              key={`mc-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-              word={getQuestionWord(wordToUse)}
+              key={`mc-${wordToUse.id}-${getQuizQuestion(wordToUse, quizModeToUse)}`} // Force remount on word change
+              word={getQuizQuestion(wordToUse, quizModeToUse)}
               options={optionsToUse}
               onSelect={handleSubmit}
               isCorrect={currentAnswerCorrect === true}
@@ -1332,13 +1458,9 @@ export const Game: React.FC = () => {
             />
           ) : quizModeToUse === 'letter-scramble' ? (
             <LetterScrambleQuiz
-              key={`ls-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-              word={
-                wordToUse.direction === 'definition-to-term' ? wordToUse.term : wordToUse.definition
-              }
-              definition={
-                wordToUse.direction === 'definition-to-term' ? wordToUse.definition : wordToUse.term
-              }
+              key={`ls-${wordToUse.id}-${getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+              word={getQuizAnswer(wordToUse, quizModeToUse)} // Always scramble the target language word (German/Spanish)
+              definition={getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as hint
               context={getContextForDirection(wordToUse)}
               currentWord={(getSessionStats()?.currentIndex || 0) + 1}
               totalWords={getSessionStats()?.totalWords || 10}
@@ -1347,7 +1469,7 @@ export const Game: React.FC = () => {
                 // Track feedback and play audio
                 setLastAnswerCorrect(correct);
                 setFeedbackQuestionKey(
-                  `${wordToUse.id}-${getQuestionWord(wordToUse)}-${Date.now()}`
+                  `${wordToUse.id}-${wordToUse.term}-${Date.now()}`
                 ); // Track unique question instance
                 if (correct) {
                   playCorrect();
@@ -1376,10 +1498,26 @@ export const Game: React.FC = () => {
                 }, 2000);
               }}
             />
+          ) : quizModeToUse === 'fill-in-the-blank' ? (
+            <FillInTheBlankQuiz
+              key={`fib-${wordToUse.id}-${getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+              word={getQuizAnswer(wordToUse, quizModeToUse)} // Always ask for the target language (German/Spanish)
+              definition={getQuizQuestion(wordToUse, quizModeToUse)} // Show the Dutch translation as hint
+              userAnswer={inputValue}
+              onAnswerChange={setInputValue}
+              onSubmit={handleOpenQuestionSubmit}
+              isCorrect={currentAnswerCorrect === true}
+              disabled={isTransitioning}
+              level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
+              xp={wordProgress[wordToUse.id]?.xp || 0}
+              context={getContextForDirection(wordToUse)}
+              currentWord={(getSessionStats()?.currentIndex || 0) + 1}
+              totalWords={getSessionStats()?.totalWords || 10}
+            />
           ) : (
             <OpenQuestionQuiz
-              key={`oq-${wordToUse.id}-${getQuestionWord(wordToUse)}`} // Force remount on word change
-              word={getQuestionWord(wordToUse)}
+              key={`oq-${wordToUse.id}-${getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+              word={getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as the question
               userAnswer={inputValue}
               onAnswerChange={setInputValue}
               onSubmit={handleOpenQuestionSubmit}
@@ -1456,6 +1594,14 @@ export const Game: React.FC = () => {
             <AccuracyMeter accuracy={accuracy} />
             {quizContent}
           </PrecisionModeContainer>
+        );
+
+      case 'fill-in-the-blank':
+        return (
+          <FillInTheBlankContainer>
+            <ContextMeter contextualWords={sessionProgress.wordsCompleted} />
+            {quizContent}
+          </FillInTheBlankContainer>
         );
 
       case 'boss-battle':
@@ -1547,6 +1693,8 @@ export const Game: React.FC = () => {
               // Increment words completed in session if session is active
               if (isSessionActive && currentSession) {
                 dispatch(incrementWordsCompleted());
+                // Don't add bonus for skipped words
+                dispatch(addCorrectAnswer({}));
               }
             }}
             disabled={isTransitioning}

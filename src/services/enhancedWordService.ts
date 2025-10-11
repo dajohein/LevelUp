@@ -31,7 +31,7 @@ interface EnhancedWordServiceState {
   currentWordIndex: number;
   sessionWords: Array<{
     word: Word;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     type: 'group' | 'review';
     difficulty?: number;
   }>;
@@ -121,7 +121,7 @@ class EnhancedWordService {
    */
   getCurrentWord(): {
     word: Word | null;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     options: string[];
     isReviewWord: boolean;
     progress: number;
@@ -311,7 +311,7 @@ class EnhancedWordService {
   ): {
     word: Word | null;
     options: string[];
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
   } {
     // Import and use the original logic from wordService
     const { getRandomWord, getRandomWordFromModule } = require('./wordService');

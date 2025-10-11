@@ -29,7 +29,7 @@ interface PersistentGameState {
   streak: number;
   correctAnswers: number;
   totalAttempts: number;
-  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer';
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 }
 
 interface PersistentSessionState {
