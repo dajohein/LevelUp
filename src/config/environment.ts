@@ -13,6 +13,15 @@ export interface EnvironmentConfig {
     storage: string;
     users: string;
   };
+  cacheBusting: {
+    enabled: boolean;
+    autoCleanOnStart: boolean;
+    clearServiceWorkerCache: boolean;
+    clearApplicationCache: boolean;
+    clearStorageCache: boolean;
+    addTimestampToRequests: boolean;
+    logCacheOperations: boolean;
+  };
 }
 
 // Development configuration (local testing)
@@ -24,6 +33,15 @@ const developmentConfig: EnvironmentConfig = {
   storageEndpoints: {
     storage: '/api/storage',
     users: '/api/users'
+  },
+  cacheBusting: {
+    enabled: true,
+    autoCleanOnStart: true,
+    clearServiceWorkerCache: true,
+    clearApplicationCache: true,
+    clearStorageCache: true,
+    addTimestampToRequests: true,
+    logCacheOperations: true,
   }
 };
 
@@ -36,6 +54,15 @@ const productionConfig: EnvironmentConfig = {
   storageEndpoints: {
     storage: '/api/storage',
     users: '/api/users'
+  },
+  cacheBusting: {
+    enabled: false,
+    autoCleanOnStart: false,
+    clearServiceWorkerCache: false,
+    clearApplicationCache: false,
+    clearStorageCache: false,
+    addTimestampToRequests: false,
+    logCacheOperations: false,
   }
 };
 
@@ -48,6 +75,15 @@ const testConfig: EnvironmentConfig = {
   storageEndpoints: {
     storage: '/api/storage',
     users: '/api/users'
+  },
+  cacheBusting: {
+    enabled: false,
+    autoCleanOnStart: false,
+    clearServiceWorkerCache: false,
+    clearApplicationCache: false,
+    clearStorageCache: false,
+    addTimestampToRequests: false,
+    logCacheOperations: false,
   }
 };
 

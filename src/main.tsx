@@ -12,6 +12,8 @@ import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
 import { initializeStorage } from './services/storage/storageInitializer';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
+import { developmentCacheManager } from './utils/developmentCacheManager';
+import { environmentConfig } from './config/environment';
 import './index.css';
 
 // Initialize the enhanced storage system with server-side support
@@ -20,6 +22,16 @@ initializeStorage({
 }).catch(error => {
   console.warn('Storage initialization failed, falling back to local storage:', error);
 });
+
+// Initialize development cache busting
+if (environmentConfig.cacheBusting.enabled) {
+  // Update cache manager with environment-specific config
+  developmentCacheManager.updateConfig(environmentConfig.cacheBusting);
+  console.log('🧹 Development cache busting enabled');
+  console.log('   • Use Ctrl+Shift+R to clear app caches and reload');
+  console.log('   • Use Ctrl+Shift+C to clear app caches only');
+  console.log('   • User data and progress are always preserved');
+}
 
 // Load debug helpers in development
 if (process.env.NODE_ENV === 'development') {

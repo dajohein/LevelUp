@@ -1,9 +1,17 @@
 // Service Worker for LevelUp PWA
 // Implements offline functionality, caching, and background sync
 
-const CACHE_NAME = 'levelup-v1.0.0';
-const OFFLINE_CACHE = 'levelup-offline';
-const DATA_CACHE = 'levelup-data';
+// Dynamic cache name with timestamp for development cache busting
+const CACHE_VERSION = '1.0.0';
+const isDevelopment = self.location.hostname === 'localhost' || 
+                     self.location.hostname === '127.0.0.1' ||
+                     self.location.hostname.includes('app.github.dev');
+
+// Use timestamp in development to ensure fresh caches
+const CACHE_TIMESTAMP = isDevelopment ? Date.now() : '';
+const CACHE_NAME = `levelup-v${CACHE_VERSION}${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
+const OFFLINE_CACHE = `levelup-offline${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
+const DATA_CACHE = `levelup-data${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
 
 // Resources to cache immediately
 const STATIC_RESOURCES = [
@@ -22,16 +30,23 @@ const API_CACHE_PATTERNS = [
 
 // Install event - cache static resources
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Install');
+  console.log('[ServiceWorker] Install', isDevelopment ? '(Development Mode)' : '(Production Mode)');
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[ServiceWorker] Caching static resources');
+        console.log('[ServiceWorker] Caching static resources to:', CACHE_NAME);
+        
+        // In development, be more aggressive about cache busting
+        if (isDevelopment) {
+          console.log('[ServiceWorker] Development mode: cache busting enabled');
+        }
+        
         return cache.addAll(STATIC_RESOURCES);
       })
       .then(() => {
         // Force activation of new service worker
+        console.log('[ServiceWorker] Skipping waiting for immediate activation');
         return self.skipWaiting();
       })
   );
@@ -39,16 +54,28 @@ self.addEventListener('install', (event) => {
 
 // Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activate');
+  console.log('[ServiceWorker] Activate', isDevelopment ? '(Development Mode)' : '(Production Mode)');
   
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
+        console.log('[ServiceWorker] Found caches:', cacheNames);
+        console.log('[ServiceWorker] Current cache names:', { CACHE_NAME, OFFLINE_CACHE, DATA_CACHE });
+        
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE && cacheName !== DATA_CACHE) {
+            // In development, be more aggressive about cleaning old caches
+            const shouldDelete = isDevelopment ? 
+              !cacheName.includes('levelup-data') || // Keep user data cache
+              (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE && cacheName !== DATA_CACHE) :
+              (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE && cacheName !== DATA_CACHE);
+              
+            if (shouldDelete) {
               console.log('[ServiceWorker] Removing old cache:', cacheName);
               return caches.delete(cacheName);
+            } else {
+              console.log('[ServiceWorker] Keeping cache:', cacheName);
+              return Promise.resolve();
             }
           })
         );
@@ -67,6 +94,18 @@ self.addEventListener('fetch', (event) => {
 
   // Skip cross-origin requests
   if (url.origin !== location.origin) {
+    return;
+  }
+
+  // Development cache busting: bypass cache if _cacheBust parameter is present
+  if (isDevelopment && url.searchParams.has('_cacheBust')) {
+    console.log('[ServiceWorker] Cache busting detected, bypassing cache for:', url.pathname);
+    event.respondWith(
+      fetch(request).catch(() => {
+        // Fallback to cache only if network fails
+        return caches.match(request);
+      })
+    );
     return;
   }
 
