@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RootState } from '../store/store';
 import { setLanguage, setCurrentModule } from '../store/gameSlice';
-import { resetSession } from '../store/sessionSlice';
+import { resetSession, startSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
 import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
@@ -973,7 +973,10 @@ export const ModuleOverview: React.FC = () => {
     dispatch(setLanguage(languageCode));
     dispatch(setCurrentModule(null)); // No specific module for mixed practice
     dispatch(resetSession());
-    navigate(`/sessions/${languageCode}`);
+    // Start a Deep Dive session for mixed practice (good balance of words and time)
+    dispatch(startSession('deep-dive'));
+    // Navigate directly to the game for mixed practice
+    navigate(`/game/${languageCode}/session`);
   };
 
   const handleModulePractice = (moduleId: string, event: React.MouseEvent) => {

@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import styled from '@emotion/styled';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
+import { setLanguage, setCurrentModule } from '../store/gameSlice';
+import { resetSession, startSession } from '../store/sessionSlice';
 import { getModule, getModuleStats } from '../services/moduleService';
 import { Navigation } from './Navigation';
 
@@ -173,8 +175,21 @@ interface ModuleProgressViewProps {}
 
 export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId: string }>();
   const wordProgress = useSelector((state: RootState) => state.game.wordProgress);
+
+  const handleMixedPractice = () => {
+    if (!languageCode) return;
+
+    dispatch(setLanguage(languageCode));
+    dispatch(setCurrentModule(null)); // No specific module for mixed practice
+    dispatch(resetSession());
+    // Start a Deep Dive session for mixed practice (good balance of words and time)
+    dispatch(startSession('deep-dive'));
+    // Navigate directly to the game for mixed practice
+    navigate(`/game/${languageCode}/session`);
+  };
 
   const module = useMemo(() => {
     if (!languageCode || !moduleId) return null;
@@ -232,7 +247,7 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
               🎯 Start Practice Session
             </Button>
             <Button
-              onClick={() => navigate(`/sessions/${languageCode}`)}
+              onClick={handleMixedPractice}
               style={{
                 background: 'rgba(255, 255, 255, 0.1)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
