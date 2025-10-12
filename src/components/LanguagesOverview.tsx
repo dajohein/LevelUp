@@ -357,3 +357,6 @@ export const LanguagesOverview: React.FC = () => {
     </>
   );
 };
+
+// Memoize to prevent re-renders when navigating
+export default React.memo(LanguagesOverview);

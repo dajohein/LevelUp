@@ -1794,3 +1794,6 @@ export const Game: React.FC = () => {
     </>
   );
 };
+
+// Memoize the Game component to prevent unnecessary re-renders
+export default React.memo(Game);
