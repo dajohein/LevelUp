@@ -15,7 +15,7 @@ import {
 import { useAudio } from '../features/audio/AudioContext';
 import { words } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
-import { useEnhancedGame } from '../hooks/useEnhancedGame';
+import { useEnhancedGame } from '../hooks/useTransparentAIGame';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
@@ -729,7 +729,7 @@ const AccuracyMeter = styled.div<{ accuracy: number }>`
   }
 
   &::after {
-    content: '${props => props.accuracy}% Accuracy';
+    content: '${props => (props.accuracy || 0)}% Accuracy';
     font-weight: bold;
     color: ${props => (props.accuracy === 100 ? '#00b4db' : '#666')};
   }
@@ -1244,14 +1244,14 @@ export const Game: React.FC = () => {
       setFeedbackWordInfo({
         originalWord: getQuizQuestion(currentWordToUse, quizModeToUse), // Dutch translation
         correctAnswer: getQuizAnswer(currentWordToUse, quizModeToUse), // Target language word
-        context: currentWordToUse?.context || '',
+        context: typeof currentWordToUse?.context === 'string' ? currentWordToUse.context : '',
       });
     } else {
       // Bidirectional modes: Follow word direction
       setFeedbackWordInfo({
         originalWord: getQuestionWord(currentWordToUse),
         correctAnswer: getAnswerWord(currentWordToUse),
-        context: currentWordToUse?.context || '',
+        context: typeof currentWordToUse?.context === 'string' ? currentWordToUse.context : '',
       });
     }
 
@@ -1259,7 +1259,7 @@ export const Game: React.FC = () => {
     setLastAnswerCorrect(isCorrect);
     setLastSelectedAnswer(answer);
     setFeedbackQuestionKey(
-      `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}`
+      currentWordToUse ? `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}` : `unknown-${Date.now()}`
     ); // Track unique question instance
 
     // Play audio feedback

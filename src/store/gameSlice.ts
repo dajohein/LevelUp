@@ -287,8 +287,23 @@ export const gameSlice = createSlice({
       saveGameState(state);
     },
     updateWordProgress: (state, action: PayloadAction<Record<string, any>>) => {
-      // Update word progress (used by components to trigger centralized saves)
-      state.wordProgress = action.payload;
+      // Handle both single word updates and full progress objects
+      if (action.payload.wordId && action.payload.progress) {
+        // Single word update: merge into existing progress
+        state.wordProgress = {
+          ...state.wordProgress,
+          [action.payload.wordId]: action.payload.progress
+        };
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug(`Redux word progress updated: ${action.payload.wordId} -> total entries: ${Object.keys(state.wordProgress).length}`);
+        }
+      } else {
+        // Full progress object: replace entirely
+        state.wordProgress = action.payload;
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug(`Redux word progress replaced with ${Object.keys(action.payload).length} entries`);
+        }
+      }
       // Don't call saveGameState here - let persistence middleware handle it
     },
   },

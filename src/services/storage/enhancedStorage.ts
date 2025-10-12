@@ -137,7 +137,7 @@ class EnhancedStorageService {
     // Clear from all storage tiers and cache
     await asyncStorage.delete(key);
     await smartCache.invalidate(key);
-    await smartCache.invalidateByPattern(`.*${languageCode}.*`);
+    await smartCache.invalidateByPattern(`word_progress_${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
 
     if (this.config.debugMode) {
       logger.debug(`🗑️ Cleared word progress for ${languageCode}`);
@@ -274,7 +274,7 @@ class EnhancedStorageService {
   }
 
   async invalidateLanguageCache(languageCode: string): Promise<void> {
-    await smartCache.invalidateByPattern(`.*${languageCode}.*`);
+    await smartCache.invalidateByPattern(`.*${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`);
     
     if (this.config.debugMode) {
       logger.debug(`🔄 Invalidated cache for ${languageCode}`);

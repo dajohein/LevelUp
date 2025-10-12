@@ -646,7 +646,7 @@ const LanguageAnalytics: React.FC<{ languageCode: string; modules: any[]; wordPr
 
   // Calculate additional analytics
   const totalSessions = Object.values(wordProgress).reduce(
-    (sum: number, progress: any) => sum + (progress.timesCorrect + progress.timesIncorrect),
+    (sum: number, progress: any) => sum + ((progress.timesCorrect || 0) + (progress.timesIncorrect || 0)),
     0
   );
 
@@ -657,7 +657,7 @@ const LanguageAnalytics: React.FC<{ languageCode: string; modules: any[]; wordPr
   const overallAccuracy =
     totalSessions > 0
       ? (Object.values(wordProgress).reduce(
-          (sum: number, progress: any) => sum + progress.timesCorrect,
+          (sum: number, progress: any) => sum + (progress.timesCorrect || 0),
           0
         ) /
           totalSessions) *
@@ -809,10 +809,10 @@ const LanguageAnalytics: React.FC<{ languageCode: string; modules: any[]; wordPr
           <AnalyticValue
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
           >
-            {Math.round(overallAccuracy)}%
+            {Math.round(overallAccuracy || 0)}%
             {overallAccuracy > 80 && (
               <span style={{ color: '#22c55e', fontSize: '0.8rem' }}>
-                ↗ {Math.round(overallAccuracy - 75)}%
+                ↗ {Math.round((overallAccuracy || 0) - 75)}%
               </span>
             )}
           </AnalyticValue>
@@ -1115,3 +1115,6 @@ export const ModuleOverview: React.FC = () => {
     </>
   );
 };
+
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ModuleOverview);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
+import { updateWordProgress } from '../store/gameSlice';
 import { wordProgressStorage } from '../services/storageService';
 import { calculateLanguageProgress, LanguageProgress } from '../services/progressService';
 
@@ -18,8 +19,8 @@ export const useOptimizedWordProgress = (languageCode: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      // Use Redux action to trigger centralized save
-      dispatch({ type: 'game/updateWordProgress', payload: progress });
+      // Use proper Redux action creator for full progress replacement
+      dispatch(updateWordProgress(progress));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save progress');
     } finally {

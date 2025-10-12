@@ -64,7 +64,7 @@ export class DataMigrationService {
     if (totalCorrect !== legacy.timesCorrect || 
         totalIncorrect !== legacy.timesIncorrect || 
         totalXp !== legacy.xp) {
-      logger.warn(`Data integrity check failed for word ${legacy.wordId}:`, {
+      logger.warn(`Data integrity check failed for word ${legacy.wordId || 'unknown'}:`, {
         original: { correct: legacy.timesCorrect, incorrect: legacy.timesIncorrect, xp: legacy.xp },
         migrated: { correct: totalCorrect, incorrect: totalIncorrect, xp: totalXp }
       });

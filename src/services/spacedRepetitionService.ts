@@ -128,6 +128,16 @@ const hasContextData = (word: Word): boolean => {
 };
 
 /**
+ * AI-driven quiz mode override for adaptive learning
+ */
+export interface AIQuizModeOverride {
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+  reasoning: string[];
+  confidence: number;
+  source: 'ai-intervention' | 'ai-optimization' | 'ai-support';
+}
+
+/**
  * Determines the appropriate quiz mode based on mastery level and learning phase
  * 
  * Progressive Difficulty System:
@@ -143,8 +153,23 @@ const hasContextData = (word: Word): boolean => {
 export const selectQuizMode = (
   mastery: number,
   sessionContext: 'introduction' | 'practice' | 'review',
-  word?: Word
+  word?: Word,
+  aiOverride?: AIQuizModeOverride
 ): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' => {
+  
+  // Apply AI override if provided and confident enough
+  if (aiOverride && aiOverride.confidence > 0.7) {
+    logger.debug('Applying AI quiz mode override', {
+      originalMode: 'would_be_calculated',
+      overrideMode: aiOverride.quizMode,
+      reasoning: aiOverride.reasoning,
+      confidence: aiOverride.confidence,
+      source: aiOverride.source
+    });
+    return aiOverride.quizMode;
+  }
+
+  // Continue with original spaced repetition logic
   const phase = getWordLearningPhase(mastery);
 
   // For introduction phase, always start with multiple choice
@@ -210,10 +235,17 @@ export const createWordGroups = (
       ? calculateMasteryDecay(progress.lastPracticed, progress.xp || 0)
       : 0;
 
+    const phase = getWordLearningPhase(currentMastery);
+    
+    // Debug logging for phase calculation
+    if (process.env.NODE_ENV === 'development' && progress?.xp > 30) {
+      logger.debug(`Word ${word.term} (ID: ${word.id}): stored XP=${progress.xp}, current mastery=${currentMastery}, phase=${phase}`);
+    }
+
     return {
       ...word,
       currentMastery,
-      phase: getWordLearningPhase(currentMastery),
+      phase,
     };
   });
 
@@ -317,11 +349,13 @@ export const selectWordsForReview = (
 
 /**
  * Creates a mixed learning session with variety in quiz modes and word selection
+ * Now supports AI-driven quiz mode overrides for adaptive learning
  */
 export const createLearningSession = (
   targetGroup: WordGroup,
   reviewWords: Word[],
-  wordProgress: { [key: string]: WordProgress }
+  wordProgress: { [key: string]: WordProgress },
+  aiOverrides?: Map<string, AIQuizModeOverride> // Word ID -> AI override
 ): LearningSession => {
   const sessionWords = targetGroup.words.map(word => {
     const progress = wordProgress[word.id];
@@ -329,10 +363,14 @@ export const createLearningSession = (
       ? calculateMasteryDecay(progress.lastPracticed, progress.xp || 0)
       : 0;
 
+    // Check for AI override for this specific word
+    const aiOverride = aiOverrides?.get(word.id);
+
     const quizMode = selectQuizMode(
       currentMastery,
       targetGroup.phase === 'introduction' ? 'introduction' : 'practice',
-      word
+      word,
+      aiOverride
     );
 
     return {
@@ -348,9 +386,12 @@ export const createLearningSession = (
       ? calculateMasteryDecay(progress.lastPracticed, progress.xp || 0)
       : 0;
 
+    // Check for AI override for this review word
+    const aiOverride = aiOverrides?.get(word.id);
+
     return {
       word,
-      quizMode: selectQuizMode(currentMastery, 'review', word),
+      quizMode: selectQuizMode(currentMastery, 'review', word, aiOverride),
       lastSeen: progress?.lastPracticed || new Date().toISOString(),
     };
   });

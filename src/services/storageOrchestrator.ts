@@ -25,8 +25,8 @@ class StorageOrchestrator {
   private saveQueue: SaveOperation[] = [];
   private isProcessing = false;
   private lastSave: { [key: string]: number } = {};
-  private readonly DEBOUNCE_MS = 1000; // 1 second debounce for most operations
-  private readonly IMMEDIATE_DEBOUNCE_MS = 100; // 100ms for immediate operations
+  private readonly DEBOUNCE_MS = 2000; // Increased to 2 seconds for better performance
+  private readonly IMMEDIATE_DEBOUNCE_MS = 200; // Increased to 200ms for immediate operations
 
   /**
    * CENTRALIZED SAVE - The only method that should trigger actual storage writes
