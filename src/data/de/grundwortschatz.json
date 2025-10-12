@@ -5,53 +5,564 @@
   "icon": "📚",
   "difficulty": "beginner",
   "words": [
-    { "id": "1", "term": "die Gitarre", "definition": "de gitaar", "direction": "definition-to-term", "category": "muziekinstrumenten", "context": "Snaarinstrument met 6 snaren", "synonyms": [] },
-    { "id": "2", "term": "die Stadt", "definition": "de stad", "direction": "definition-to-term", "category": "plaatsen", "context": "Grote woonplaats met veel inwoners", "synonyms": ["die Großstadt", "das Stadtzentrum"] },
-    { "id": "3", "term": "die Geige", "definition": "de viool", "direction": "definition-to-term", "category": "muziekinstrumenten", "context": "Strijkinstrument met 4 snaren", "synonyms": ["die Violine"] },
-    { "id": "4", "term": "das Schlagzeug", "definition": "het drumstel", "direction": "definition-to-term", "category": "muziekinstrumenten", "context": "Percussie-instrument met verschillende trommels", "synonyms": ["die Drums"] },
-    { "id": "5", "term": "das Hobby", "definition": "de hobby", "direction": "definition-to-term", "category": "vrije tijd", "context": "Activiteit die je doet voor plezier", "synonyms": ["das Interesse", "die Freizeitbeschäftigung"] },
-    { "id": "6", "term": "das Klavier", "definition": "de piano", "direction": "definition-to-term", "category": "muziekinstrumenten", "context": "Toetsinstrument met 88 toetsen", "synonyms": ["das Piano"] },
-    { "id": "7", "term": "die Ferien", "definition": "de vakantie", "direction": "definition-to-term", "category": "vrije tijd", "context": "Periode vrij van school of werk", "synonyms": ["der Urlaub"] },
-    { "id": "8", "term": "Sport machen", "definition": "aan sport doen", "direction": "definition-to-term", "category": "activiteiten", "context": "Fysieke activiteit beoefenen", "synonyms": ["trainieren", "sich bewegen"] },
-    { "id": "9", "term": "gefallen", "definition": "bevallen", "direction": "definition-to-term", "category": "meningen", "context": "Iets leuk of mooi vinden", "synonyms": ["mögen", "toll finden"] },
-    { "id": "10", "term": "tanzen", "definition": "dansen", "direction": "definition-to-term", "category": "activiteiten", "context": "Bewegen op muziek", "synonyms": ["sich zur Musik bewegen"] },
-    { "id": "11", "term": "Rad fahren", "definition": "fietsen", "direction": "definition-to-term", "category": "activiteiten", "context": "Met de fiets rijden", "synonyms": ["mit dem Fahrrad fahren", "radeln"] },
-    { "id": "12", "term": "gamen", "definition": "gamen", "direction": "definition-to-term", "category": "activiteiten", "context": "Computerspelletjes spelen", "synonyms": ["Computer spielen", "zocken"] },
-    { "id": "13", "term": "Spaß machen", "definition": "leuk zijn", "direction": "definition-to-term", "category": "meningen", "context": "Plezier geven of veroorzaken", "synonyms": ["Freude bereiten", "erfreuen"] },
-    { "id": "14", "term": "lesen", "definition": "lezen", "direction": "definition-to-term", "category": "activiteiten", "context": "Tekst bekijken en begrijpen", "synonyms": ["studieren", "durchlesen"] },
-    { "id": "15", "term": "ins Kino gehen", "definition": "naar de bioscoop gaan", "direction": "definition-to-term", "category": "activiteiten", "context": "Een film bekijken in de bioscoop", "synonyms": ["einen Film schauen"] },
-    { "id": "16", "term": "ins Museum gehen", "definition": "naar het museum gaan", "direction": "definition-to-term", "category": "activiteiten", "context": "Kunstwerken of historische objecten bekijken", "synonyms": ["eine Ausstellung besuchen"] },
-    { "id": "17", "term": "ins Schwimmbad gehen", "definition": "naar het zwembad gaan", "direction": "definition-to-term", "category": "activiteiten", "context": "Zwemmen in een overdekt of openlucht zwembad", "synonyms": ["baden gehen"] },
-    { "id": "18", "term": "Musik hören", "definition": "naar muziek luisteren", "direction": "definition-to-term", "category": "activiteiten", "context": "Geluid van muziek beluisteren", "synonyms": ["Lieder anhören"] },
-    { "id": "19", "term": "reiten", "definition": "paardrijden", "direction": "definition-to-term", "category": "activiteiten", "context": "Op een paard rijden", "synonyms": ["auf einem Pferd reiten"] },
-    { "id": "20", "term": "Ski fahren", "definition": "skiën", "direction": "definition-to-term", "category": "activiteiten", "context": "Op ski's over sneeuw glijden", "synonyms": ["Ski laufen"] },
-    { "id": "21", "term": "spielen", "definition": "spelen", "direction": "definition-to-term", "category": "activiteiten", "context": "Een spel of sport beoefenen", "synonyms": ["ein Spiel machen"] },
-    { "id": "22", "term": "Tennis spielen", "definition": "tennissen", "direction": "definition-to-term", "category": "activiteiten", "context": "De sport tennis beoefenen", "synonyms": ["Tennis machen"] },
-    { "id": "23", "term": "Fußball spielen", "definition": "voetballen", "direction": "definition-to-term", "category": "activiteiten", "context": "De sport voetbal beoefenen", "synonyms": ["kicken", "Fußball machen"] },
-    { "id": "24", "term": "singen", "definition": "zingen", "direction": "definition-to-term", "category": "activiteiten", "context": "Melodieën en teksten met de stem maken", "synonyms": ["ein Lied singen"] },
-    { "id": "25", "term": "schwimmen", "definition": "zwemmen", "direction": "definition-to-term", "category": "activiteiten", "context": "Zich voortbewegen in het water", "synonyms": ["baden", "ins Wasser gehen"] },
-    { "id": "26", "term": "mit", "definition": "met", "direction": "definition-to-term", "category": "voorzetsels", "context": "Voorzetsel dat gezelschap of middel aangeeft", "synonyms": ["zusammen mit"] },
-    { "id": "27", "term": "oder", "definition": "of", "direction": "definition-to-term", "category": "voegwoorden", "context": "Voegwoord voor keuze tussen alternatieven", "synonyms": ["entweder ... oder"] },
-    { "id": "28", "term": "manchmal", "definition": "soms", "direction": "definition-to-term", "category": "bijwoorden", "context": "Af en toe, niet altijd", "synonyms": ["gelegentlich", "hin und wieder"] },
-    { "id": "29", "term": "blöd", "definition": "dom, stom", "direction": "definition-to-term", "category": "eigenschappen", "context": "Niet slim of vervelend", "synonyms": ["dumm", "doof"] },
-    { "id": "30", "term": "interessant", "definition": "interessant", "direction": "definition-to-term", "category": "eigenschappen", "context": "Boeiend of de aandacht trekkend", "synonyms": ["spannend", "faszinierend"] },
-    { "id": "31", "term": "toll", "definition": "leuk", "direction": "definition-to-term", "category": "eigenschappen", "context": "Erg goed of fantastisch", "synonyms": ["super", "großartig", "prima"] },
-    { "id": "32", "term": "leicht", "definition": "makkelijk", "direction": "definition-to-term", "category": "eigenschappen", "context": "Niet moeilijk of zwaar", "synonyms": ["einfach", "simpel"] },
-    { "id": "33", "term": "schwierig", "definition": "moeilijk", "direction": "definition-to-term", "category": "eigenschappen", "context": "Niet gemakkelijk of ingewikkeld", "synonyms": ["schwer", "kompliziert"] },
-    { "id": "34", "term": "schön", "definition": "mooi", "direction": "definition-to-term", "category": "eigenschappen", "context": "Aangenaam om naar te kijken", "synonyms": ["hübsch", "wunderschön"] },
-    { "id": "35", "term": "langweilig", "definition": "saai", "direction": "definition-to-term", "category": "eigenschappen", "context": "Niet interessant of boeiend", "synonyms": ["öde", "eintönig"] },
-    { "id": "36", "term": "abenteuerlich", "definition": "avontuurlijk", "direction": "definition-to-term", "category": "eigenschappen", "context": "Vol risico en spanning", "synonyms": ["riskant", "spannend", "aufregend"] },
-    { "id": "37", "term": "kicken", "definition": "voetballen", "direction": "definition-to-term", "category": "activiteiten", "context": "Informeel woord voor voetballen", "synonyms": ["Fußball spielen", "bolzen"] },
-    { "id": "38", "term": "irgendwann", "definition": "op een gegeven moment", "direction": "definition-to-term", "category": "bijwoorden", "context": "Op een onbepaald moment in de toekomst", "synonyms": ["einmal", "eines Tages"] },
-    { "id": "39", "term": "der Fußballverein", "definition": "de voetbalclub", "direction": "definition-to-term", "category": "organisaties", "context": "Club waar mensen samen voetballen", "synonyms": ["der Fußballklub", "der Sportverein"] },
-    { "id": "40", "term": "wechseln", "definition": "wisselen", "direction": "definition-to-term", "category": "werkwoorden", "context": "Van de ene naar de andere overgaan", "synonyms": ["ändern", "tauschen"] },
-    { "id": "41", "term": "der Gegner", "definition": "de tegenstander", "direction": "definition-to-term", "category": "personen", "context": "Iemand tegen wie je speelt of vecht", "synonyms": ["der Konkurrent", "der Rivale"] },
-    { "id": "42", "term": "trainieren", "definition": "trainen", "direction": "definition-to-term", "category": "activiteiten", "context": "Oefenen om beter te worden", "synonyms": ["üben", "sich vorbereiten"] },
-    { "id": "43", "term": "draußen", "definition": "buiten", "direction": "definition-to-term", "category": "bijwoorden", "context": "Niet binnen, in de open lucht", "synonyms": ["im Freien", "außerhalb"] },
-    { "id": "44", "term": "schade", "definition": "jammer", "direction": "definition-to-term", "category": "uitdrukkingen", "context": "Uitdrukking van teleurstelling", "synonyms": ["bedauerlich", "leider"] },
-    { "id": "45", "term": "leider", "definition": "helaas", "direction": "definition-to-term", "category": "bijwoorden", "context": "Woord dat spijt uitdrukt", "synonyms": ["bedauerlicherweise", "unglücklicherweise"] },
-    { "id": "46", "term": "keine Ahnung", "definition": "geen idee", "direction": "definition-to-term", "category": "uitdrukkingen", "context": "Ik weet het niet", "synonyms": ["weiß nicht", "keine Vorstellung"] },
-    { "id": "47", "term": "gleich", "definition": "zometeen, binnenkort", "direction": "definition-to-term", "category": "bijwoorden", "context": "Heel binnenkort, over een korte tijd", "synonyms": ["sofort", "bald"] },
-    { "id": "48", "term": "manchmal", "definition": "af en toe, soms", "direction": "definition-to-term", "category": "bijwoorden", "context": "Van tijd tot tijd, niet altijd", "synonyms": ["gelegentlich", "hin und wieder"] }
+    {
+      "id": "1",
+      "term": "die Gitarre",
+      "definition": "de gitaar",
+      "direction": "definition-to-term",
+      "category": "muziekinstrumenten",
+      "context": "Snaarinstrument met 6 snaren",
+      "synonyms": []
+    },
+    {
+      "id": "2",
+      "term": "die Stadt",
+      "definition": "de stad",
+      "direction": "definition-to-term",
+      "category": "plaatsen",
+      "context": "Grote woonplaats met veel inwoners",
+      "synonyms": [
+        "die Großstadt",
+        "das Stadtzentrum"
+      ]
+    },
+    {
+      "id": "3",
+      "term": "die Geige",
+      "definition": "de viool",
+      "direction": "definition-to-term",
+      "category": "muziekinstrumenten",
+      "context": "Strijkinstrument met 4 snaren",
+      "synonyms": [
+        "die Violine"
+      ]
+    },
+    {
+      "id": "4",
+      "term": "das Schlagzeug",
+      "definition": "het drumstel",
+      "direction": "definition-to-term",
+      "category": "muziekinstrumenten",
+      "context": "Percussie-instrument met verschillende trommels",
+      "synonyms": [
+        "die Drums"
+      ]
+    },
+    {
+      "id": "5",
+      "term": "das Hobby",
+      "definition": "de hobby",
+      "direction": "definition-to-term",
+      "category": "vrije tijd",
+      "context": "Activiteit die je doet voor plezier",
+      "synonyms": [
+        "das Interesse",
+        "die Freizeitbeschäftigung"
+      ]
+    },
+    {
+      "id": "6",
+      "term": "das Klavier",
+      "definition": "de piano",
+      "direction": "definition-to-term",
+      "category": "muziekinstrumenten",
+      "context": "Toetsinstrument met 88 toetsen",
+      "synonyms": [
+        "das Piano"
+      ]
+    },
+    {
+      "id": "7",
+      "term": "die Ferien",
+      "definition": "de vakantie",
+      "direction": "definition-to-term",
+      "category": "vrije tijd",
+      "context": "Periode vrij van school of werk",
+      "synonyms": [
+        "der Urlaub"
+      ]
+    },
+    {
+      "id": "8",
+      "term": "Sport machen",
+      "definition": "aan sport doen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Fysieke activiteit beoefenen",
+      "synonyms": [
+        "trainieren",
+        "sich bewegen"
+      ]
+    },
+    {
+      "id": "9",
+      "term": "gefallen",
+      "definition": "bevallen",
+      "direction": "definition-to-term",
+      "category": "meningen",
+      "context": "Iets leuk of mooi vinden",
+      "synonyms": [
+        "mögen",
+        "toll finden"
+      ]
+    },
+    {
+      "id": "10",
+      "term": "tanzen",
+      "definition": "dansen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Bewegen op muziek",
+      "synonyms": [
+        "sich zur Musik bewegen"
+      ]
+    },
+    {
+      "id": "11",
+      "term": "Rad fahren",
+      "definition": "fietsen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Met de fiets rijden",
+      "synonyms": [
+        "mit dem Fahrrad fahren",
+        "radeln"
+      ]
+    },
+    {
+      "id": "12",
+      "term": "gamen",
+      "definition": "gamen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Computerspelletjes spelen",
+      "synonyms": [
+        "Computer spielen",
+        "zocken"
+      ]
+    },
+    {
+      "id": "13",
+      "term": "Spaß machen",
+      "definition": "leuk zijn",
+      "direction": "definition-to-term",
+      "category": "meningen",
+      "context": "Plezier geven of veroorzaken",
+      "synonyms": [
+        "Freude bereiten",
+        "erfreuen"
+      ]
+    },
+    {
+      "id": "14",
+      "term": "lesen",
+      "definition": "lezen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Tekst bekijken en begrijpen",
+      "synonyms": [
+        "studieren",
+        "durchlesen"
+      ]
+    },
+    {
+      "id": "15",
+      "term": "ins Kino gehen",
+      "definition": "naar de bioscoop gaan",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Een film bekijken in de bioscoop",
+      "synonyms": [
+        "einen Film schauen"
+      ]
+    },
+    {
+      "id": "16",
+      "term": "ins Museum gehen",
+      "definition": "naar het museum gaan",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Kunstwerken of historische objecten bekijken",
+      "synonyms": [
+        "eine Ausstellung besuchen"
+      ]
+    },
+    {
+      "id": "17",
+      "term": "ins Schwimmbad gehen",
+      "definition": "naar het zwembad gaan",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Zwemmen in een overdekt of openlucht zwembad",
+      "synonyms": [
+        "baden gehen"
+      ]
+    },
+    {
+      "id": "18",
+      "term": "Musik hören",
+      "definition": "naar muziek luisteren",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Geluid van muziek beluisteren",
+      "synonyms": [
+        "Lieder anhören"
+      ]
+    },
+    {
+      "id": "19",
+      "term": "reiten",
+      "definition": "paardrijden",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Op een paard rijden",
+      "synonyms": [
+        "auf einem Pferd reiten"
+      ]
+    },
+    {
+      "id": "20",
+      "term": "Ski fahren",
+      "definition": "skiën",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Op ski's over sneeuw glijden",
+      "synonyms": [
+        "Ski laufen"
+      ]
+    },
+    {
+      "id": "21",
+      "term": "spielen",
+      "definition": "spelen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Een spel of sport beoefenen",
+      "synonyms": [
+        "ein Spiel machen"
+      ]
+    },
+    {
+      "id": "22",
+      "term": "Tennis spielen",
+      "definition": "tennissen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "De sport tennis beoefenen",
+      "synonyms": [
+        "Tennis machen"
+      ]
+    },
+    {
+      "id": "23",
+      "term": "Fußball spielen",
+      "definition": "voetballen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "De sport voetbal beoefenen",
+      "synonyms": [
+        "kicken",
+        "Fußball machen"
+      ]
+    },
+    {
+      "id": "24",
+      "term": "singen",
+      "definition": "zingen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Melodieën en teksten met de stem maken",
+      "synonyms": [
+        "ein Lied singen"
+      ]
+    },
+    {
+      "id": "25",
+      "term": "schwimmen",
+      "definition": "zwemmen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Zich voortbewegen in het water",
+      "synonyms": [
+        "baden",
+        "ins Wasser gehen"
+      ]
+    },
+    {
+      "id": "26",
+      "term": "mit",
+      "definition": "met",
+      "direction": "definition-to-term",
+      "category": "voorzetsels",
+      "context": "Voorzetsel dat gezelschap of middel aangeeft",
+      "synonyms": [
+        "zusammen mit"
+      ]
+    },
+    {
+      "id": "27",
+      "term": "oder",
+      "definition": "of",
+      "direction": "definition-to-term",
+      "category": "voegwoorden",
+      "context": "Voegwoord voor keuze tussen alternatieven",
+      "synonyms": [
+        "entweder ... oder"
+      ]
+    },
+    {
+      "id": "28",
+      "term": "manchmal",
+      "definition": "soms",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Af en toe, niet altijd",
+      "synonyms": [
+        "gelegentlich",
+        "hin und wieder"
+      ]
+    },
+    {
+      "id": "29",
+      "term": "blöd",
+      "definition": "dom, stom",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Niet slim of vervelend",
+      "synonyms": [
+        "dumm",
+        "doof"
+      ]
+    },
+    {
+      "id": "30",
+      "term": "interessant",
+      "definition": "interessant",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Boeiend of de aandacht trekkend",
+      "synonyms": [
+        "spannend",
+        "faszinierend"
+      ]
+    },
+    {
+      "id": "31",
+      "term": "toll",
+      "definition": "leuk",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Erg goed of fantastisch",
+      "synonyms": [
+        "super",
+        "großartig",
+        "prima"
+      ]
+    },
+    {
+      "id": "32",
+      "term": "leicht",
+      "definition": "makkelijk",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Niet moeilijk of zwaar",
+      "synonyms": [
+        "einfach",
+        "simpel"
+      ]
+    },
+    {
+      "id": "33",
+      "term": "schwierig",
+      "definition": "moeilijk",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Niet gemakkelijk of ingewikkeld",
+      "synonyms": [
+        "schwer",
+        "kompliziert"
+      ]
+    },
+    {
+      "id": "34",
+      "term": "schön",
+      "definition": "mooi",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Aangenaam om naar te kijken",
+      "synonyms": [
+        "hübsch",
+        "wunderschön"
+      ]
+    },
+    {
+      "id": "35",
+      "term": "langweilig",
+      "definition": "saai",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Niet interessant of boeiend",
+      "synonyms": [
+        "öde",
+        "eintönig"
+      ]
+    },
+    {
+      "id": "36",
+      "term": "abenteuerlich",
+      "definition": "avontuurlijk",
+      "direction": "definition-to-term",
+      "category": "eigenschappen",
+      "context": "Vol risico en spanning",
+      "synonyms": [
+        "riskant",
+        "spannend",
+        "aufregend"
+      ]
+    },
+    {
+      "id": "37",
+      "term": "kicken",
+      "definition": "voetballen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Informeel woord voor voetballen",
+      "synonyms": [
+        "Fußball spielen",
+        "bolzen"
+      ]
+    },
+    {
+      "id": "38",
+      "term": "irgendwann",
+      "definition": "op een gegeven moment",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Op een onbepaald moment in de toekomst",
+      "synonyms": [
+        "einmal",
+        "eines Tages"
+      ]
+    },
+    {
+      "id": "39",
+      "term": "der Fußballverein",
+      "definition": "de voetbalclub",
+      "direction": "definition-to-term",
+      "category": "organisaties",
+      "context": "Club waar mensen samen voetballen",
+      "synonyms": [
+        "der Fußballklub",
+        "der Sportverein"
+      ]
+    },
+    {
+      "id": "40",
+      "term": "wechseln",
+      "definition": "wisselen",
+      "direction": "definition-to-term",
+      "category": "werkwoorden",
+      "context": "Van de ene naar de andere overgaan",
+      "synonyms": [
+        "ändern",
+        "tauschen"
+      ]
+    },
+    {
+      "id": "41",
+      "term": "der Gegner",
+      "definition": "de tegenstander",
+      "direction": "definition-to-term",
+      "category": "personen",
+      "context": "Iemand tegen wie je speelt of vecht",
+      "synonyms": [
+        "der Konkurrent",
+        "der Rivale"
+      ]
+    },
+    {
+      "id": "42",
+      "term": "trainieren",
+      "definition": "trainen",
+      "direction": "definition-to-term",
+      "category": "activiteiten",
+      "context": "Oefenen om beter te worden",
+      "synonyms": [
+        "üben",
+        "sich vorbereiten"
+      ]
+    },
+    {
+      "id": "43",
+      "term": "draußen",
+      "definition": "buiten",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Niet binnen, in de open lucht",
+      "synonyms": [
+        "im Freien",
+        "außerhalb"
+      ]
+    },
+    {
+      "id": "44",
+      "term": "schade",
+      "definition": "jammer",
+      "direction": "definition-to-term",
+      "category": "uitdrukkingen",
+      "context": "Uitdrukking van teleurstelling",
+      "synonyms": [
+        "bedauerlich",
+        "leider"
+      ]
+    },
+    {
+      "id": "45",
+      "term": "leider",
+      "definition": "helaas",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Woord dat spijt uitdrukt",
+      "synonyms": [
+        "bedauerlicherweise",
+        "unglücklicherweise"
+      ]
+    },
+    {
+      "id": "46",
+      "term": "keine Ahnung",
+      "definition": "geen idee",
+      "direction": "definition-to-term",
+      "category": "uitdrukkingen",
+      "context": "Ik weet het niet",
+      "synonyms": [
+        "weiß nicht",
+        "keine Vorstellung"
+      ]
+    },
+    {
+      "id": "47",
+      "term": "gleich",
+      "definition": "zometeen, binnenkort",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Heel binnenkort, over een korte tijd",
+      "synonyms": [
+        "sofort",
+        "bald"
+      ]
+    },
+    {
+      "id": "48",
+      "term": "manchmal",
+      "definition": "af en toe, soms",
+      "direction": "definition-to-term",
+      "category": "bijwoorden",
+      "context": "Van tijd tot tijd, niet altijd",
+      "synonyms": [
+        "gelegentlich",
+        "hin und wieder"
+      ]
+    }
   ]
 }

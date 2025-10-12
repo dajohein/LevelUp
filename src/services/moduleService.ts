@@ -9,6 +9,8 @@ import esLanguageInfo from '../data/es/index.json';
 
 // Import module files
 import deGrundwortschatz from '../data/de/grundwortschatz.json';
+import deGrammatikGrundlagen from '../data/de/grammatik-grundlagen.json';
+import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 
 // Available languages registry (restored for browser compatibility)
@@ -21,6 +23,8 @@ export const availableLanguages = {
 const moduleRegistry: Record<string, Record<string, any>> = {
   de: {
     grundwortschatz: deGrundwortschatz,
+    'grammatik-grundlagen': deGrammatikGrundlagen,
+    'grammatik-herhaling': deGrammatikHerhaling,
   },
   es: {
     'vocabulario-basico': esVocabularioBasico,
