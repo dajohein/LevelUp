@@ -18,10 +18,17 @@ const OverviewContainer = styled.div`
   color: ${props => props.theme.colors.text};
   gap: ${props => props.theme.spacing.lg};
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+  /* Large tablets and below - stack vertically */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
     flex-direction: column;
+    padding-top: 80px;
+    gap: 0;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding-top: 70px;
-    gap: ${props => props.theme.spacing.md};
+    gap: 0;
   }
 `;
 
@@ -31,9 +38,22 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 100%;
+  overflow-x: hidden;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     padding: ${props => props.theme.spacing.md};
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
   }
 `;
 
@@ -42,9 +62,17 @@ const Sidebar = styled.div`
   padding: ${props => props.theme.spacing.lg};
   background: rgba(0, 0, 0, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 
-  @media (max-width: 1024px) {
+  /* Large tablets and below - hide sidebar */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
     display: none;
+  }
+
+  /* Large screens - wider sidebar */
+  @media (min-width: 1400px) {
+    width: 380px;
+    padding: ${props => props.theme.spacing.xl};
   }
 `;
 
@@ -53,9 +81,27 @@ const MobileAnalytics = styled.div`
   width: 100%;
   max-width: 800px;
   margin-bottom: ${props => props.theme.spacing.lg};
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: ${props => props.theme.spacing.md};
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
-  @media (max-width: 1024px) {
+  /* Show analytics on tablets and smaller devices */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
     display: block;
+  }
+
+  /* Mobile optimization */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    border-radius: 8px;
+    margin-bottom: ${props => props.theme.spacing.md};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: ${props => props.theme.spacing.xs};
+    margin-bottom: ${props => props.theme.spacing.sm};
   }
 `;
 
@@ -63,6 +109,25 @@ const Header = styled.div`
   text-align: center;
   margin-bottom: ${props => props.theme.spacing.lg};
   max-width: 800px;
+  width: 100%;
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    margin-bottom: ${props => props.theme.spacing.md};
+    max-width: 600px;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    margin-bottom: ${props => props.theme.spacing.md};
+    max-width: 100%;
+    padding: 0 ${props => props.theme.spacing.sm};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
 `;
 
 const LanguageTitle = styled.h1`
@@ -75,8 +140,30 @@ const LanguageTitle = styled.h1`
   background-clip: text;
   text-align: center;
 
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    font-size: 2rem;
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    font-size: 1.9rem;
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 1.8rem;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1.8rem;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 1.6rem;
   }
 `;
 
@@ -85,37 +172,100 @@ const Subtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
   margin: 0;
   text-align: center;
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.95rem;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const ModulesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${props => props.theme.spacing.lg};
-  max-width: 800px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: ${props => props.theme.spacing.xl};
+  max-width: 1400px;
   width: 100%;
 
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: ${props => props.theme.spacing.lg};
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: ${props => props.theme.spacing.md};
+    max-width: 100%;
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: ${props => props.theme.spacing.md};
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing.lg};
     padding: 0 ${props => props.theme.spacing.sm};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    gap: ${props => props.theme.spacing.md};
+    padding: 0 ${props => props.theme.spacing.xs};
   }
 `;
 
 const ModuleCard = styled.div`
   background: ${props => props.theme.colors.surface};
   border-radius: 16px;
-  padding: ${props => props.theme.spacing.lg};
+  padding: ${props => props.theme.spacing.xl};
   text-align: left;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   border: 2px solid transparent;
   display: flex;
-  gap: ${props => props.theme.spacing.md};
-  min-height: 200px;
+  gap: ${props => props.theme.spacing.lg};
+  min-height: 240px;
   width: 100%;
   position: relative;
   overflow: hidden;
 
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    padding: ${props => props.theme.spacing.lg};
+    min-height: 220px;
+    gap: ${props => props.theme.spacing.md};
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    min-height: 200px;
+    padding: ${props => props.theme.spacing.lg};
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.md};
+    min-height: 180px;
+    gap: ${props => props.theme.spacing.sm};
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.lg};
     flex-direction: column;
@@ -124,6 +274,13 @@ const ModuleCard = styled.div`
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: ${props => props.theme.spacing.md};
+    gap: ${props => props.theme.spacing.sm};
+    border-radius: 8px;
   }
 
   &::before {
@@ -140,19 +297,37 @@ const ModuleCard = styled.div`
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     border-color: #4caf50;
+    
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+      transform: none; /* Disable hover effects on mobile for better touch experience */
+    }
   }
 `;
 
 const ModuleHeader = styled.div`
   display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  margin-bottom: ${props => props.theme.spacing.sm};
+  align-items: flex-start;
+  gap: ${props => props.theme.spacing.lg};
+  margin-bottom: ${props => props.theme.spacing.md};
+  width: 100%;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     gap: ${props => props.theme.spacing.md};
-    margin-bottom: ${props => props.theme.spacing.md};
-    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${props => props.theme.spacing.sm};
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    gap: ${props => props.theme.spacing.xs};
   }
 `;
 
@@ -160,6 +335,7 @@ const ModuleContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Important for text truncation */
 `;
 
 const ModuleActions = styled.div`
@@ -171,56 +347,168 @@ const ModuleActions = styled.div`
   min-width: 140px;
   text-align: center;
   padding: ${props => props.theme.spacing.sm};
+  flex-shrink: 0;
 
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    min-width: 120px;
+    padding: ${props => props.theme.spacing.xs};
+    gap: ${props => props.theme.spacing.xs};
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    min-width: 110px;
+    gap: ${props => props.theme.spacing.xs};
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    min-width: 100px;
+    padding: ${props => props.theme.spacing.xs};
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     flex-direction: column;
     align-items: stretch;
     min-width: auto;
     width: 100%;
     padding: 0;
-    gap: ${props => props.theme.spacing.md};
+    gap: ${props => props.theme.spacing.sm};
     margin-top: ${props => props.theme.spacing.md};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    gap: ${props => props.theme.spacing.xs};
+    margin-top: ${props => props.theme.spacing.sm};
   }
 `;
 
 const ModuleIcon = styled.span`
   font-size: 2rem;
+  
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 1.8rem;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 2.2rem;
+    margin-bottom: ${props => props.theme.spacing.xs};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 2rem;
+  }
 `;
 
 const ModuleInfo = styled.div`
-  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 `;
 
 const ModuleName = styled.h3`
-  color: ${props => props.theme.colors.text};
-  margin: 0;
+  color: ${props => props.theme.colors.text || '#ffffff'};
+  margin: 0 0 ${props => props.theme.spacing.xs} 0;
   font-size: 1.3rem;
+  line-height: 1.3;
+  font-weight: 600;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  max-width: 100%;
 
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    font-size: 1.25rem;
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    font-size: 1.2rem;
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 1.15rem;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 700;
     line-height: 1.3;
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 1.3rem;
   }
 `;
 
 const ModuleDescription = styled.p`
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${props => props.theme.colors.textSecondary || '#cccccc'};
   margin: ${props => props.theme.spacing.xs} 0;
   font-size: 0.9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  visibility: visible;
+  opacity: 1;
+  word-wrap: break-word;
+  
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 2;
+  }
 
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    font-size: 0.85rem;
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1rem;
     margin: ${props => props.theme.spacing.sm} 0 ${props => props.theme.spacing.md} 0;
     line-height: 1.4;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 0.9rem;
+    margin: ${props => props.theme.spacing.xs} 0 ${props => props.theme.spacing.sm} 0;
   }
 `;
 
 const DifficultyBadge = styled.span<{ difficulty: string }>`
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
   border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-start;
   background-color: ${props => {
     switch (props.difficulty) {
       case 'beginner':
@@ -235,11 +523,24 @@ const DifficultyBadge = styled.span<{ difficulty: string }>`
   }};
   color: white;
 
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.7rem;
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 0.8rem;
     padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
     border-radius: ${props => props.theme.borderRadius.md};
-    margin-left: auto;
+    align-self: flex-start;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 0.75rem;
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
   }
 `;
 
@@ -247,15 +548,27 @@ const StatsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing.xs};
+  gap: ${props => props.theme.spacing.md};
   margin-top: auto;
 
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    gap: ${props => props.theme.spacing.sm};
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     gap: ${props => props.theme.spacing.sm};
     margin-top: ${props => props.theme.spacing.md};
     padding: ${props => props.theme.spacing.md};
     background: rgba(0, 0, 0, 0.2);
     border-radius: ${props => props.theme.borderRadius.md};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: ${props => props.theme.spacing.sm};
+    gap: ${props => props.theme.spacing.xs};
   }
 `;
 
@@ -264,7 +577,18 @@ const StatRow = styled.div`
   justify-content: space-between;
   align-items: center;
 
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: ${props => props.theme.spacing.xs} 0;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs} 0;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
     padding: ${props => props.theme.spacing.xs} 0;
   }
 `;
@@ -273,9 +597,20 @@ const StatLabel = styled.span`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
 
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.85rem;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1rem;
     font-weight: 500;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 0.9rem;
   }
 `;
 
@@ -283,9 +618,21 @@ const StatValue = styled.span`
   color: ${props => props.theme.colors.text};
   font-weight: 600;
 
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1.1rem;
     font-weight: 700;
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    font-size: 1rem;
   }
 `;
 
@@ -518,29 +865,44 @@ const QuickPracticeButton = styled.button`
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   width: 100%;
+  min-height: ${props => props.theme.touchTarget.minimum};
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: 14px 18px;
+    font-size: 0.95rem;
   }
 
-  &:active {
-    transform: translateY(0);
-  }
-
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: 16px 24px;
     font-size: 1.1rem;
     font-weight: 700;
     border-radius: 14px;
     box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
-    
-    &:hover {
+    min-height: ${props => props.theme.touchTarget.comfortable};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
       transform: none;
       background: linear-gradient(45deg, #43a047, #5cb860);
     }
-    
-    &:active {
+  }
+
+  &:active {
+    transform: translateY(0);
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
       transform: scale(0.98);
     }
   }
@@ -559,17 +921,16 @@ const ViewDetailsButton = styled.button`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   width: 100%;
   margin-bottom: ${props => props.theme.spacing.sm};
+  min-height: ${props => props.theme.touchTarget.minimum};
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(45deg, #2563eb, #4f46e5);
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    margin-bottom: ${props => props.theme.spacing.xs};
   }
 
-  &:active {
-    transform: translateY(0);
-  }
-
+  /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: 14px 24px;
     font-size: 1rem;
@@ -580,14 +941,31 @@ const ViewDetailsButton = styled.button`
     background: rgba(59, 130, 246, 0.2);
     border: 1px solid rgba(59, 130, 246, 0.5);
     backdrop-filter: blur(10px);
-    
-    &:hover {
+    min-height: ${props => props.theme.touchTarget.comfortable};
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(45deg, #2563eb, #4f46e5);
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
       transform: none;
       background: rgba(59, 130, 246, 0.3);
       border-color: rgba(59, 130, 246, 0.7);
     }
-    
-    &:active {
+  }
+
+  &:active {
+    transform: translateY(0);
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
       transform: scale(0.98);
     }
   }
@@ -610,23 +988,65 @@ const MainMixedPracticeButton = styled.button`
   gap: ${props => props.theme.spacing.sm};
   justify-content: center;
   min-width: 200px;
+  min-height: ${props => props.theme.touchTarget.minimum};
+
+  /* Large tablets and small desktops */
+  @media (max-width: 1200px) {
+    padding: 15px 28px;
+    font-size: 1.05rem;
+  }
+
+  /* Standard tablets */
+  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
+    padding: 14px 26px;
+    font-size: 1rem;
+    min-width: 180px;
+  }
+
+  /* Small tablets */
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+    padding: 14px 24px;
+    font-size: 1rem;
+    min-width: 160px;
+    border-radius: 14px;
+  }
+
+  /* Mobile devices */
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: 16px 24px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: auto;
+    width: 100%;
+    max-width: 320px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+
+  /* Very small mobile devices */
+  @media (max-width: 400px) {
+    padding: 14px 20px;
+    font-size: 1rem;
+    max-width: 280px;
+  }
 
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     background: linear-gradient(135deg, #5a6fd8 0%, #6b3fa0 100%);
+
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+      transform: none; /* Disable hover effects on mobile */
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
   }
 
   &:active {
     transform: translateY(-1px);
-  }
 
-  @media (max-width: 768px) {
-    padding: 14px 24px;
-    font-size: 1rem;
-    min-width: auto;
-    width: 100%;
-    max-width: 300px;
+    @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+      transform: scale(0.98);
+    }
   }
 `;
 
