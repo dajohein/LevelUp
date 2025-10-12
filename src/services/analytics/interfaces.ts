@@ -23,6 +23,7 @@ export enum AnalyticsEventType {
   WORD_ATTEMPT = 'word_attempt',
   WORD_SUCCESS = 'word_success',
   WORD_FAILURE = 'word_failure',
+  WORD_MISTAKE = 'word_mistake',
   SESSION_START = 'session_start',
   SESSION_END = 'session_end',
   LEVEL_UP = 'level_up',

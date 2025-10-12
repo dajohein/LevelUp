@@ -153,6 +153,20 @@ export const Navigation: React.FC<NavigationProps> = ({
               </DropdownItem>
               <DropdownDivider role="separator" />
               <DropdownItem 
+                onClick={() => handleDropdownItemClick(() => navigate('/simple-ai-demo'))}
+                role="menuitem"
+              >
+                🤖 Simple AI Demo
+              </DropdownItem>
+              {/* TEMPORARILY DISABLED - MUI Dependencies missing */}
+              {/* <DropdownItem 
+                onClick={() => handleDropdownItemClick(() => navigate('/ai-system-demo'))}
+                role="menuitem"
+              >
+                🧠 Advanced AI Demo
+              </DropdownItem> */}
+              <DropdownDivider role="separator" />
+              <DropdownItem 
                 onClick={() => handleDropdownItemClick(() => navigate('/'))}
                 role="menuitem"
               >

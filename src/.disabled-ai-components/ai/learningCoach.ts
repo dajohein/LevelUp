@@ -6,14 +6,14 @@
 import {
   AnalyticsEvent,
   AnalyticsEventType,
-  // LearningPattern,
-  // PatternType,
-  // LearningMetrics,
+  LearningPattern,
+  PatternType,
+  LearningMetrics,
   LearningRecommendation,
   RealTimeMetrics,
   PredictionContext
 } from '../analytics/interfaces';
-import { /* enhancedStorage, */ EnhancedStorageService } from '../storage/enhancedStorage';
+import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { PatternRecognizer } from '../analytics/patternRecognizer';
 import { PredictiveAnalytics } from '../analytics/predictiveAnalytics';
 import { logger } from '../logger';
@@ -89,8 +89,8 @@ export class AILearningCoach {
   private readonly COGNITIVE_LOAD_WINDOW = 600000; // 10 minutes
   
   constructor(
-    private _enhancedStorage: EnhancedStorageService,
-    private _patternRecognizer: PatternRecognizer,
+    private enhancedStorage: EnhancedStorageService,
+    private patternRecognizer: PatternRecognizer,
     private predictiveAnalytics: PredictiveAnalytics
   ) {}
 

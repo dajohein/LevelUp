@@ -18,7 +18,7 @@ import {
 
 const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
 const ComponentLibraryDemoLazy = React.lazy(() => import('./components/ComponentLibraryDemo'));
-const AILearningDemoLazy = React.lazy(() => import('./components/AILearningDemo'));
+const AdvancedAISystemDemoLazy = React.lazy(() => import('./components/AdvancedAISystemDemo'));
 
 import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
@@ -107,13 +107,30 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'ai-demo',
+        path: 'simple-ai-demo',
         element: (
-          <LazyWrapper loadingText="Loading AI learning demo...">
-            <AILearningDemoLazy />
+          <LazyWrapper loadingText="Loading Advanced AI System demo...">
+            <AdvancedAISystemDemoLazy languageCode="de" />
           </LazyWrapper>
         ),
       },
+      {
+        path: 'ai-system-demo',
+        element: (
+          <LazyWrapper loadingText="Loading Advanced AI System demo...">
+            <AdvancedAISystemDemoLazy languageCode="de" />
+          </LazyWrapper>
+        ),
+      },
+      // TEMPORARILY DISABLED - AI DEMO NEEDS REFACTORING
+      // {
+      //   path: 'ai-demo',
+      //   element: (
+      //     <LazyWrapper loadingText="Loading AI learning demo...">
+      //       <AILearningDemoLazy />
+      //     </LazyWrapper>
+      //   ),
+      // },
       {
         path: 'sessions/:languageCode',
         element: <SessionSelectWrapper />,

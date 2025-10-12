@@ -128,6 +128,15 @@ npm run build
 npm run dev:stop
 ```
 
+### 🧪 **Development Mode Features**
+When running in development mode (`localhost` or GitHub Codespaces), additional features are available:
+- **🤖 Simple AI Demo** - Interactive AI learning demonstration
+- **🎨 Component Library** - Complete UI component showcase  
+- **⏳ Loading States** - Loading state demonstrations
+- **Debug Tools** - Advanced development utilities
+
+*Development features are automatically hidden in production builds for a clean user experience.*
+
 ### 📚 **Detailed Documentation**
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides

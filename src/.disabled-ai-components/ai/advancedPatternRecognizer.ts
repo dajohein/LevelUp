@@ -8,7 +8,7 @@ import {
   AnalyticsEventType,
   LearningPattern
 } from '../analytics/interfaces';
-// import { PatternRecognizer } from '../analytics/patternRecognizer';
+import { PatternRecognizer } from '../analytics/patternRecognizer';
 import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { logger } from '../logger';
 
@@ -43,13 +43,14 @@ interface AdvancedLearningPattern extends LearningPattern {
   personalityFactors: string[];
 }
 
-export class AdvancedPatternRecognizer {
+export class AdvancedPatternRecognizer extends PatternRecognizer {
   private motivationBaseline = new Map<string, number>();
-  private _enhancedStorage: any;
+  private learningRhythms = new Map<string, any>();
+  private skillTransferMap = new Map<string, any>();
 
   constructor(storage: EnhancedStorageService) {
-    this._enhancedStorage = storage;
-    // Initialize advanced pattern detection (simplified)
+    super(storage);
+    this.initializeAdvancedDetectors();
   }
 
   async analyzeAdvancedPatterns(
@@ -88,9 +89,6 @@ export class AdvancedPatternRecognizer {
 
       const crammingPattern = this.detectCrammingBehaviorPattern(recentEvents);
       if (crammingPattern) patterns.push(crammingPattern);
-
-      // Store patterns for future analysis
-      await this.persistPatternInsights(userId, patterns);
 
       return this.prioritizeAdvancedPatterns(patterns);
     } catch (error) {
@@ -455,89 +453,34 @@ export class AdvancedPatternRecognizer {
   }
 
   private detectSkillTransferPattern(events: AnalyticsEvent[]): AdvancedLearningPattern | null {
-    // Analyze if user is applying knowledge from one area to another
-    const wordAttempts = events.filter(e => e.type === AnalyticsEventType.WORD_ATTEMPT);
-    
-    if (wordAttempts.length < 10) return null;
-    
-    // Group by word difficulty/topic and look for cross-application
-    const successByType = new Map<string, number>();
-    const totalByType = new Map<string, number>();
-    
-    wordAttempts.forEach(event => {
-      const wordType = event.data?.wordType || 'general';
-      const isSuccess = event.data?.isCorrect || false;
-      
-      totalByType.set(wordType, (totalByType.get(wordType) || 0) + 1);
-      if (isSuccess) {
-        successByType.set(wordType, (successByType.get(wordType) || 0) + 1);
-      }
-    });
-    
-    // Detect if success in one area correlates with improvement in another
-    const improvements = Array.from(successByType.entries())
-      .map(([type, successes]) => ({
-        type,
-        rate: successes / (totalByType.get(type) || 1)
-      }))
-      .filter(item => item.rate > 0.7);
-    
-    if (improvements.length >= 2) {
-      return {
-        id: `skill_transfer_${Date.now()}`,
-        type: 'topic_affinity' as any, // Using compatible type for skill transfer
-        confidence: 0.8,
-        timeframe: {
-          start: Date.now() - (7 * 24 * 60 * 60 * 1000), // Last week
-          end: Date.now()
-        },
-        description: `User is successfully transferring skills between ${improvements.map(i => i.type).join(', ')}`,
-        recommendations: [
-          'Continue practicing across different word types',
-          'Try more challenging vocabulary that combines these skills'
-        ],
-        behavioralSignals: [{
-          signal: 'cross_domain_success',
-          strength: 0.8,
-          evidence: improvements.map(i => `${i.rate * 100}% success in ${i.type}`)
-        }],
-        interventions: {
-          immediate: ['Acknowledge skill transfer success'],
-          shortTerm: ['Introduce vocabulary that combines learned skills'],
-          longTerm: ['Build advanced skill integration exercises']
-        },
-        riskLevel: 'low',
-        personalityFactors: ['adaptive_learner', 'pattern_recognition', 'knowledge_integration']
-      };
-    }
-    
+    // Implementation for skill transfer detection
     return null;
   }
 
-  private async detectRetentionDecayPattern(_events: AnalyticsEvent[]): Promise<AdvancedLearningPattern | null> {
+  private async detectRetentionDecayPattern(events: AnalyticsEvent[]): Promise<AdvancedLearningPattern | null> {
     // Implementation for retention decay detection
     return null;
   }
 
-  private async detectLearningRhythmPattern(_events: AnalyticsEvent[], _userId: string): Promise<AdvancedLearningPattern | null> {
+  private async detectLearningRhythmPattern(events: AnalyticsEvent[], userId: string): Promise<AdvancedLearningPattern | null> {
     // Implementation for learning rhythm detection
     return null;
   }
 
-  private detectAttentionSpanPattern(_events: AnalyticsEvent[]): AdvancedLearningPattern | null {
+  private detectAttentionSpanPattern(events: AnalyticsEvent[]): AdvancedLearningPattern | null {
     // Implementation for attention span detection
     return null;
   }
 
-  private detectCrammingBehaviorPattern(_events: AnalyticsEvent[]): AdvancedLearningPattern | null {
+  private detectCrammingBehaviorPattern(events: AnalyticsEvent[]): AdvancedLearningPattern | null {
     // Implementation for cramming behavior detection
     return null;
   }
 
-  // Helper methods (commented out unused method)
-  // private initializeAdvancedDetectors(): void {
-  //   // Initialize advanced pattern detectors
-  // }
+  // Helper methods
+  private initializeAdvancedDetectors(): void {
+    // Initialize advanced pattern detectors
+  }
 
   private createTimeWindows(events: AnalyticsEvent[], windowSize: number): AnalyticsEvent[][] {
     const windows: AnalyticsEvent[][] = [];
@@ -582,151 +525,41 @@ export class AdvancedPatternRecognizer {
   }
 
   private groupEventsIntoSessions(events: AnalyticsEvent[]): any[] {
-    const sessions: any[] = [];
-    const SESSION_GAP_THRESHOLD = 30 * 60 * 1000; // 30 minutes
-    
-    let currentSession: AnalyticsEvent[] = [];
-    
-    for (let i = 0; i < events.length; i++) {
-      const event = events[i];
-      
-      if (currentSession.length === 0) {
-        currentSession.push(event);
-      } else {
-        const lastEvent = currentSession[currentSession.length - 1];
-        const timeDiff = event.timestamp - lastEvent.timestamp;
-        
-        if (timeDiff > SESSION_GAP_THRESHOLD) {
-          // New session detected
-          sessions.push({
-            events: [...currentSession],
-            duration: currentSession[currentSession.length - 1].timestamp - currentSession[0].timestamp,
-            eventCount: currentSession.length
-          });
-          currentSession = [event];
-        } else {
-          currentSession.push(event);
-        }
-      }
-    }
-    
-    // Add final session
-    if (currentSession.length > 0) {
-      sessions.push({
-        events: [...currentSession],
-        duration: currentSession[currentSession.length - 1].timestamp - currentSession[0].timestamp,
-        eventCount: currentSession.length
-      });
-    }
-    
-    return sessions;
+    // Implementation for grouping events into sessions
+    return [];
   }
 
   private calculateSessionGaps(sessions: any[]): number[] {
-    const gaps: number[] = [];
-    
-    for (let i = 1; i < sessions.length; i++) {
-      const prevSession = sessions[i - 1];
-      const currentSession = sessions[i];
-      
-      // Calculate gap between end of previous session and start of current session
-      const prevEnd = prevSession.events[prevSession.events.length - 1].timestamp;
-      const currentStart = currentSession.events[0].timestamp;
-      const gap = currentStart - prevEnd;
-      
-      gaps.push(gap);
-    }
-    
-    return gaps;
+    // Implementation for calculating gaps between sessions
+    return [];
   }
 
   private calculateMotivationScore(sessions: any[]): number {
-    if (sessions.length === 0) return 0.5;
-    
-    // Score based on multiple factors
-    let score = 0;
-    
-    // Factor 1: Session frequency (more frequent = higher motivation)
-    const avgGap = sessions.length > 1 ? 
-      sessions.slice(1).reduce((sum, session, i) => {
-        const prevEnd = sessions[i].events[sessions[i].events.length - 1].timestamp;
-        const currentStart = session.events[0].timestamp;
-        return sum + (currentStart - prevEnd);
-      }, 0) / (sessions.length - 1) : 
-      24 * 60 * 60 * 1000; // Default to 1 day
-    
-    const frequencyScore = Math.min(1, (24 * 60 * 60 * 1000) / avgGap); // Normalize to daily sessions = 1.0
-    score += frequencyScore * 0.4;
-    
-    // Factor 2: Session duration (longer sessions show engagement)
-    const avgDuration = sessions.reduce((sum, session) => sum + session.duration, 0) / sessions.length;
-    const durationScore = Math.min(1, avgDuration / (15 * 60 * 1000)); // 15 minutes = max score
-    score += durationScore * 0.3;
-    
-    // Factor 3: Session consistency (regular timing shows commitment)
-    const sessionTimes = sessions.map(s => new Date(s.events[0].timestamp).getHours());
-    const timeVariance = this.calculateVariance(sessionTimes);
-    const consistencyScore = Math.max(0, 1 - (timeVariance / 12)); // Lower variance = higher score
-    score += consistencyScore * 0.3;
-    
-    return Math.min(1, Math.max(0, score));
+    // Implementation for calculating motivation score
+    return 0.5;
   }
 
   private generateMomentumRecommendations(acceleration: number, consistency: number): string[] {
-    const recommendations: string[] = [];
-    
-    if (acceleration > 0.2) {
-      recommendations.push('Excellent momentum! Consider increasing difficulty slightly');
-      recommendations.push('Maintain current learning schedule');
-      
-      if (consistency > 0.8) {
-        recommendations.push('Your consistent practice is paying off - keep it up!');
-      } else {
-        recommendations.push('Set higher goals to match your progress');
-      }
-    } else if (acceleration > 0) {
-      recommendations.push('Good progress, but momentum could be improved');
-      
-      if (consistency < 0.5) {
-        recommendations.push('Try to establish a more regular practice schedule');
-      } else {
-        recommendations.push('Consider increasing practice intensity or frequency');
-      }
+    if (acceleration > 0) {
+      return [
+        'Excellent momentum! Consider increasing difficulty slightly',
+        'Maintain current learning schedule',
+        'Set higher goals to match your progress'
+      ];
     } else {
-      if (consistency < 0.3) {
-        recommendations.push('Take a short break to refresh motivation');
-        recommendations.push('Focus on establishing a regular practice routine first');
-      } else {
-        recommendations.push('Review easier content to build confidence');
-        recommendations.push('Consider adjusting learning schedule or environment');
-      }
+      return [
+        'Take a short break to refresh motivation',
+        'Review easier content to build confidence',
+        'Consider adjusting learning schedule or environment'
+      ];
     }
-    
-    return recommendations;
   }
 
   private generateMomentumInterventions(acceleration: number, riskLevel: string): AdvancedLearningPattern['interventions'] {
-    const isPositiveMomentum = acceleration > 0;
-    const isHighRisk = riskLevel === 'high';
-    
     return {
-      immediate: isPositiveMomentum 
-        ? ['Continue current approach', 'Acknowledge progress'] 
-        : isHighRisk 
-          ? ['Immediate motivational intervention needed', 'Reduce difficulty temporarily']
-          : ['Take a motivational break', 'Review recent successes'],
-      
-      shortTerm: isPositiveMomentum 
-        ? ['Gradually increase challenge', 'Introduce new learning strategies'] 
-        : isHighRisk 
-          ? ['Focus on confidence building', 'Implement regular check-ins']
-          : ['Focus on review and confidence building', 'Adjust learning schedule'],
-      
-      longTerm: isPositiveMomentum 
-        ? ['Set ambitious learning goals', 'Maintain momentum tracking'] 
-        : isHighRisk 
-          ? ['Comprehensive strategy reassessment', 'Consider external support']
-          : ['Reassess learning strategy and goals', 'Build sustainable habits']
+      immediate: acceleration > 0 ? ['Continue current approach'] : ['Take a motivational break'],
+      shortTerm: acceleration > 0 ? ['Gradually increase challenge'] : ['Focus on review and confidence building'],
+      longTerm: acceleration > 0 ? ['Set ambitious learning goals'] : ['Reassess learning strategy and goals']
     };
   }
 
@@ -761,24 +594,5 @@ export class AdvancedPatternRecognizer {
       const bScore = riskOrder[b.riskLevel] * b.confidence;
       return bScore - aScore;
     });
-  }
-
-  private async persistPatternInsights(userId: string, patterns: AdvancedLearningPattern[]): Promise<void> {
-    if (this._enhancedStorage && patterns.length > 0) {
-      try {
-        const insights = {
-          userId,
-          timestamp: Date.now(),
-          patterns: patterns.map(p => ({
-            type: p.type,
-            confidence: p.confidence,
-            riskLevel: p.riskLevel
-          }))
-        };
-        await this._enhancedStorage.saveAnalyticsData(`pattern_insights_${userId}`, insights);
-      } catch (error) {
-        console.warn('Failed to persist pattern insights:', error);
-      }
-    }
   }
 }

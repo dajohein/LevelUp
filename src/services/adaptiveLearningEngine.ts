@@ -1,46 +1,29 @@
 /**
- * AI-Driven Adaptive Learning Engine
+ * Simplified Adaptive Learning Engine
  * 
- * This service connects the AI Learning Coach with the learning engine to:
- * - Dynamically adjust difficulty based on cognitive load detection
- * - Switch to multiple-choice when user is struggling (challenge intervention)
- * - Increase difficulty when AI detects readiness for more challenge
- * - Optimize quiz mode selection based on real-time performance patterns
+ * Re-enabled version with simplified AI interfaces for gradual restoration
+ * This service connects simple AI insights with the learning engine to:
+ * - Dynamically adjust difficulty based on basic cognitive load detection
+ * - Switch to multiple-choice when user is struggling
+ * - Optimize quiz mode selection based on performance patterns
  */
 
 import { 
-  AILearningCoach, 
-  LearningMomentum, 
-  CognitiveLoad, 
-  MotivationProfile,
-  LearningPersonality,
+  simpleAILearningCoach,
   LearningCoachInsight 
-} from './ai/learningCoach';
+} from './simpleAIInterfaces';
 import { selectQuizMode as originalSelectQuizMode } from './spacedRepetitionService';
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 import { 
   AnalyticsEvent, 
   AnalyticsEventType, 
-  LearningRecommendation,
-  RealTimeMetrics 
+  LearningRecommendation
 } from './analytics/interfaces';
 import { enhancedStorage } from './storage/enhancedStorage';
 import { logger } from './logger';
 
-export interface AILearningContext {
-  userId: string;
-  languageCode: string;
-  sessionId: string;
-  sessionEvents: AnalyticsEvent[];
-  currentPerformance: {
-    accuracy: number;
-    responseTime: number;
-    consecutiveErrors: number;
-    consecutiveSuccess: number;
-  };
-}
-
+// Enhanced interfaces for advanced AI learning
 export interface AdaptiveLearningDecision {
   quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
   difficultyAdjustment: number; // -2 to +2 relative adjustment
@@ -58,468 +41,457 @@ export interface LearningEngineConfig {
   interventionThreshold: number; // 0-1, when to trigger interventions
   difficultyAdjustmentRate: number; // Maximum change per adjustment
   adaptationSensitivity: number; // 0-1, how quickly to adapt
-  challengeThreshold: number; // Accuracy threshold to increase difficulty
-  supportThreshold: number; // Accuracy threshold to provide support
 }
 
-export class AIAdaptiveLearningEngine {
-  private aiCoach: AILearningCoach;
-  private config: LearningEngineConfig;
-  private sessionCache = new Map<string, {
-    momentum: LearningMomentum;
-    cognitiveLoad: CognitiveLoad;
-    motivation: MotivationProfile;
-    personality: LearningPersonality;
-    lastUpdate: number;
-  }>();
+// Adaptive learning configuration
+interface AdaptiveLearningConfig {
+  cognitiveLoadThresholds: {
+    low: number;
+    moderate: number;
+    high: number;
+  };
+  interventionTriggers: {
+    strugglingErrorRate: number;
+    excellentAccuracyRate: number;
+    slowResponseTime: number;
+  };
+  difficultyAdjustment: {
+    minWords: number;
+    maxWords: number;
+    stepSize: number;
+  };
+}
 
-  constructor(
-    aiCoach: AILearningCoach,
-    config: Partial<LearningEngineConfig> = {}
-  ) {
-    this.aiCoach = aiCoach;
-    this.config = {
-      enableAIControl: true,
-      interventionThreshold: 0.7,
-      difficultyAdjustmentRate: 0.2,
-      adaptationSensitivity: 0.8,
-      challengeThreshold: 0.85, // 85%+ accuracy triggers challenge
-      supportThreshold: 0.6, // <60% accuracy triggers support
-      ...config
-    };
+const DEFAULT_CONFIG: AdaptiveLearningConfig = {
+  cognitiveLoadThresholds: {
+    low: 0.3,
+    moderate: 0.6,
+    high: 0.8
+  },
+  interventionTriggers: {
+    strugglingErrorRate: 0.4,
+    excellentAccuracyRate: 0.9,
+    slowResponseTime: 4000
+  },
+  difficultyAdjustment: {
+    minWords: 3,
+    maxWords: 10,
+    stepSize: 1
   }
+};
 
-  /**
-   * AI-enhanced quiz mode selection
-   * Overrides default spaced repetition logic when AI detects need for intervention
-   */
-  async selectOptimalQuizMode(
-    context: AILearningContext,
-    word: Word,
-    currentMastery: number,
-    sessionContext: 'introduction' | 'practice' | 'review'
-  ): Promise<AdaptiveLearningDecision> {
-    if (!this.config.enableAIControl) {
-      // Fallback to original logic
-      const quizMode = originalSelectQuizMode(currentMastery, sessionContext, word);
-      return {
-        quizMode,
-        difficultyAdjustment: 0,
-        reasoning: ['AI control disabled, using default spaced repetition logic'],
-        confidence: 1.0
-      };
-    }
-
-    try {
-      // Get or update AI analysis
-      const aiAnalysis = await this.getAIAnalysis(context);
+// Enhanced quiz mode selection with AI insights
+export async function selectQuizModeWithAI(
+  word: Word, 
+  progress: WordProgress, 
+  _languageCode: string, // Using underscore to indicate intentionally unused
+  sessionContext?: {
+    recentPerformance: any[];
+    currentStreak: number;
+    sessionDuration: number;
+  }
+): Promise<'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank'> {
+  
+  try {
+    // Get AI insights if session context available
+    if (sessionContext) {
+      const cognitiveLoad = await simpleAILearningCoach.detectCognitiveLoad(sessionContext.recentPerformance);
+      const momentum = await simpleAILearningCoach.analyzeLearningMomentum(sessionContext.recentPerformance);
       
-      // Determine if intervention is needed
-      const decision = await this.makeAdaptiveLearningDecision(
-        aiAnalysis,
-        word,
-        currentMastery,
-        sessionContext,
-        context.currentPerformance
-      );
-
-      logger.debug('AI adaptive learning decision', {
-        userId: context.userId,
+      logger.debug('AI-enhanced quiz mode selection', {
         wordId: word.id,
-        decision,
-        cognitiveLoad: aiAnalysis.cognitiveLoad.level,
-        momentum: aiAnalysis.momentum.direction
+        cognitiveLoad: cognitiveLoad.level,
+        momentum: momentum.trend,
+        sessionContext
       });
-
-      return decision;
-
-    } catch (error) {
-      logger.error('AI adaptive learning failed, falling back to default', error);
       
-      // Safe fallback
-      const quizMode = originalSelectQuizMode(currentMastery, sessionContext, word);
-      return {
-        quizMode,
-        difficultyAdjustment: 0,
-        reasoning: ['AI system error, using fallback logic'],
-        confidence: 0.5
-      };
-    }
-  }
-
-  /**
-   * Real-time difficulty adjustment based on performance patterns
-   */
-  async adjustDifficultyDynamically(
-    context: AILearningContext,
-    baseLevel: number
-  ): Promise<{
-    adjustedLevel: number;
-    reasoning: string[];
-    shouldIntervene: boolean;
-    intervention?: any;
-  }> {
-    const aiAnalysis = await this.getAIAnalysis(context);
-    const { cognitiveLoad, momentum, motivation } = aiAnalysis;
-
-    let adjustment = 0;
-    const reasoning: string[] = [];
-    let shouldIntervene = false;
-    let intervention;
-
-    // Cognitive load based adjustments
-    if (cognitiveLoad.level === 'overloaded') {
-      adjustment = -1;
-      reasoning.push('Cognitive overload detected - reducing difficulty');
-      shouldIntervene = true;
-      intervention = {
-        type: 'support',
-        message: 'Taking a moment to review easier content',
-        priority: 'high'
-      };
-    } else if (cognitiveLoad.level === 'low' && momentum.direction === 'improving') {
-      adjustment = +0.5;
-      reasoning.push('Low cognitive load with improving momentum - slight difficulty increase');
-    }
-
-    // Performance pattern adjustments
-    if (context.currentPerformance.accuracy > this.config.challengeThreshold) {
-      adjustment += 0.3;
-      reasoning.push(`High accuracy (${(context.currentPerformance.accuracy * 100).toFixed(1)}%) - increasing challenge`);
-    } else if (context.currentPerformance.accuracy < this.config.supportThreshold) {
-      adjustment -= 0.4;
-      reasoning.push(`Low accuracy (${(context.currentPerformance.accuracy * 100).toFixed(1)}%) - providing support`);
+      // AI-driven mode selection
+      if (cognitiveLoad.level === 'overload' || cognitiveLoad.level === 'high') {
+        logger.info('AI recommendation: Multiple choice (high cognitive load)', {
+          cognitiveLoad: cognitiveLoad.level,
+          indicators: cognitiveLoad.indicators
+        });
+        return 'multiple-choice';
+      }
       
-      if (context.currentPerformance.consecutiveErrors >= 3) {
-        shouldIntervene = true;
-        intervention = {
-          type: 'mode_switch',
-          message: 'Switching to multiple choice to build confidence',
-          priority: 'medium'
-        };
+      if (cognitiveLoad.level === 'low' && momentum.trend === 'increasing') {
+        logger.info('AI recommendation: Fill-in-blank (low load, good momentum)', {
+          cognitiveLoad: cognitiveLoad.level,
+          momentum: momentum.trend
+        });
+        return 'fill-in-the-blank';
       }
     }
+    
+    // Fallback to original spaced repetition logic
+    const mastery = progress.timesCorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect) * 100;
+    return originalSelectQuizMode(mastery, 'practice', word);
+    
+  } catch (error) {
+    logger.error('Error in AI-enhanced quiz mode selection, falling back to default', { error, wordId: word.id });
+    const mastery = progress.timesCorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect) * 100;
+    return originalSelectQuizMode(mastery, 'practice', word);
+  }
+}
 
-    // Motivation based adjustments
-    if (motivation.currentState === 'frustrated') {
-      adjustment -= 0.2;
-      reasoning.push('Frustration detected - reducing pressure');
-    } else if (motivation.currentState === 'motivated' && motivation.challengeSeekingBehavior > 0.7) {
-      adjustment += 0.2;
-      reasoning.push('High motivation and challenge-seeking - increasing difficulty');
+// Adaptive difficulty adjustment
+export async function adjustSessionDifficulty(
+  currentWords: Word[],
+  recentPerformance: any[],
+  languageCode: string,
+  config: AdaptiveLearningConfig = DEFAULT_CONFIG
+): Promise<{
+  recommendedWordCount: number;
+  difficultyAdjustment: 'increase' | 'decrease' | 'maintain';
+  reasoning: string[];
+  aiInsight?: LearningCoachInsight;
+}> {
+  
+  try {
+    // Analyze current performance
+    const errorRate = recentPerformance.filter(p => !p.correct).length / recentPerformance.length;
+    const avgResponseTime = recentPerformance.reduce((sum, p) => sum + (p.responseTime || 1000), 0) / recentPerformance.length;
+    
+    // Get AI insights
+    const cognitiveLoad = await simpleAILearningCoach.detectCognitiveLoad(recentPerformance);
+    const aiInsight = await simpleAILearningCoach.generateInsight({
+      recentResponses: recentPerformance,
+      currentWords,
+      languageCode
+    });
+    
+    let difficultyAdjustment: 'increase' | 'decrease' | 'maintain' = 'maintain';
+    let recommendedWordCount = currentWords.length;
+    let reasoning: string[] = [];
+    
+    // AI-driven difficulty adjustment
+    if (cognitiveLoad.level === 'overload') {
+      difficultyAdjustment = 'decrease';
+      recommendedWordCount = Math.max(config.difficultyAdjustment.minWords, currentWords.length - config.difficultyAdjustment.stepSize);
+      reasoning.push('AI detected cognitive overload', 'Reducing word count to maintain momentum');
+    } else if (cognitiveLoad.level === 'low' && errorRate < config.interventionTriggers.excellentAccuracyRate) {
+      difficultyAdjustment = 'increase';
+      recommendedWordCount = Math.min(config.difficultyAdjustment.maxWords, currentWords.length + config.difficultyAdjustment.stepSize);
+      reasoning.push('AI detected low cognitive load', 'High performance indicates readiness for more challenge');
+    } else {
+      reasoning.push('AI analysis suggests maintaining current difficulty', `Cognitive load: ${cognitiveLoad.level}`);
     }
-
-    // Clamp adjustment to configured limits
-    adjustment = Math.max(-this.config.difficultyAdjustmentRate, 
-                         Math.min(this.config.difficultyAdjustmentRate, adjustment));
-
-    const adjustedLevel = Math.max(0, Math.min(5, baseLevel + adjustment));
-
-    return {
-      adjustedLevel,
-      reasoning,
-      shouldIntervene,
-      intervention
+    
+    // Log AI-driven decision
+    logger.info('AI-driven difficulty adjustment', {
+      languageCode,
+      currentWordCount: currentWords.length,
+      recommendedWordCount,
+      difficultyAdjustment,
+      cognitiveLoad: cognitiveLoad.level,
+      errorRate,
+      avgResponseTime,
+      reasoning
+    });
+    
+    // Store analytics event
+    const analyticsEvent: AnalyticsEvent = {
+      id: `adaptive-${Date.now()}`,
+      type: AnalyticsEventType.SETTINGS_CHANGE,
+      timestamp: Date.now(),
+      sessionId: `session-${Date.now()}`,
+      data: {
+        feature: 'adaptive_difficulty',
+        from: currentWords.length,
+        to: recommendedWordCount,
+        adjustment: difficultyAdjustment,
+        cognitiveLoad: cognitiveLoad.level,
+        aiInsight: aiInsight.type,
+        reasoning
+      }
     };
-  }
-
-  /**
-   * Determine if quiz mode should be overridden for learning support
-   */
-  private async makeAdaptiveLearningDecision(
-    aiAnalysis: {
-      momentum: LearningMomentum;
-      cognitiveLoad: CognitiveLoad;
-      motivation: MotivationProfile;
-      personality: LearningPersonality;
-    },
-    word: Word,
-    currentMastery: number,
-    sessionContext: 'introduction' | 'practice' | 'review',
-    performance: AILearningContext['currentPerformance']
-  ): Promise<AdaptiveLearningDecision> {
-    const { cognitiveLoad, momentum, motivation, personality } = aiAnalysis;
     
-    // Get default quiz mode as baseline
-    const defaultMode = originalSelectQuizMode(currentMastery, sessionContext, word);
-    let selectedMode = defaultMode;
-    let difficultyAdjustment = 0;
-    const reasoning: string[] = [];
-    let intervention;
-
-    // CHALLENGE INTERVENTION: Switch to multiple choice when struggling
-    if (performance.consecutiveErrors >= 3 || performance.accuracy < 0.5) {
-      selectedMode = 'multiple-choice';
-      reasoning.push(`Consecutive errors (${performance.consecutiveErrors}) detected - switching to multiple choice for confidence building`);
-      intervention = {
-        type: 'support' as const,
-        message: 'Let\'s build confidence with recognition-based questions',
-        priority: 'high' as const
-      };
-    }
+    await enhancedStorage.saveAnalyticsEvents([analyticsEvent]);
     
-    // COGNITIVE OVERLOAD: Simplify when overwhelmed
-    else if (cognitiveLoad.level === 'overloaded') {
-      if (defaultMode === 'fill-in-the-blank' || defaultMode === 'open-answer') {
-        selectedMode = 'multiple-choice';
-        reasoning.push('Cognitive overload detected - simplifying to multiple choice');
-      }
-      difficultyAdjustment = -1;
-      intervention = {
-        type: 'support' as const,
-        message: 'Taking it easier to reduce cognitive load',
-        priority: 'medium' as const
-      };
-    }
-    
-    // CHALLENGE BOOST: Increase difficulty when performing well
-    else if (performance.accuracy > 0.85 && momentum.direction === 'improving') {
-      if (defaultMode === 'multiple-choice' && currentMastery > 60) {
-        selectedMode = 'open-answer';
-        reasoning.push('High performance with improving momentum - advancing to open answer');
-      } else if (defaultMode === 'letter-scramble' && currentMastery > 80) {
-        selectedMode = 'open-answer';
-        reasoning.push('Excellence detected - challenging with recall-based questions');
-      }
-      difficultyAdjustment = 0.5;
-      intervention = {
-        type: 'challenge' as const,
-        message: 'You\'re doing great! Ready for more challenge?',
-        priority: 'low' as const
-      };
-    }
-    
-    // MOTIVATION BOOST: Adapt to personality
-    else if (motivation.currentState === 'frustrated' && personality.challengePreference === 'gradual') {
-      if (defaultMode === 'open-answer' || defaultMode === 'fill-in-the-blank') {
-        selectedMode = 'letter-scramble';
-        reasoning.push('Frustration with gradual preference - using interactive mode');
-      }
-    }
-    
-    // ENGAGEMENT OPTIMIZATION: Match learning style
-    else if (personality.learningStyle === 'visual' && defaultMode === 'open-answer') {
-      selectedMode = 'multiple-choice';
-      reasoning.push('Visual learner preference - using recognition-based mode');
-    }
-
-    // Calculate confidence based on multiple factors
-    const confidence = this.calculateDecisionConfidence(
-      aiAnalysis,
-      performance,
-      selectedMode !== defaultMode
-    );
-
     return {
-      quizMode: selectedMode,
+      recommendedWordCount,
       difficultyAdjustment,
       reasoning,
-      confidence,
-      intervention
+      aiInsight
     };
-  }
-
-  /**
-   * Get or compute AI analysis with caching
-   */
-  private async getAIAnalysis(context: AILearningContext) {
-    const cacheKey = `${context.userId}_${context.sessionId}`;
-    const cached = this.sessionCache.get(cacheKey);
     
-    // Use cache if recent (< 30 seconds)
-    if (cached && Date.now() - cached.lastUpdate < 30000) {
-      return cached;
-    }
-
-    // Compute fresh analysis
-    const insights = await this.aiCoach.analyzeLearningBehavior(
-      context.userId,
-      context.languageCode,
-      context.sessionEvents
-    );
-
-    // Extract behavioral components (simplified for demo)
-    const momentum: LearningMomentum = {
-      velocity: context.currentPerformance.accuracy * 10,
-      acceleration: 0,
-      direction: context.currentPerformance.consecutiveSuccess > 2 ? 'improving' : 
-                 context.currentPerformance.consecutiveErrors > 2 ? 'declining' : 'plateauing',
-      confidence: 0.7,
-      sustainabilityScore: Math.min(1, context.currentPerformance.accuracy * 1.2)
+  } catch (error) {
+    logger.error('Error in adaptive difficulty adjustment', { error, languageCode });
+    
+    return {
+      recommendedWordCount: currentWords.length,
+      difficultyAdjustment: 'maintain',
+      reasoning: ['AI control disabled, using default spaced repetition logic'],
     };
-
-    const cognitiveLoad: CognitiveLoad = {
-      level: context.currentPerformance.responseTime > 15000 ? 'high' :
-             context.currentPerformance.responseTime > 30000 ? 'overloaded' :
-             context.currentPerformance.responseTime < 3000 ? 'low' : 'optimal',
-      overallLoad: Math.min(1, context.currentPerformance.responseTime / 20000),
-      attentionFatigue: context.sessionEvents.length > 50 ? 0.8 : 0.3,
-      indicators: [],
-      responseTimeVariance: 0.2,
-      errorPatterns: [],
-      recommendedAction: context.currentPerformance.accuracy > 0.8 ? 'challenge' :
-                        context.currentPerformance.accuracy < 0.5 ? 'simplify' : 'continue'
-    };
-
-    const motivation: MotivationProfile = {
-      currentLevel: Math.min(1, context.currentPerformance.accuracy * 1.5),
-      trend: context.currentPerformance.consecutiveSuccess > context.currentPerformance.consecutiveErrors ? 0.3 : -0.2,
-      intrinsicMotivation: 0.7,
-      extrinsicMotivation: 0.6,
-      challengeSeekingBehavior: context.currentPerformance.accuracy > 0.7 ? 0.8 : 0.4,
-      persistenceLevel: 0.7,
-      currentState: context.currentPerformance.consecutiveErrors > 3 ? 'frustrated' :
-                   context.currentPerformance.accuracy > 0.8 ? 'motivated' : 'neutral',
-      triggers: ['achievement', 'progress'],
-      motivationType: 'mastery'
-    };
-
-    const personality: LearningPersonality = {
-      learningStyle: 'multimodal',
-      processingSpeed: context.currentPerformance.responseTime < 5000 ? 'fast' : 
-                      context.currentPerformance.responseTime > 15000 ? 'deliberate' : 'moderate',
-      errorTolerance: context.currentPerformance.consecutiveErrors > 2 ? 'low' : 'moderate',
-      challengePreference: context.currentPerformance.accuracy > 0.8 ? 'steep' : 'gradual',
-      feedbackPreference: 'immediate',
-      sessionLengthPreference: 'medium'
-    };
-
-    const analysis = { momentum, cognitiveLoad, motivation, personality, lastUpdate: Date.now() };
-    this.sessionCache.set(cacheKey, analysis);
-    return analysis;
-  }
-
-  /**
-   * Calculate confidence in AI decision
-   */
-  private calculateDecisionConfidence(
-    aiAnalysis: any,
-    performance: AILearningContext['currentPerformance'],
-    isOverride: boolean
-  ): number {
-    let confidence = 0.7; // Base confidence
-
-    // Higher confidence for clear patterns
-    if (performance.consecutiveErrors >= 3) confidence += 0.2;
-    if (performance.accuracy > 0.9) confidence += 0.15;
-    if (performance.accuracy < 0.4) confidence += 0.25;
-
-    // Lower confidence for overrides without strong signals
-    if (isOverride && performance.accuracy > 0.6 && performance.accuracy < 0.8) {
-      confidence -= 0.2;
-    }
-
-    // Cognitive load clarity
-    if (aiAnalysis.cognitiveLoad.level === 'overloaded' || aiAnalysis.cognitiveLoad.level === 'low') {
-      confidence += 0.1;
-    }
-
-    return Math.max(0.3, Math.min(1.0, confidence));
-  }
-
-  /**
-   * Should the AI intervene in the current learning session?
-   */
-  async shouldIntervene(
-    context: AILearningContext
-  ): Promise<{
-    shouldIntervene: boolean;
-    intervention?: any;
-    priority: 'low' | 'medium' | 'high' | 'critical';
-  }> {
-    const aiAnalysis = await this.getAIAnalysis(context);
-    const { cognitiveLoad, motivation } = aiAnalysis;
-
-    // Critical interventions
-    if (cognitiveLoad.level === 'overloaded' || motivation.currentState === 'frustrated') {
-      return {
-        shouldIntervene: true,
-        intervention: {
-          type: 'break',
-          message: 'Time for a short break to recharge',
-          action: 'suggest_break'
-        },
-        priority: 'critical'
-      };
-    }
-
-    // High priority interventions
-    if (context.currentPerformance.consecutiveErrors >= 4) {
-      return {
-        shouldIntervene: true,
-        intervention: {
-          type: 'support',
-          message: 'Let\'s review some easier content',
-          action: 'reduce_difficulty'
-        },
-        priority: 'high'
-      };
-    }
-
-    // Medium priority suggestions
-    if (context.currentPerformance.accuracy > 0.9 && context.sessionEvents.length > 20) {
-      return {
-        shouldIntervene: true,
-        intervention: {
-          type: 'challenge',
-          message: 'You\'re mastering this! Ready for harder questions?',
-          action: 'increase_difficulty'
-        },
-        priority: 'medium'
-      };
-    }
-
-    return { shouldIntervene: false, priority: 'low' };
-  }
-
-  /**
-   * Get personalized learning recommendations
-   */
-  async getPersonalizedRecommendations(
-    context: AILearningContext
-  ): Promise<LearningRecommendation[]> {
-    const aiAnalysis = await this.getAIAnalysis(context);
-    const recommendations: LearningRecommendation[] = [];
-
-    // Performance-based recommendations
-    if (context.currentPerformance.accuracy < 0.6) {
-      recommendations.push({
-        type: 'difficulty_adjustment',
-        priority: 'high',
-        action: 'reduce_difficulty',
-        value: -1,
-        reasoning: ['Accuracy below 60% - reducing cognitive load'],
-        confidence: 0.8,
-        expectedImprovement: 0.2
-      });
-    }
-
-    if (aiAnalysis.cognitiveLoad.level === 'low' && context.currentPerformance.accuracy > 0.8) {
-      recommendations.push({
-        type: 'difficulty_adjustment',
-        priority: 'medium',
-        action: 'increase_difficulty',
-        value: 1,
-        reasoning: ['Low cognitive load with high accuracy - ready for more challenge'],
-        confidence: 0.75,
-        expectedImprovement: 0.15
-      });
-    }
-
-    return recommendations;
-  }
-
-  /**
-   * Clear session cache for testing or cleanup
-   */
-  clearCache(): void {
-    this.sessionCache.clear();
-  }
-
-  /**
-   * Update configuration
-   */
-  updateConfig(newConfig: Partial<LearningEngineConfig>): void {
-    this.config = { ...this.config, ...newConfig };
   }
 }
+
+// Real-time learning optimization
+export async function optimizeLearningSession(
+  sessionData: {
+    words: Word[];
+    performance: any[];
+    duration: number;
+    languageCode: string;
+    userId?: string;
+  }
+): Promise<LearningRecommendation[]> {
+  
+  const recommendations: LearningRecommendation[] = [];
+  
+  try {
+    // Get comprehensive AI analysis
+    const cognitiveLoad = await simpleAILearningCoach.detectCognitiveLoad(sessionData.performance);
+    const momentum = await simpleAILearningCoach.analyzeLearningMomentum(sessionData.performance);
+    const motivation = await simpleAILearningCoach.assessMotivation({
+      currentStreak: sessionData.performance.filter(p => p.correct).length,
+      sessionDuration: sessionData.duration
+    });
+    
+    // Generate AI-driven recommendations
+    if (cognitiveLoad.level === 'overload') {
+      recommendations.push({
+        type: 'break_suggestion',
+        priority: 'high',
+        action: 'Take a 2-3 minute break to improve retention',
+        value: { breakDuration: 3, reason: 'cognitive_overload' },
+        reasoning: cognitiveLoad.indicators,
+        confidence: cognitiveLoad.confidence,
+        expectedImprovement: 0.8
+      });
+    }
+    
+    if (momentum.trend === 'decreasing' && motivation.level < 0.4) {
+      recommendations.push({
+        type: 'review_words',
+        priority: 'medium',
+        action: 'Focus on words you know well to rebuild confidence',
+        value: { reviewMode: true, difficulty: 'easy' },
+        reasoning: ['Decreasing momentum detected', 'Low motivation level'],
+        confidence: 0.8,
+        expectedImprovement: 0.6
+      });
+    }
+    
+    if (cognitiveLoad.level === 'low' && momentum.trend === 'increasing') {
+      recommendations.push({
+        type: 'difficulty_adjustment',
+        priority: 'low',
+        action: 'Add more words or try harder modes',
+        value: { wordCount: sessionData.words.length + 2, difficulty: 'harder' },
+        reasoning: ['Low cognitive load', 'Increasing momentum'],
+        confidence: 0.9,
+        expectedImprovement: 0.7
+      });
+    }
+    
+    logger.info('Generated AI learning recommendations', {
+      languageCode: sessionData.languageCode,
+      recommendationCount: recommendations.length,
+      cognitiveLoad: cognitiveLoad.level,
+      momentum: momentum.trend,
+      motivation: motivation.level
+    });
+    
+  } catch (error) {
+    logger.error('Error generating learning recommendations', { error, sessionData });
+  }
+  
+  return recommendations;
+}
+
+/**
+ * Enhanced method that returns full AdaptiveLearningDecision instead of just quiz mode
+ */
+export async function selectOptimalQuizMode(
+  context: any,
+  word: Word,
+  mastery: number,
+  _sessionType: string // Underscore prefix to mark as intentionally unused
+): Promise<AdaptiveLearningDecision> {
+  
+  // Get basic quiz mode selection
+  const progress: WordProgress = {
+    wordId: word.id,
+    xp: Math.round(mastery * 10),
+    lastPracticed: new Date().toISOString(),
+    timesCorrect: 0,
+    timesIncorrect: 0
+  };
+  
+  const quizMode = await selectQuizModeWithAI(word, progress, 'de');
+  
+  // Analyze context for difficulty adjustment
+  let difficultyAdjustment = 0;
+  const reasoning: string[] = [];
+  let confidence = 0.8;
+  
+  if (context?.recentPerformance) {
+    const recentErrors = context.recentPerformance.filter((p: any) => !p.isCorrect).length;
+    const errorRate = recentErrors / Math.max(1, context.recentPerformance.length);
+    
+    if (errorRate > 0.6) {
+      difficultyAdjustment = -1;
+      reasoning.push('High error rate detected, reducing difficulty');
+      confidence = 0.9;
+    } else if (errorRate < 0.2 && mastery > 0.8) {
+      difficultyAdjustment = 1;
+      reasoning.push('Low error rate and high mastery, increasing difficulty');
+      confidence = 0.85;
+    }
+  }
+  
+  // Add intervention logic
+  let intervention: AdaptiveLearningDecision['intervention'];
+  if (context?.consecutiveErrors > 4) {
+    intervention = {
+      type: 'support',
+      message: 'You might benefit from reviewing easier content or taking a short break',
+      priority: 'high'
+    };
+    reasoning.push('Consecutive errors detected, suggesting intervention');
+  }
+  
+  reasoning.push(`Selected ${quizMode} based on word difficulty and user performance`);
+  
+  return {
+    quizMode,
+    difficultyAdjustment,
+    reasoning,
+    confidence,
+    intervention
+  };
+}
+
+/**
+ * Check if user needs intervention based on performance patterns
+ */
+export async function shouldIntervene(context: any): Promise<{
+  shouldIntervene: boolean;
+  intervention?: {
+    type: 'support' | 'challenge' | 'break' | 'mode_switch';
+    message: string;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+  };
+}> {
+  
+  // Check for intervention triggers
+  const consecutiveErrors = context?.performanceMetrics?.consecutiveErrors || 0;
+  const accuracy = context?.performanceMetrics?.accuracy || 1;
+  const sessionDuration = context?.sessionDuration || 0;
+  
+  // Support intervention for struggling users
+  if (consecutiveErrors >= 4 || accuracy < 0.4) {
+    return {
+      shouldIntervene: true,
+      intervention: {
+        type: 'support',
+        message: 'Consider reviewing easier content or taking a break to consolidate learning',
+        priority: 'high'
+      }
+    };
+  }
+  
+  // Break intervention for long sessions
+  if (sessionDuration > 45 * 60 * 1000) { // 45 minutes
+    return {
+      shouldIntervene: true,
+      intervention: {
+        type: 'break',
+        message: 'Great progress! Taking a break can help consolidate what you\'ve learned',
+        priority: 'medium'
+      }
+    };
+  }
+  
+  // Challenge intervention for high performers
+  if (consecutiveErrors === 0 && accuracy > 0.9) {
+    return {
+      shouldIntervene: true,
+      intervention: {
+        type: 'challenge',
+        message: 'You\'re doing excellent! Ready for more challenging content?',
+        priority: 'low'
+      }
+    };
+  }
+  
+  return { shouldIntervene: false };
+}
+
+/**
+ * Get personalized recommendations based on performance data
+ */
+export async function getPersonalizedRecommendations(context: any): Promise<LearningRecommendation[]> {
+  const recommendations: LearningRecommendation[] = [];
+  
+  const accuracy = context?.performanceMetrics?.accuracy || 0;
+  const responseTime = context?.performanceMetrics?.responseTime || 0;
+  const consecutiveErrors = context?.performanceMetrics?.consecutiveErrors || 0;
+  
+  // Performance-based recommendations
+  if (accuracy < 0.6) {
+    recommendations.push({
+      type: 'difficulty_adjustment',
+      action: 'Consider reviewing fundamentals or practicing with easier words',
+      priority: 'high',
+      value: { suggestedDifficulty: 'easier' },
+      reasoning: ['Low accuracy indicates need for easier content'],
+      confidence: 0.8,
+      expectedImprovement: 0.3
+    });
+  }
+  
+  if (responseTime > 5000) { // > 5 seconds
+    recommendations.push({
+      type: 'speed_training',
+      action: 'Practice quick recognition with flashcard mode',
+      priority: 'medium',
+      value: { suggestedMode: 'multiple-choice' },
+      reasoning: ['Slow response time indicates need for speed training'],
+      confidence: 0.7,
+      expectedImprovement: 0.2
+    });
+  }
+  
+  if (consecutiveErrors === 0 && accuracy > 0.85) {
+    recommendations.push({
+      type: 'challenge_increase',
+      action: 'Try more challenging vocabulary or advanced quiz modes',
+      priority: 'low',
+      value: { suggestedMode: 'open-answer' },
+      reasoning: ['High accuracy indicates readiness for increased challenge'],
+      confidence: 0.9,
+      expectedImprovement: 0.1
+    });
+  }
+  
+  // Learning pattern recommendations
+  if (context?.sessionWords?.length > 10) {
+    recommendations.push({
+      type: 'session_management',
+      action: 'Consider shorter, more frequent sessions for better retention',
+      priority: 'medium',
+      value: { suggestedSessionLength: 10 },
+      reasoning: ['Long sessions may lead to fatigue and reduced retention'],
+      confidence: 0.6,
+      expectedImprovement: 0.2
+    });
+  }
+  
+  return recommendations;
+}
+
+// Export main adaptive learning interface
+export const adaptiveLearningEngine = {
+  selectQuizModeWithAI,
+  selectOptimalQuizMode,
+  shouldIntervene,
+  getPersonalizedRecommendations,
+  adjustSessionDifficulty,
+  optimizeLearningSession,
+  
+  // Configuration
+  getConfig: () => DEFAULT_CONFIG,
+  updateConfig: (newConfig: Partial<AdaptiveLearningConfig>) => ({ ...DEFAULT_CONFIG, ...newConfig })
+};
