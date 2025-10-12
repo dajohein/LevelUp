@@ -9,6 +9,20 @@
       "description": "Alle aktuellen deutschen Wörter.",
       "icon": "📚",
       "difficulty": "beginner"
+    },
+    {
+      "id": "grammatik-grundlagen",
+      "name": "Grammatik Grundlagen",
+      "description": "Deutsche Grammatik Grundlagen - Artikel, Pronomen und Satzstrukturen",
+      "icon": "📝",
+      "difficulty": "beginner"
+    },
+    {
+      "id": "grammatik-herhaling",
+      "name": "Grammatik Herhaling",
+      "description": "Herhaling Duitse Grammatik - Vervoeging, Volgorde en Zinsbouw",
+      "icon": "🔄",
+      "difficulty": "intermediate"
     }
   ]
 }

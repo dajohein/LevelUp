@@ -4,6 +4,11 @@
 
 This directory contains comprehensive technical documentation for the LevelUp language learning platform.
 
+### 📖 **Content Creation Guides**
+- **[Language Module Guide](LANGUAGE_MODULE_GUIDE.md)** - Comprehensive guide for creating educational language modules
+
+### 🏗️ **Technical Architecture**
+
 ## 🎯 Current Implementation Status (October 2025)
 
 ### ✅ **Phase 2+ Complete**: AI Learning Coach & Advanced Analytics

@@ -1,0 +1,342 @@
+{
+  "id": "grammatik-herhaling",
+  "name": "Grammatik Herhaling",
+  "description": "Herhaling Duitse Grammatik - Vervoeging, Volgorde en Zinsbouw",
+  "icon": "🔄",
+  "difficulty": "intermediate",
+  "words": [
+    { 
+      "id": "1", 
+      "term": "ich lerne", 
+      "definition": "ik leer", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - stam + e",
+      "synonyms": ["ich studiere", "ich übe"]
+    },
+    { 
+      "id": "2", 
+      "term": "du lernst", 
+      "definition": "jij leert", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - stam + st",
+      "synonyms": ["du studierst", "du übst"]
+    },
+    { 
+      "id": "3", 
+      "term": "er lernt", 
+      "definition": "hij leert", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - stam + t",
+      "synonyms": ["er studiert", "er übt"]
+    },
+    { 
+      "id": "4", 
+      "term": "wir lernen", 
+      "definition": "wij leren", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - infinitief vorm",
+      "synonyms": ["wir studieren", "wir üben"]
+    },
+    { 
+      "id": "5", 
+      "term": "ihr lernt", 
+      "definition": "jullie leren", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - stam + t",
+      "synonyms": ["ihr studiert", "ihr übt"]
+    },
+    { 
+      "id": "6", 
+      "term": "sie lernen", 
+      "definition": "zij leren", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Regelmatige vervoeging - infinitief vorm",
+      "synonyms": ["sie studieren", "sie üben"]
+    },
+    { 
+      "id": "7", 
+      "term": "du fährst", 
+      "definition": "jij rijdt", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)",
+      "synonyms": ["du gehst", "du reist"]
+    },
+    { 
+      "id": "8", 
+      "term": "er fährt", 
+      "definition": "hij rijdt", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)",
+      "synonyms": ["er geht", "er reist"]
+    },
+    { 
+      "id": "9", 
+      "term": "du siehst", 
+      "definition": "jij ziet", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering e→ie bij 'sehen' (2e/3e persoon enkelvoud)",
+      "synonyms": ["du schaust", "du blickst"]
+    },
+    { 
+      "id": "10", 
+      "term": "er sieht", 
+      "definition": "hij ziet", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering e→ie bij 'sehen' (2e/3e persoon enkelvoud)",
+      "synonyms": ["er schaut", "er blickt"]
+    },
+    { 
+      "id": "11", 
+      "term": "du isst", 
+      "definition": "jij eet", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering e→i bij 'essen' (2e/3e persoon enkelvoud)",
+      "synonyms": ["du nimmst (zu dir)"]
+    },
+    { 
+      "id": "12", 
+      "term": "er isst", 
+      "definition": "hij eet", 
+      "direction": "definition-to-term", 
+      "category": "onregelmatige werkwoorden",
+      "context": "Klinkerverandering e→i bij 'essen' (2e/3e persoon enkelvoud)",
+      "synonyms": ["er nimmt (zu sich)", "er verzehrt"]
+    },
+    { 
+      "id": "13", 
+      "term": "der Lehrer", 
+      "definition": "de leraar", 
+      "direction": "definition-to-term", 
+      "category": "naamvallen",
+      "context": "Mannelijk zelfstandig naamwoord - naamvalverbuiging",
+      "synonyms": ["der Dozent", "der Professor"]
+    },
+    { 
+      "id": "14", 
+      "term": "die Lehrerin", 
+      "definition": "de lerares", 
+      "direction": "definition-to-term", 
+      "category": "naamvallen",
+      "context": "Vrouwelijk zelfstandig naamwoord - naamvalverbuiging",
+      "synonyms": ["die Dozentin", "die Professorin"]
+    },
+    { 
+      "id": "15", 
+      "term": "ich kann", 
+      "definition": "ik kan", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming",
+      "synonyms": ["ich vermag", "ich bin imstande"]
+    },
+    { 
+      "id": "16", 
+      "term": "du kannst", 
+      "definition": "jij kunt", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming",
+      "synonyms": ["du vermagst", "du bist imstande"]
+    },
+    { 
+      "id": "17", 
+      "term": "ich muss", 
+      "definition": "ik moet", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'müssen' - noodzaak of verplichting",
+      "synonyms": ["ich habe zu", "ich bin verpflichtet"]
+    },
+    { 
+      "id": "18", 
+      "term": "du musst", 
+      "definition": "jij moet", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'müssen' - noodzaak of verplichting",
+      "synonyms": ["du hast zu", "du bist verpflichtet"]
+    },
+    { 
+      "id": "19", 
+      "term": "in", 
+      "definition": "in (wisselvoorzetsel: datief=waar?, accusatief=waarheen?)", 
+      "direction": "definition-to-term", 
+      "category": "wisselvoorzetsels",
+      "context": "Wisselvoorzetsel: datief (waar?) vs accusatief (waarheen?)",
+      "synonyms": ["innerhalb"]
+    },
+    { 
+      "id": "20", 
+      "term": "auf", 
+      "definition": "op (wisselvoorzetsel: datief=waar?, accusatief=waarheen?)", 
+      "direction": "definition-to-term", 
+      "category": "wisselvoorzetsels",
+      "context": "Wisselvoorzetsel: datief (waar?) vs accusatief (waarheen?)",
+      "synonyms": ["oberhalb"]
+    },
+    { 
+      "id": "21", 
+      "term": "unter", 
+      "definition": "onder (wisselvoorzetsel: datief=waar?, accusatief=waarheen?)", 
+      "direction": "definition-to-term", 
+      "category": "wisselvoorzetsels",
+      "context": "Wisselvoorzetsel: datief (waar?) vs accusatief (waarheen?)",
+      "synonyms": ["unterhalb"]
+    },
+    { 
+      "id": "22", 
+      "term": "den Mann", 
+      "definition": "de man (accusatief)", 
+      "direction": "definition-to-term", 
+      "category": "naamvallen",
+      "context": "Accusatief vorm van 'der Mann' - wordt gebruikt als direct object in de zin",
+      "synonyms": ["den Kerl", "den Herr", "den Typ"]
+    },
+    { 
+      "id": "23", 
+      "term": "dem Mann", 
+      "definition": "aan de man (datief)", 
+      "direction": "definition-to-term", 
+      "category": "naamvallen",
+      "context": "Datief vorm van 'der Mann' - wordt gebruikt als indirect object of na bepaalde voorzetsels",
+      "synonyms": ["dem Kerl", "dem Herr", "dem Typ"]
+    },
+    { 
+      "id": "24", 
+      "term": "in der Schule", 
+      "definition": "op school (locatie)", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + datief",
+      "context": "Voorzetsel 'in' met datief toont statische locatie - je bent ergens aanwezig",
+      "synonyms": ["in der Stadt", "in der Küche", "in der Kirche"]
+    },
+    { 
+      "id": "25", 
+      "term": "in die Schule", 
+      "definition": "naar school (richting)", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + accusatief",
+      "context": "Voorzetsel 'in' met accusatief toont beweging naar een plaats toe",
+      "synonyms": ["in die Stadt", "in die Küche", "in die Kirche"]
+    },
+    { 
+      "id": "26", 
+      "term": "auf dem Tisch", 
+      "definition": "op de tafel (locatie)", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + datief",
+      "context": "Voorzetsel 'auf' met datief toont statische positie bovenop iets",
+      "synonyms": ["auf der Straße", "auf dem Stuhl", "auf dem Boden"]
+    },
+    { 
+      "id": "27", 
+      "term": "auf den Tisch", 
+      "definition": "op de tafel", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + accusatief",
+      "context": "Voorzetsel 'auf' met accusatief toont beweging naar de bovenkant van iets",
+      "synonyms": ["auf die Straße", "auf den Stuhl", "auf den Boden"]
+    },
+    { 
+      "id": "28", 
+      "term": "mit dem Auto", 
+      "definition": "met de auto", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + datief",
+      "context": "Voorzetsel 'mit' vereist altijd datief - middel of gezelschap",
+      "synonyms": ["mit dem Bus", "mit der Bahn", "mit dem Fahrrad"]
+    },
+    { 
+      "id": "29", 
+      "term": "für den Lehrer", 
+      "definition": "voor de leraar", 
+      "direction": "definition-to-term", 
+      "category": "voorzetsels + accusatief",
+      "context": "Voorzetsel 'für' vereist altijd accusatief - doel of begunstigde",
+      "synonyms": ["für die Schule", "für das Kind", "für den Freund"]
+    },
+    { 
+      "id": "30", 
+      "term": "wir können", 
+      "definition": "wij kunnen", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming",
+      "synonyms": ["wir vermögen", "wir sind imstande"]
+    },
+    { 
+      "id": "31", 
+      "term": "ihr könnt", 
+      "definition": "jullie kunnen", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming",
+      "synonyms": ["ihr vermögt", "ihr seid imstande"]
+    },
+    { 
+      "id": "32", 
+      "term": "sie können", 
+      "definition": "zij kunnen", 
+      "direction": "definition-to-term", 
+      "category": "modalwerkwoorden",
+      "context": "Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming",
+      "synonyms": ["sie vermögen", "sie sind imstande"]
+    },
+    { 
+      "id": "33", 
+      "term": "größer", 
+      "definition": "groter", 
+      "direction": "definition-to-term", 
+      "category": "vergrotende trap",
+      "context": "Vergrotende trap (comparatief) - vergelijking tussen twee dingen",
+      "synonyms": ["höher", "länger", "breiter"]
+    },
+    { 
+      "id": "34", 
+      "term": "am größten", 
+      "definition": "het grootst", 
+      "direction": "definition-to-term", 
+      "category": "overtreffende trap",
+      "context": "Overtreffende trap (superlatief) - het hoogste van allemaal",
+      "synonyms": ["am höchsten", "am längsten", "am breitesten"]
+    },
+    { 
+      "id": "35", 
+      "term": "besser", 
+      "definition": "beter", 
+      "direction": "definition-to-term", 
+      "category": "vergrotende trap",
+      "context": "Onregelmatige vergrotende trap van 'gut' - vergelijking tussen twee",
+      "synonyms": ["schöner", "lieber"]
+    },
+    { 
+      "id": "36", 
+      "term": "am besten", 
+      "definition": "het best", 
+      "direction": "definition-to-term", 
+      "category": "overtreffende trap",
+      "context": "Onregelmatige overtreffende trap van 'gut' - het beste van allemaal",
+      "synonyms": ["am schönsten", "am liebsten"]
+    },
+    { 
+      "id": "37", 
+      "term": "ich arbeite", 
+      "definition": "ik werk", 
+      "direction": "definition-to-term", 
+      "category": "regelmatige werkwoorden",
+      "context": "Werkwoord op -ten: stam + e + persoonsvorm (extra e voor uitspraak)",
+      "synonyms": ["ich tätige", "ich wirke"]
+    }
+  ]
+}

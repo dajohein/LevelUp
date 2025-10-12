@@ -1,0 +1,380 @@
+{
+  "id": "grammatik-grundlagen",
+  "name": "Grammatik Grundlagen",
+  "description": "Deutsche Grammatik Grundlagen - Artikel, Pronomen und Satzstrukturen",
+  "icon": "📝",
+  "difficulty": "beginner",
+  "words": [
+    { 
+      "id": "1", 
+      "term": "der Mann", 
+      "definition": "de man (alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "artikel",
+      "context": "der Mann (nom.) • den Mann (acc.) • dem Mann (dat.) • des Mannes (gen.)"
+    },
+    { 
+      "id": "2", 
+      "term": "die Frau", 
+      "definition": "de vrouw (alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "artikel",
+      "context": "die Frau (nom.) • die Frau (acc.) • der Frau (dat.) • der Frau (gen.)"
+    },
+    { 
+      "id": "3", 
+      "term": "das Kind", 
+      "definition": "het kind (alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "artikel",
+      "context": "das Kind (nom.) • das Kind (acc.) • dem Kind (dat.) • des Kindes (gen.)"
+    },
+    { 
+      "id": "4", 
+      "term": "die Kinder", 
+      "definition": "de kinderen (alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "artikel",
+      "context": "die Kinder (nom.) • die Kinder (acc.) • den Kindern (dat.) • der Kinder (gen.)"
+    },
+    { 
+      "id": "5", 
+      "term": "ein Mann", 
+      "definition": "een man (onbepaald lidwoord alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "onbepaald lidwoord",
+      "context": "ein Mann (nom.) • einen Mann (acc.) • einem Mann (dat.) • eines Mannes (gen.)"
+    },
+    { 
+      "id": "6", 
+      "term": "eine Frau", 
+      "definition": "een vrouw (onbepaald lidwoord alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "onbepaald lidwoord",
+      "context": "eine Frau (nom.) • eine Frau (acc.) • einer Frau (dat.) • einer Frau (gen.)"
+    },
+    { 
+      "id": "7", 
+      "term": "ein Kind", 
+      "definition": "een kind (onbepaald lidwoord alle naamvallen)", 
+      "direction": "definition-to-term", 
+      "category": "onbepaald lidwoord",
+      "context": "ein Kind (nom.) • ein Kind (acc.) • einem Kind (dat.) • eines Kindes (gen.)"
+    },
+    { 
+      "id": "8", 
+      "term": "ich bin", 
+      "definition": "ik ben", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "1e persoon enkelvoud - 'sein' is onregelmatig",
+      "synonyms": []
+    },
+    { 
+      "id": "9", 
+      "term": "du bist", 
+      "definition": "jij bent", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "2e persoon enkelvoud - let op unieke vorm 'bist'",
+      "synonyms": []
+    },
+    { 
+      "id": "10", 
+      "term": "er ist", 
+      "definition": "hij is", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'",
+      "synonyms": ["sie ist", "es ist"]
+    },
+    { 
+      "id": "11", 
+      "term": "ich habe", 
+      "definition": "ik heb", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "1e persoon enkelvoud - hulpwerkwoord voor perfectum",
+      "synonyms": []
+    },
+    { 
+      "id": "12", 
+      "term": "du hast", 
+      "definition": "jij hebt", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "2e persoon enkelvoud - let op verkorte vorm van 'haben'",
+      "synonyms": []
+    },
+    { 
+      "id": "13", 
+      "term": "er hat", 
+      "definition": "hij heeft", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'",
+      "synonyms": ["sie hat", "es hat"]
+    },
+    { 
+      "id": "14", 
+      "term": "mein Vater", 
+      "definition": "mijn vader", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "mein + mannelijk zelfstandig naamwoord (nominatief)",
+      "synonyms": ["mein Papa", "mein Dad"]
+    },
+    { 
+      "id": "15", 
+      "term": "meine Mutter", 
+      "definition": "mijn moeder", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "meine + vrouwelijk zelfstandig naamwoord (nominatief)",
+      "synonyms": ["meine Mama", "meine Mutti"]
+    },
+    { 
+      "id": "16", 
+      "term": "dein Haus", 
+      "definition": "jouw huis", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "dein + onzijdig zelfstandig naamwoord (nominatief)",
+      "synonyms": ["dein Zuhause", "dein Heim"]
+    },
+    { 
+      "id": "17", 
+      "term": "ihre Kinder", 
+      "definition": "haar kinderen", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "ihre + meervoud zelfstandig naamwoord (nominatief)",
+      "synonyms": ["ihre Freunde", "ihre Bücher", "ihre Eltern"]
+    },
+    { 
+      "id": "18", 
+      "term": "das Haus", 
+      "definition": "het huis", 
+      "direction": "definition-to-term", 
+      "category": "zelfstandig naamwoord",
+      "context": "das Haus • die Häuser • des Hauses • dem Haus",
+      "synonyms": ["das Gebäude", "das Zuhause"]
+    },
+    { 
+      "id": "19", 
+      "term": "die Schule", 
+      "definition": "de school", 
+      "direction": "definition-to-term", 
+      "category": "zelfstandig naamwoord",
+      "context": "die Schule • die Schulen • der Schule • den Schulen",
+      "synonyms": ["die Bildungseinrichtung", "das Gymnasium"]
+    },
+    { 
+      "id": "20", 
+      "term": "das Buch", 
+      "definition": "het boek", 
+      "direction": "definition-to-term", 
+      "category": "zelfstandig naamwoord",
+      "context": "das Buch • die Bücher • des Buches • dem Buch",
+      "synonyms": ["das Werk", "der Band"]
+    },
+    { 
+      "id": "21", 
+      "term": "der Tisch", 
+      "definition": "de tafel", 
+      "direction": "definition-to-term", 
+      "category": "zelfstandig naamwoord",
+      "context": "der Tisch • die Tische • des Tisches • dem Tisch",
+      "synonyms": ["die Tafel", "der Schreibtisch"]
+    },
+    { 
+      "id": "22", 
+      "term": "die Tür", 
+      "definition": "de deur", 
+      "direction": "definition-to-term", 
+      "category": "zelfstandig naamwoord",
+      "context": "die Tür • die Türen • der Tür • den Türen",
+      "synonyms": ["das Tor", "der Eingang"]
+    },
+    { 
+      "id": "23", 
+      "term": "wir sind", 
+      "definition": "wij zijn", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "1e persoon meervoud van 'sein'",
+      "synonyms": []
+    },
+    { 
+      "id": "24", 
+      "term": "ihr seid", 
+      "definition": "jullie zijn", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "2e persoon meervoud van 'sein'",
+      "synonyms": []
+    },
+    { 
+      "id": "25", 
+      "term": "sie sind", 
+      "definition": "zij zijn", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord zijn",
+      "context": "3e persoon meervoud van 'sein'",
+      "synonyms": []
+    },
+    { 
+      "id": "26", 
+      "term": "wir haben", 
+      "definition": "wij hebben", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "1e persoon meervoud van 'haben'",
+      "synonyms": []
+    },
+    { 
+      "id": "27", 
+      "term": "ihr habt", 
+      "definition": "jullie hebben", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "2e persoon meervoud van 'haben'",
+      "synonyms": []
+    },
+    { 
+      "id": "28", 
+      "term": "sie haben", 
+      "definition": "zij hebben", 
+      "direction": "definition-to-term", 
+      "category": "werkwoord hebben",
+      "context": "3e persoon meervoud van 'haben'",
+      "synonyms": []
+    },
+    { 
+      "id": "29", 
+      "term": "deine Schwester", 
+      "definition": "jouw zus", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "deine + vrouwelijk zelfstandig naamwoord",
+      "synonyms": ["deine Mutter", "deine Tochter"]
+    },
+    { 
+      "id": "30", 
+      "term": "sein Auto", 
+      "definition": "zijn auto", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "sein + onzijdig zelfstandig naamwoord",
+      "synonyms": ["sein Wagen", "sein Fahrzeug"]
+    },
+    { 
+      "id": "31", 
+      "term": "seine Frau", 
+      "definition": "zijn vrouw", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "seine + vrouwelijk zelfstandig naamwoord",
+      "synonyms": ["seine Ehefrau", "seine Gattin"]
+    },
+    { 
+      "id": "32", 
+      "term": "unsere Schule", 
+      "definition": "onze school", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "unsere + vrouwelijk zelfstandig naamwoord",
+      "synonyms": ["unsere Bildungseinrichtung"]
+    },
+    { 
+      "id": "33", 
+      "term": "unser Lehrer", 
+      "definition": "onze leraar", 
+      "direction": "definition-to-term", 
+      "category": "bezittelijk voornaamwoord",
+      "context": "unser + mannelijk zelfstandig naamwoord",
+      "synonyms": ["unser Dozent", "unser Pädagoge"]
+    },
+    { 
+      "id": "34", 
+      "term": "Wie heißt du?", 
+      "definition": "Hoe heet je?", 
+      "direction": "definition-to-term", 
+      "category": "vraagzinnen",
+      "context": "W-vraag met 'heißen' (heten) - informele vorm",
+      "synonyms": ["Wie heißen Sie?", "Wie ist dein Name?"]
+    },
+    { 
+      "id": "35", 
+      "term": "Wie alt bist du?", 
+      "definition": "Hoe oud ben je?", 
+      "direction": "definition-to-term", 
+      "category": "vraagzinnen",
+      "context": "W-vraag met 'alt' (oud) - informele vorm",
+      "synonyms": ["Wie alt sind Sie?", "Welches Alter hast du?"]
+    },
+    { 
+      "id": "36", 
+      "term": "Woher kommst du?", 
+      "definition": "Waar kom je vandaan?", 
+      "direction": "definition-to-term", 
+      "category": "vraagzinnen",
+      "context": "W-vraag met 'woher' (vanwaar) voor herkomst",
+      "synonyms": ["Woher kommen Sie?", "Aus welchem Land kommst du?"]
+    },
+    { 
+      "id": "37", 
+      "term": "Wo wohnst du?", 
+      "definition": "Waar woon je?", 
+      "direction": "definition-to-term", 
+      "category": "vraagzinnen",
+      "context": "W-vraag met 'wo' (waar) voor locatie",
+      "synonyms": ["Wo wohnen Sie?", "In welcher Stadt wohnst du?"]
+    },
+    { 
+      "id": "38", 
+      "term": "Was machst du?", 
+      "definition": "Wat doe je?", 
+      "direction": "definition-to-term", 
+      "category": "vraagzinnen",
+      "context": "W-vraag met 'was' (wat) voor activiteit/beroep",
+      "synonyms": ["Was machen Sie?", "Was ist dein Beruf?"]
+    },
+    { 
+      "id": "39", 
+      "term": "Ich heiße Anna", 
+      "definition": "Ik heet Anna", 
+      "direction": "definition-to-term", 
+      "category": "antwoorden",
+      "context": "Persoonlijke voorstelling met 'heißen'",
+      "synonyms": ["Mein Name ist Anna", "Ich bin Anna"]
+    },
+    { 
+      "id": "40", 
+      "term": "Ich bin zwanzig Jahre alt", 
+      "definition": "Ik ben twintig jaar oud", 
+      "direction": "definition-to-term", 
+      "category": "antwoorden",
+      "context": "Leeftijd aangeven met 'Jahre alt' constructie",
+      "synonyms": ["Ich bin 20 Jahre alt", "Ich bin zwanzig"]
+    },
+    { 
+      "id": "41", 
+      "term": "Ich komme aus Deutschland", 
+      "definition": "Ik kom uit Duitsland", 
+      "direction": "definition-to-term", 
+      "category": "antwoorden",
+      "context": "Herkomst aangeven met 'kommen aus' + land",
+      "synonyms": ["Ich komme aus Berlin", "Ich bin aus Deutschland"]
+    },
+    { 
+      "id": "42", 
+      "term": "Ich wohne in Berlin", 
+      "definition": "Ik woon in Berlijn", 
+      "direction": "definition-to-term", 
+      "category": "antwoorden",
+      "context": "Woonplaats aangeven met 'wohnen in' + stad",
+      "synonyms": ["Ich lebe in Berlin", "Ich wohne in Deutschland"]
+    }
+  ]
+}
