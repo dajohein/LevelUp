@@ -13,6 +13,10 @@ import {
 } from '../services/levelService';
 import { wordProgressStorage } from '../services/storageService';
 import { getAvailableLanguages } from '../services/moduleService';
+import { useUserLearningProfile } from '../hooks/useUserLearningProfile';
+import { LearningProfileDisplay } from './LearningProfileSection';
+import { testLearningProfileStorage } from '../utils/testLearningProfile';
+import { inspectStoredProfile } from '../utils/debugProfileInspector';
 
 // Animations
 const xpCountUp = keyframes`
@@ -290,12 +294,16 @@ interface UserProfileProps {
   compact?: boolean;
   showAchievements?: boolean;
   languageCode?: string;
+  userId?: string;
+  showLearningProfile?: boolean;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
   compact = false,
   showAchievements = true,
   languageCode,
+  userId = 'default-user', // TODO: Get from auth context when available
+  showLearningProfile = true,
 }) => {
   // Optimize Redux selector to only update when relevant data changes
   const gameData = useSelector((state: RootState) => ({
@@ -307,6 +315,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   );
   
   const [animateProgress, setAnimateProgress] = useState(false);
+
+  // Load user learning profile
+  const { 
+    profile: learningProfile, 
+    isLoading: profileLoading, 
+    error: profileError,
+    refreshProfile 
+  } = useUserLearningProfile(userId);
+
+  // Debug logging
+  useEffect(() => {
+    logger.debug('UserProfile learning profile state:', {
+      userId,
+      hasProfile: !!learningProfile,
+      isLoading: profileLoading,
+      error: profileError
+    });
+  }, [userId, learningProfile, profileLoading, profileError]);
 
   // Use provided languageCode, current language from store, or default to first available language
   const availableLanguages = getAvailableLanguages();
@@ -493,6 +519,124 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </AchievementBadge>
           ))}
         </AchievementsBadges>
+      )}
+
+      {/* Learning Profile Section - Only show if requested */}
+      {showLearningProfile && (
+        <>
+          {profileLoading && (
+            <div style={{ 
+              padding: '16px', 
+              marginTop: '16px', 
+              background: 'rgba(147, 51, 234, 0.1)', 
+              borderRadius: '12px',
+              textAlign: 'center',
+              color: '#9333ea'
+            }}>
+              🧠 Loading learning profile...
+            </div>
+          )}
+          
+          {profileError && (
+            <div style={{ 
+              padding: '16px', 
+              marginTop: '16px', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              borderRadius: '12px',
+              textAlign: 'center',
+              color: '#ef4444'
+            }}>
+              ⚠️ Error loading profile: {profileError}
+            </div>
+          )}
+          
+          {learningProfile && !profileLoading && (
+            <LearningProfileDisplay profile={learningProfile} compact={compact} />
+          )}
+          
+          {!learningProfile && !profileLoading && !profileError && (
+            <div style={{ 
+              padding: '16px', 
+              marginTop: '16px', 
+              background: 'rgba(147, 51, 234, 0.1)', 
+              borderRadius: '12px',
+              textAlign: 'center',
+              color: '#9333ea'
+            }}>
+              🤖 AI Learning Coach will create your profile after a few learning sessions
+              <br />
+              <small style={{ opacity: 0.7 }}>
+                Debug: userId="{userId}", profileLoading={String(profileLoading)}
+              </small>
+              <br />
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  style={{ 
+                    marginTop: '8px', 
+                    padding: '6px 12px', 
+                    background: '#9333ea', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    fontSize: '0.8rem'
+                  }}
+                  onClick={async () => {
+                    console.log('Manually creating fresh profile...');
+                    // Clear any existing incomplete profile first
+                    const storage = new (await import('../services/storage/userLearningProfile')).UserLearningProfileStorage();
+                    try {
+                      await storage.deleteProfile(userId);
+                      console.log('Old profile cleared');
+                    } catch (e) {
+                      console.log('No old profile to clear or error clearing:', e);
+                    }
+                    // Trigger refresh to create new profile
+                    refreshProfile();
+                  }}
+                >
+                  🔄 Create New
+                </button>
+                <button 
+                  style={{ 
+                    marginTop: '8px', 
+                    padding: '6px 12px', 
+                    background: '#ef4444', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    fontSize: '0.8rem'
+                  }}
+                  onClick={() => {
+                    console.log('Running storage test...');
+                    testLearningProfileStorage();
+                  }}
+                >
+                  🧪 Test
+                </button>
+                <button 
+                  style={{ 
+                    marginTop: '8px', 
+                    padding: '6px 12px', 
+                    background: '#3b82f6', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    fontSize: '0.8rem'
+                  }}
+                  onClick={() => {
+                    console.log('Inspecting stored profile...');
+                    inspectStoredProfile(userId);
+                  }}
+                >
+                  🔍 Inspect
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </ProfileContainer>
   );

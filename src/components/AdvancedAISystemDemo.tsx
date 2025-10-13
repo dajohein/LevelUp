@@ -8,11 +8,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useAILearning } from '../hooks/useAILearning';
+
 import { 
-  adaptiveLearningEngine
+  adaptiveLearningEngine,
+  userLearningProfileStorage
 } from '../services';
 import { BaseButton, Card } from './ui';
 import { theme } from '../styles/theme';
+
 
 const DemoContainer = styled.div`
   max-width: 1200px;
@@ -173,6 +176,11 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
       'Take a 5-minute break for better retention'
     ]
   });
+
+
+
+  // Learning Profile Hook - removed for simplicity
+  // Profile functionality now integrated directly into UserProfile component
 
   // AI Learning Hook
   const [aiLearningState] = useAILearning({
@@ -418,6 +426,8 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
               <RecommendationItem>Take a 5-minute break for better retention</RecommendationItem>
             </RecommendationList>
           </DemoSection>
+
+
         </DemoCard>
 
         {/* Technical Implementation */}
@@ -453,6 +463,8 @@ const patterns = await patternRecognizer
         </DemoCard>
       </DemoGrid>
 
+
+
       <DemoSection>
         <h3>🎯 Next Steps</h3>
         <p>This advanced AI system is now fully integrated and ready for production use. The system provides:</p>
@@ -460,6 +472,7 @@ const patterns = await patternRecognizer
           <li><strong>Real-time Adaptation:</strong> Dynamic difficulty adjustment and quiz mode selection</li>
           <li><strong>Predictive Analytics:</strong> Churn prevention and breakthrough timing predictions</li>
           <li><strong>Pattern Recognition:</strong> Skill transfer detection and learning optimization</li>
+          <li><strong>Learning Profile Storage:</strong> Persistent AI-driven personality and motivation tracking</li>
           <li><strong>Intelligent Coaching:</strong> Personalized interventions and recommendations</li>
         </ul>
       </DemoSection>

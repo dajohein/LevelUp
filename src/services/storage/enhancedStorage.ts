@@ -555,6 +555,123 @@ class EnhancedStorageService {
   }
 
   // ==========================================
+  // Generic Storage Methods for Learning Profiles
+  // ==========================================
+
+  /**
+   * Generic data storage method
+   */
+  async setData<T>(key: string, data: T, options?: StorageOptions): Promise<StorageResult<void>> {
+    const startTime = performance.now();
+    this.analytics.operations++;
+
+    try {
+      const result = await asyncStorage.set(key, data, options);
+
+      // Update analytics
+      if (result.success) {
+        this.analytics.hits++;
+      } else {
+        this.analytics.misses++;
+      }
+
+      const duration = performance.now() - startTime;
+      this.analytics.totalTime += duration;
+
+      if (this.config.debugMode) {
+        logger.debug(`💾 Generic data saved to ${key} (${Math.round(duration)}ms)`);
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(`Failed to save data to ${key}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Generic data loading method
+   */
+  async getData<T>(key: string): Promise<StorageResult<T>> {
+    const startTime = performance.now();
+    this.analytics.operations++;
+
+    try {
+      const result = await asyncStorage.get<T>(key);
+
+      // Update analytics
+      if (result.success && result.data) {
+        this.analytics.hits++;
+      } else {
+        this.analytics.misses++;
+      }
+
+      const duration = performance.now() - startTime;
+      this.analytics.totalTime += duration;
+
+      if (this.config.debugMode && result.success) {
+        logger.debug(`📖 Generic data loaded from ${key} (${Math.round(duration)}ms)`);
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(`Failed to load data from ${key}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Delete data method
+   */
+  async deleteData(key: string): Promise<StorageResult<void>> {
+    try {
+      // Delete from all storage tiers and cache
+      await asyncStorage.delete(key);
+      await smartCache.invalidate(key);
+
+      if (this.config.debugMode) {
+        logger.debug(`🗑️ Data deleted from ${key}`);
+      }
+
+      return { success: true };
+    } catch (error) {
+      logger.error(`Failed to delete data from ${key}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Get keys matching pattern
+   */
+  async getKeys(pattern: string): Promise<StorageResult<string[]>> {
+    try {
+      const result = await asyncStorage.getKeys(pattern);
+      return result;
+    } catch (error) {
+      logger.error(`Failed to get keys for pattern ${pattern}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Batch get operation
+   */
+  async getBatch<T>(keys: string[]): Promise<StorageResult<Record<string, T>>> {
+    try {
+      const result = await asyncStorage.getBatch<T>(keys);
+      return result;
+    } catch (error) {
+      logger.error('Failed to perform batch get operation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  // ==========================================
   // Analytics Storage Methods (Phase 2)
   // ==========================================
 

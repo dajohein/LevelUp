@@ -71,7 +71,7 @@ const DEFAULT_TIERED_CONFIG: TieredStorageConfig = {
     remote: {
       maxSize: 1024 * 1024 * 1024, // 1GB
       ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
-      enabled: false,              // Disabled until backend is ready
+      enabled: true,               // ✅ ENABLED - Vercel backend ready!
       priority: 1,
     },
     archive: {
@@ -444,15 +444,18 @@ export class TieredStorageService implements TieredStorageProvider {
       const stored = localStorage.getItem(key);
       if (!stored) return { success: false };
 
-      // Handle compressed data
-      if (stored.startsWith('{"algorithm":')) {
-        const compressed = JSON.parse(stored);
-        const data = await compressionService.decompress<T>(compressed);
+      const parsed = JSON.parse(stored);
+      
+      // Handle compressed data - check if it has the CompressedData structure
+      if (parsed && typeof parsed === 'object' && 
+          'data' in parsed && 'algorithm' in parsed && 
+          'originalSize' in parsed && 'compressedSize' in parsed) {
+        const data = await compressionService.decompress<T>(parsed);
         return { success: true, data, metadata: { compressed: true } };
       }
 
-      const data = JSON.parse(stored);
-      return { success: true, data };
+      // Return non-compressed data
+      return { success: true, data: parsed };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, error: errorMessage };
@@ -489,8 +492,10 @@ export class TieredStorageService implements TieredStorageProvider {
 
       let data: T;
       
-      // Check if data was compressed
-      if (options.compress !== false && this.config.enableCompression) {
+      // Check if data has the CompressedData structure
+      if (result.data && typeof result.data === 'object' && 
+          'data' in result.data && 'algorithm' in result.data && 
+          'originalSize' in result.data && 'compressedSize' in result.data) {
         data = await compressionService.decompress(result.data);
       } else {
         data = result.data;

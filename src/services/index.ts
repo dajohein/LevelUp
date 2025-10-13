@@ -8,6 +8,7 @@ export { enhancedWordService } from './enhancedWordService';
 export { enhancedStorage } from './storage/enhancedStorage';
 export { tieredStorage } from './storage/tieredStorage';
 export { indexedDBStorage } from './storage/indexedDB';
+export { userLearningProfileStorage } from './storage/userLearningProfile';
 
 // AI services
 export { aiEnhancedWordService } from './aiEnhancedWordService';

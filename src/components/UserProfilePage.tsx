@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import { FaUser, FaChartLine, FaTrophy, FaClock } from 'react-icons/fa';
+import { FaUser, FaChartLine, FaTrophy, FaClock, FaBrain, FaSync, FaTrash, FaCog } from 'react-icons/fa';
 import { Navigation } from './Navigation';
 import { getAvailableLanguages } from '../services/moduleService';
 import { getAllLanguageProgress } from '../services/progressService';
@@ -8,6 +8,9 @@ import { DirectionalStats } from './DirectionalStats';
 import { UserProfile as UserProfileWidget } from './UserProfile';
 import { StorageManagement } from './StorageManagement';
 import { DataTransfer } from './DataTransfer';
+import { useUserLearningProfile } from '../hooks/useUserLearningProfile';
+import { LearningProfileDisplay } from './LearningProfileSection';
+import { ConfirmationDialog } from './ui/ConfirmationDialog';
 
 // Debug helpers (only in development)
 const DebugSection = () => {
@@ -102,6 +105,123 @@ const LanguageProgressSection = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.lg};
+  }
+`;
+
+const AIInsightsSection = styled.div`
+  background: linear-gradient(
+    135deg,
+    rgba(147, 51, 234, 0.1) 0%,
+    rgba(59, 130, 246, 0.1) 100%
+  );
+  border-radius: 16px;
+  padding: ${props => props.theme.spacing.xl};
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(147, 51, 234, 0.1),
+      transparent
+    );
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.lg};
+  }
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${props => props.theme.spacing.lg};
+  
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    flex-direction: column;
+    gap: ${props => props.theme.spacing.md};
+    align-items: flex-start;
+  }
+`;
+
+const ControlButtons = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.sm};
+  
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    width: 100%;
+    justify-content: flex-end;
+  }
+`;
+
+const ControlButton = styled.button<{ variant?: 'refresh' | 'reset' }>`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  ${(props: { variant?: 'refresh' | 'reset'; disabled?: boolean }) => {
+    if (props.variant === 'reset') {
+      return `
+        background: rgba(220, 38, 38, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        
+        &:hover:not(:disabled) {
+          background: rgba(220, 38, 38, 0.2);
+          border-color: rgba(220, 38, 38, 0.3);
+        }
+      `;
+    } else {
+      return `
+        background: rgba(147, 51, 234, 0.1);
+        color: #9333ea;
+        border: 1px solid rgba(147, 51, 234, 0.2);
+        
+        &:hover:not(:disabled) {
+          background: rgba(147, 51, 234, 0.2);
+          border-color: rgba(147, 51, 234, 0.3);
+        }
+      `;
+    }
+  }}
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 `;
 
@@ -238,6 +358,20 @@ const ActivityIndicator = styled.div<{ active: boolean }>`
 export const UserProfilePage: React.FC = () => {
   const languages = getAvailableLanguages();
   const progressData = getAllLanguageProgress();
+  
+  // State for confirmation dialog
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  
+  // Get learning profile for AI insights section
+  const { 
+    profile: learningProfile, 
+    isLoading: profileLoading, 
+    error: profileError,
+    refreshProfile,
+    resetProfile,
+    isRefreshing,
+    isResetting
+  } = useUserLearningProfile('default-user'); // TODO: Get from auth context when available
 
   const formatLastPracticed = (lastPracticed?: string) => {
     if (!lastPracticed) return 'Never';
@@ -283,6 +417,24 @@ export const UserProfilePage: React.FC = () => {
   const overallProgress =
     totalStats.totalWords > 0 ? (totalStats.practicedWords / totalStats.totalWords) * 100 : 0;
 
+  // Handler functions for profile controls
+  const handleRefreshProfile = async () => {
+    try {
+      await refreshProfile();
+    } catch (error) {
+      console.error('Failed to refresh profile:', error);
+    }
+  };
+
+  const handleResetProfile = async () => {
+    try {
+      await resetProfile();
+      setShowResetDialog(false);
+    } catch (error) {
+      console.error('Failed to reset profile:', error);
+    }
+  };
+
   return (
     <Container>
       <Navigation />
@@ -302,7 +454,9 @@ export const UserProfilePage: React.FC = () => {
         <ProfileGrid>
           {/* Overall User Profile Widget - Show stats for the language with most progress */}
           <UserProfileWidget 
-            compact={false} 
+            compact={false}
+            userId="default-user" // TODO: Get from auth context when available
+            showLearningProfile={false} // Don't show learning profile here, we'll have a dedicated section
             languageCode={
               // Find the language with the most progress, or default to first available
               Object.entries(progressData).length > 0 
@@ -443,11 +597,100 @@ export const UserProfilePage: React.FC = () => {
             </LanguageGrid>
           </LanguageProgressSection>
 
+          {/* AI Learning Insights Section */}
+          <AIInsightsSection>
+            <SectionHeader>
+              <SectionTitle>
+                <FaBrain />
+                AI Learning Insights
+              </SectionTitle>
+              
+              <ControlButtons>
+                <ControlButton
+                  variant="refresh"
+                  onClick={handleRefreshProfile}
+                  disabled={isRefreshing || isResetting || profileLoading}
+                  title="Refresh your learning profile analysis"
+                >
+                  <FaSync style={{ 
+                    animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                  }} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </ControlButton>
+                
+                <ControlButton
+                  variant="reset"
+                  onClick={() => setShowResetDialog(true)}
+                  disabled={isRefreshing || isResetting || profileLoading}
+                  title="Reset your learning profile (this will clear all AI insights)"
+                >
+                  <FaTrash />
+                  Reset
+                </ControlButton>
+              </ControlButtons>
+            </SectionHeader>
+            
+            {profileLoading && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#9333ea'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🧠</div>
+                <div>Analyzing your learning patterns...</div>
+              </div>
+            )}
+            
+            {profileError && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#ef4444'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '16px' }}>⚠️</div>
+                <div>Error loading AI insights: {profileError}</div>
+              </div>
+            )}
+            
+            {learningProfile && !profileLoading && (
+              <LearningProfileDisplay profile={learningProfile} compact={false} />
+            )}
+            
+            {!learningProfile && !profileLoading && !profileError && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#9333ea'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🤖</div>
+                <div style={{ marginBottom: '16px' }}>
+                  The AI Learning Coach will create your personalized insights after completing a few learning sessions.
+                </div>
+                <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                  Your learning style, cognitive patterns, and motivation levels will be analyzed automatically.
+                </div>
+              </div>
+            )}
+          </AIInsightsSection>
+
           <DataTransfer />
 
           <StorageManagement />
         </ProfileGrid>
       </ContentWrapper>
+      
+      {/* Confirmation Dialog for Reset */}
+      <ConfirmationDialog
+        isOpen={showResetDialog}
+        onClose={() => setShowResetDialog(false)}
+        onConfirm={handleResetProfile}
+        title="Reset Learning Profile"
+        message="Are you sure you want to reset your AI learning profile? This will permanently delete all your personalized insights, learning patterns, and AI coaching data. This action cannot be undone."
+        confirmText={isResetting ? 'Resetting...' : 'Reset Profile'}
+        cancelText="Cancel"
+        destructive={true}
+        isLoading={isResetting}
+      />
     </Container>
   );
 };

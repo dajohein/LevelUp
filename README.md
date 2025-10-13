@@ -66,7 +66,9 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 - **Smart word grouping** (5-7 words) for better focus and retention
 - **Mixed quiz modes** within sessions for engaging variety
 - **Four learning phases**: Introduction → Learning → Consolidation → Mastery
-- **Personalized analytics** and learning recommendations
+- **AI Learning Coach** with real-time behavioral analytics and personalized coaching
+- **User Learning Profiles** automatically saved and synchronized across devices
+- **Personalized analytics** and ML-powered learning recommendations
 
 ### **Triple Quiz System**
 - **📝 Multiple Choice**: Visual recognition for beginners (up to 50 XP)

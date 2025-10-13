@@ -351,7 +351,69 @@ const testResults = await testAILearningCoach();
 - **Confidence Thresholds**: Display insights with >60% confidence
 - **Recommendation Limits**: Show maximum 3-5 actionable recommendations per session
 
-## 🔮 **Future Enhancements**
+## � **Learning Profile Storage System**
+
+### **User-Specific Profile Architecture**
+The AI Learning Coach automatically saves learning profiles using the tiered storage system:
+
+```typescript
+// User learning profile structure (USER-SPECIFIC, not language-specific)
+interface UserLearningProfile {
+  userId: string;
+  personality: LearningPersonality;     // Learning style, processing speed, etc.
+  momentum: LearningMomentum;           // Current learning velocity & direction
+  cognitiveLoad: CognitiveLoad;         // Mental strain assessment
+  motivation: MotivationProfile;        // Intrinsic/extrinsic motivation
+  languageProfiles: {                   // Language-specific insights
+    [languageCode: string]: {
+      proficiencyLevel: number;
+      strengthAreas: string[];
+      improvementAreas: string[];
+      insights: LearningCoachInsight[];
+    };
+  };
+  globalPatterns: {                     // Cross-language patterns
+    optimalTimeOfDay: string[];
+    peakPerformanceDuration: number;
+    preferredSessionLength: number;
+    learningStyle: 'visual' | 'auditory' | 'kinesthetic' | 'reading-writing' | 'multimodal';
+  };
+}
+```
+
+### **Storage Integration**
+```typescript
+// Automatic profile saving after each session
+import { useUserLearningProfile } from '../hooks/useUserLearningProfile';
+
+function UserProfile({ userId }) {
+  const { profile, isLoading } = useUserLearningProfile(userId);
+  
+  return (
+    <div>
+      {profile && <LearningProfileDisplay profile={profile} />}
+    </div>
+  );
+}
+```
+
+### **Key Features**
+- ✅ **Tiered Storage**: Memory → localStorage → IndexedDB → Remote backend
+- ✅ **User-Specific**: Single profile per user across all languages
+- ✅ **Language Isolation**: Language-specific insights maintain separation
+- ✅ **Automatic Updates**: Profile updates after each learning session
+- ✅ **Confidence Tracking**: Profile accuracy improves with more data
+- ✅ **Cross-Language Insights**: Global learning patterns detection
+
+### **UI Integration**
+The learning profile is seamlessly integrated into the existing UserProfile component:
+- **Learning Style Display**: Visual/Auditory/Kinesthetic preferences
+- **Processing Speed**: Quick/Steady/Careful learning pace  
+- **Motivation Level**: Current motivation with trend indicators
+- **Cognitive Load**: Real-time mental strain assessment
+- **Confidence Score**: Profile reliability indicator
+
+## �🔮 **Future Enhancements**
 
 ### **Planned Features**
 1. **Multi-language Learning Analysis**: Cross-language skill transfer detection

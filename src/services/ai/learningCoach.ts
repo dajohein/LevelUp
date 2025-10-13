@@ -14,6 +14,7 @@ import {
   PredictionContext
 } from '../analytics/interfaces';
 import { /* enhancedStorage, */ EnhancedStorageService } from '../storage/enhancedStorage';
+import { userLearningProfileStorage } from '../storage/userLearningProfile';
 import { PatternRecognizer } from '../analytics/patternRecognizer';
 import { PredictiveAnalytics } from '../analytics/predictiveAnalytics';
 import { logger } from '../logger';
@@ -145,7 +146,18 @@ export class AILearningCoach {
       const risks = await this.assessLearningRisks(allEvents, motivation);
       insights.push(...risks);
 
-      return this.prioritizeInsights(insights);
+      const finalInsights = this.prioritizeInsights(insights);
+
+      // Save learning profile to storage
+      await this.saveLearningProfile(userId, languageCode, {
+        personality,
+        momentum,
+        cognitiveLoad,
+        motivation,
+        insights: finalInsights
+      }, sessionEvents);
+
+      return finalInsights;
     } catch (error) {
       logger.error('Learning behavior analysis failed', error);
       return [];
@@ -989,5 +1001,163 @@ export class AILearningCoach {
   private generateLearningStrategy(personality: LearningPersonality, momentum: LearningMomentum): string {
     // Implementation for learning strategy generation
     return '';
+  }
+
+  /**
+   * Save comprehensive learning profile to storage
+   */
+  private async saveLearningProfile(
+    userId: string,
+    languageCode: string,
+    profileData: {
+      personality: LearningPersonality;
+      momentum: LearningMomentum;
+      cognitiveLoad: CognitiveLoad;
+      motivation: MotivationProfile;
+      insights: LearningCoachInsight[];
+    },
+    sessionEvents: AnalyticsEvent[]
+  ): Promise<void> {
+    try {
+      // Load existing profile or create new one
+      let profile = await userLearningProfileStorage.loadProfile(userId);
+      if (!profile) {
+        profile = await userLearningProfileStorage.createInitialProfile(userId);
+      }
+
+      // Update profile with new data
+      profile.personality = profileData.personality;
+      profile.momentum = profileData.momentum;
+      profile.cognitiveLoad = profileData.cognitiveLoad;
+      profile.motivation = profileData.motivation;
+
+      // Update language-specific insights
+      if (!profile.languageProfiles[languageCode]) {
+        profile.languageProfiles[languageCode] = {
+          proficiencyLevel: 0,
+          strengthAreas: [],
+          improvementAreas: [],
+          insights: [],
+          lastAssessment: new Date()
+        };
+      }
+      profile.languageProfiles[languageCode].insights = profileData.insights;
+      profile.languageProfiles[languageCode].lastAssessment = new Date();
+
+      // Update metadata
+      profile.metadata.lastUpdated = new Date();
+      profile.metadata.totalSessionsAnalyzed += 1;
+      profile.metadata.profileVersion += 1;
+
+      // Increase confidence as we get more data
+      if (profile.metadata.totalSessionsAnalyzed > 10) {
+        profile.metadata.confidenceScore = Math.min(0.9, profile.metadata.confidenceScore + 0.05);
+      }
+
+      // Save updated profile
+      await userLearningProfileStorage.saveProfile(userId, profile);
+      logger.debug(`💡 Learning profile saved for user ${userId} (${languageCode})`);
+    } catch (error) {
+      logger.error('Error saving learning profile:', error);
+    }
+  }
+
+  /**
+   * Calculate session metrics from analytics events
+   */
+  private calculateSessionMetrics(sessionEvents: AnalyticsEvent[]): {
+    sessionDuration: number;
+    wordsAttempted: number;
+    accuracy: number;
+    averageResponseTime: number;
+  } {
+    if (sessionEvents.length === 0) {
+      return {
+        sessionDuration: 0,
+        wordsAttempted: 0,
+        accuracy: 0,
+        averageResponseTime: 0
+      };
+    }
+
+    // Calculate session duration
+    const timestamps = sessionEvents.map(e => e.timestamp);
+    const sessionDuration = Math.max(...timestamps) - Math.min(...timestamps);
+
+    // Calculate words attempted
+    const wordsAttempted = sessionEvents.filter(e => 
+      e.type === AnalyticsEventType.WORD_ATTEMPT
+    ).length;
+
+    // Calculate accuracy
+    const successes = sessionEvents.filter(e => 
+      e.type === AnalyticsEventType.WORD_SUCCESS
+    ).length;
+    const failures = sessionEvents.filter(e => 
+      e.type === AnalyticsEventType.WORD_FAILURE
+    ).length;
+    const accuracy = (successes + failures) > 0 ? successes / (successes + failures) : 0;
+
+    // Calculate average response time
+    const responseTimes = sessionEvents
+      .filter(e => e.data?.responseTime)
+      .map(e => e.data.responseTime);
+    const averageResponseTime = responseTimes.length > 0 
+      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+      : 0;
+
+    return {
+      sessionDuration,
+      wordsAttempted,
+      accuracy,
+      averageResponseTime
+    };
+  }
+
+  /**
+   * Load existing learning profile from storage
+   */
+  async loadLearningProfile(userId: string, languageCode: string) {
+    try {
+      const profile = await userLearningProfileStorage.loadProfile(userId);
+      
+      if (profile) {
+        logger.debug(`🧠 Loaded learning profile for user ${userId}`);
+        return {
+          personality: profile.personality,
+          momentum: profile.momentum,
+          cognitiveLoad: profile.cognitiveLoad,
+          motivation: profile.motivation,
+          languageInsights: profile.languageProfiles[languageCode]?.insights || []
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Error loading learning profile:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get learning profile analytics (simplified for user-specific storage)
+   */
+  async getProfileAnalytics(userId: string) {
+    try {
+      const profile = await userLearningProfileStorage.loadProfile(userId);
+      if (!profile) return null;
+
+      // Create basic analytics from profile metadata
+      return {
+        totalSessions: profile.metadata.totalSessionsAnalyzed,
+        confidenceScore: profile.metadata.confidenceScore,
+        profileAge: Math.floor((Date.now() - profile.metadata.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+        lastUpdated: profile.metadata.lastUpdated,
+        languageCount: Object.keys(profile.languageProfiles).length
+      };
+    } catch (error) {
+      logger.error('Error loading profile analytics:', error);
+      return null;
+    }
   }
 }

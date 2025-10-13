@@ -83,11 +83,11 @@ export class CompressionService implements CompressionProvider {
           break;
         
         case 'gzip':
-          decompressed = await this.decompressGzip(compressed.data as Uint8Array);
+          decompressed = await this.decompressGzip(compressed.data);
           break;
         
         case 'lz4':
-          decompressed = await this.decompressLZ4(compressed.data as Uint8Array);
+          decompressed = await this.decompressLZ4(compressed.data);
           break;
         
         default:
@@ -190,10 +190,27 @@ export class CompressionService implements CompressionProvider {
   /**
    * Gzip decompression using browser APIs (simplified)
    */
-  private async decompressGzip(data: Uint8Array): Promise<string> {
+  private async decompressGzip(data: Uint8Array | any): Promise<string> {
+    // Convert data to Uint8Array if it's a plain object with numeric keys (from JSON deserialization)
+    let uint8Data: Uint8Array;
+    if (data instanceof Uint8Array) {
+      uint8Data = data;
+    } else if (typeof data === 'object' && data !== null) {
+      // Handle case where data was serialized/deserialized and became {0: 31, 1: 139, ...}
+      const keys = Object.keys(data);
+      if (keys.length > 0 && keys.every(key => /^\d+$/.test(key))) {
+        const values = keys.map(key => data[key]);
+        uint8Data = new Uint8Array(values);
+      } else {
+        throw new Error('Invalid compressed data format');
+      }
+    } else {
+      throw new Error('Invalid data type for decompression');
+    }
+
     // If DecompressionStream is not available, assume data is uncompressed
     if (typeof DecompressionStream === 'undefined') {
-      return this.textDecoder.decode(data);
+      return this.textDecoder.decode(uint8Data);
     }
 
     try {
@@ -201,7 +218,7 @@ export class CompressionService implements CompressionProvider {
       const decompressed = new Response(
         new ReadableStream({
           start(controller) {
-            controller.enqueue(data);
+            controller.enqueue(uint8Data);
             controller.close();
           }
         }).pipeThrough(stream)
@@ -211,7 +228,7 @@ export class CompressionService implements CompressionProvider {
       return text;
     } catch (error) {
       logger.debug('Gzip decompression failed, assuming uncompressed:', error);
-      return this.textDecoder.decode(data);
+      return this.textDecoder.decode(uint8Data);
     }
   }
 
@@ -235,8 +252,25 @@ export class CompressionService implements CompressionProvider {
   /**
    * Simple LZ4-style decompression
    */
-  private async decompressLZ4(data: Uint8Array): Promise<string> {
-    const decoded = this.textDecoder.decode(data);
+  private async decompressLZ4(data: Uint8Array | any): Promise<string> {
+    // Convert data to Uint8Array if it's a plain object with numeric keys (from JSON deserialization)
+    let uint8Data: Uint8Array;
+    if (data instanceof Uint8Array) {
+      uint8Data = data;
+    } else if (typeof data === 'object' && data !== null) {
+      // Handle case where data was serialized/deserialized and became {0: 31, 1: 139, ...}
+      const keys = Object.keys(data);
+      if (keys.length > 0 && keys.every(key => /^\d+$/.test(key))) {
+        const values = keys.map(key => data[key]);
+        uint8Data = new Uint8Array(values);
+      } else {
+        throw new Error('Invalid compressed data format');
+      }
+    } else {
+      throw new Error('Invalid data type for decompression');
+    }
+
+    const decoded = this.textDecoder.decode(uint8Data);
     const { dict, data: compressed } = JSON.parse(decoded);
     
     return this.decompressWithDictionary(compressed, dict);
