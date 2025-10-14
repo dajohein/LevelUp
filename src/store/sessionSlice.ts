@@ -100,15 +100,15 @@ export const sessionTypes: SessionType[] = [
     name: 'Streak Challenge',
     description: 'How far can you go without mistakes? High risk, high reward!',
     emoji: '🔥',
-    targetWords: -1, // unlimited until 3 mistakes
-    allowedMistakes: 3,
+    targetWords: -1, // unlimited until first mistake
+    allowedMistakes: 1, // End on first mistake - that's what makes it a streak!
     difficulty: 'advanced',
     requiredScore: 1000,
     scoreMultiplier: 2.0,
     specialRules: [
       'Exponential scoring: 2^streak',
       'No time pressure',
-      "3 strikes and you're out!",
+      'One mistake ends the streak!',
     ],
   },
   {
@@ -278,9 +278,9 @@ const sessionSlice = createSlice({
 
       // Session-specific scoring
       if (state.currentSession?.id === 'streak-challenge') {
-        // Capped exponential scoring for streak challenge (max multiplier of 8x at streak 10+)
+        // Capped exponential scoring for streak challenge (max multiplier of 8x at streak 20+)
         const streakMultiplier = Math.min(
-          Math.pow(1.5, Math.min(state.progress.currentStreak, 10)),
+          Math.pow(1.5, Math.min(state.progress.currentStreak, 20)),
           8
         );
         points = Math.floor(streakMultiplier * 50);

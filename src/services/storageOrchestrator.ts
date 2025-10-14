@@ -1,9 +1,9 @@
 /**
  * Centralized Storage Orchestrator
- * 
+ *
  * This service provides the SINGLE SOURCE OF TRUTH for all storage operations.
  * All saves must go through this centralized system to prevent duplicates and ensure consistency.
- * 
+ *
  * ARCHITECTURE PRINCIPLE: Only this service should call the actual storage APIs.
  * Components and hooks should dispatch actions or call this service, never save directly.
  */
@@ -31,35 +31,45 @@ class StorageOrchestrator {
   /**
    * CENTRALIZED SAVE - The only method that should trigger actual storage writes
    */
-  async saveWordProgress(languageCode: string, wordProgress: any, priority: 'immediate' | 'debounced' = 'debounced'): Promise<void> {
+  async saveWordProgress(
+    languageCode: string,
+    wordProgress: any,
+    priority: 'immediate' | 'debounced' = 'debounced'
+  ): Promise<void> {
     const operation: SaveOperation = {
       type: 'wordProgress',
       languageCode,
       data: wordProgress,
       timestamp: Date.now(),
-      priority
+      priority,
     };
 
     await this.queueSave(operation);
   }
 
-  async saveGameState(gameState: any, priority: 'immediate' | 'debounced' = 'debounced'): Promise<void> {
+  async saveGameState(
+    gameState: any,
+    priority: 'immediate' | 'debounced' = 'debounced'
+  ): Promise<void> {
     const operation: SaveOperation = {
       type: 'gameState',
       data: gameState,
       timestamp: Date.now(),
-      priority
+      priority,
     };
 
     await this.queueSave(operation);
   }
 
-  async saveSessionState(sessionState: any, priority: 'immediate' | 'debounced' = 'debounced'): Promise<void> {
+  async saveSessionState(
+    sessionState: any,
+    priority: 'immediate' | 'debounced' = 'debounced'
+  ): Promise<void> {
     const operation: SaveOperation = {
       type: 'sessionState',
       data: sessionState,
       timestamp: Date.now(),
-      priority
+      priority,
     };
 
     await this.queueSave(operation);
@@ -75,13 +85,13 @@ class StorageOrchestrator {
     const lastSaveTime = this.lastSave[key] || 0;
 
     // For immediate operations, skip if very recent save
-    if (operation.priority === 'immediate' && (now - lastSaveTime) < this.IMMEDIATE_DEBOUNCE_MS) {
+    if (operation.priority === 'immediate' && now - lastSaveTime < this.IMMEDIATE_DEBOUNCE_MS) {
       return; // Skip duplicate immediate save
     }
 
     // Remove any existing operations of the same type (latest wins)
-    this.saveQueue = this.saveQueue.filter(op => 
-      !(op.type === operation.type && op.languageCode === operation.languageCode)
+    this.saveQueue = this.saveQueue.filter(
+      op => !(op.type === operation.type && op.languageCode === operation.languageCode)
     );
 
     // Add new operation
@@ -127,9 +137,8 @@ class StorageOrchestrator {
       await Promise.all([
         this.executeWordProgressSaves(wordProgressOps),
         this.executeGameStateSaves(gameStateOps),
-        this.executeSessionStateSaves(sessionStateOps)
+        this.executeSessionStateSaves(sessionStateOps),
       ]);
-
     } catch (error) {
       logger.error('Storage orchestrator error:', error);
     } finally {
@@ -140,7 +149,7 @@ class StorageOrchestrator {
   private async executeWordProgressSaves(operations: SaveOperation[]): Promise<void> {
     // Group by language code and take latest for each
     const latestByLanguage = new Map<string, SaveOperation>();
-    
+
     operations.forEach(op => {
       if (op.languageCode) {
         latestByLanguage.set(op.languageCode, op);
@@ -152,13 +161,77 @@ class StorageOrchestrator {
       try {
         wordProgressStorage.save(languageCode, operation.data);
         this.lastSave[`wordProgress-${languageCode}`] = Date.now();
-        
+
         if (process.env.NODE_ENV === 'development') {
-          logger.debug(`✅ Centralized save: wordProgress for ${languageCode} (${Object.keys(operation.data).length} entries)`);
+          logger.debug(
+            `✅ Centralized save: wordProgress for ${languageCode} (${
+              Object.keys(operation.data).length
+            } entries)`
+          );
         }
       } catch (error) {
         logger.error(`Failed to save word progress for ${languageCode}:`, error);
       }
+    }
+  }
+
+  /**
+   * Compute and persist per-module progress summaries to help module views load quickly.
+   * This mirrors previous behavior where module summaries were stored separately.
+   */
+  private persistModuleSummaries(languageCode: string, wordProgress: Record<string, any>) {
+    try {
+      // Lazy-import to avoid circular dependency at module load time
+      const { getModulesForLanguage } = require('./moduleService');
+
+      const modules = getModulesForLanguage(languageCode) || [];
+      const moduleSummaries: Record<string, any> = {};
+
+      modules.forEach((m: any) => {
+        const moduleWords = m.words || [];
+        const totalWords = moduleWords.length;
+        const completed = moduleWords.reduce((acc: number, w: any) => {
+          const progress = wordProgress[w.id];
+          return acc + (progress && (progress.timesCorrect || progress.xp) ? 1 : 0);
+        }, 0);
+
+        const averageMastery = moduleWords.length
+          ? Math.round(
+              moduleWords.reduce((sum: number, w: any) => {
+                const p = wordProgress[w.id];
+                const xp = p && typeof p.xp === 'number' ? p.xp : 0;
+                return sum + xp;
+              }, 0) / Math.max(1, moduleWords.length)
+            )
+          : 0;
+
+        moduleSummaries[m.id] = {
+          moduleId: m.id,
+          languageCode,
+          completionPercentage: totalWords === 0 ? 0 : Math.round((completed / totalWords) * 100),
+          wordsLearned: completed,
+          totalWords,
+          lastAccessed: Date.now(),
+          averageMastery,
+        };
+      });
+
+      // Save to localStorage under a single key for module progress summaries
+      const key = 'levelup_module_progress';
+      const existingRaw = localStorage.getItem(key);
+      const existing = existingRaw ? JSON.parse(existingRaw) : {};
+      existing[languageCode] = moduleSummaries;
+      localStorage.setItem(key, JSON.stringify(existing));
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(
+          `💾 Persisted module summaries for ${languageCode} (${
+            Object.keys(moduleSummaries).length
+          } modules)`
+        );
+      }
+    } catch (err) {
+      logger.error('Failed to persist module summaries:', err);
     }
   }
 
@@ -167,11 +240,11 @@ class StorageOrchestrator {
 
     // Take latest game state operation
     const latest = operations[operations.length - 1];
-    
+
     try {
       gameStateStorage.save(latest.data);
       this.lastSave['gameState-global'] = Date.now();
-      
+
       if (process.env.NODE_ENV === 'development') {
         logger.debug('✅ Centralized save: gameState');
       }
@@ -185,11 +258,11 @@ class StorageOrchestrator {
 
     // Take latest session state operation
     const latest = operations[operations.length - 1];
-    
+
     try {
       sessionStateStorage.save(latest.data);
       this.lastSave['sessionState-global'] = Date.now();
-      
+
       if (process.env.NODE_ENV === 'development') {
         logger.debug('✅ Centralized save: sessionState');
       }
@@ -208,22 +281,28 @@ class StorageOrchestrator {
       await this.saveWordProgress(state.game.language, state.game.wordProgress, priority);
     }
 
-    await this.saveGameState({
-      language: state.game.language,
-      score: state.game.score,
-      streak: state.game.streak,
-      correctAnswers: state.game.correctAnswers,
-      totalAttempts: state.game.totalAttempts,
-      quizMode: state.game.quizMode,
-      wordProgress: {}, // Don't save mixed word progress
-    }, priority);
+    await this.saveGameState(
+      {
+        language: state.game.language,
+        score: state.game.score,
+        streak: state.game.streak,
+        correctAnswers: state.game.correctAnswers,
+        totalAttempts: state.game.totalAttempts,
+        quizMode: state.game.quizMode,
+        wordProgress: {}, // Don't save mixed word progress
+      },
+      priority
+    );
 
-    await this.saveSessionState({
-      language: state.session.currentLanguage,
-      currentSession: state.session.currentSession,
-      sessionProgress: state.session.progress,
-      isActive: state.session.isSessionActive,
-    }, priority);
+    await this.saveSessionState(
+      {
+        language: state.session.currentLanguage,
+        currentSession: state.session.currentSession,
+        sessionProgress: state.session.progress,
+        isActive: state.session.isSessionActive,
+      },
+      priority
+    );
   }
 
   /**
@@ -240,7 +319,7 @@ class StorageOrchestrator {
     return {
       queueLength: this.saveQueue.length,
       isProcessing: this.isProcessing,
-      lastSaves: { ...this.lastSave }
+      lastSaves: { ...this.lastSave },
     };
   }
 }
@@ -250,7 +329,11 @@ export const storageOrchestrator = new StorageOrchestrator();
 
 // Export convenience methods for common operations
 export const saveWordProgress = (languageCode: string, wordProgress: any, immediate = false) =>
-  storageOrchestrator.saveWordProgress(languageCode, wordProgress, immediate ? 'immediate' : 'debounced');
+  storageOrchestrator.saveWordProgress(
+    languageCode,
+    wordProgress,
+    immediate ? 'immediate' : 'debounced'
+  );
 
 export const saveCurrentGameState = (immediate = false) =>
   storageOrchestrator.saveCurrentState(immediate ? 'immediate' : 'debounced');

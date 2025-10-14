@@ -33,6 +33,7 @@ export interface EnhancedGameState {
 
 export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
   const { wordProgress } = useSelector((state: RootState) => state.game);
+  const { currentSession } = useSelector((state: RootState) => state.session);
 
   const [enhancedState, setEnhancedState] = useState<EnhancedGameState>({
     isUsingSpacedRepetition: false,
@@ -49,6 +50,15 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
   const initializeEnhancedSession = useCallback(async () => {
     if (!languageCode) {
       logger.debug('🔄 No language code provided');
+      setEnhancedState(prev => ({ ...prev, isUsingSpacedRepetition: false }));
+      return false;
+    }
+
+    // Disable enhanced learning for challenges that need full word pool access
+    if (currentSession?.id === 'streak-challenge' || 
+        currentSession?.id === 'boss-battle' || 
+        currentSession?.id === 'precision-mode') {
+      logger.debug(`🎯 ${currentSession.name} detected - using full word pool mode`);
       setEnhancedState(prev => ({ ...prev, isUsingSpacedRepetition: false }));
       return false;
     }
@@ -87,7 +97,7 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
       setEnhancedState(prev => ({ ...prev, isUsingSpacedRepetition: false }));
       return false;
     }
-  }, [languageCode, moduleId, wordProgress]);
+  }, [languageCode, moduleId, wordProgress, currentSession]);
 
   /**
    * Handle answer submission in the learning system

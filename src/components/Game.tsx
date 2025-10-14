@@ -192,11 +192,11 @@ const SessionProgressBar = styled.div`
     justify-content: space-around;
     gap: ${props => props.theme.spacing.xs};
     min-height: auto;
-    
+
     &:hover {
       transform: none;
     }
-    
+
     &::before {
       display: none;
     }
@@ -265,7 +265,7 @@ const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time
     flex: 1;
     border-width: 1px;
     background: rgba(255, 255, 255, 0.03);
-    
+
     &:hover {
       transform: none;
       background: rgba(255, 255, 255, 0.05);
@@ -350,7 +350,7 @@ const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'tim
     font-size: 0.9rem;
     margin-bottom: 1px;
     gap: 1px;
-    
+
     &::before {
       font-size: 0.6rem;
       margin-right: 1px;
@@ -378,7 +378,8 @@ const ProgressLabel = styled.div`
     letter-spacing: 0.2px;
     margin-top: 1px;
   }
-`;const Button = styled.button<{ disabled?: boolean }>`
+`;
+const Button = styled.button<{ disabled?: boolean }>`
   padding: 1rem 2rem;
   font-size: 1.2rem;
   border: none;
@@ -569,8 +570,14 @@ const FillInTheBlankContainer = styled.div`
   }
 
   @keyframes contextGlow {
-    0% { opacity: 0.3; transform: scaleX(0.8); }
-    100% { opacity: 0.7; transform: scaleX(1.2); }
+    0% {
+      opacity: 0.3;
+      transform: scaleX(0.8);
+    }
+    100% {
+      opacity: 0.7;
+      transform: scaleX(1.2);
+    }
   }
 `;
 
@@ -729,7 +736,7 @@ const AccuracyMeter = styled.div<{ accuracy: number }>`
   }
 
   &::after {
-    content: '${props => (props.accuracy || 0)}% Accuracy';
+    content: '${props => props.accuracy || 0}% Accuracy';
     font-weight: bold;
     color: ${props => (props.accuracy === 100 ? '#00b4db' : '#666')};
   }
@@ -791,9 +798,16 @@ const ContextMeter = styled.div<{ contextualWords: number }>`
   }
 
   @keyframes contextPulse {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    33% { transform: scale(1.05) rotate(1deg); }
-    66% { transform: scale(1.02) rotate(-1deg); }
+    0%,
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+    33% {
+      transform: scale(1.05) rotate(1deg);
+    }
+    66% {
+      transform: scale(1.02) rotate(-1deg);
+    }
   }
 `;
 
@@ -944,31 +958,35 @@ export const Game: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
-  
+
   // Optimize Redux selectors with memoization to prevent unnecessary re-renders
-  const gameState = useSelector((state: RootState) => ({
-    currentWord: state.game.currentWord,
-    currentOptions: state.game.currentOptions,
-    quizMode: state.game.quizMode,
-    wordProgress: state.game.wordProgress,
-    capitalizationFeedback: state.game.capitalizationFeedback,
-    language: state.game.language,
-  }), (left, right) => 
-    left.currentWord?.id === right.currentWord?.id &&
-    left.quizMode === right.quizMode &&
-    left.language === right.language &&
-    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  const gameState = useSelector(
+    (state: RootState) => ({
+      currentWord: state.game.currentWord,
+      currentOptions: state.game.currentOptions,
+      quizMode: state.game.quizMode,
+      wordProgress: state.game.wordProgress,
+      capitalizationFeedback: state.game.capitalizationFeedback,
+      language: state.game.language,
+    }),
+    (left, right) =>
+      left.currentWord?.id === right.currentWord?.id &&
+      left.quizMode === right.quizMode &&
+      left.language === right.language &&
+      Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
   );
-  
-  const sessionState = useSelector((state: RootState) => ({
-    currentSession: state.session.currentSession,
-    progress: state.session.progress,
-    isSessionActive: state.session.isSessionActive,
-    sessionStartTime: state.session.sessionStartTime,
-  }), (left, right) =>
-    left.currentSession?.id === right.currentSession?.id &&
-    left.isSessionActive === right.isSessionActive &&
-    left.progress.wordsCompleted === right.progress.wordsCompleted
+
+  const sessionState = useSelector(
+    (state: RootState) => ({
+      currentSession: state.session.currentSession,
+      progress: state.session.progress,
+      isSessionActive: state.session.isSessionActive,
+      sessionStartTime: state.session.sessionStartTime,
+    }),
+    (left, right) =>
+      left.currentSession?.id === right.currentSession?.id &&
+      left.isSessionActive === right.isSessionActive &&
+      left.progress.wordsCompleted === right.progress.wordsCompleted
   );
 
   const {
@@ -979,7 +997,7 @@ export const Game: React.FC = () => {
     capitalizationFeedback,
     language: gameLanguage,
   } = gameState;
-  
+
   const {
     currentSession,
     progress: sessionProgress,
@@ -1042,33 +1060,32 @@ export const Game: React.FC = () => {
   // Memoize expensive mastery calculation and learning card decision
   const wordLearningStatus = useMemo(() => {
     if (!currentWord) return { isTrulyNewWord: false, needsReinforcement: false };
-    
+
     const currentWordProgress = wordProgress[currentWord.id];
-    
+
     // Truly new word - never practiced before
     if (!currentWordProgress) {
       return { isTrulyNewWord: true, needsReinforcement: false };
     }
-    
+
     const currentMastery = calculateMasteryDecay(
       currentWordProgress.lastPracticed || '',
       currentWordProgress.xp || 0
     );
-    
+
     // Check if word is truly new (very low mastery)
     const isTrulyNewWord = currentMastery < 20;
-    
+
     // Check if word needs reinforcement due to mistakes
-    const needsReinforcement = (
+    const needsReinforcement =
       // Recent mistakes: more incorrect than correct answers
-      (currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect) ||
+      currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect ||
       // Low consecutive correct count (less than 3 in a row)
       ((currentWordProgress.directions?.['term-to-definition']?.consecutiveCorrect || 0) < 3 &&
-       (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
+        (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
       // Low mastery with some incorrect answers (needs practice)
-      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0)
-    );
-    
+      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0);
+
     return { isTrulyNewWord, needsReinforcement };
   }, [currentWord?.id, wordProgress]);
 
@@ -1082,15 +1099,16 @@ export const Game: React.FC = () => {
         !enhancedWordInfo.isReviewWord
       ) {
         // Show learning card for truly new words OR words that need reinforcement
-        const shouldShowCard = wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement;
+        const shouldShowCard =
+          wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement;
         setShowLearningCard(shouldShowCard);
-        
+
         // Debug logging for development
         if (process.env.NODE_ENV === 'development' && shouldShowCard) {
           console.log(`📚 Learning card shown for word "${currentWord.term}":`, {
             isNew: wordLearningStatus.isTrulyNewWord,
             needsReinforcement: wordLearningStatus.needsReinforcement,
-            wordProgress: wordProgress[currentWord.id]
+            wordProgress: wordProgress[currentWord.id],
           });
         }
       } else {
@@ -1226,7 +1244,14 @@ export const Game: React.FC = () => {
       }, 1000); // Single unified timer
     }
     return () => clearInterval(interval);
-  }, [isSessionActive, sessionStartTime, currentSession?.id, wordStartTime, isTransitioning, dispatch]);
+  }, [
+    isSessionActive,
+    sessionStartTime,
+    currentSession?.id,
+    wordStartTime,
+    isTransitioning,
+    dispatch,
+  ]);
 
   const handleSubmit = (answer: string) => {
     // Always use enhanced learning system
@@ -1259,7 +1284,9 @@ export const Game: React.FC = () => {
     setLastAnswerCorrect(isCorrect);
     setLastSelectedAnswer(answer);
     setFeedbackQuestionKey(
-      currentWordToUse ? `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}` : `unknown-${Date.now()}`
+      currentWordToUse
+        ? `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}`
+        : `unknown-${Date.now()}`
     ); // Track unique question instance
 
     // Play audio feedback
@@ -1290,11 +1317,33 @@ export const Game: React.FC = () => {
         // Update session counter if answer was correct and we're in a session
         if (isCorrect && isSessionActive && currentSession) {
           dispatch(incrementWordsCompleted());
-          if (currentSession.id === 'fill-in-the-blank') {
-            dispatch(addCorrectAnswer({ contextBonus: 25 }));
-          } else {
-            dispatch(addCorrectAnswer({}));
+          
+          // Calculate bonuses based on session type and performance
+          const bonuses = {
+            timeBonus: 0,
+            streakBonus: 0,
+            contextBonus: 0,
+            perfectRecallBonus: 0,
+          };
+
+          // Session-specific bonuses
+          if (currentSession.id === 'quick-dash') {
+            // Speed bonus up to 50 points per word (based on time remaining)
+            const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
+            bonuses.timeBonus = Math.min(50, Math.floor(timeRemaining / 6)); // Up to 50 points
+          } else if (currentSession.id === 'deep-dive') {
+            // Context bonus +30 points for deep learning
+            bonuses.contextBonus = 30;
+            // Perfect recall bonus if user has seen this word before and got it right quickly
+            if (wordTimer < 3) {
+              bonuses.perfectRecallBonus = 100;
+            }
+          } else if (currentSession.id === 'fill-in-the-blank') {
+            // Language comprehension bonus +25
+            bonuses.contextBonus = 25;
           }
+          
+          dispatch(addCorrectAnswer(bonuses));
         }
 
         setTimeout(
@@ -1305,9 +1354,13 @@ export const Game: React.FC = () => {
             // Note: feedback state is reset by useEffect when word changes
           },
           // Fill-in-the-blank needs more time to read context and feedback
-          quizModeToUse === 'fill-in-the-blank' 
-            ? (isCorrect ? 2500 : 4500) // Longer for fill-in-the-blank
-            : (isCorrect ? 1200 : 3000)  // Normal timing for other modes
+          quizModeToUse === 'fill-in-the-blank'
+            ? isCorrect
+              ? 2500
+              : 4500 // Longer for fill-in-the-blank
+            : isCorrect
+            ? 1200
+            : 3000 // Normal timing for other modes
         );
       }
     }
@@ -1323,7 +1376,7 @@ export const Game: React.FC = () => {
     // Use centralized business logic for determining correct answer
     const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
     const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
-      
+
     return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
   };
 
@@ -1348,12 +1401,12 @@ export const Game: React.FC = () => {
 
   /**
    * Business Logic: Quiz Mode Directionality
-   * 
+   *
    * UNIDIRECTIONAL MODES (always Dutch → Target Language):
    * - letter-scramble: User constructs target language word from letters
    * - open-answer: User types target language word from Dutch prompt
    * - fill-in-the-blank: User fills target language word in context
-   * 
+   *
    * BIDIRECTIONAL MODES (respects word.direction):
    * - multiple-choice: Recognition works in both directions
    */
@@ -1386,7 +1439,7 @@ export const Game: React.FC = () => {
         const sentence = word.context.sentence.toLowerCase();
         const termLower = word.term.toLowerCase();
         const definitionLower = word.definition.toLowerCase();
-        
+
         // Check if term appears in sentence
         if (sentence.includes(termLower)) {
           return word.term;
@@ -1395,20 +1448,22 @@ export const Game: React.FC = () => {
         if (sentence.includes(definitionLower)) {
           return word.definition;
         }
-        
+
         // Try without articles for term
         const termWithoutArticle = word.term.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
         if (sentence.includes(termWithoutArticle.toLowerCase())) {
           return word.term;
         }
-        
+
         // Try without articles for definition
-        const definitionWithoutArticle = word.definition.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
+        const definitionWithoutArticle = word.definition
+          .replace(/^(der|die|das|ein|eine)\s+/i, '')
+          .trim();
         if (sentence.includes(definitionWithoutArticle.toLowerCase())) {
           return word.definition;
         }
       }
-      
+
       // Fallback: return German word (term for German words, definition for Dutch words)
       return word.term; // Default fallback
     } else if (isUnidirectionalMode(quizMode)) {
@@ -1450,12 +1505,12 @@ export const Game: React.FC = () => {
   const contextForWord = useMemo(() => {
     const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    
+
     // Add null check to prevent error when word is not loaded yet
     if (!wordToUse) {
       return undefined;
     }
-    
+
     return getContextForDirection(wordToUse);
   }, [currentWord?.id, currentWord?.context, isUsingSpacedRepetition, getCurrentWordInfo]);
 
@@ -1538,9 +1593,7 @@ export const Game: React.FC = () => {
               onAnswer={correct => {
                 // Track feedback and play audio
                 setLastAnswerCorrect(correct);
-                setFeedbackQuestionKey(
-                  `${wordToUse.id}-${wordToUse.term}-${Date.now()}`
-                ); // Track unique question instance
+                setFeedbackQuestionKey(`${wordToUse.id}-${wordToUse.term}-${Date.now()}`); // Track unique question instance
                 if (correct) {
                   playCorrect();
                 } else {
@@ -1648,7 +1701,7 @@ export const Game: React.FC = () => {
             <StreakMultiplier streak={sessionProgress.currentStreak}>
               {sessionProgress.currentStreak > 0
                 ? `x${Math.min(
-                    Math.pow(1.5, Math.min(sessionProgress.currentStreak, 10)),
+                    Math.pow(1.5, Math.min(sessionProgress.currentStreak, 20)),
                     8
                   ).toFixed(1)}`
                 : 'x1.0'}
@@ -1780,7 +1833,9 @@ export const Game: React.FC = () => {
           feedbackWordInfo?.context
             ? typeof feedbackWordInfo.context === 'string'
               ? feedbackWordInfo.context
-              : (feedbackWordInfo.context as any)?.sentence || (feedbackWordInfo.context as any)?.translation || ''
+              : (feedbackWordInfo.context as any)?.sentence ||
+                (feedbackWordInfo.context as any)?.translation ||
+                ''
             : ''
         }
         capitalizationFeedback={capitalizationFeedback}

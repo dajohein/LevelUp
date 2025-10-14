@@ -279,10 +279,16 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   const handleNextSession = () => {
     setIsNavigating(true);
-    navigate(`/language/${languageCode}`, {
+    // Restart the same session (keep moduleId if present)
+    const sessionRoute = moduleId
+      ? `/sessions/${languageCode}/${moduleId}`
+      : `/sessions/${languageCode}`;
+
+    navigate(sessionRoute, {
       state: {
         fromSessionCompletion: true,
         shouldResetSession: true,
+        restartSameSession: true,
       },
     });
   };
