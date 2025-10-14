@@ -104,6 +104,21 @@ export const gameSlice = createSlice({
         state.lastWordId = word?.id;
       }
     },
+
+    setCurrentWord: (state, action: PayloadAction<{
+      word: any;
+      options: string[];
+      quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+    }>) => {
+      const { word, options, quizMode } = action.payload;
+      state.currentWord = word;
+      state.currentOptions = options;
+      state.quizMode = quizMode;
+      state.isCorrect = null;
+      state.lastAnswer = undefined;
+      state.capitalizationFeedback = undefined;
+      state.lastWordId = word?.id;
+    },
     checkAnswer: (state, action: PayloadAction<string>) => {
       if (!state.currentWord) return;
 
@@ -309,7 +324,7 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { nextWord, checkAnswer, setLanguage, setCurrentModule, resetGame, updateWordProgress } =
+export const { nextWord, setCurrentWord, checkAnswer, setLanguage, setCurrentModule, resetGame, updateWordProgress } =
   gameSlice.actions;
 
 export default gameSlice.reducer;

@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
-import { nextWord, setLanguage, setCurrentModule } from '../store/gameSlice';
+import { nextWord, setCurrentWord, setLanguage, setCurrentModule } from '../store/gameSlice';
 import {
   addTimeElapsed,
   completeSession,
@@ -17,6 +17,7 @@ import { useAudio } from '../features/audio/AudioContext';
 import { words } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
 import { useEnhancedGame } from '../hooks/useEnhancedGame';
+import { streakChallengeService } from '../services/streakChallengeService';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
@@ -1140,7 +1141,22 @@ export const Game: React.FC = () => {
       // Load the first word after setting the language
       // Use enhanced system by default
       if (!isUsingSpacedRepetition) {
-        dispatch(nextWord());
+        // Initialize streak challenge service if this is a streak challenge
+        if (currentSession?.id === 'streak-challenge') {
+          streakChallengeService.initializeStreak(languageCode, wordProgress);
+          // Get first streak word instead of random word
+          const streakWord = streakChallengeService.getNextStreakWord(0, wordProgress);
+          if (streakWord.word) {
+            // Manually set the word instead of using nextWord()
+            dispatch(setCurrentWord({
+              word: streakWord.word,
+              options: streakWord.options,
+              quizMode: streakWord.quizMode,
+            }));
+          }
+        } else {
+          dispatch(nextWord());
+        }
       }
     }
   }, [dispatch, languageCode, moduleId]); // Removed isUsingSpacedRepetition to prevent infinite loops
@@ -1367,7 +1383,20 @@ export const Game: React.FC = () => {
         setWordStartTime(Date.now());
         // Standard word progression - let Redux/game logic handle next word
         if (!isUsingSpacedRepetition) {
-          dispatch(nextWord());
+          // Use streak challenge service for streak challenges
+          if (currentSession?.id === 'streak-challenge') {
+            const currentStreak = sessionProgress.currentStreak;
+            const streakWord = streakChallengeService.getNextStreakWord(currentStreak, wordProgress);
+            if (streakWord.word) {
+              dispatch(setCurrentWord({
+                word: streakWord.word,
+                options: streakWord.options,
+                quizMode: streakWord.quizMode,
+              }));
+            }
+          } else {
+            dispatch(nextWord());
+          }
         }
         // Note: feedback state is reset by useEffect when word changes
       },
@@ -1653,7 +1682,21 @@ export const Game: React.FC = () => {
                     setIsTransitioning(false);
                     setWordTimer(0);
                     setWordStartTime(Date.now());
-                    dispatch(nextWord());
+                    
+                    // Use streak challenge service for streak challenges
+                    if (currentSession?.id === 'streak-challenge') {
+                      const currentStreak = sessionProgress.currentStreak;
+                      const streakWord = streakChallengeService.getNextStreakWord(currentStreak, wordProgress);
+                      if (streakWord.word) {
+                        dispatch(setCurrentWord({
+                          word: streakWord.word,
+                          options: streakWord.options,
+                          quizMode: streakWord.quizMode,
+                        }));
+                      }
+                    } else {
+                      dispatch(nextWord());
+                    }
                   }, 2000);
                 }
               }}
@@ -1848,7 +1891,22 @@ export const Game: React.FC = () => {
         <SkipButtonContainer>
           <Button
             onClick={() => {
-              dispatch(nextWord());
+              // Use streak challenge service for streak challenges
+              if (currentSession?.id === 'streak-challenge' && !isUsingSpacedRepetition) {
+                // For streak challenges, skipping should reset the streak
+                streakChallengeService.resetStreak();
+                const streakWord = streakChallengeService.getNextStreakWord(0, wordProgress);
+                if (streakWord.word) {
+                  dispatch(setCurrentWord({
+                    word: streakWord.word,
+                    options: streakWord.options,
+                    quizMode: streakWord.quizMode,
+                  }));
+                }
+              } else {
+                dispatch(nextWord());
+              }
+              
               // Increment words completed in session if session is active
               if (isSessionActive && currentSession) {
                 dispatch(incrementWordsCompleted());
