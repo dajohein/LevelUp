@@ -37,25 +37,73 @@ export class GameModeHandler {
    */
   getQuizQuestion(word: any, quizMode: string): string {
     if (this.isUnidirectionalMode(quizMode)) {
-      // For unidirectional modes, always show Dutch as the question
-      return word?.dutch || word?.term || '';
+      // Unidirectional modes: Show the source language as the question
+      // Use word direction to determine which field contains the source language
+      if (word.direction === 'term-to-definition') {
+        // term=Dutch (source), definition=German (target): show Dutch (term)
+        return word.term;
+      } else {
+        // definition-to-term (default): definition=Dutch (source), term=German (target): show Dutch (definition)
+        return word.definition;
+      }
+    } else {
+      // Bidirectional modes follow word direction
+      return this.getQuestionWord(word);
     }
-    
-    // For bidirectional modes, follow word direction
-    return this.getQuestionWord(word);
   }
 
   /**
    * Get the answer text based on quiz mode and word direction
    */
   getQuizAnswer(word: any, quizMode: string): string {
-    if (this.isUnidirectionalMode(quizMode)) {
-      // For unidirectional modes, answer is always the target language
-      return word?.term || '';
+    if (quizMode === 'fill-in-the-blank') {
+      // Fill-in-the-blank: We need to return the word that appears in the context sentence
+      // This could be either term or definition depending on the sentence language
+      if (word.context?.sentence) {
+        const sentence = word.context.sentence.toLowerCase();
+        const termLower = word.term.toLowerCase();
+        const definitionLower = word.definition.toLowerCase();
+
+        // Check if term appears in sentence
+        if (sentence.includes(termLower)) {
+          return word.term;
+        }
+        // Check if definition appears in sentence
+        if (sentence.includes(definitionLower)) {
+          return word.definition;
+        }
+
+        // Try without articles for term
+        const termWithoutArticle = word.term.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
+        if (sentence.includes(termWithoutArticle.toLowerCase())) {
+          return word.term;
+        }
+
+        // Try without articles for definition
+        const definitionWithoutArticle = word.definition
+          .replace(/^(der|die|das|ein|eine)\s+/i, '')
+          .trim();
+        if (sentence.includes(definitionWithoutArticle.toLowerCase())) {
+          return word.definition;
+        }
+      }
+
+      // Fallback: return German word (term for German words, definition for Dutch words)
+      return word.term; // Default fallback
+    } else if (this.isUnidirectionalMode(quizMode)) {
+      // For learning German: All unidirectional modes should expect German answers
+      // Use the word direction to determine which field contains the German word
+      if (word.direction === 'term-to-definition') {
+        // term=Dutch, definition=German: return German (definition)
+        return word.definition;
+      } else {
+        // definition-to-term (default): term=German, definition=Dutch: return German (term)
+        return word.term;
+      }
+    } else {
+      // Bidirectional modes follow word direction
+      return this.getAnswerWord(word);
     }
-    
-    // For bidirectional modes, follow word direction
-    return this.getAnswerWord(word);
   }
 
   /**
@@ -64,8 +112,9 @@ export class GameModeHandler {
   getQuestionWord(word: any): string {
     if (!word) return '';
     
-    // Default to showing target language as question for bidirectional
-    return word.term || '';
+    // Use word direction to determine question word
+    const direction = word.direction || 'definition-to-term'; // default to old behavior
+    return direction === 'definition-to-term' ? word.definition : word.term;
   }
 
   /**
@@ -74,8 +123,31 @@ export class GameModeHandler {
   getAnswerWord(word: any): string {
     if (!word) return '';
     
-    // Default to Dutch as answer for bidirectional
-    return word.dutch || '';
+    // Use word direction to determine answer word
+    const direction = word.direction || 'definition-to-term'; // default to old behavior
+    return direction === 'definition-to-term' ? word.term : word.definition;
+  }
+
+  /**
+   * Get context for word direction (preserving original complexity)
+   */
+  getContextForDirection(word: any): { sentence: string; translation: string } | undefined {
+    // If word has explicit context field, use it
+    if (word.context) {
+      if (typeof word.context === 'string') {
+        return {
+          sentence: word.context,
+          translation: word.context,
+        };
+      }
+      return {
+        sentence: word.context.sentence || '',
+        translation: word.context.translation || '',
+      };
+    }
+
+    // Fallback: no context available
+    return undefined;
   }
 
   /**

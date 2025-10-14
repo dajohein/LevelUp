@@ -18,6 +18,8 @@ import { words, getWordsForLanguage } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
 import { useEnhancedGame } from '../hooks/useEnhancedGame';
 import { challengeServiceManager } from '../services/challengeServiceManager';
+// Import game business logic services
+import { gameServices } from '../services/game';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
@@ -1059,36 +1061,21 @@ export const Game: React.FC = () => {
     previousWordRef.current = currentQuestionKey;
   }, [currentWord]); // Only depend on currentWord state, not functions // Only depend on currentWord, not the function
 
-  // Memoize expensive mastery calculation and learning card decision
+  // Use GameProgressTracker for learning status calculation (preserving full complexity)
   const wordLearningStatus = useMemo(() => {
     if (!currentWord) return { isTrulyNewWord: false, needsReinforcement: false };
 
-    const currentWordProgress = wordProgress[currentWord.id];
-
-    // Truly new word - never practiced before
-    if (!currentWordProgress) {
-      return { isTrulyNewWord: true, needsReinforcement: false };
-    }
-
-    const currentMastery = calculateMasteryDecay(
-      currentWordProgress.lastPracticed || '',
-      currentWordProgress.xp || 0
+    // Use service for comprehensive learning status calculation
+    const status = gameServices.progressTracker.calculateWordLearningStatus(
+      currentWord,
+      wordProgress,
+      false // shouldShowCard will be determined separately
     );
 
-    // Check if word is truly new (very low mastery)
-    const isTrulyNewWord = currentMastery < 20;
-
-    // Check if word needs reinforcement due to mistakes
-    const needsReinforcement =
-      // Recent mistakes: more incorrect than correct answers
-      currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect ||
-      // Low consecutive correct count (less than 3 in a row)
-      ((currentWordProgress.directions?.['term-to-definition']?.consecutiveCorrect || 0) < 3 &&
-        (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
-      // Low mastery with some incorrect answers (needs practice)
-      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0);
-
-    return { isTrulyNewWord, needsReinforcement };
+    return {
+      isTrulyNewWord: status.isTrulyNewWord,
+      needsReinforcement: status.needsReinforcement
+    };
   }, [currentWord?.id, wordProgress]);
 
   // Check if we should show learning card for new words or words needing reinforcement
@@ -1141,42 +1128,21 @@ export const Game: React.FC = () => {
       // Load the first word after setting the language
       // Use enhanced system by default
       if (!isUsingSpacedRepetition) {
-        // Initialize challenge services for special modes using unified service manager
-        if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id)) {
-          const config = {
-            targetWords: currentSession?.targetWords || 15,
-            timeLimit: currentSession?.timeLimit || 5,
-            difficulty: 3
-          };
-
-          challengeServiceManager.initializeSession(currentSession.id, languageCode, wordProgress, config)
-            .then(() => {
-              // Get first word using unified service manager
-              const context = {
-                wordsCompleted: 0,
-                currentStreak: 0,
-                timeRemaining: config.timeLimit * 60, // Convert to seconds
-                targetWords: config.targetWords,
-                wordProgress,
-                languageCode
-              };
-
-              return challengeServiceManager.getNextWord(currentSession.id!, context);
-            })
-            .then((result) => {
-              dispatch(setCurrentWord({
-                word: result.word!,
-                options: result.options,
-                quizMode: result.quizMode,
-              }));
-            })
-            .catch((error) => {
-              console.error(`Failed to initialize ${currentSession.id} session:`, error);
-              dispatch(nextWord()); // Fallback to regular word selection
-            });
-        } else {
-          dispatch(nextWord());
-        }
+        // Use GameSessionManager for session initialization
+        gameServices.sessionManager.initializeSession(
+          currentSession,
+          languageCode,
+          wordProgress,
+          sessionProgress
+        ).then((success) => {
+          if (!success) {
+            // Fallback to regular word selection if special session fails
+            dispatch(nextWord());
+          }
+        }).catch((error) => {
+          console.error(`Failed to initialize session:`, error);
+          dispatch(nextWord()); // Fallback to regular word selection
+        });
       }
     }
   }, [dispatch, languageCode, moduleId]); // Removed isUsingSpacedRepetition to prevent infinite loops
@@ -1291,43 +1257,35 @@ export const Game: React.FC = () => {
   ]);
 
   const handleSubmit = (answer: string) => {
-    // Always use enhanced learning system
-    const isCorrect = checkAnswerCorrectness(answer);
-
-    // Get current word info to track feedback BEFORE any state changes
+    // Use GameProgressTracker for answer validation and feedback
     const enhancedWordInfo = getCurrentWordInfo();
-    const currentWordToUse = enhancedWordInfo?.word || currentWord;
-    const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
+    const currentWordToUse = gameServices.modeHandler.getCurrentWord(enhancedWordInfo, currentWord);
+    const quizModeToUse = gameServices.modeHandler.getCurrentQuizMode(enhancedWordInfo, quizMode);
 
-    // Capture feedback information immediately before any transitions
-    // Use centralized business logic for consistent feedback display
-    if (isUnidirectionalMode(quizModeToUse)) {
-      // Unidirectional modes: Show Dutch as question, target language as answer
-      setFeedbackWordInfo({
-        originalWord: getQuizQuestion(currentWordToUse, quizModeToUse), // Dutch translation
-        correctAnswer: getQuizAnswer(currentWordToUse, quizModeToUse), // Target language word
-        context: typeof currentWordToUse?.context === 'string' ? currentWordToUse.context : '',
-      });
-    } else {
-      // Bidirectional modes: Follow word direction
-      setFeedbackWordInfo({
-        originalWord: getQuestionWord(currentWordToUse),
-        correctAnswer: getAnswerWord(currentWordToUse),
-        context: typeof currentWordToUse?.context === 'string' ? currentWordToUse.context : '',
-      });
-    }
+    // Validate answer and get feedback using service
+    const validationResult = gameServices.progressTracker.validateAnswer(
+      answer,
+      currentWordToUse,
+      quizModeToUse,
+      wordProgress,
+      getQuizQuestion,
+      getQuizAnswer,
+      getQuestionWord,
+      getAnswerWord,
+      checkAnswerCorrectness,
+      (mode: string) => gameServices.modeHandler.isUnidirectionalMode(mode)
+    );
 
-    // Update local feedback state
-    setLastAnswerCorrect(isCorrect);
+    // Update feedback state from validation result
+    setFeedbackWordInfo(validationResult.feedbackInfo);
+    setLastAnswerCorrect(validationResult.isCorrect);
     setLastSelectedAnswer(answer);
     setFeedbackQuestionKey(
-      currentWordToUse
-        ? `${currentWordToUse.id}-${getQuestionWord(currentWordToUse)}-${Date.now()}`
-        : `unknown-${Date.now()}`
-    ); // Track unique question instance
+      gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
+    );
 
     // Play audio feedback
-    if (isCorrect) {
+    if (validationResult.isCorrect) {
       playCorrect();
     } else {
       playIncorrect();
@@ -1336,21 +1294,19 @@ export const Game: React.FC = () => {
     // Handle enhanced vs standard game logic
     if (isUsingSpacedRepetition) {
       // Use enhanced learning system
-      const result = handleEnhancedAnswer(isCorrect);
+      const result = handleEnhancedAnswer(validationResult.isCorrect);
 
-      if (result && typeof result === 'object' && 'isComplete' in result) {
-        if (result.isComplete) {
-          // Session completed - show recommendations and analytics
-          setSessionCompleted(true);
+      // Use GameSessionManager for enhanced session completion
+      const completionResult = gameServices.sessionManager.handleEnhancedSessionCompletion(
+        result,
+        gameLanguage || undefined,
+        languageCode
+      );
 
-          // Use the correct language code for navigation
-          const actualLanguageCode = gameLanguage || languageCode;
-
-          // Complete the session in Redux store and navigate
-          dispatch(completeSession());
-          navigate(`/completed/${actualLanguageCode}`);
-          return; // Exit early for enhanced session completion
-        }
+      if (completionResult.isComplete && completionResult.shouldNavigate) {
+        setSessionCompleted(true);
+        navigate(completionResult.navigationPath!);
+        return; // Exit early for enhanced session completion
       }
     }
 
@@ -1359,42 +1315,18 @@ export const Game: React.FC = () => {
     setInputValue('');
     setIsTransitioning(true);
 
-    // Update session counter if answer was correct and we're in a session
-    if (isCorrect && isSessionActive && currentSession) {
-      dispatch(incrementWordsCompleted());
-      
-      // Calculate bonuses based on session type and performance
-      const bonuses = {
-        timeBonus: 0,
-        streakBonus: 0,
-        contextBonus: 0,
-        perfectRecallBonus: 0,
-      };
-
-      // Session-specific bonuses
-      if (currentSession.id === 'quick-dash') {
-        // Speed bonus up to 50 points per word (based on time remaining)
-        const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-        bonuses.timeBonus = Math.min(50, Math.floor(timeRemaining / 6)); // Up to 50 points
-      } else if (currentSession.id === 'deep-dive') {
-        // Context bonus +30 points for deep learning
-        bonuses.contextBonus = 30;
-        // Perfect recall bonus if user has seen this word before and got it right quickly
-        if (wordTimer < 3) {
-          bonuses.perfectRecallBonus = 100;
-        }
-      } else if (currentSession.id === 'fill-in-the-blank') {
-        // Language comprehension bonus +25
-        bonuses.contextBonus = 25;
-      }
-      
-      dispatch(addCorrectAnswer(bonuses));
-    }
-
-    // Handle incorrect answers for session tracking
-    if (!isCorrect && isSessionActive) {
-      dispatch(addIncorrectAnswer());
-    }
+    // Use GameSessionManager for session progress handling
+    gameServices.sessionManager.handleAnswerSubmission(
+      validationResult.isCorrect,
+      currentSession,
+      isSessionActive,
+      sessionTimer,
+      sessionProgress,
+      wordProgress,
+      languageCode!,
+      isUsingSpacedRepetition,
+      gameLanguage || undefined
+    );
 
     // Use setTimeout only for UI delay, then trigger non-blocking async transition
     setTimeout(
@@ -1402,14 +1334,8 @@ export const Game: React.FC = () => {
         // Trigger non-blocking word transition
         handleWordTransition();
       },
-      // Fill-in-the-blank needs more time to read context and feedback
-      quizModeToUse === 'fill-in-the-blank'
-        ? isCorrect
-          ? 2500
-          : 4500 // Longer for fill-in-the-blank
-        : isCorrect
-        ? 1200
-        : 3000 // Normal timing for other modes
+      // Use GameModeHandler for optimal timing
+      gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
     );
   };
 
@@ -1505,116 +1431,26 @@ export const Game: React.FC = () => {
   }, []);
 
   // Helper functions to determine quiz direction
+  // Use GameModeHandler service methods for quiz mode logic
   const getQuestionWord = (word: any) => {
-    const direction = word.direction || 'definition-to-term'; // default to old behavior
-    return direction === 'definition-to-term' ? word.definition : word.term;
+    return gameServices.modeHandler.getQuestionWord(word);
   };
 
   const getAnswerWord = (word: any) => {
-    const direction = word.direction || 'definition-to-term'; // default to old behavior
-    return direction === 'definition-to-term' ? word.term : word.definition;
+    return gameServices.modeHandler.getAnswerWord(word);
   };
 
-  /**
-   * Business Logic: Quiz Mode Directionality
-   *
-   * UNIDIRECTIONAL MODES (always Dutch → Target Language):
-   * - letter-scramble: User constructs target language word from letters
-   * - open-answer: User types target language word from Dutch prompt
-   * - fill-in-the-blank: User fills target language word in context
-   *
-   * BIDIRECTIONAL MODES (respects word.direction):
-   * - multiple-choice: Recognition works in both directions
-   */
+  // Use GameModeHandler service methods for quiz mode logic
   const isUnidirectionalMode = (quizMode: string): boolean => {
-    return ['letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(quizMode);
+    return gameServices.modeHandler.isUnidirectionalMode(quizMode);
   };
 
   const getQuizQuestion = (word: any, quizMode: string): string => {
-    if (isUnidirectionalMode(quizMode)) {
-      // Unidirectional modes: Show the source language as the question
-      // Use word direction to determine which field contains the source language
-      if (word.direction === 'term-to-definition') {
-        // term=Dutch (source), definition=German (target): show Dutch (term)
-        return word.term;
-      } else {
-        // definition-to-term (default): definition=Dutch (source), term=German (target): show Dutch (definition)
-        return word.definition;
-      }
-    } else {
-      // Bidirectional modes follow word direction
-      return getQuestionWord(word);
-    }
+    return gameServices.modeHandler.getQuizQuestion(word, quizMode);
   };
 
   const getQuizAnswer = (word: any, quizMode: string): string => {
-    if (quizMode === 'fill-in-the-blank') {
-      // Fill-in-the-blank: We need to return the word that appears in the context sentence
-      // This could be either term or definition depending on the sentence language
-      if (word.context?.sentence) {
-        const sentence = word.context.sentence.toLowerCase();
-        const termLower = word.term.toLowerCase();
-        const definitionLower = word.definition.toLowerCase();
-
-        // Check if term appears in sentence
-        if (sentence.includes(termLower)) {
-          return word.term;
-        }
-        // Check if definition appears in sentence
-        if (sentence.includes(definitionLower)) {
-          return word.definition;
-        }
-
-        // Try without articles for term
-        const termWithoutArticle = word.term.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
-        if (sentence.includes(termWithoutArticle.toLowerCase())) {
-          return word.term;
-        }
-
-        // Try without articles for definition
-        const definitionWithoutArticle = word.definition
-          .replace(/^(der|die|das|ein|eine)\s+/i, '')
-          .trim();
-        if (sentence.includes(definitionWithoutArticle.toLowerCase())) {
-          return word.definition;
-        }
-      }
-
-      // Fallback: return German word (term for German words, definition for Dutch words)
-      return word.term; // Default fallback
-    } else if (isUnidirectionalMode(quizMode)) {
-      // For learning German: All unidirectional modes should expect German answers
-      // Use the word direction to determine which field contains the German word
-      if (word.direction === 'term-to-definition') {
-        // term=Dutch, definition=German: return German (definition)
-        return word.definition;
-      } else {
-        // definition-to-term (default): term=German, definition=Dutch: return German (term)
-        return word.term;
-      }
-    } else {
-      // Bidirectional modes follow word direction
-      return getAnswerWord(word);
-    }
-  };
-
-  const getContextForDirection = (word: any) => {
-    // If word has explicit context field, use it
-    if (word.context) {
-      if (typeof word.context === 'string') {
-        return {
-          sentence: word.context,
-          translation: word.context,
-        };
-      }
-      return {
-        sentence: word.context.sentence || '',
-        translation: word.context.translation || '',
-      };
-    }
-
-    // Fallback: no context available
-    return undefined;
+    return gameServices.modeHandler.getQuizAnswer(word, quizMode);
   };
 
   // Memoize context to prevent render loops - moved from renderThemedQuiz to fix hooks order
@@ -1627,7 +1463,8 @@ export const Game: React.FC = () => {
       return undefined;
     }
 
-    return getContextForDirection(wordToUse);
+    // Use GameModeHandler service for context handling
+    return gameServices.modeHandler.getContextForDirection(wordToUse);
   }, [currentWord?.id, currentWord?.context, isUsingSpacedRepetition, getCurrentWordInfo]);
 
   if (!currentWord) {

@@ -140,7 +140,7 @@ export class GameProgressTracker {
   }
 
   /**
-   * Calculate learning status for word display
+   * Calculate learning status for word display with full complexity
    */
   calculateWordLearningStatus(
     currentWord: any,
@@ -150,14 +150,52 @@ export class GameProgressTracker {
     currentMastery: number;
     shouldShowCard: boolean;
     isDevelopmentMode: boolean;
+    isTrulyNewWord: boolean;
+    needsReinforcement: boolean;
   } {
+    if (!currentWord) {
+      return {
+        currentMastery: 0,
+        shouldShowCard: false,
+        isDevelopmentMode: process.env.NODE_ENV === 'development',
+        isTrulyNewWord: false,
+        needsReinforcement: false
+      };
+    }
+
+    const currentWordProgress = wordProgress[currentWord.id];
     const currentMastery = this.calculateWordMastery(currentWord, wordProgress);
-    const isDevelopmentMode = process.env.NODE_ENV === 'development' && shouldShowCard;
+
+    // Truly new word - never practiced before
+    if (!currentWordProgress) {
+      return {
+        currentMastery: 0,
+        shouldShowCard: process.env.NODE_ENV === 'development' && shouldShowCard,
+        isDevelopmentMode: process.env.NODE_ENV === 'development',
+        isTrulyNewWord: true,
+        needsReinforcement: false
+      };
+    }
+
+    // Check if word is truly new (very low mastery)
+    const isTrulyNewWord = currentMastery < 20;
+
+    // Check if word needs reinforcement due to mistakes (complex logic preserved)
+    const needsReinforcement =
+      // Recent mistakes: more incorrect than correct answers
+      currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect ||
+      // Low consecutive correct count (less than 3 in a row)
+      ((currentWordProgress.directions?.['term-to-definition']?.consecutiveCorrect || 0) < 3 &&
+        (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
+      // Low mastery with some incorrect answers (needs practice)
+      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0);
 
     return {
       currentMastery,
-      shouldShowCard: isDevelopmentMode,
-      isDevelopmentMode: process.env.NODE_ENV === 'development'
+      shouldShowCard: process.env.NODE_ENV === 'development' && shouldShowCard,
+      isDevelopmentMode: process.env.NODE_ENV === 'development',
+      isTrulyNewWord,
+      needsReinforcement
     };
   }
 
