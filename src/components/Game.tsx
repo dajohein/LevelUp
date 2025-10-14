@@ -9,6 +9,7 @@ import {
   completeSession,
   incrementWordsCompleted,
   addCorrectAnswer,
+  addIncorrectAnswer,
   addPerfectAccuracyBonus,
   setLanguage as setSessionLanguage,
 } from '../store/sessionSlice';
@@ -1296,74 +1297,89 @@ export const Game: React.FC = () => {
       playIncorrect();
     }
 
-    const result = handleEnhancedAnswer(isCorrect);
+    // Handle enhanced vs standard game logic
+    if (isUsingSpacedRepetition) {
+      // Use enhanced learning system
+      const result = handleEnhancedAnswer(isCorrect);
 
-    if (result && typeof result === 'object' && 'isComplete' in result) {
-      if (result.isComplete) {
-        // Session completed - show recommendations and analytics
-        setSessionCompleted(true);
+      if (result && typeof result === 'object' && 'isComplete' in result) {
+        if (result.isComplete) {
+          // Session completed - show recommendations and analytics
+          setSessionCompleted(true);
 
-        // Use the correct language code for navigation
-        const actualLanguageCode = gameLanguage || languageCode;
+          // Use the correct language code for navigation
+          const actualLanguageCode = gameLanguage || languageCode;
 
-        // Complete the session in Redux store and navigate
-        dispatch(completeSession());
-        navigate(`/completed/${actualLanguageCode}`);
-      } else {
-        // Move to next word
-        setInputValue('');
-        setIsTransitioning(true);
-
-        // Update session counter if answer was correct and we're in a session
-        if (isCorrect && isSessionActive && currentSession) {
-          dispatch(incrementWordsCompleted());
-          
-          // Calculate bonuses based on session type and performance
-          const bonuses = {
-            timeBonus: 0,
-            streakBonus: 0,
-            contextBonus: 0,
-            perfectRecallBonus: 0,
-          };
-
-          // Session-specific bonuses
-          if (currentSession.id === 'quick-dash') {
-            // Speed bonus up to 50 points per word (based on time remaining)
-            const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-            bonuses.timeBonus = Math.min(50, Math.floor(timeRemaining / 6)); // Up to 50 points
-          } else if (currentSession.id === 'deep-dive') {
-            // Context bonus +30 points for deep learning
-            bonuses.contextBonus = 30;
-            // Perfect recall bonus if user has seen this word before and got it right quickly
-            if (wordTimer < 3) {
-              bonuses.perfectRecallBonus = 100;
-            }
-          } else if (currentSession.id === 'fill-in-the-blank') {
-            // Language comprehension bonus +25
-            bonuses.contextBonus = 25;
-          }
-          
-          dispatch(addCorrectAnswer(bonuses));
+          // Complete the session in Redux store and navigate
+          dispatch(completeSession());
+          navigate(`/completed/${actualLanguageCode}`);
+          return; // Exit early for enhanced session completion
         }
-
-        setTimeout(
-          () => {
-            setIsTransitioning(false);
-            setWordTimer(0);
-            setWordStartTime(Date.now());
-            // Note: feedback state is reset by useEffect when word changes
-          },
-          // Fill-in-the-blank needs more time to read context and feedback
-          quizModeToUse === 'fill-in-the-blank'
-            ? isCorrect
-              ? 2500
-              : 4500 // Longer for fill-in-the-blank
-            : isCorrect
-            ? 1200
-            : 3000 // Normal timing for other modes
-        );
       }
     }
+
+    // Standard game logic (for all sessions, enhanced and non-enhanced)
+    // Move to next word
+    setInputValue('');
+    setIsTransitioning(true);
+
+    // Update session counter if answer was correct and we're in a session
+    if (isCorrect && isSessionActive && currentSession) {
+      dispatch(incrementWordsCompleted());
+      
+      // Calculate bonuses based on session type and performance
+      const bonuses = {
+        timeBonus: 0,
+        streakBonus: 0,
+        contextBonus: 0,
+        perfectRecallBonus: 0,
+      };
+
+      // Session-specific bonuses
+      if (currentSession.id === 'quick-dash') {
+        // Speed bonus up to 50 points per word (based on time remaining)
+        const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
+        bonuses.timeBonus = Math.min(50, Math.floor(timeRemaining / 6)); // Up to 50 points
+      } else if (currentSession.id === 'deep-dive') {
+        // Context bonus +30 points for deep learning
+        bonuses.contextBonus = 30;
+        // Perfect recall bonus if user has seen this word before and got it right quickly
+        if (wordTimer < 3) {
+          bonuses.perfectRecallBonus = 100;
+        }
+      } else if (currentSession.id === 'fill-in-the-blank') {
+        // Language comprehension bonus +25
+        bonuses.contextBonus = 25;
+      }
+      
+      dispatch(addCorrectAnswer(bonuses));
+    }
+
+    // Handle incorrect answers for session tracking
+    if (!isCorrect && isSessionActive) {
+      dispatch(addIncorrectAnswer());
+    }
+
+    setTimeout(
+      () => {
+        setIsTransitioning(false);
+        setWordTimer(0);
+        setWordStartTime(Date.now());
+        // Standard word progression - let Redux/game logic handle next word
+        if (!isUsingSpacedRepetition) {
+          dispatch(nextWord());
+        }
+        // Note: feedback state is reset by useEffect when word changes
+      },
+      // Fill-in-the-blank needs more time to read context and feedback
+      quizModeToUse === 'fill-in-the-blank'
+        ? isCorrect
+          ? 2500
+          : 4500 // Longer for fill-in-the-blank
+        : isCorrect
+        ? 1200
+        : 3000 // Normal timing for other modes
+    );
   };
 
   // Helper function to check answer correctness
@@ -1600,25 +1616,46 @@ export const Game: React.FC = () => {
                   playIncorrect();
                 }
 
-                // Process answer through learning system
-                const result = handleEnhancedAnswer(correct);
-                setIsTransitioning(true);
+                // Handle enhanced vs standard game logic
+                if (isUsingSpacedRepetition) {
+                  // Process answer through enhanced learning system
+                  const result = handleEnhancedAnswer(correct);
+                  setIsTransitioning(true);
 
-                setTimeout(() => {
-                  if (
-                    result &&
-                    typeof result === 'object' &&
-                    'isComplete' in result &&
-                    result.isComplete
-                  ) {
-                    setSessionCompleted(true);
-                  } else {
+                  setTimeout(() => {
+                    if (
+                      result &&
+                      typeof result === 'object' &&
+                      'isComplete' in result &&
+                      result.isComplete
+                    ) {
+                      setSessionCompleted(true);
+                    } else {
+                      setIsTransitioning(false);
+                      setWordTimer(0);
+                      setWordStartTime(Date.now());
+                    }
+                  }, 2000);
+                } else {
+                  // Standard game logic for non-enhanced sessions
+                  setIsTransitioning(true);
+                  
+                  // Update session state
+                  if (correct && isSessionActive && currentSession) {
+                    dispatch(incrementWordsCompleted());
+                    dispatch(addCorrectAnswer({}));
+                  }
+                  if (!correct && isSessionActive) {
+                    dispatch(addIncorrectAnswer());
+                  }
+
+                  setTimeout(() => {
                     setIsTransitioning(false);
                     setWordTimer(0);
                     setWordStartTime(Date.now());
-                    // Note: feedback state is reset by useEffect when word changes
-                  }
-                }, 2000);
+                    dispatch(nextWord());
+                  }, 2000);
+                }
               }}
             />
           ) : quizModeToUse === 'fill-in-the-blank' ? (
