@@ -1,17 +1,27 @@
 // Service Worker for LevelUp PWA
 // Implements offline functionality, caching, and background sync
 
-// Dynamic cache name with timestamp for development cache busting
-const CACHE_VERSION = '1.0.0';
+// Dynamic cache versioning system
+// This will be automatically updated during build process
+const CACHE_VERSION = '2.0.0'; // Incremented for boss battle & streak challenge updates
+const BUILD_TIMESTAMP = '__BUILD_TIMESTAMP__'; // Replaced during build
+const FEATURES_HASH = '__FEATURES_HASH__'; // Hash of recent features for cache invalidation
+
 const isDevelopment = self.location.hostname === 'localhost' || 
                      self.location.hostname === '127.0.0.1' ||
-                     self.location.hostname.includes('app.github.dev');
+                     self.location.hostname.includes('app.github.dev') ||
+                     self.location.hostname.includes('gitpod.io') ||
+                     self.location.hostname.includes('codespaces');
 
-// Use timestamp in development to ensure fresh caches
-const CACHE_TIMESTAMP = isDevelopment ? Date.now() : '';
-const CACHE_NAME = `levelup-v${CACHE_VERSION}${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
-const OFFLINE_CACHE = `levelup-offline${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
-const DATA_CACHE = `levelup-data${CACHE_TIMESTAMP ? '-' + CACHE_TIMESTAMP : ''}`;
+// Production: Use version + features hash for cache busting
+// Development: Use timestamp for immediate cache invalidation
+const cacheIdentifier = isDevelopment 
+  ? Date.now().toString()
+  : `${CACHE_VERSION}-${FEATURES_HASH}`;
+
+const CACHE_NAME = `levelup-v${cacheIdentifier}`;
+const OFFLINE_CACHE = `levelup-offline-v${cacheIdentifier}`;
+const DATA_CACHE = `levelup-data-v${cacheIdentifier}`;
 
 // Resources to cache immediately
 const STATIC_RESOURCES = [
@@ -52,9 +62,10 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - cleanup old caches
+// Activate event - cleanup old caches and force updates
 self.addEventListener('activate', (event) => {
   console.log('[ServiceWorker] Activate', isDevelopment ? '(Development Mode)' : '(Production Mode)');
+  console.log('[ServiceWorker] Cache identifier:', cacheIdentifier);
   
   event.waitUntil(
     caches.keys()
@@ -62,29 +73,54 @@ self.addEventListener('activate', (event) => {
         console.log('[ServiceWorker] Found caches:', cacheNames);
         console.log('[ServiceWorker] Current cache names:', { CACHE_NAME, OFFLINE_CACHE, DATA_CACHE });
         
+        const currentCaches = [CACHE_NAME, OFFLINE_CACHE, DATA_CACHE];
+        
         return Promise.all(
           cacheNames.map((cacheName) => {
-            // In development, be more aggressive about cleaning old caches
-            const shouldDelete = isDevelopment ? 
-              !cacheName.includes('levelup-data') || // Keep user data cache
-              (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE && cacheName !== DATA_CACHE) :
-              (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE && cacheName !== DATA_CACHE);
-              
-            if (shouldDelete) {
-              console.log('[ServiceWorker] Removing old cache:', cacheName);
+            // Delete any cache that doesn't match our current version
+            if (cacheName.startsWith('levelup') && !currentCaches.includes(cacheName)) {
+              console.log('[ServiceWorker] 🗑️ Removing outdated cache:', cacheName);
               return caches.delete(cacheName);
+            } else if (currentCaches.includes(cacheName)) {
+              console.log('[ServiceWorker] ✅ Keeping current cache:', cacheName);
+              return Promise.resolve();
             } else {
-              console.log('[ServiceWorker] Keeping cache:', cacheName);
+              console.log('[ServiceWorker] 📦 Keeping non-LevelUp cache:', cacheName);
               return Promise.resolve();
             }
           })
         );
       })
       .then(() => {
-        // Take control of all pages immediately
+        console.log('[ServiceWorker] 🚀 Taking control of all pages');
+        // Take control of all pages immediately - forces update
         return self.clients.claim();
       })
+      .then(() => {
+        // Notify all clients about the update
+        return self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            console.log('[ServiceWorker] 📢 Notifying client of update');
+            client.postMessage({
+              type: 'SW_UPDATED',
+              version: CACHE_VERSION,
+              cacheIdentifier: cacheIdentifier
+            });
+          });
+        });
+      })
   );
+});
+
+// Message event - handle messages from clients
+self.addEventListener('message', (event) => {
+  console.log('[ServiceWorker] Received message:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[ServiceWorker] 🚀 Client requested immediate activation');
+    // Skip waiting and take control immediately
+    self.skipWaiting();
+  }
 });
 
 // Fetch event - implement caching strategies

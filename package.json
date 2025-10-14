@@ -11,6 +11,7 @@
     "dev:stop": "./scripts/dev-stop.sh",
     "dev:restart": "./scripts/dev-restart.sh",
     "build": "tsc && vite build",
+    "build:production": "./scripts/build-with-versioning.sh",
     "preview": "vite preview",
     "test": "vitest",
     "test:storage": "node scripts/test-storage.js",

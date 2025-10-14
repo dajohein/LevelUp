@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { Outlet } from 'react-router-dom';
 import { MobileBottomNavigation } from './mobile/MobileBottomNavigation';
 import { StorageDebug } from './debug/StorageDebug';
+import { PWAUpdateNotification } from './PWAUpdateNotification';
 import { useViewport } from '../hooks/useViewport';
 
 const LayoutContainer = styled.div`
@@ -51,6 +52,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <LayoutContainer>
+      {/* PWA Update notification - always on top */}
+      <PWAUpdateNotification />
+      
       <MainContent hasMobileBottomNav={shouldShowBottomNav}>
         {children || <Outlet />}
       </MainContent>

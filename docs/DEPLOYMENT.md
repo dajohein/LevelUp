@@ -43,6 +43,40 @@ Add this to your deployment platform:
 VITE_VAPID_PUBLIC_KEY=BI8OflKtDyI1am3VQ-pZa2qLBiUnXLAoYzkkq233ylHP3U4EC-N7reTeyzj9d2XPAOcGYsANPMfW5C5Gms5C_T0
 ```
 
+## 📱 **Production Cache Management**
+
+### **For Production Deployments:**
+Use the production build script for automatic cache versioning:
+
+```bash
+# Use this for production deployments
+npm run build:production
+```
+
+This script:
+- ✅ **Auto-updates cache version** based on git commits
+- ✅ **Generates unique cache identifiers** for each deployment  
+- ✅ **Forces cache refresh** on mobile devices
+- ✅ **Prevents stale content** issues
+
+### **Manual Build (Not Recommended for Production):**
+```bash
+npm run build
+```
+
+### **Cache Versioning System:**
+- **Development**: Uses timestamps for immediate cache busting
+- **Production**: Uses git commit hash + version for reliable updates
+- **Mobile devices**: Automatically get updates on next visit
+- **Users see notification**: Can choose to update immediately or later
+
+### **Troubleshooting Cache Issues:**
+If users report not seeing latest changes:
+1. Check service worker version in browser DevTools
+2. Force refresh with Ctrl+Shift+R (desktop)  
+3. Clear application data in browser settings (mobile)
+4. Update notification should appear automatically on next visit
+
 ## 🎯 **Post-Deployment Testing**
 
 ### **Test PWA Features**
