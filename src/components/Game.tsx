@@ -1396,43 +1396,11 @@ export const Game: React.FC = () => {
       dispatch(addIncorrectAnswer());
     }
 
+    // Use setTimeout only for UI delay, then trigger non-blocking async transition
     setTimeout(
       () => {
-        setIsTransitioning(false);
-        setWordTimer(0);
-        setWordStartTime(Date.now());
-        // Standard word progression - let Redux/game logic handle next word
-        if (!isUsingSpacedRepetition) {
-          // Use unified challenge service manager for all special modes
-          if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id)) {
-            const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-            
-            const context = {
-              wordsCompleted: sessionProgress.wordsCompleted,
-              currentStreak: sessionProgress.currentStreak,
-              timeRemaining,
-              targetWords: currentSession.targetWords || 15,
-              wordProgress,
-              languageCode: languageCode!
-            };
-
-            challengeServiceManager.getNextWord(currentSession.id, context)
-              .then((result) => {
-                dispatch(setCurrentWord({
-                  word: result.word,
-                  options: result.options,
-                  quizMode: result.quizMode,
-                }));
-              })
-              .catch((error) => {
-                console.error(`Failed to get next word from ${currentSession.id} service:`, error);
-                dispatch(nextWord()); // Fallback
-              });
-          } else {
-            dispatch(nextWord());
-          }
-        }
-        // Note: feedback state is reset by useEffect when word changes
+        // Trigger non-blocking word transition
+        handleWordTransition();
       },
       // Fill-in-the-blank needs more time to read context and feedback
       quizModeToUse === 'fill-in-the-blank'
@@ -1444,6 +1412,75 @@ export const Game: React.FC = () => {
         : 3000 // Normal timing for other modes
     );
   };
+
+  // Non-blocking async word transition handler
+  const handleWordTransition = useCallback(async (transitionType: 'enhanced' | 'standard' | 'quiz' = 'standard', additionalData?: any) => {
+    try {
+      // Wait for transition timing (non-blocking)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (transitionType === 'enhanced') {
+        const result = additionalData;
+        if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
+          setSessionCompleted(true);
+        } else {
+          setIsTransitioning(false);
+          setWordTimer(0);
+          setWordStartTime(Date.now());
+        }
+        return;
+      }
+
+      // Immediately update UI state (non-blocking)
+      setIsTransitioning(false);
+      setWordTimer(0);
+      setWordStartTime(Date.now());
+
+      // Standard word progression - let Redux/game logic handle next word
+      if (!isUsingSpacedRepetition) {
+        // Use unified challenge service manager for all special modes
+        if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id)) {
+          const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
+          
+          const context = {
+            wordsCompleted: sessionProgress.wordsCompleted,
+            currentStreak: sessionProgress.currentStreak,
+            timeRemaining,
+            targetWords: currentSession.targetWords || 15,
+            wordProgress,
+            languageCode: languageCode!
+          };
+
+          // Non-blocking async call
+          const result = await challengeServiceManager.getNextWord(currentSession.id, context);
+          
+          // Only update if component is still mounted and session hasn't changed
+          if (result.word) {
+            dispatch(setCurrentWord({
+              word: result.word,
+              options: result.options,
+              quizMode: result.quizMode,
+            }));
+          }
+        } else {
+          dispatch(nextWord());
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to get next word from ${currentSession?.id} service:`, error);
+      // Fallback only if we're still in the same session
+      dispatch(nextWord());
+    }
+  }, [
+    currentSession?.id, 
+    sessionProgress.wordsCompleted, 
+    sessionProgress.currentStreak, 
+    sessionTimer, 
+    wordProgress, 
+    languageCode, 
+    isUsingSpacedRepetition,
+    dispatch
+  ]);
 
   // Helper function to check answer correctness
   const checkAnswerCorrectness = (answer: string): boolean => {
@@ -1683,22 +1720,9 @@ export const Game: React.FC = () => {
                 if (isUsingSpacedRepetition) {
                   // Process answer through enhanced learning system
                   const result = handleEnhancedAnswer(correct);
-                  setIsTransitioning(true);
-
-                  setTimeout(() => {
-                    if (
-                      result &&
-                      typeof result === 'object' &&
-                      'isComplete' in result &&
-                      result.isComplete
-                    ) {
-                      setSessionCompleted(true);
-                    } else {
-                      setIsTransitioning(false);
-                      setWordTimer(0);
-                      setWordStartTime(Date.now());
-                    }
-                  }, 2000);
+                  
+                  // Use non-blocking transition handler
+                  handleWordTransition('enhanced', result);
                 } else {
                   // Standard game logic for non-enhanced sessions
                   setIsTransitioning(true);
@@ -1712,40 +1736,8 @@ export const Game: React.FC = () => {
                     dispatch(addIncorrectAnswer());
                   }
 
-                  setTimeout(() => {
-                    setIsTransitioning(false);
-                    setWordTimer(0);
-                    setWordStartTime(Date.now());
-                    
-                    // Use unified challenge service manager for all special modes
-                    if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id) && !isUsingSpacedRepetition) {
-                      const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-                      
-                      const context = {
-                        wordsCompleted: sessionProgress.wordsCompleted,
-                        currentStreak: sessionProgress.currentStreak,
-                        timeRemaining,
-                        targetWords: currentSession.targetWords || 15,
-                        wordProgress,
-                        languageCode: languageCode!
-                      };
-
-                      challengeServiceManager.getNextWord(currentSession.id, context)
-                        .then((result) => {
-                          dispatch(setCurrentWord({
-                            word: result.word!,
-                            options: result.options,
-                            quizMode: result.quizMode,
-                          }));
-                        })
-                        .catch((error) => {
-                          console.error(`Failed to get next word from ${currentSession.id} service in completion:`, error);
-                          dispatch(nextWord()); // Fallback
-                        });
-                    } else {
-                      dispatch(nextWord());
-                    }
-                  }, 2000);
+                  // Use non-blocking transition handler for quiz modes
+                  handleWordTransition('quiz');
                 }
               }}
             />
