@@ -12,7 +12,7 @@ import { WordProgress } from '../store/types';
 import { logger } from './logger';
 
 export interface ChallengeAIContext {
-  sessionType: 'streak-challenge' | 'boss-battle';
+  sessionType: 'streak-challenge' | 'boss-battle' | 'quick-dash' | 'deep-dive' | 'precision-mode' | 'fill-in-the-blank';
   currentProgress: {
     wordsCompleted: number;
     targetWords: number;
@@ -21,6 +21,8 @@ export interface ChallengeAIContext {
     consecutiveIncorrect: number;
     recentAccuracy: number;
     sessionDuration: number;
+    accuracy?: number; // For modes that track overall accuracy
+    timeElapsed?: number; // Alternative to sessionDuration
   };
   userState: {
     recentPerformance: Array<{
@@ -38,6 +40,16 @@ export interface ChallengeAIContext {
     phaseProgress?: number; // For boss battles (0-1)
     isEarlyPhase: boolean;
     isFinalPhase: boolean;
+    // Additional context for new challenge modes
+    timePressure?: number; // For quick-dash (0-1)
+    speedFocus?: boolean; // For quick-dash
+    remainingTime?: number; // For quick-dash (seconds)
+    errorRisk?: number; // For precision-mode (0-1)
+    perfectAccuracyRequired?: boolean; // For precision-mode
+    currentErrorCount?: number; // For precision-mode
+    contextualLearning?: boolean; // For deep-dive and fill-in-the-blank
+    retentionFocus?: boolean; // For deep-dive
+    sentenceComplexity?: 'simple' | 'moderate' | 'complex'; // For fill-in-the-blank
   };
 }
 
@@ -354,6 +366,38 @@ class ChallengeAIIntegrator {
    */
   isAIAvailable(): boolean {
     return this.isAIEnabled;
+  }
+
+  /**
+   * Save AI intervention performance data
+   */
+  async saveAIPerformanceData(
+    userId: string,
+    interventionData: {
+      type: 'quiz-mode-easier' | 'quiz-mode-harder' | 'cognitive-load-support' | 'momentum-boost';
+      successful: boolean;
+      beforeAccuracy: number;
+      afterAccuracy: number;
+      beforeTime: number;
+      afterTime: number;
+      wasAISession: boolean;
+    }
+  ): Promise<void> {
+    try {
+      // Import here to avoid circular dependency
+      const { userLearningProfileStorage } = await import('./storage/userLearningProfile');
+      
+      await userLearningProfileStorage.updateAIPerformanceData(userId, interventionData);
+      
+      logger.info('AI intervention performance saved', {
+        userId,
+        type: interventionData.type,
+        successful: interventionData.successful,
+        accuracyImprovement: interventionData.afterAccuracy - interventionData.beforeAccuracy
+      });
+    } catch (error) {
+      logger.error('Failed to save AI performance data', { userId, error });
+    }
   }
 }
 

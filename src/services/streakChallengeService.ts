@@ -15,6 +15,7 @@ import {
   AIEnhancedWordSelection 
 } from './challengeAIIntegrator';
 import { logger } from './logger';
+import { userLearningProfileStorage } from './storage/userLearningProfile';
 
 interface StreakChallengeState {
   languageCode: string;
@@ -267,8 +268,28 @@ class StreakChallengeService {
    * Generate multiple choice options
    */
   private generateOptions(word: Word, quizMode: string): string[] {
-    if (quizMode !== 'multiple-choice') return [];
-    
+    switch (quizMode) {
+      case 'multiple-choice':
+        return this.generateMultipleChoiceOptions(word);
+      
+      case 'letter-scramble':
+        return this.generateLetterScrambleOptions(word);
+      
+      case 'open-answer':
+        return []; // Open answer doesn't need options
+      
+      case 'fill-in-the-blank':
+        return this.generateFillInTheBlankOptions(word);
+      
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * Generate multiple choice options for streak challenge
+   */
+  private generateMultipleChoiceOptions(word: Word): string[] {
     if (!this.state) return [];
 
     const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
@@ -284,6 +305,109 @@ class StreakChallengeService {
 
     const options = [correctAnswer, ...wrongAnswers];
     return options.sort(() => 0.5 - Math.random()); // Shuffle options
+  }
+
+  /**
+   * Generate letter scramble options for streak challenge
+   */
+  private generateLetterScrambleOptions(word: Word): string[] {
+    const correctTerm = word.direction === 'definition-to-term' ? word.term : word.definition;
+    const options = [correctTerm];
+    
+    // Generate scrambled versions
+    for (let i = 0; i < 3; i++) {
+      let scrambled = this.scrambleText(correctTerm, i + 1);
+      // Ensure we don't duplicate the correct answer
+      while (options.includes(scrambled) || scrambled === correctTerm) {
+        scrambled = this.scrambleText(correctTerm, Math.random() * 3 + 1);
+      }
+      options.push(scrambled);
+    }
+    
+    return options.sort(() => 0.5 - Math.random());
+  }
+
+  /**
+   * Generate fill-in-the-blank options for streak challenge
+   */
+  private generateFillInTheBlankOptions(word: Word): string[] {
+    if (!this.state) return [];
+
+    const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
+    const allWords = this.state.availableWords;
+    
+    // Get plausible alternatives of similar length and complexity
+    const wrongAnswers = allWords
+      .filter(w => w.id !== word.id)
+      .map(w => word.direction === 'definition-to-term' ? w.term : w.definition)
+      .filter(answer => answer !== correctAnswer)
+      .filter(answer => Math.abs(answer.length - correctAnswer.length) <= 4) // Similar length
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+    
+    // Fallback if not enough similar words
+    while (wrongAnswers.length < 3) {
+      const fallbacks = ['alternative', 'different', 'another'];
+      for (const fallback of fallbacks) {
+        if (!wrongAnswers.includes(fallback) && wrongAnswers.length < 3) {
+          wrongAnswers.push(fallback);
+        }
+      }
+      break;
+    }
+    
+    const options = [correctAnswer, ...wrongAnswers];
+    return options.sort(() => 0.5 - Math.random());
+  }
+
+  /**
+   * Scramble text for letter-scramble quiz mode
+   */
+  private scrambleText(text: string, level: number): string {
+    const words = text.split(' ');
+    
+    if (words.length === 1) {
+      // Single word - scramble letters
+      return this.scrambleWord(words[0], level);
+    } else {
+      // Multiple words - scramble word order and individual words
+      const scrambledWords = words.map(word => this.scrambleWord(word, level * 0.5));
+      return scrambledWords.sort(() => 0.5 - Math.random()).join(' ');
+    }
+  }
+
+  /**
+   * Scramble individual word
+   */
+  private scrambleWord(word: string, level: number): string {
+    if (word.length <= 2) return word; // Don't scramble very short words
+    
+    const chars = word.split('');
+    
+    switch (Math.floor(level) % 3) {
+      case 0:
+        // Light scramble - swap adjacent characters
+        for (let i = 0; i < chars.length - 1; i += 2) {
+          [chars[i], chars[i + 1]] = [chars[i + 1], chars[i]];
+        }
+        break;
+      
+      case 1:
+        // Medium scramble - reverse order
+        chars.reverse();
+        break;
+      
+      case 2:
+      default:
+        // Heavy scramble - random shuffle
+        for (let i = chars.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [chars[i], chars[j]] = [chars[j], chars[i]];
+        }
+        break;
+    }
+    
+    return chars.join('');
   }
 
   /**
@@ -491,6 +615,36 @@ class StreakChallengeService {
     if (rand < 0.2) return 'letter-scramble';
     if (rand < 0.5) return 'open-answer';
     return 'fill-in-the-blank';
+  }
+
+  /**
+   * Save streak challenge session performance data
+   */
+  async saveStreakPerformance(
+    userId: string,
+    sessionData: {
+      streak: number;
+      wordsCompleted: number;
+      accuracy: number;
+      wasAIEnhanced: boolean;
+      tier: number;
+      quizMode: string;
+      cognitiveLoad: 'low' | 'moderate' | 'high' | 'overload';
+      adaptationsUsed: string[];
+    }
+  ): Promise<void> {
+    try {
+      await userLearningProfileStorage.updateStreakChallengeData(userId, sessionData);
+      
+      logger.info('Streak challenge performance saved', {
+        userId,
+        streak: sessionData.streak,
+        tier: sessionData.tier,
+        wasAIEnhanced: sessionData.wasAIEnhanced
+      });
+    } catch (error) {
+      logger.error('Failed to save streak challenge performance', { userId, error });
+    }
   }
 }
 

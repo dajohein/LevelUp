@@ -14,6 +14,13 @@ export { userLearningProfileStorage } from './storage/userLearningProfile';
 export { aiEnhancedWordService } from './aiEnhancedWordService';
 export { adaptiveLearningEngine } from './adaptiveLearningEngine';
 
+// Challenge services
+export { challengeAIIntegrator } from './challengeAIIntegrator';
+export { quickDashService } from './quickDashService';
+export { precisionModeService } from './precisionModeService';
+export { deepDiveService } from './deepDiveService';
+export { fillInTheBlankService } from './fillInTheBlankService';
+
 // AI components (for demos)
 export { AdvancedMLModels } from './ai/advancedMLModels';
 export { AILearningCoach } from './ai/learningCoach';

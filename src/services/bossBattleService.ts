@@ -15,6 +15,7 @@ import {
   AIEnhancedWordSelection 
 } from './challengeAIIntegrator';
 import { logger } from './logger';
+import { userLearningProfileStorage } from './storage/userLearningProfile';
 
 interface BossBattleState {
   languageCode: string;
@@ -337,11 +338,31 @@ class BossBattleService {
   }
 
   /**
-   * Generate challenging multiple choice options
+   * Generate challenging options for boss battles
    */
   private generateBossOptions(word: Word, quizMode: string): string[] {
-    if (quizMode !== 'multiple-choice') return [];
-    
+    switch (quizMode) {
+      case 'multiple-choice':
+        return this.generateBossMultipleChoiceOptions(word);
+      
+      case 'letter-scramble':
+        return this.generateBossLetterScrambleOptions(word);
+      
+      case 'open-answer':
+        return []; // Open answer doesn't need options
+      
+      case 'fill-in-the-blank':
+        return this.generateBossFillInTheBlankOptions(word);
+      
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * Generate challenging multiple choice options for boss battles
+   */
+  private generateBossMultipleChoiceOptions(word: Word): string[] {
     if (!this.state) return [];
 
     const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
@@ -359,6 +380,122 @@ class BossBattleService {
 
     const options = [correctAnswer, ...wrongAnswers];
     return options.sort(() => 0.5 - Math.random()); // Shuffle final options
+  }
+
+  /**
+   * Generate challenging letter scramble options for boss battles
+   */
+  private generateBossLetterScrambleOptions(word: Word): string[] {
+    const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
+    const options = [correctAnswer];
+    
+    // For boss battles, create more deceptive scrambles
+    for (let i = 0; i < 3; i++) {
+      let scrambled = this.createBossScramble(correctAnswer, i + 1);
+      // Ensure we don't duplicate the correct answer
+      while (options.includes(scrambled) || scrambled === correctAnswer) {
+        scrambled = this.createBossScramble(correctAnswer, Math.random() * 4 + 1);
+      }
+      options.push(scrambled);
+    }
+    
+    return options.sort(() => 0.5 - Math.random());
+  }
+
+  /**
+   * Generate challenging fill-in-the-blank options for boss battles
+   */
+  private generateBossFillInTheBlankOptions(word: Word): string[] {
+    if (!this.state) return [];
+
+    const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
+    
+    // For boss battles, use more sophisticated distractors
+    const wrongAnswers = this.state.challengeWords
+      .filter(w => w.id !== word.id)
+      .map(w => word.direction === 'definition-to-term' ? w.term : w.definition)
+      .filter(answer => answer !== correctAnswer)
+      .filter(answer => Math.abs(answer.length - correctAnswer.length) <= 3) // Similar length for challenging options
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+    
+    // Boss-level fallbacks if needed
+    while (wrongAnswers.length < 3) {
+      const bossFallbacks = ['challenging-alternative', 'complex-option', 'sophisticated-choice'];
+      for (const fallback of bossFallbacks) {
+        if (!wrongAnswers.includes(fallback) && wrongAnswers.length < 3) {
+          wrongAnswers.push(fallback);
+        }
+      }
+      break;
+    }
+    
+    const options = [correctAnswer, ...wrongAnswers];
+    return options.sort(() => 0.5 - Math.random());
+  }
+
+  /**
+   * Create challenging scrambles for boss battles
+   */
+  private createBossScramble(text: string, difficulty: number): string {
+    const words = text.split(' ');
+    
+    if (words.length === 1) {
+      // Single word - use advanced scrambling
+      return this.scrambleBossWord(words[0], difficulty);
+    } else {
+      // Multiple words - scramble both order and letters
+      const scrambledWords = words.map(word => this.scrambleBossWord(word, difficulty * 0.7));
+      return scrambledWords.reverse().join(' '); // Reverse word order for extra challenge
+    }
+  }
+
+  /**
+   * Advanced word scrambling for boss battles
+   */
+  private scrambleBossWord(word: string, difficulty: number): string {
+    if (word.length <= 2) return word; // Don't scramble very short words
+    
+    const chars = word.split('');
+    const level = Math.floor(difficulty) % 4;
+    
+    switch (level) {
+      case 0:
+        // Reverse with middle swap
+        chars.reverse();
+        if (chars.length > 4) {
+          const mid = Math.floor(chars.length / 2);
+          [chars[mid - 1], chars[mid + 1]] = [chars[mid + 1], chars[mid - 1]];
+        }
+        break;
+      
+      case 1:
+        // Split and reverse sections
+        const firstHalf = chars.slice(0, Math.floor(chars.length / 2)).reverse();
+        const secondHalf = chars.slice(Math.floor(chars.length / 2)).reverse();
+        return firstHalf.concat(secondHalf).join('');
+      
+      case 2:
+        // Advanced pattern scramble
+        for (let i = 0; i < chars.length; i += 2) {
+          if (i + 1 < chars.length) {
+            [chars[i], chars[i + 1]] = [chars[i + 1], chars[i]];
+          }
+        }
+        chars.reverse();
+        break;
+      
+      case 3:
+      default:
+        // Full random scramble with strategic placement
+        for (let i = chars.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [chars[i], chars[j]] = [chars[j], chars[i]];
+        }
+        break;
+    }
+    
+    return chars.join('');
   }
 
   /**
@@ -579,6 +716,37 @@ class BossBattleService {
     } else {
       // Lower difficulty: easier modes to start
       return Math.random() < 0.5 ? 'multiple-choice' : 'letter-scramble';
+    }
+  }
+
+  /**
+   * Save boss battle session performance data
+   */
+  async saveBossPerformance(
+    userId: string,
+    sessionData: {
+      wordsCompleted: number;
+      completed: boolean;
+      wasAIEnhanced: boolean;
+      finalBossReached: boolean;
+      finalBossDefeated: boolean;
+      phasePerformance: { [phase: string]: { accuracy: number; avgTime: number; adaptations: number } };
+      quizMode: string;
+      cognitiveLoad: 'low' | 'moderate' | 'high' | 'overload';
+    }
+  ): Promise<void> {
+    try {
+      await userLearningProfileStorage.updateBossBattleData(userId, sessionData);
+      
+      logger.info('Boss battle performance saved', {
+        userId,
+        wordsCompleted: sessionData.wordsCompleted,
+        completed: sessionData.completed,
+        finalBossReached: sessionData.finalBossReached,
+        wasAIEnhanced: sessionData.wasAIEnhanced
+      });
+    } catch (error) {
+      logger.error('Failed to save boss battle performance', { userId, error });
     }
   }
 }

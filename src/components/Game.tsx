@@ -14,11 +14,15 @@ import {
   setLanguage as setSessionLanguage,
 } from '../store/sessionSlice';
 import { useAudio } from '../features/audio/AudioContext';
-import { words } from '../services/wordService';
+import { words, getWordsForLanguage } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
 import { useEnhancedGame } from '../hooks/useEnhancedGame';
 import { streakChallengeService } from '../services/streakChallengeService';
 import { bossBattleService } from '../services/bossBattleService';
+import { precisionModeService } from '../services/precisionModeService';
+import { quickDashService } from '../services/quickDashService';
+import { deepDiveService } from '../services/deepDiveService';
+import { fillInTheBlankService } from '../services/fillInTheBlankService';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
@@ -1176,6 +1180,90 @@ export const Game: React.FC = () => {
             console.error('Failed to get initial boss word:', error);
             dispatch(nextWord()); // Fallback to regular word selection
           });
+        } else if (currentSession?.id === 'precision-mode') {
+          const targetWords = currentSession?.targetWords || 15;
+          precisionModeService.initializePrecisionMode(languageCode, wordProgress, targetWords).then(() => {
+            return precisionModeService.getNextPrecisionWord(0, wordProgress);
+          }).then((precisionWord) => {
+            if (precisionWord.word) {
+              dispatch(setCurrentWord({
+                word: precisionWord.word,
+                options: precisionWord.options,
+                quizMode: precisionWord.quizMode,
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial precision word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
+        } else if (currentSession?.id === 'quick-dash') {
+          const targetWords = currentSession?.targetWords || 8;
+          const timeLimit = (currentSession?.timeLimit || 5) * 60; // Convert to seconds
+          quickDashService.initializeQuickDash(languageCode, wordProgress, targetWords, timeLimit).then(() => {
+            const timeRemaining = timeLimit;
+            return quickDashService.getNextQuickDashWord(0, wordProgress, timeRemaining);
+          }).then((quickDashWord) => {
+            if (quickDashWord.word) {
+              dispatch(setCurrentWord({
+                word: quickDashWord.word,
+                options: quickDashWord.options,
+                quizMode: quickDashWord.quizMode,
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial quick dash word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
+        } else if (currentSession?.id === 'deep-dive') {
+          const targetWords = currentSession?.targetWords || 20;
+          deepDiveService.initializeDeepDive(languageCode, targetWords, 3).then(() => {
+            // Get all words for candidates
+            const allWords = getWordsForLanguage(languageCode) || [];
+            return deepDiveService.getNextDeepDiveWord(allWords, wordProgress, 0, targetWords);
+          }).then((deepDiveWord) => {
+            if (deepDiveWord.word) {
+              // Map Deep Dive quiz modes to Redux-compatible modes
+              let mappedQuizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+              switch (deepDiveWord.quizMode) {
+                case 'contextual-analysis':
+                case 'usage-example':
+                case 'synonym-antonym':
+                  mappedQuizMode = 'multiple-choice'; // Map specialized modes to multiple-choice
+                  break;
+                case 'multiple-choice':
+                default:
+                  mappedQuizMode = 'multiple-choice';
+                  break;
+              }
+              
+              dispatch(setCurrentWord({
+                word: deepDiveWord.word,
+                options: deepDiveWord.options || [],
+                quizMode: mappedQuizMode,
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial deep dive word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
+        } else if (currentSession?.id === 'fill-in-the-blank') {
+          const targetWords = currentSession?.targetWords || 15;
+          fillInTheBlankService.initializeFillInTheBlank(languageCode, targetWords).then(() => {
+            // Get all words for candidates
+            const allWords = getWordsForLanguage(languageCode) || [];
+            return fillInTheBlankService.getNextFillInTheBlankWord(allWords, wordProgress, 0, targetWords);
+          }).then((fillBlankWord) => {
+            if (fillBlankWord.word) {
+              dispatch(setCurrentWord({
+                word: fillBlankWord.word,
+                options: fillBlankWord.options || [],
+                quizMode: 'fill-in-the-blank', // Fixed quiz mode for fill-in-the-blank
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial fill-in-the-blank word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
         } else {
           dispatch(nextWord());
         }
@@ -1432,6 +1520,81 @@ export const Game: React.FC = () => {
               }
             }).catch((error) => {
               console.error('Failed to get boss word:', error);
+              dispatch(nextWord()); // Fallback
+            });
+          } else if (currentSession?.id === 'precision-mode') {
+            const wordsCompleted = sessionProgress.wordsCompleted;
+            precisionModeService.getNextPrecisionWord(wordsCompleted, wordProgress).then((precisionWord) => {
+              if (precisionWord.word) {
+                dispatch(setCurrentWord({
+                  word: precisionWord.word,
+                  options: precisionWord.options,
+                  quizMode: precisionWord.quizMode,
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get precision word:', error);
+              dispatch(nextWord()); // Fallback
+            });
+          } else if (currentSession?.id === 'quick-dash') {
+            const wordsCompleted = sessionProgress.wordsCompleted;
+            const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
+            quickDashService.getNextQuickDashWord(wordsCompleted, wordProgress, timeRemaining).then((quickDashWord) => {
+              if (quickDashWord.word) {
+                dispatch(setCurrentWord({
+                  word: quickDashWord.word,
+                  options: quickDashWord.options,
+                  quizMode: quickDashWord.quizMode,
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get quick dash word:', error);
+              dispatch(nextWord()); // Fallback
+            });
+          } else if (currentSession?.id === 'deep-dive') {
+            const wordsCompleted = sessionProgress.wordsCompleted;
+            const allWords = getWordsForLanguage(languageCode!) || [];
+            const targetWords = currentSession.targetWords || 20;
+            deepDiveService.getNextDeepDiveWord(allWords, wordProgress, wordsCompleted, targetWords).then((deepDiveWord) => {
+              if (deepDiveWord.word) {
+                // Map Deep Dive quiz modes to Redux-compatible modes
+                let mappedQuizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+                switch (deepDiveWord.quizMode) {
+                  case 'contextual-analysis':
+                  case 'usage-example':
+                  case 'synonym-antonym':
+                    mappedQuizMode = 'multiple-choice'; // Map specialized modes to multiple-choice
+                    break;
+                  case 'multiple-choice':
+                  default:
+                    mappedQuizMode = 'multiple-choice';
+                    break;
+                }
+                
+                dispatch(setCurrentWord({
+                  word: deepDiveWord.word,
+                  options: deepDiveWord.options || [],
+                  quizMode: mappedQuizMode,
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get deep dive word:', error);
+              dispatch(nextWord()); // Fallback
+            });
+          } else if (currentSession?.id === 'fill-in-the-blank') {
+            const wordsCompleted = sessionProgress.wordsCompleted;
+            const allWords = getWordsForLanguage(languageCode!) || [];
+            const targetWords = currentSession.targetWords || 15;
+            fillInTheBlankService.getNextFillInTheBlankWord(allWords, wordProgress, wordsCompleted, targetWords).then((fillBlankWord) => {
+              if (fillBlankWord.word) {
+                dispatch(setCurrentWord({
+                  word: fillBlankWord.word,
+                  options: fillBlankWord.options || [],
+                  quizMode: 'fill-in-the-blank', // Fixed quiz mode
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get fill-in-the-blank word:', error);
               dispatch(nextWord()); // Fallback
             });
           } else {
