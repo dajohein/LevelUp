@@ -1,14 +1,19 @@
 /**
- * Streak Challenge Service
+ * Streak Challenge Service - AI Enhanced
  * 
- * Implements progressive difficulty word selection for streak challenges.
- * Words get progressively harder as the streak increases, ensuring a challenging
- * and engaging experience that tests the user's knowledge limits.
+ * Implements progressive difficulty word selection for streak challenges with
+ * intelligent AI adaptations. Words get progressively harder as the streak increases,
+ * while AI monitors cognitive load and adjusts difficulty and quiz modes dynamically.
  */
 
 import { Word, getWordsForLanguage } from './wordService';
 import { WordProgress } from '../store/types';
 import { calculateMasteryDecay } from './masteryService';
+import { 
+  challengeAIIntegrator, 
+  ChallengeAIContext, 
+  AIEnhancedWordSelection 
+} from './challengeAIIntegrator';
 import { logger } from './logger';
 
 interface StreakChallengeState {
@@ -17,6 +22,18 @@ interface StreakChallengeState {
   usedWordIds: Set<string>;
   difficultyTier: number;
   availableWords: Word[];
+  // AI enhancement state
+  sessionStartTime: number;
+  performanceHistory: Array<{
+    isCorrect: boolean;
+    timeSpent: number;
+    quizMode: string;
+    difficulty: number;
+    streak: number;
+  }>;
+  consecutiveCorrect: number;
+  consecutiveIncorrect: number;
+  aiEnhancementsEnabled: boolean;
 }
 
 class StreakChallengeService {
@@ -42,25 +59,39 @@ class StreakChallengeService {
       usedWordIds: new Set(),
       difficultyTier: 1,
       availableWords: sortedWords,
+      // AI enhancement initialization
+      sessionStartTime: Date.now(),
+      performanceHistory: [],
+      consecutiveCorrect: 0,
+      consecutiveIncorrect: 0,
+      aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
     logger.debug(`🔥 Streak challenge initialized with ${allWords.length} words`);
   }
 
   /**
-   * Get the next word for the streak challenge based on current difficulty
+   * Get the next word for the streak challenge with AI enhancements
    */
-  getNextStreakWord(
+  async getNextStreakWord(
     currentStreak: number,
-    wordProgress: { [key: string]: WordProgress }
-  ): {
+    wordProgress: { [key: string]: WordProgress },
+    lastWordResult?: { isCorrect: boolean; timeSpent: number; quizMode: string }
+  ): Promise<{
     word: Word | null;
     options: string[];
     quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-  } {
+    aiEnhanced: boolean;
+    reasoning?: string[];
+  }> {
     if (!this.state) {
       logger.error('Streak challenge not initialized');
-      return { word: null, options: [], quizMode: 'multiple-choice' };
+      return { word: null, options: [], quizMode: 'multiple-choice', aiEnhanced: false };
+    }
+
+    // Update performance tracking
+    if (lastWordResult) {
+      this.updatePerformanceHistory(lastWordResult, currentStreak);
     }
 
     // Update streak and calculate new difficulty tier
@@ -79,21 +110,21 @@ class StreakChallengeService {
       // If we've exhausted words at this tier, move to harder tier or cycle
       const higherTierWord = this.selectWordForTier(Math.min(5, this.state.difficultyTier + 1), wordProgress);
       if (higherTierWord) {
-        return this.generateQuizForWord(higherTierWord, currentStreak);
+        return this.generateAIEnhancedQuiz(higherTierWord, currentStreak, wordProgress);
       }
       
       // Last resort: reset used words and start over
       this.state.usedWordIds.clear();
       const resetWord = this.selectWordForTier(this.state.difficultyTier, wordProgress);
       if (resetWord) {
-        return this.generateQuizForWord(resetWord, currentStreak);
+        return this.generateAIEnhancedQuiz(resetWord, currentStreak, wordProgress);
       }
       
       logger.error('No words available for streak challenge');
-      return { word: null, options: [], quizMode: 'multiple-choice' };
+      return { word: null, options: [], quizMode: 'multiple-choice', aiEnhanced: false };
     }
 
-    return this.generateQuizForWord(selectedWord, currentStreak);
+    return this.generateAIEnhancedQuiz(selectedWord, currentStreak, wordProgress);
   }
 
   /**
@@ -277,7 +308,189 @@ class StreakChallengeService {
       difficultyTier: this.state.difficultyTier,
       wordsUsed: this.state.usedWordIds.size,
       totalWords: this.state.availableWords.length,
+      aiEnhanced: this.state.aiEnhancementsEnabled,
+      performanceHistory: this.state.performanceHistory.length,
     };
+  }
+
+  /**
+   * Update performance history for AI analysis
+   */
+  private updatePerformanceHistory(
+    result: { isCorrect: boolean; timeSpent: number; quizMode: string },
+    streak: number
+  ): void {
+    if (!this.state) return;
+
+    // Update consecutive counters
+    if (result.isCorrect) {
+      this.state.consecutiveCorrect++;
+      this.state.consecutiveIncorrect = 0;
+    } else {
+      this.state.consecutiveIncorrect++;
+      this.state.consecutiveCorrect = 0;
+    }
+
+    // Add to performance history
+    this.state.performanceHistory.push({
+      isCorrect: result.isCorrect,
+      timeSpent: result.timeSpent,
+      quizMode: result.quizMode,
+      difficulty: this.state.difficultyTier * 20, // Convert tier to percentage
+      streak: streak
+    });
+
+    // Keep only recent history (last 10 words for AI analysis)
+    if (this.state.performanceHistory.length > 10) {
+      this.state.performanceHistory = this.state.performanceHistory.slice(-10);
+    }
+  }
+
+  /**
+   * Generate AI-enhanced quiz with intelligent mode selection
+   */
+  private async generateAIEnhancedQuiz(
+    word: Word,
+    currentStreak: number,
+    wordProgress: { [key: string]: WordProgress }
+  ): Promise<{
+    word: Word;
+    options: string[];
+    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+    aiEnhanced: boolean;
+    reasoning?: string[];
+  }> {
+    if (!this.state) {
+      return {
+        word,
+        options: [],
+        quizMode: 'multiple-choice',
+        aiEnhanced: false
+      };
+    }
+
+    // Calculate recent accuracy
+    const recentPerformance = this.state.performanceHistory.slice(-5); // Last 5 words
+    const recentAccuracy = recentPerformance.length > 0 
+      ? recentPerformance.filter(p => p.isCorrect).length / recentPerformance.length 
+      : 0.8; // Default assumption
+
+    // Generate baseline quiz mode based on tier
+    const baselineQuizMode = this.generateQuizModeForTier(this.state.difficultyTier, currentStreak);
+
+    // If AI is disabled, use baseline approach
+    if (!this.state.aiEnhancementsEnabled) {
+      const options = this.generateOptions(word, baselineQuizMode);
+      return {
+        word,
+        options,
+        quizMode: baselineQuizMode,
+        aiEnhanced: false
+      };
+    }
+
+    try {
+      // Create AI context for analysis
+      const aiContext: ChallengeAIContext = {
+        sessionType: 'streak-challenge',
+        currentProgress: {
+          wordsCompleted: this.state.performanceHistory.length,
+          targetWords: 50, // Streak challenges don't have fixed targets
+          currentStreak: currentStreak,
+          consecutiveCorrect: this.state.consecutiveCorrect,
+          consecutiveIncorrect: this.state.consecutiveIncorrect,
+          recentAccuracy: recentAccuracy,
+          sessionDuration: Date.now() - this.state.sessionStartTime
+        },
+        userState: {
+          recentPerformance: this.state.performanceHistory
+        },
+        challengeContext: {
+          currentDifficulty: this.state.difficultyTier * 20, // Convert tier to percentage
+          tierLevel: this.state.difficultyTier,
+          isEarlyPhase: currentStreak <= 5,
+          isFinalPhase: false // Streak challenges don't have final phase
+        }
+      };
+
+      // Get AI enhancement
+      const aiEnhancement = await challengeAIIntegrator.enhanceWordSelection(
+        word,
+        baselineQuizMode,
+        aiContext,
+        wordProgress
+      );
+
+      // Generate options for the AI-selected mode
+      const options = this.generateOptions(word, aiEnhancement.aiRecommendedMode || baselineQuizMode);
+
+      logger.debug(`🤖 AI-enhanced streak word: ${word.term}`, {
+        baseline: baselineQuizMode,
+        aiMode: aiEnhancement.aiRecommendedMode,
+        reasoning: aiEnhancement.reasoning,
+        streak: currentStreak,
+        tier: this.state.difficultyTier
+      });
+
+      return {
+        word,
+        options,
+        quizMode: aiEnhancement.aiRecommendedMode as any || baselineQuizMode,
+        aiEnhanced: true,
+        reasoning: aiEnhancement.reasoning
+      };
+
+    } catch (error) {
+      logger.error('❌ AI enhancement failed for streak challenge, using baseline:', error);
+      
+      const options = this.generateOptions(word, baselineQuizMode);
+      return {
+        word,
+        options,
+        quizMode: baselineQuizMode,
+        aiEnhanced: false,
+        reasoning: ['AI enhancement failed - using baseline selection']
+      };
+    }
+  }
+
+  /**
+   * Generate quiz mode for difficulty tier (baseline logic)
+   */
+  private generateQuizModeForTier(tier: number, streak: number): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' {
+    // Tier 1 (0-2 streak): Easier modes
+    if (tier === 1) {
+      return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
+    }
+    
+    // Tier 2 (3-6 streak): Mixed easier modes
+    if (tier === 2) {
+      return Math.random() < 0.5 ? 'multiple-choice' : 'letter-scramble';
+    }
+    
+    // Tier 3 (7-11 streak): Introduce open-answer
+    if (tier === 3) {
+      const rand = Math.random();
+      if (rand < 0.3) return 'multiple-choice';
+      if (rand < 0.6) return 'letter-scramble';
+      return 'open-answer';
+    }
+    
+    // Tier 4 (12-17 streak): More challenging
+    if (tier === 4) {
+      const rand = Math.random();
+      if (rand < 0.2) return 'multiple-choice';
+      if (rand < 0.4) return 'letter-scramble';
+      if (rand < 0.7) return 'open-answer';
+      return 'fill-in-the-blank';
+    }
+    
+    // Tier 5 (18+ streak): Expert level
+    const rand = Math.random();
+    if (rand < 0.1) return 'multiple-choice';
+    if (rand < 0.2) return 'letter-scramble';
+    if (rand < 0.5) return 'open-answer';
+    return 'fill-in-the-blank';
   }
 }
 

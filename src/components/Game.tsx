@@ -1145,29 +1145,37 @@ export const Game: React.FC = () => {
         // Initialize challenge services for special modes
         if (currentSession?.id === 'streak-challenge') {
           streakChallengeService.initializeStreak(languageCode, wordProgress);
-          // Get first streak word instead of random word
-          const streakWord = streakChallengeService.getNextStreakWord(0, wordProgress);
-          if (streakWord.word) {
-            // Manually set the word instead of using nextWord()
-            dispatch(setCurrentWord({
-              word: streakWord.word,
-              options: streakWord.options,
-              quizMode: streakWord.quizMode,
-            }));
-          }
+          // Get first streak word instead of random word (async)
+          streakChallengeService.getNextStreakWord(0, wordProgress).then((streakWord) => {
+            if (streakWord.word) {
+              // Manually set the word instead of using nextWord()
+              dispatch(setCurrentWord({
+                word: streakWord.word,
+                options: streakWord.options,
+                quizMode: streakWord.quizMode,
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial streak word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
         } else if (currentSession?.id === 'boss-battle') {
           const targetWords = currentSession?.targetWords || 25;
           bossBattleService.initializeBossBattle(languageCode, wordProgress, targetWords);
-          // Get first boss word instead of random word
-          const bossWord = bossBattleService.getNextBossWord(0, wordProgress);
-          if (bossWord.word) {
-            // Manually set the word instead of using nextWord()
-            dispatch(setCurrentWord({
-              word: bossWord.word,
-              options: bossWord.options,
-              quizMode: bossWord.quizMode,
-            }));
-          }
+          // Get first boss word instead of random word (async)
+          bossBattleService.getNextBossWord(0, wordProgress).then((bossWord) => {
+            if (bossWord.word) {
+              // Manually set the word instead of using nextWord()
+              dispatch(setCurrentWord({
+                word: bossWord.word,
+                options: bossWord.options,
+                quizMode: bossWord.quizMode,
+              }));
+            }
+          }).catch((error) => {
+            console.error('Failed to get initial boss word:', error);
+            dispatch(nextWord()); // Fallback to regular word selection
+          });
         } else {
           dispatch(nextWord());
         }
@@ -1400,24 +1408,32 @@ export const Game: React.FC = () => {
           // Use specialized services for challenge modes
           if (currentSession?.id === 'streak-challenge') {
             const currentStreak = sessionProgress.currentStreak;
-            const streakWord = streakChallengeService.getNextStreakWord(currentStreak, wordProgress);
-            if (streakWord.word) {
-              dispatch(setCurrentWord({
-                word: streakWord.word,
-                options: streakWord.options,
-                quizMode: streakWord.quizMode,
-              }));
-            }
+            streakChallengeService.getNextStreakWord(currentStreak, wordProgress).then((streakWord) => {
+              if (streakWord.word) {
+                dispatch(setCurrentWord({
+                  word: streakWord.word,
+                  options: streakWord.options,
+                  quizMode: streakWord.quizMode,
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get streak word:', error);
+              dispatch(nextWord()); // Fallback
+            });
           } else if (currentSession?.id === 'boss-battle') {
             const wordsCompleted = sessionProgress.wordsCompleted;
-            const bossWord = bossBattleService.getNextBossWord(wordsCompleted, wordProgress);
-            if (bossWord.word) {
-              dispatch(setCurrentWord({
-                word: bossWord.word,
-                options: bossWord.options,
-                quizMode: bossWord.quizMode,
-              }));
-            }
+            bossBattleService.getNextBossWord(wordsCompleted, wordProgress).then((bossWord) => {
+              if (bossWord.word) {
+                dispatch(setCurrentWord({
+                  word: bossWord.word,
+                  options: bossWord.options,
+                  quizMode: bossWord.quizMode,
+                }));
+              }
+            }).catch((error) => {
+              console.error('Failed to get boss word:', error);
+              dispatch(nextWord()); // Fallback
+            });
           } else {
             dispatch(nextWord());
           }
@@ -1710,14 +1726,18 @@ export const Game: React.FC = () => {
                     // Use streak challenge service for streak challenges
                     if (currentSession?.id === 'streak-challenge') {
                       const currentStreak = sessionProgress.currentStreak;
-                      const streakWord = streakChallengeService.getNextStreakWord(currentStreak, wordProgress);
-                      if (streakWord.word) {
-                        dispatch(setCurrentWord({
-                          word: streakWord.word,
-                          options: streakWord.options,
-                          quizMode: streakWord.quizMode,
-                        }));
-                      }
+                      streakChallengeService.getNextStreakWord(currentStreak, wordProgress).then((streakWord) => {
+                        if (streakWord.word) {
+                          dispatch(setCurrentWord({
+                            word: streakWord.word,
+                            options: streakWord.options,
+                            quizMode: streakWord.quizMode,
+                          }));
+                        }
+                      }).catch((error) => {
+                        console.error('Failed to get streak word in completion:', error);
+                        dispatch(nextWord()); // Fallback
+                      });
                     } else {
                       dispatch(nextWord());
                     }
@@ -1919,25 +1939,33 @@ export const Game: React.FC = () => {
               if (currentSession?.id === 'streak-challenge' && !isUsingSpacedRepetition) {
                 // For streak challenges, skipping should reset the streak
                 streakChallengeService.resetStreak();
-                const streakWord = streakChallengeService.getNextStreakWord(0, wordProgress);
-                if (streakWord.word) {
-                  dispatch(setCurrentWord({
-                    word: streakWord.word,
-                    options: streakWord.options,
-                    quizMode: streakWord.quizMode,
-                  }));
-                }
+                streakChallengeService.getNextStreakWord(0, wordProgress).then((streakWord) => {
+                  if (streakWord.word) {
+                    dispatch(setCurrentWord({
+                      word: streakWord.word,
+                      options: streakWord.options,
+                      quizMode: streakWord.quizMode,
+                    }));
+                  }
+                }).catch((error) => {
+                  console.error('Failed to get streak word on skip:', error);
+                  dispatch(nextWord()); // Fallback
+                });
               } else if (currentSession?.id === 'boss-battle' && !isUsingSpacedRepetition) {
                 // For boss battles, get the next challenging word
                 const wordsCompleted = sessionProgress.wordsCompleted;
-                const bossWord = bossBattleService.getNextBossWord(wordsCompleted, wordProgress);
-                if (bossWord.word) {
-                  dispatch(setCurrentWord({
-                    word: bossWord.word,
-                    options: bossWord.options,
-                    quizMode: bossWord.quizMode,
-                  }));
-                }
+                bossBattleService.getNextBossWord(wordsCompleted, wordProgress).then((bossWord) => {
+                  if (bossWord.word) {
+                    dispatch(setCurrentWord({
+                      word: bossWord.word,
+                      options: bossWord.options,
+                      quizMode: bossWord.quizMode,
+                    }));
+                  }
+                }).catch((error) => {
+                  console.error('Failed to get boss word on skip:', error);
+                  dispatch(nextWord()); // Fallback
+                });
               } else {
                 dispatch(nextWord());
               }
