@@ -18,6 +18,7 @@ import { words } from '../services/wordService';
 import { calculateMasteryDecay } from '../services/masteryService';
 import { useEnhancedGame } from '../hooks/useEnhancedGame';
 import { streakChallengeService } from '../services/streakChallengeService';
+import { bossBattleService } from '../services/bossBattleService';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
@@ -1141,7 +1142,7 @@ export const Game: React.FC = () => {
       // Load the first word after setting the language
       // Use enhanced system by default
       if (!isUsingSpacedRepetition) {
-        // Initialize streak challenge service if this is a streak challenge
+        // Initialize challenge services for special modes
         if (currentSession?.id === 'streak-challenge') {
           streakChallengeService.initializeStreak(languageCode, wordProgress);
           // Get first streak word instead of random word
@@ -1152,6 +1153,19 @@ export const Game: React.FC = () => {
               word: streakWord.word,
               options: streakWord.options,
               quizMode: streakWord.quizMode,
+            }));
+          }
+        } else if (currentSession?.id === 'boss-battle') {
+          const targetWords = currentSession?.targetWords || 25;
+          bossBattleService.initializeBossBattle(languageCode, wordProgress, targetWords);
+          // Get first boss word instead of random word
+          const bossWord = bossBattleService.getNextBossWord(0, wordProgress);
+          if (bossWord.word) {
+            // Manually set the word instead of using nextWord()
+            dispatch(setCurrentWord({
+              word: bossWord.word,
+              options: bossWord.options,
+              quizMode: bossWord.quizMode,
             }));
           }
         } else {
@@ -1383,7 +1397,7 @@ export const Game: React.FC = () => {
         setWordStartTime(Date.now());
         // Standard word progression - let Redux/game logic handle next word
         if (!isUsingSpacedRepetition) {
-          // Use streak challenge service for streak challenges
+          // Use specialized services for challenge modes
           if (currentSession?.id === 'streak-challenge') {
             const currentStreak = sessionProgress.currentStreak;
             const streakWord = streakChallengeService.getNextStreakWord(currentStreak, wordProgress);
@@ -1392,6 +1406,16 @@ export const Game: React.FC = () => {
                 word: streakWord.word,
                 options: streakWord.options,
                 quizMode: streakWord.quizMode,
+              }));
+            }
+          } else if (currentSession?.id === 'boss-battle') {
+            const wordsCompleted = sessionProgress.wordsCompleted;
+            const bossWord = bossBattleService.getNextBossWord(wordsCompleted, wordProgress);
+            if (bossWord.word) {
+              dispatch(setCurrentWord({
+                word: bossWord.word,
+                options: bossWord.options,
+                quizMode: bossWord.quizMode,
               }));
             }
           } else {
@@ -1891,7 +1915,7 @@ export const Game: React.FC = () => {
         <SkipButtonContainer>
           <Button
             onClick={() => {
-              // Use streak challenge service for streak challenges
+              // Use specialized services for challenge modes
               if (currentSession?.id === 'streak-challenge' && !isUsingSpacedRepetition) {
                 // For streak challenges, skipping should reset the streak
                 streakChallengeService.resetStreak();
@@ -1901,6 +1925,17 @@ export const Game: React.FC = () => {
                     word: streakWord.word,
                     options: streakWord.options,
                     quizMode: streakWord.quizMode,
+                  }));
+                }
+              } else if (currentSession?.id === 'boss-battle' && !isUsingSpacedRepetition) {
+                // For boss battles, get the next challenging word
+                const wordsCompleted = sessionProgress.wordsCompleted;
+                const bossWord = bossBattleService.getNextBossWord(wordsCompleted, wordProgress);
+                if (bossWord.word) {
+                  dispatch(setCurrentWord({
+                    word: bossWord.word,
+                    options: bossWord.options,
+                    quizMode: bossWord.quizMode,
                   }));
                 }
               } else {
