@@ -67,7 +67,12 @@
       "definition": "ik ben",
       "direction": "definition-to-term",
       "category": "werkwoord zijn",
-      "context": "1e persoon enkelvoud - 'sein' is onregelmatig",
+      "context": {
+        "sentence": "Ich bin heute sehr müde.",
+        "translation": "Ik ben vandaag heel moe.",
+        "sentenceWithBlank": "{BLANK} heute sehr müde.",
+        "explanation": "1e persoon enkelvoud - 'sein' is onregelmatig"
+      },
       "synonyms": []
     },
     {
@@ -76,7 +81,12 @@
       "definition": "jij bent",
       "direction": "definition-to-term",
       "category": "werkwoord zijn",
-      "context": "2e persoon enkelvoud - let op unieke vorm 'bist'",
+      "context": {
+        "sentence": "Du bist mein bester Freund.",
+        "translation": "Jij bent mijn beste vriend.",
+        "sentenceWithBlank": "{BLANK} mein bester Freund.",
+        "explanation": "2e persoon enkelvoud - let op unieke vorm 'bist'"
+      },
       "synonyms": []
     },
     {
@@ -85,7 +95,12 @@
       "definition": "hij is",
       "direction": "definition-to-term",
       "category": "werkwoord zijn",
-      "context": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'",
+      "context": {
+        "sentence": "Er ist ein sehr guter Schüler.",
+        "translation": "Hij is een heel goede leerling.",
+        "sentenceWithBlank": "{BLANK} ein sehr guter Schüler.",
+        "explanation": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'"
+      },
       "synonyms": [
         "sie ist",
         "es ist"
@@ -97,7 +112,12 @@
       "definition": "ik heb",
       "direction": "definition-to-term",
       "category": "werkwoord hebben",
-      "context": "1e persoon enkelvoud - hulpwerkwoord voor perfectum",
+      "context": {
+        "sentence": "Ich habe einen neuen Computer.",
+        "translation": "Ik heb een nieuwe computer.",
+        "sentenceWithBlank": "{BLANK} einen neuen Computer.",
+        "explanation": "1e persoon enkelvoud - hulpwerkwoord voor perfectum"
+      },
       "synonyms": []
     },
     {
@@ -106,7 +126,12 @@
       "definition": "jij hebt",
       "direction": "definition-to-term",
       "category": "werkwoord hebben",
-      "context": "2e persoon enkelvoud - let op verkorte vorm van 'haben'",
+      "context": {
+        "sentence": "Du hast heute keine Zeit.",
+        "translation": "Jij hebt vandaag geen tijd.",
+        "sentenceWithBlank": "{BLANK} heute keine Zeit.",
+        "explanation": "2e persoon enkelvoud - let op verkorte vorm van 'haben'"
+      },
       "synonyms": []
     },
     {
@@ -115,7 +140,12 @@
       "definition": "hij heeft",
       "direction": "definition-to-term",
       "category": "werkwoord hebben",
-      "context": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'",
+      "context": {
+        "sentence": "Er hat viele interessante Bücher.",
+        "translation": "Hij heeft veel interessante boeken.",
+        "sentenceWithBlank": "{BLANK} viele interessante Bücher.",
+        "explanation": "3e persoon enkelvoud - geldt ook voor 'sie' en 'es'"
+      },
       "synonyms": [
         "sie hat",
         "es hat"
@@ -127,7 +157,12 @@
       "definition": "mijn vader",
       "direction": "definition-to-term",
       "category": "bezittelijk voornaamwoord",
-      "context": "mein + mannelijk zelfstandig naamwoord (nominatief)",
+      "context": {
+        "sentence": "Mein Vater arbeitet in einem Büro.",
+        "translation": "Mijn vader werkt op een kantoor.",
+        "sentenceWithBlank": "{BLANK} arbeitet in einem Büro.",
+        "explanation": "mein + mannelijk zelfstandig naamwoord (nominatief)"
+      },
       "synonyms": [
         "mein Papa",
         "mein Dad"
@@ -139,7 +174,12 @@
       "definition": "mijn moeder",
       "direction": "definition-to-term",
       "category": "bezittelijk voornaamwoord",
-      "context": "meine + vrouwelijk zelfstandig naamwoord (nominatief)",
+      "context": {
+        "sentence": "Meine Mutter kocht gerne im Supermarkt ein.",
+        "translation": "Mijn moeder koopt graag boodschappen in de supermarkt.",
+        "sentenceWithBlank": "{BLANK} kocht gerne im Supermarkt ein.",
+        "explanation": "meine + vrouwelijk zelfstandig naamwoord (nominatief)"
+      },
       "synonyms": [
         "meine Mama",
         "meine Mutti"
@@ -151,7 +191,12 @@
       "definition": "jouw huis",
       "direction": "definition-to-term",
       "category": "bezittelijk voornaamwoord",
-      "context": "dein + onzijdig zelfstandig naamwoord (nominatief)",
+      "context": {
+        "sentence": "Dein Haus liegt sehr ruhig.",
+        "translation": "Jouw huis ligt heel rustig.",
+        "sentenceWithBlank": "{BLANK} liegt sehr ruhig.",
+        "explanation": "dein + onzijdig zelfstandig naamwoord (nominatief)"
+      },
       "synonyms": [
         "dein Zuhause",
         "dein Heim"

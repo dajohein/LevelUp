@@ -44,6 +44,8 @@ export interface ChallengeResult {
     optimalPacing?: number;
     difficulty?: number;
     bossPhase?: string;
+    originalQuizMode?: string; // Preserve the original mode for UI display
+    enhancementLevel?: 'standard' | 'advanced'; // Indicate if this is an enhanced question
   };
 }
 

@@ -171,7 +171,7 @@ class DevelopmentCacheManager {
   private setupFetchInterception(): void {
     if (this.originalFetch) return; // Already set up
 
-    this.originalFetch = window.fetch;
+    this.originalFetch = window.fetch.bind(window); // ✅ FIX: Bind to window context
     
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const url = this.addCacheBustingToUrl(input);

@@ -4,10 +4,44 @@
 
 This directory contains comprehensive technical documentation for the LevelUp language learning platform.
 
-### 📖 **Content Creation Guides**
+### 🏗️ **Core Architecture**
+- **[Separation of Concerns](SEPARATION_OF_CONCERNS.md)** - Complete architectural overview and data flow
+- **[Game Mode Unification](GAME_MODE_UNIFICATION.md)** - Enhanced vs Standard mode architecture analysis
+- **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Code splitting, lazy loading, and optimization strategies
+- **[Error Handling](ERROR_HANDLING.md)** - Error patterns and debugging strategies
+
+### 📊 **Performance & Monitoring**
+- **[Performance Monitoring Fix](PERFORMANCE_MONITORING_FIX.md)** - Performance tracking optimization
+- **[Storage Save Optimization](STORAGE_SAVE_OPTIMIZATION.md)** - Storage save operation optimization
+
+### �️ **Data & Storage**
+- **[Language Separation](LANGUAGE_SEPARATION.md)** - Language data isolation architecture
+- **[Migration Strategy](MIGRATION_STRATEGY.md)** - Data migration and compatibility
+- **[Server Side Storage](SERVER_SIDE_STORAGE.md)** - Backend integration planning
+
+### �📖 **Content Creation Guides**
 - **[Language Module Guide](LANGUAGE_MODULE_GUIDE.md)** - Comprehensive guide for creating educational language modules
 
-### 🏗️ **Technical Architecture**
+### 🤖 **AI & Analytics**
+- **[AI Implementation Summary](AI_IMPLEMENTATION_SUMMARY.md)** - Complete AI system overview
+- **[AI Learning Coach](AI_LEARNING_COACH.md)** - Learning analytics and recommendations
+- **[AI Adaptive Learning](AI_ADAPTIVE_LEARNING.md)** - Adaptive learning algorithms
+
+### 🔧 **Development & Deployment**
+- **[Developer Tools](DEVELOPER_TOOLS.md)** - Centralized developer tools dashboard (window.LevelUpDev)
+- **[Development Mode](DEVELOPMENT_MODE.md)** - Development environment setup
+- **[Deployment](DEPLOYMENT.md)** - Production deployment strategies
+- **[Loading States](LOADING_STATES_IMPLEMENTATION.md)** - UI loading state management
+- **[Mobile Optimization](MOBILE_OPTIMIZATION.md)** - Mobile-specific optimizations
+
+### 📋 **Project Management**
+- **[Implementation Complete](IMPLEMENTATION_COMPLETE.md)** - Project completion status overview
+- **[Advanced AI Demo Complete](ADVANCED_AI_DEMO_COMPLETE.md)** - AI system implementation status
+- **[AI Challenge Data Storage Complete](AI_CHALLENGE_DATA_STORAGE_COMPLETE.md)** - Storage system completion
+- **[Security Review](SECURITY_REVIEW.md)** - Security assessment and recommendations
+- **[Next Priorities](NEXT_PRIORITIES.md)** - Development roadmap and upcoming features
+- **[Technical Debt Tracker](TECHNICAL_DEBT_TRACKER.md)** - Technical debt identification and resolution
+- **[Performance Fix Test](PERFORMANCE_FIX_TEST.md)** - Performance testing verification
 
 ## 🎯 Current Implementation Status (October 2025)
 

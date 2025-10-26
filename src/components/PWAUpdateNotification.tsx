@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import { useLocation } from 'react-router-dom';
 import { pwaUpdateManager, UpdateInfo } from '../services/pwaUpdateManager';
 
 const UpdateBanner = styled.div<{ visible: boolean }>`
@@ -90,20 +91,64 @@ export const PWAUpdateNotification: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds to respond
+  const location = useLocation();
+
+  // Check if user is in an active learning session
+  const isInLearningSession = () => {
+    const learningRoutes = ['/game/', '/challenge/', '/practice/', '/boss/', '/streak/'];
+    return learningRoutes.some(route => location.pathname.includes(route));
+  };
 
   useEffect(() => {
     // Listen for update notifications
     pwaUpdateManager.onUpdateAvailable((info) => {
       console.log('🔔 Update notification received:', info);
-      setUpdateInfo(info);
-      setIsVisible(true);
+      
+      // If user is in a learning session, delay the notification longer
+      const delayTime = isInLearningSession() ? 30000 : 2000; // 30s vs 2s delay
+      
+      setTimeout(() => {
+        setUpdateInfo(info);
+        setIsVisible(true);
+        setShowTimer(true);
+        setTimeLeft(15);
+      }, delayTime);
     });
-  }, []);
+  }, [location.pathname]);
+
+  // Auto-dismiss timer
+  useEffect(() => {
+    if (!isVisible || !showTimer) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Auto-dismiss after 15 seconds
+          setIsVisible(false);
+          setShowTimer(false);
+          setTimeout(() => {
+            // Store update info for later access
+            if (updateInfo) {
+              localStorage.setItem('pending-update', JSON.stringify(updateInfo));
+            }
+            setUpdateInfo(null);
+          }, 300);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isVisible, showTimer, updateInfo]);
 
   const handleUpdate = async () => {
     if (!updateInfo) return;
 
     setIsUpdating(true);
+    setShowTimer(false); // Stop the timer
     console.log('🚀 User initiated update');
 
     try {
@@ -124,6 +169,13 @@ export const PWAUpdateNotification: React.FC = () => {
   const handleDismiss = () => {
     console.log('👋 User dismissed update notification');
     setIsVisible(false);
+    setShowTimer(false);
+    
+    // Store update info for later access
+    if (updateInfo) {
+      localStorage.setItem('pending-update', JSON.stringify(updateInfo));
+    }
+    
     setTimeout(() => setUpdateInfo(null), 300);
   };
 
@@ -142,7 +194,17 @@ export const PWAUpdateNotification: React.FC = () => {
         {updateInfo.version && (
           <span className="version">v{updateInfo.version}</span>
         )}
-        <span>Boss battles & streak challenges now have progressive difficulty!</span>
+        <span>
+          {isInLearningSession() 
+            ? 'Update when you finish this session, or continue later'
+            : 'Boss battles & streak challenges now have progressive difficulty!'
+          }
+        </span>
+        {showTimer && timeLeft > 0 && (
+          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+            Auto-dismiss in {timeLeft}s
+          </span>
+        )}
       </UpdateMessage>
       
       <UpdateActions>
@@ -151,7 +213,7 @@ export const PWAUpdateNotification: React.FC = () => {
           onClick={handleDismiss}
           disabled={isUpdating}
         >
-          Later
+          {isInLearningSession() ? 'Continue Learning' : 'Later'}
         </UpdateButton>
         <UpdateButton 
           onClick={handleUpdate}

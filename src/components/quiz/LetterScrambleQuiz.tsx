@@ -65,27 +65,6 @@ const ContextSection = styled.div`
   }
 `;
 
-const ContextSentence = styled.div`
-  font-style: italic;
-  color: ${props => props.theme.colors.text};
-  margin-bottom: ${props => props.theme.spacing.xs};
-  font-size: 1.1rem;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1rem;
-  }
-`;
-
-const ContextTranslation = styled.div`
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
-`;
-
-const ContextPlaceholder = styled(ContextTranslation)`
-  font-style: italic;
-  opacity: 0.6;
-`;
-
 const AnswerContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -551,19 +530,6 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   return (
     <Container>
       <Word>{definition}</Word>
-
-      {context && (
-        <ContextSection>
-          {showResult ? (
-            <>
-              <ContextSentence>"{context.sentence}"</ContextSentence>
-              <ContextTranslation>{context.translation}</ContextTranslation>
-            </>
-          ) : (
-            <ContextPlaceholder>Context will appear after answering</ContextPlaceholder>
-          )}
-        </ContextSection>
-      )}
 
       <AnswerContainer>
         <AnswerDisplay role="group" aria-label="Answer letters">

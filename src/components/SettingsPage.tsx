@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from './Navigation';
 import { MobileButton } from './mobile/MobileButton';
 import { AccountLinking } from './AccountLinking';
+import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { logger } from '../services/logger';
 
 const Container = styled.div`
@@ -136,6 +137,14 @@ const CloseButton = styled.button`
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [showAccountLinking, setShowAccountLinking] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<any>(null);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+
+  useEffect(() => {
+    // Check for pending updates when component mounts
+    const pending = pwaUpdateManager.getPendingUpdate();
+    setPendingUpdate(pending);
+  }, []);
 
   const handleNavigation = (path: string) => {
     if (path === '/export') {
@@ -151,6 +160,33 @@ export const SettingsPage: React.FC = () => {
       setShowAccountLinking(true);
     } else {
       navigate(path);
+    }
+  };
+
+  const handleApplyPendingUpdate = async () => {
+    setIsApplyingUpdate(true);
+    try {
+      const success = await pwaUpdateManager.applyPendingUpdate();
+      if (!success) {
+        // Fallback to manual reload
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to apply pending update:', error);
+      setIsApplyingUpdate(false);
+      // Fallback to manual reload
+      window.location.reload();
+    }
+  };
+
+  const handleCheckForUpdates = async () => {
+    try {
+      await pwaUpdateManager.checkForUpdates();
+      // Re-check for pending updates
+      const pending = pwaUpdateManager.getPendingUpdate();
+      setPendingUpdate(pending);
+    } catch (error) {
+      console.error('Failed to check for updates:', error);
     }
   };
 
@@ -211,6 +247,40 @@ export const SettingsPage: React.FC = () => {
 
         <SectionCard>
           <SectionTitle>
+            <span>�</span>
+            App Updates
+          </SectionTitle>
+          <OptionsGrid>
+            {pendingUpdate ? (
+              <MobileButton
+                variant="primary"
+                onClick={handleApplyPendingUpdate}
+                disabled={isApplyingUpdate}
+                fullWidth
+              >
+                {isApplyingUpdate ? 'Applying Update...' : `🚀 Apply Update (v${pendingUpdate.version})`}
+              </MobileButton>
+            ) : (
+              <MobileButton
+                variant="outline"
+                onClick={handleCheckForUpdates}
+                fullWidth
+              >
+                🔍 Check for Updates
+              </MobileButton>
+            )}
+            <MobileButton
+              variant="secondary"
+              onClick={() => window.location.reload()}
+              fullWidth
+            >
+              🔄 Refresh App
+            </MobileButton>
+          </OptionsGrid>
+        </SectionCard>
+
+        <SectionCard>
+          <SectionTitle>
             <span>📱</span>
             App Settings
           </SectionTitle>
@@ -221,13 +291,6 @@ export const SettingsPage: React.FC = () => {
               fullWidth
             >
               Install as App
-            </MobileButton>
-            <MobileButton
-              variant="secondary"
-              onClick={() => window.location.reload()}
-              fullWidth
-            >
-              Refresh App
             </MobileButton>
           </OptionsGrid>
         </SectionCard>

@@ -92,17 +92,16 @@ self.addEventListener('activate', (event) => {
         );
       })
       .then(() => {
-        console.log('[ServiceWorker] 🚀 Taking control of all pages');
-        // Take control of all pages immediately - forces update
-        return self.clients.claim();
-      })
-      .then(() => {
-        // Notify all clients about the update
+        console.log('[ServiceWorker] ✅ Cache cleanup complete');
+        // Don't immediately claim control - wait for user consent
+        // return self.clients.claim(); // Removed: was too aggressive
+        
+        // Notify all clients about the update availability
         return self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
-            console.log('[ServiceWorker] 📢 Notifying client of update');
+            console.log('[ServiceWorker] 📢 Notifying client of update availability');
             client.postMessage({
-              type: 'SW_UPDATED',
+              type: 'SW_UPDATE_AVAILABLE',
               version: CACHE_VERSION,
               cacheIdentifier: cacheIdentifier
             });
@@ -118,8 +117,24 @@ self.addEventListener('message', (event) => {
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[ServiceWorker] 🚀 Client requested immediate activation');
-    // Skip waiting and take control immediately
-    self.skipWaiting();
+    
+    // First skip waiting to become the active service worker
+    self.skipWaiting().then(() => {
+      // Then claim control of all clients
+      return self.clients.claim();
+    }).then(() => {
+      // Notify clients that the update has been applied
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          console.log('[ServiceWorker] 📢 Notifying client of successful update');
+          client.postMessage({
+            type: 'SW_UPDATED_APPLIED',
+            version: CACHE_VERSION,
+            cacheIdentifier: cacheIdentifier
+          });
+        });
+      });
+    });
   }
 });
 

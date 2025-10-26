@@ -192,16 +192,16 @@ export const Game: React.FC = () => {
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = levelUp;
   const { playCorrect, playIncorrect } = audio;
 
+  // Check for redirect to session selection (moved to useEffect to avoid render-time navigation)
+  useEffect(() => {
+    const isSessionGameRoute = window.location.pathname.endsWith('/session');
+    if (isSessionGameRoute && !isSessionActive && !sessionCompleted) {
+      navigate(`/sessions/${languageCode}`);
+    }
+  }, [isSessionActive, sessionCompleted, languageCode, navigate]);
+
   if (!currentWord) {
     return <UnifiedLoading text="Loading words..." />;
-  }
-
-  // If we're in session mode but no session is active, redirect to session selection
-  // Only redirect if we're specifically on the /game/{lang}/session route, not completed
-  const isSessionGameRoute = window.location.pathname.endsWith('/session');
-  if (isSessionGameRoute && !isSessionActive) {
-    navigate(`/sessions/${languageCode}`);
-    return <UnifiedLoading text="Redirecting to session selection..." />;
   }
 
   // Function to render themed quiz based on session type
@@ -302,8 +302,8 @@ export const Game: React.FC = () => {
               // Increment words completed in session if session is active
               if (isSessionActive && currentSession) {
                 dispatch(incrementWordsCompleted());
-                // Don't add bonus for skipped words
-                dispatch(addCorrectAnswer({}));
+                // FIXED: Don't falsely record skipped words as correct answers
+                // Skipped words should only increment the word counter, not trigger save operations
               }
             }}
             disabled={isTransitioning}

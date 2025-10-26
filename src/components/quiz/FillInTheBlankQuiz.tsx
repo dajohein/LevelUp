@@ -94,6 +94,18 @@ const BlankSpace = styled.span<{ isCorrect?: boolean; isError?: boolean }>`
   };
 `;
 
+const QuestionPrompt = styled.div`
+  background-color: ${props => props.theme.colors.primary};
+  color: white;
+  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: ${props => props.theme.spacing.lg};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
 const InstructionText = styled.div`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
@@ -129,6 +141,7 @@ const ProgressBar = styled.div<{ progress: number }>`
 
 interface FillInTheBlankQuizProps {
   word: string;
+  questionWord?: string; // The Dutch word to translate
   userAnswer: string;
   onAnswerChange: (answer: string) => void;
   onSubmit: () => void;
@@ -138,13 +151,14 @@ interface FillInTheBlankQuizProps {
   disabled?: boolean;
   level?: number;
   xp?: number;
-  context?: { sentence: string; translation: string; audio?: string };
+  context?: { sentence: string; translation: string; sentenceWithBlank?: string; audio?: string };
   currentWord?: number;
   totalWords?: number;
 }
 
 const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
   word,
+  questionWord,
   userAnswer,
   onAnswerChange,
   onSubmit,
@@ -168,13 +182,20 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       };
     }
 
+    // Use explicit blank markers if available (preferred method)
+    if (context.sentenceWithBlank) {
+      const parts = context.sentenceWithBlank.split('{BLANK}');
+      if (parts.length === 2) {
+        return {
+          beforeBlank: parts[0].trim(),
+          afterBlank: parts[1].trim()
+        };
+      }
+    }
+
+    // Fallback: try to find and blank the word in the original sentence
     const sentence = context.sentence;
     const sentenceLower = sentence.toLowerCase();
-    
-    // For fill-in-the-blank, we need to find which word (term or definition) appears in the sentence
-    // and remove it to create the blank. The user should fill in the same word that was removed.
-    
-    // Try to find the word that was passed to this component (should be the target answer)
     let wordToReplace = word.toLowerCase().trim();
     let wordIndex = sentenceLower.indexOf(wordToReplace);
     let actualWordLength = word.length;
@@ -186,24 +207,6 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       if (withoutArticleIndex !== -1) {
         wordIndex = withoutArticleIndex;
         actualWordLength = wordWithoutArticle.length;
-        wordToReplace = wordWithoutArticle.toLowerCase();
-      }
-    }
-    
-    // If still not found, try splitting multi-word phrases
-    if (wordIndex === -1) {
-      const words = word.split(/\s+/);
-      for (const singleWord of words) {
-        const cleanWord = singleWord.toLowerCase().trim();
-        if (cleanWord.length > 2) { // Only try meaningful words
-          const singleWordIndex = sentenceLower.indexOf(cleanWord);
-          if (singleWordIndex !== -1) {
-            wordIndex = singleWordIndex;
-            actualWordLength = cleanWord.length;
-            wordToReplace = cleanWord;
-            break;
-          }
-        }
       }
     }
     
@@ -218,11 +221,10 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       };
     }
     
-    // If word can't be found in the sentence, show the sentence as instruction
-    // and provide a clear indication of what to fill in
+    // Final fallback: show instruction without revealing answer
     return {
-      beforeBlank: `Context: ${sentence}`,
-      afterBlank: `\n\nFill in the German word for: ${context.translation || 'the missing word'}`
+      beforeBlank: "Complete the German sentence:",
+      afterBlank: ""
     };
   };
 
@@ -233,6 +235,12 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
   return (
     <Container>
       <ModeIndicator>Fill in the Blank</ModeIndicator>
+
+      {questionWord && (
+        <QuestionPrompt>
+          Translate: {questionWord}
+        </QuestionPrompt>
+      )}
 
       <ContextSection>
         <ContextLabel>Complete the sentence</ContextLabel>

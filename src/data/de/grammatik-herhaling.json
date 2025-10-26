@@ -11,7 +11,12 @@
       "definition": "ik leer",
       "direction": "definition-to-term",
       "category": "regelmatige werkwoorden",
-      "context": "Regelmatige vervoeging - stam + e",
+      "context": {
+        "sentence": "Ich lerne Deutsch seit zwei Jahren.",
+        "translation": "Ik leer al twee jaar Duits.",
+        "sentenceWithBlank": "{BLANK} Deutsch seit zwei Jahren.",
+        "explanation": "Regelmatige vervoeging - stam + e"
+      },
       "synonyms": [
         "ich studiere",
         "ich übe"
@@ -23,7 +28,12 @@
       "definition": "jij leert",
       "direction": "definition-to-term",
       "category": "regelmatige werkwoorden",
-      "context": "Regelmatige vervoeging - stam + st",
+      "context": {
+        "sentence": "Du lernst sehr schnell neue Sprachen.",
+        "translation": "Jij leert heel snel nieuwe talen.",
+        "sentenceWithBlank": "{BLANK} sehr schnell neue Sprachen.",
+        "explanation": "Regelmatige vervoeging - stam + st"
+      },
       "synonyms": [
         "du studierst",
         "du übst"
@@ -35,7 +45,12 @@
       "definition": "hij leert",
       "direction": "definition-to-term",
       "category": "regelmatige werkwoorden",
-      "context": "Regelmatige vervoeging - stam + t",
+      "context": {
+        "sentence": "Er lernt jeden Tag eine Stunde Gitarre.",
+        "translation": "Hij leert elke dag een uur gitaar.",
+        "sentenceWithBlank": "{BLANK} jeden Tag eine Stunde Gitarre.",
+        "explanation": "Regelmatige vervoeging - stam + t"
+      },
       "synonyms": [
         "er studiert",
         "er übt"
@@ -83,7 +98,12 @@
       "definition": "jij rijdt",
       "direction": "definition-to-term",
       "category": "onregelmatige werkwoorden",
-      "context": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)",
+      "context": {
+        "sentence": "Du fährst immer sehr vorsichtig Auto.",
+        "translation": "Jij rijdt altijd heel voorzichtig auto.",
+        "sentenceWithBlank": "{BLANK} immer sehr vorsichtig Auto.",
+        "explanation": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)"
+      },
       "synonyms": [
         "du gehst",
         "du reist"
@@ -95,7 +115,12 @@
       "definition": "hij rijdt",
       "direction": "definition-to-term",
       "category": "onregelmatige werkwoorden",
-      "context": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)",
+      "context": {
+        "sentence": "Er fährt jeden Morgen mit dem Bus zur Arbeit.",
+        "translation": "Hij rijdt elke ochtend met de bus naar het werk.",
+        "sentenceWithBlank": "{BLANK} jeden Morgen mit dem Bus zur Arbeit.",
+        "explanation": "Klinkerverandering a→ä bij 'fahren' (2e/3e persoon enkelvoud)"
+      },
       "synonyms": [
         "er geht",
         "er reist"

@@ -14,6 +14,7 @@ import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
 import { developmentCacheManager } from './utils/developmentCacheManager';
 import { environmentConfig } from './config/environment';
+import './utils/developerToolsDashboard'; // Initialize developer tools globally
 import './index.css';
 
 // Initialize the enhanced storage system with server-side support
@@ -36,6 +37,8 @@ if (environmentConfig.cacheBusting.enabled) {
 // Load debug helpers in development
 if (process.env.NODE_ENV === 'development') {
   import('./utils/debugHelpers');
+  import('./utils/debugPerformanceHelper');
+  import('./utils/testPerformanceFix');
 }
 
 // Setup cross-tab synchronization

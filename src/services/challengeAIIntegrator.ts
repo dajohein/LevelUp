@@ -176,6 +176,22 @@ class ChallengeAIIntegrator {
         aiRecommendedMode = this.getHarderQuizMode(originalQuizMode);
         difficultyAdjustment = 1;
         reasoning.push(`Low cognitive load + positive momentum - increasing challenge with ${aiRecommendedMode}`);
+      } else if (context.sessionType === 'deep-dive') {
+        // Deep Dive mode should always benefit from AI enhancements
+        // Even with moderate cognitive load, we can provide contextual improvements
+        if (analysis.cognitiveLoad.level === 'moderate' && Math.random() > 0.3) {
+          // 70% chance to apply AI enhancement in deep-dive mode
+          const enhancementTypes = ['contextual-analysis', 'usage-example', 'synonym-antonym'];
+          const randomEnhancement = enhancementTypes[Math.floor(Math.random() * enhancementTypes.length)];
+          
+          // Only switch if it's different from current mode and compatible
+          if (randomEnhancement !== originalQuizMode && 
+              ['multiple-choice', 'contextual-analysis', 'usage-example', 'synonym-antonym'].includes(randomEnhancement)) {
+            aiRecommendedMode = randomEnhancement;
+            interventionNeeded = true;
+            reasoning.push(`Deep Dive AI enhancement - exploring ${aiRecommendedMode} for deeper understanding`);
+          }
+        }
       }
 
       // Apply challenge-specific logic

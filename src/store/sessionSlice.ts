@@ -167,12 +167,20 @@ export const sessionTypes: SessionType[] = [
 const loadPersistedSessionState = (): Partial<SessionState> => {
   try {
     const savedState = sessionStateStorage.load();
+    console.log('🔍 Loading persisted session state:', {
+      hasCurrentSession: !!savedState.currentSession,
+      sessionId: savedState.currentSession?.id,
+      isActive: savedState.isActive,
+      language: savedState.language,
+      sessionTimer: savedState.sessionTimer
+    });
+    
     return {
       currentLanguage: savedState.language || '',
-      currentSession: savedState.currentSession || null,
-      isSessionActive: savedState.isActive || false,
-      sessionStartTime: Date.now(), // Always reset timer on app start
-      // Only restore these if they exist
+      currentSession: null, // Clear any persisted session - user must explicitly choose
+      isSessionActive: false, // Never auto-restore active sessions - user must explicitly start
+      sessionStartTime: 0, // Reset to 0 - will be set when session explicitly starts
+      // Restore progress but not session state
       ...(savedState.sessionProgress && {
         progress: { ...defaultProgress, ...savedState.sessionProgress },
       }),
@@ -183,21 +191,21 @@ const loadPersistedSessionState = (): Partial<SessionState> => {
   }
 };
 
-// Helper function to save session state
-const saveSessionState = (state: SessionState): void => {
-  try {
-    sessionStateStorage.save({
-      language: state.currentLanguage,
-      currentSession: state.currentSession,
-      sessionProgress: state.progress,
-      isActive: state.isSessionActive,
-    });
-  } catch (error) {
-    logger.error('Failed to save session state:', error);
-  }
-};
-
 const persistedSessionState = loadPersistedSessionState();
+
+console.log('🔍 Persisted session state after loading:', {
+  currentLanguage: persistedSessionState.currentLanguage,
+  currentSession: persistedSessionState.currentSession?.id,
+  isSessionActive: persistedSessionState.isSessionActive,
+  sessionStartTime: persistedSessionState.sessionStartTime
+});
+
+/**
+ * Session state persistence follows the centralized architecture pattern.
+ * All saves are coordinated through middleware to prevent data races.
+ * 
+ * Flow: Session Actions → Persistence Middleware → Storage Orchestrator
+ */
 
 const initialState: SessionState = {
   currentLanguage: persistedSessionState.currentLanguage || '',
@@ -237,8 +245,7 @@ const sessionSlice = createSlice({
         state.isSessionActive = true;
         state.sessionStartTime = Date.now();
 
-        // Save session state
-        saveSessionState(state);
+        // Persistence handled by middleware
       }
     },
 
@@ -305,8 +312,7 @@ const sessionSlice = createSlice({
       state.progress.score += Math.round(points);
       state.progress.bonusPoints += timeBonus + streakBonus + contextBonus + perfectRecallBonus;
 
-      // Save session progress
-      saveSessionState(state);
+      // Persistence handled by middleware
     },
 
     addIncorrectAnswer: state => {
@@ -385,8 +391,7 @@ const sessionSlice = createSlice({
         }
       }
 
-      // Clear session state from localStorage when completed
-      saveSessionState(state);
+      // Persistence handled by middleware
     },
 
     resetSession: state => {
@@ -394,6 +399,27 @@ const sessionSlice = createSlice({
       state.progress = defaultProgress;
       state.isSessionActive = false;
       state.sessionStartTime = 0;
+    },
+
+    clearStaleSession: state => {
+      console.log('🔍 clearStaleSession called with:', {
+        hasCurrentSession: !!state.currentSession,
+        sessionId: state.currentSession?.id,
+        isSessionActive: state.isSessionActive,
+        sessionStartTime: state.sessionStartTime
+      });
+      
+      // With the new loading logic, sessions are never auto-restored as active
+      // This action is now primarily for explicit cleanup of inactive sessions
+      if (state.currentSession && !state.isSessionActive) {
+        console.log(`🧹 Clearing inactive session: ${state.currentSession.id}`);
+        state.currentSession = null;
+        state.progress = defaultProgress;
+        state.isSessionActive = false;
+        state.sessionStartTime = 0;
+      } else {
+        console.log('✅ No session cleanup needed');
+      }
     },
 
     setWeeklyChallenge: (
@@ -430,6 +456,7 @@ export const {
   useHint,
   completeSession,
   resetSession,
+  clearStaleSession,
   setWeeklyChallenge,
 } = sessionSlice.actions;
 

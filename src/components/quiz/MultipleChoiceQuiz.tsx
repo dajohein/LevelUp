@@ -77,6 +77,20 @@ const ContextLabel = styled.div`
   margin-bottom: ${props => props.theme.spacing.xs};
 `;
 
+const EnhancementIndicator = styled.div`
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  margin-bottom: ${props => props.theme.spacing.sm};
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+`;
+
 const OptionsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -177,6 +191,10 @@ interface MultipleChoiceQuizProps {
   disabled?: boolean;
   level?: number;
   xp?: number;
+  direction?: 'term-to-definition' | 'definition-to-term';
+  enhancementLevel?: 'standard' | 'advanced';
+  originalQuizMode?: string;
+  sessionProgress?: number; // 0-1 progress through session
   context?: {
     sentence: string;
     translation: string;
@@ -193,22 +211,38 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   disabled,
   level = 1,
   xp = 0,
+  direction,
+  enhancementLevel,
+  originalQuizMode,
+  sessionProgress = 0,
   context,
 }) => {
+  console.log('🎯 MultipleChoiceQuiz props:', { context, enhancementLevel, originalQuizMode, level, xp, sessionProgress });
+  
+  // Show enhancement indicator when session has progressed (indicating advanced modes are active)
+  const isEnhanced = sessionProgress >= 0.3 || context || enhancementLevel === 'advanced';
+  const enhancementText = sessionProgress >= 0.7 ? 'Advanced Deep Dive' : 
+                         sessionProgress >= 0.5 ? 'Enhanced Learning' : 
+                         sessionProgress >= 0.3 ? 'Context Mode' : 'Enhanced Learning';
+  
   return (
     <Container>
+      {isEnhanced && (
+        <EnhancementIndicator>
+          ✨ {enhancementText}
+        </EnhancementIndicator>
+      )}
+      
       <Word>{word}</Word>
       {context && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
+          <ContextSentence>{context.sentence}</ContextSentence>
           {selectedOption ? (
-            <>
-              <ContextSentence>{context.sentence}</ContextSentence>
-              <ContextTranslation>{context.translation}</ContextTranslation>
-            </>
+            <ContextTranslation>{context.translation}</ContextTranslation>
           ) : (
-            <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.6 }}>
-              Context will appear after answering
+            <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem' }}>
+              Translation will appear after answering
             </ContextTranslation>
           )}
         </ContextSection>

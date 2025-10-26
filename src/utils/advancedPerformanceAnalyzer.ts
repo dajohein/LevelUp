@@ -31,8 +31,11 @@ class PerformanceAnalyzer {
   private startTime = performance.now();
 
   constructor() {
-    this.initializeObservers();
-    this.interceptStorageOperations();
+    // Only initialize observers and interception if explicitly enabled
+    if ((window as any).__ENABLE_PERFORMANCE_TRACKING__) {
+      this.initializeObservers();
+      this.interceptStorageOperations();
+    }
   }
 
   private initializeObservers() {
@@ -215,15 +218,24 @@ class PerformanceAnalyzer {
 // Global performance analyzer instance
 const performanceAnalyzer = new PerformanceAnalyzer();
 
-// Export for use in components
+// Declare the debug flag type
+declare global {
+  interface Window {
+    __ENABLE_PERFORMANCE_TRACKING__?: boolean;
+  }
+}
+
+// Export for manual use in components (opt-in only)
 export const trackComponentRender = (componentName: string) => {
-  if (process.env.NODE_ENV === 'development') {
+  // Only track if explicitly enabled via debug flag
+  if (process.env.NODE_ENV === 'development' && window.__ENABLE_PERFORMANCE_TRACKING__) {
     performanceAnalyzer.trackComponentRender(componentName);
   }
 };
 
 export const trackExpensiveCalculation = (name: string, fn: () => any) => {
-  if (process.env.NODE_ENV === 'development') {
+  // Only track if explicitly enabled via debug flag
+  if (process.env.NODE_ENV === 'development' && window.__ENABLE_PERFORMANCE_TRACKING__) {
     return performanceAnalyzer.trackExpensiveCalculation(name, fn);
   }
   return fn();
@@ -241,12 +253,22 @@ export const resetPerformanceMetrics = () => {
   }
 };
 
-// Auto-analyze every 30 seconds in development
-if (process.env.NODE_ENV === 'development') {
-  setInterval(() => {
-    analyzePerformance();
-  }, 30000);
-}
+// Manual activation functions for debugging
+export const enablePerformanceTracking = () => {
+  if (process.env.NODE_ENV === 'development') {
+    window.__ENABLE_PERFORMANCE_TRACKING__ = true;
+    // Re-initialize the analyzer with tracking enabled
+    performanceAnalyzer.cleanup();
+    const newAnalyzer = new PerformanceAnalyzer();
+    console.log('🔍 Performance tracking enabled - use analyzePerformance() to get report');
+  }
+};
+
+export const disablePerformanceTracking = () => {
+  window.__ENABLE_PERFORMANCE_TRACKING__ = false;
+  performanceAnalyzer.cleanup();
+  console.log('🔍 Performance tracking disabled');
+};
 
 // Cleanup on window unload
 window.addEventListener('beforeunload', () => {

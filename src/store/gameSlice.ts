@@ -40,27 +40,12 @@ const loadPersistedState = (): Partial<GameState> => {
 
 const persistedState = loadPersistedState();
 
-// Helper function to save game state to localStorage
-const saveGameState = (state: GameState): void => {
-  try {
-    // CRITICAL FIX: Don't save mixed wordProgress to gameStateStorage
-    gameStateStorage.save({
-      language: state.language || undefined,
-      score: state.score,
-      streak: state.streak,
-      correctAnswers: state.correctAnswers,
-      totalAttempts: state.totalAttempts,
-      quizMode: state.quizMode,
-      // Don't save wordProgress here to prevent mixing
-      wordProgress: {},
-    });
-
-    // NOTE: Word progress is now only saved by persistenceMiddleware to prevent duplicates
-    // Removed duplicate wordProgressStorage.save() call to fix performance issue
-  } catch (error) {
-    logger.error('Failed to save game state:', error);
-  }
-};
+/**
+ * Game state persistence is handled by the persistence middleware.
+ * This ensures centralized, coordinated saves with proper debouncing.
+ * 
+ * Architecture: Redux State → Persistence Middleware → Storage Orchestrator → Storage Services
+ */
 
 const initialState: GameState = {
   currentWord: null,
@@ -248,8 +233,8 @@ export const gameSlice = createSlice({
         state.streak = 0;
       }
 
-      // Save state after word progress update
-      saveGameState(state);
+      // Persistence handled by middleware
+      // REMOVED: Direct save call - persistence middleware will handle this
     },
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
@@ -271,13 +256,11 @@ export const gameSlice = createSlice({
       state.currentWord = word;
       state.currentOptions = options;
 
-      // Save updated state
-      saveGameState(state);
+      // Persistence handled by middleware
     },
     setCurrentModule: (state, action: PayloadAction<string | null>) => {
       state.module = action.payload;
-      // Save updated state
-      saveGameState(state);
+      // Persistence handled by middleware
     },
     resetGame: state => {
       // Reset game state while preserving word progress
@@ -298,8 +281,7 @@ export const gameSlice = createSlice({
         state.currentOptions = options;
       }
 
-      // Save reset state
-      saveGameState(state);
+      // Persistence handled by middleware
     },
     updateWordProgress: (state, action: PayloadAction<Record<string, any>>) => {
       // Handle both single word updates and full progress objects

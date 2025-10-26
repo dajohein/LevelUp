@@ -2,7 +2,34 @@
 
 A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
-## 🚀 **Latest: Unified Loading States + Enhanced UX (NEW!)**
+## 🚀 **Latest: Performance Monitoring Fix (October 15, 2025)**
+
+### ⚡ **Critical Performance Issue Resolved**
+
+- **🎯 Issue Fixed**: Performance monitoring was causing the performance problems it was meant to detect
+- **📈 Impact**: Eliminated background processing overhead affecting gameplay smoothness
+- **🔧 Solution**: Made performance monitoring opt-in only, disabled automatic intervals
+- **🧪 Testing**: Added verification tools accessible via `window.testPerformanceFix()`
+- **👨‍💻 Developer UX**: Performance monitoring still available on-demand via browser console
+
+### 🛠️ **Developer Controls (Development Mode)**
+```javascript
+// Enable performance monitoring when needed:
+window.enablePerformanceDebug()
+
+// Get performance analysis:
+window.getPerformanceReport()
+
+// Disable when done:
+window.disablePerformanceDebug()
+
+// Test that the fix works:
+window.testPerformanceFix()
+```
+
+**Result**: Smooth gameplay experience with zero background monitoring overhead!
+
+## 🚀 **Enterprise: Unified Loading States + Enhanced UX**
 
 ### ✨ **Modern Loading Experience**
 

@@ -6,12 +6,6 @@ import { getAvailableLanguages, getModulesForLanguage } from '../services/module
 import { calculateCurrentLevel, getLevelInfo } from '../services/levelService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { Navigation } from './Navigation';
-import { isDevelopment } from '../config/environment';
-
-// Import environment test utility in development
-if (isDevelopment) {
-  import('../utils/testEnvironmentMode');
-}
 
 const Container = styled.div`
   min-height: 100vh;
@@ -359,66 +353,6 @@ export const LanguagesOverview: React.FC = () => {
             );
           })}
         </LanguageGrid>
-        
-        {/* Demo Section - Only in Development Mode */}
-        {isDevelopment && (
-          <div style={{ marginTop: '3rem', textAlign: 'center' }}>
-            <h3 style={{ color: '#666', marginBottom: '1rem' }}>🧪 Development Features</h3>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button 
-                onClick={() => navigate('/simple-ai-demo')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#4a90e2',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#357abd'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4a90e2'}
-              >
-                🤖 Simple AI Demo
-              </button>
-              <button 
-                onClick={() => navigate('/components-demo')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#6c5ce7',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5a4bcf'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6c5ce7'}
-              >
-                🎨 Component Library
-              </button>
-              <button 
-                onClick={() => navigate('/loading-demo')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#fd79a8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e84393'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fd79a8'}
-              >
-                ⏳ Loading States
-              </button>
-            </div>
-          </div>
-        )}
       </Container>
     </>
   );

@@ -12,6 +12,7 @@ import {
   completeSession,
   addPerfectAccuracyBonus,
   setLanguage as setSessionLanguage,
+  clearStaleSession,
 } from '../store/sessionSlice';
 import { useEnhancedGame } from './useEnhancedGame';
 import { useLevelUpDetection } from './useLevelUpDetection';
@@ -212,8 +213,14 @@ export const useEnhancedGameState = ({
     if (!wordToUse) return false;
 
     const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
+    
+    // For enhanced comprehension modes, any non-empty answer is considered correct
+    // These are open-ended learning exercises, not strict quizzes
+    if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizModeToUse)) {
+      return answer.trim().length > 0; // Accept any meaningful input
+    }
+    
     const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
-
     return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
   }, [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]);
 
@@ -339,7 +346,7 @@ export const useEnhancedGameState = ({
       setWordTimer(0);
       setWordStartTime(Date.now());
 
-      if (!isUsingSpacedRepetition) {
+      if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
         if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id)) {
           const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
           
@@ -433,7 +440,15 @@ export const useEnhancedGameState = ({
     }
   }, [isUsingSpacedRepetition, currentWord, wordLearningStatus, getCurrentWordInfo, wordProgress]);
 
-  // Language initialization
+  // Clear stale sessions first, before any other initialization
+  useEffect(() => {
+    if (languageCode) {
+      console.log('🔍 Dispatching clearStaleSession first for languageCode:', languageCode);
+      dispatch(clearStaleSession());
+    }
+  }, [languageCode, dispatch]); // Run immediately when languageCode is available
+
+  // Language initialization (runs after stale session clearing)
   useEffect(() => {
     if (languageCode) {
       dispatch(setLanguage(languageCode));
@@ -449,7 +464,8 @@ export const useEnhancedGameState = ({
         setLanguageFlag(langData.flag);
       }
 
-      if (!isUsingSpacedRepetition) {
+      // Only initialize session if one is actually active (user has started a session)
+      if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
         gameServices.sessionManager.initializeSession(
           currentSession,
           languageCode,
@@ -465,7 +481,7 @@ export const useEnhancedGameState = ({
         });
       }
     }
-  }, [dispatch, languageCode, moduleId]);
+  }, [dispatch, languageCode, moduleId, isSessionActive, currentSession?.id]); // Added session deps
 
   // Session state management
   useEffect(() => {

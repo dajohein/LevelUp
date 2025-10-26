@@ -60,13 +60,12 @@ const ProgressBar = styled.div<{ progress: number }>`
 const ModeIndicator = styled.div`
   background-color: ${props => props.theme.colors.primary};
   color: white;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: 0.8rem;
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
+  border-radius: ${props => props.theme.borderRadius.full};
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: ${props => props.theme.spacing.sm};
 `;
 
 const ContextSection = styled.div`
@@ -81,6 +80,7 @@ const ContextSection = styled.div`
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.sm};
     margin: ${props => props.theme.spacing.xs} 0;
+    border-left-width: 3px;
   }
 `;
 
@@ -89,10 +89,6 @@ const ContextSentence = styled.div`
   color: ${props => props.theme.colors.text};
   margin-bottom: ${props => props.theme.spacing.xs};
   font-size: 1.1rem;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    font-size: 1rem;
-  }
 `;
 
 const ContextTranslation = styled.div`
@@ -140,23 +136,22 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
     <Container>
       <ModeIndicator>Open Answer Mode</ModeIndicator>
 
+      <Word>{word}</Word>
+      
       {context && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
-          {isCorrect !== undefined ? (
-            <>
-              <ContextSentence>{context.sentence}</ContextSentence>
-              <ContextTranslation>{context.translation}</ContextTranslation>
-            </>
+          <ContextSentence>{context.sentence}</ContextSentence>
+          {userAnswer && (isCorrect === true || isError === true) ? (
+            <ContextTranslation>{context.translation}</ContextTranslation>
           ) : (
-            <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.6 }}>
-              Context will appear after answering
+            <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem' }}>
+              Translation will appear after answering
             </ContextTranslation>
           )}
         </ContextSection>
       )}
-
-      <Word>{word}</Word>
+      
       <AnimatedInput
         value={userAnswer}
         onChange={onAnswerChange}

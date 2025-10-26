@@ -211,23 +211,82 @@ class DeepDiveAdapter implements IChallengeService {
 
     // Handle specialized quiz modes - map them to Redux-compatible modes
     let standardQuizMode: StandardQuizMode;
+    let finalOptions: string[] = [];
+    
     if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(result.quizMode as string)) {
-      standardQuizMode = 'multiple-choice'; // Map specialized modes to multiple-choice
+      // For enhanced modes, force multiple-choice and generate options if needed
+      standardQuizMode = 'multiple-choice';
+      
+      logger.debug(`🎯 Enhanced quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`);
+      
+      console.log(`🎯 ENHANCED MODE DETECTED:`, {
+        originalMode: result.quizMode,
+        word: result.word.term,
+        convertedTo: 'multiple-choice',
+        aiEnhanced: result.aiEnhanced
+      });
+      
+      // If Deep Dive didn't provide options (for open-ended modes), generate them
+      if (!result.options || result.options.length === 0) {
+        // Generate multiple choice options using the Deep Dive service's method
+        const deepDiveServiceAny = deepDiveService as any;
+        if (deepDiveServiceAny.generateMultipleChoiceOptions) {
+          finalOptions = deepDiveServiceAny.generateMultipleChoiceOptions(result.word, allWords);
+        } else {
+          // Fallback: generate basic options
+          finalOptions = this.generateBasicOptions(result.word, allWords);
+        }
+      } else {
+        finalOptions = result.options;
+      }
     } else if (['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(result.quizMode as string)) {
       standardQuizMode = result.quizMode as StandardQuizMode;
+      finalOptions = result.options || [];
+      
+      logger.debug(`🎯 Standard quiz mode: ${result.quizMode} for word "${result.word.term}"`);
     } else {
       standardQuizMode = 'multiple-choice';
+      finalOptions = result.options || [];
+      
+      logger.debug(`🎯 Fallback quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`);
     }
 
     return {
       word: result.word,
-      options: result.options || [],
+      options: finalOptions,
       quizMode: standardQuizMode,
       aiEnhanced: result.aiEnhanced,
       metadata: {
-        reasoning: result.reasoning
+        reasoning: result.reasoning,
+        originalQuizMode: result.quizMode, // Preserve the original mode for UI display
+        enhancementLevel: ['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(result.quizMode as string) ? 'advanced' : 'standard'
       }
     };
+  }
+
+  private generateBasicOptions(word: any, allWords: any[]): string[] {
+    const direction = word.direction || 'definition-to-term';
+    const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
+    
+    // Get 3 random incorrect options
+    const incorrectOptions: string[] = [];
+    const shuffledWords = [...allWords].sort(() => 0.5 - Math.random());
+    
+    for (const candidate of shuffledWords) {
+      if (candidate.id !== word.id && incorrectOptions.length < 3) {
+        const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
+        if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
+          incorrectOptions.push(incorrectAnswer);
+        }
+      }
+    }
+    
+    // Create final options with correct answer at random position
+    const options = [...incorrectOptions];
+    const correctPos = Math.floor(Math.random() * 4);
+    options.splice(correctPos, 0, correctAnswer);
+    
+    return options;
   }
 
   recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {

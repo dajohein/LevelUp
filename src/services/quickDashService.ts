@@ -446,27 +446,30 @@ class QuickDashService {
    * Generate multiple choice options optimized for speed
    */
   private generateMultipleChoiceOptions(word: Word): string[] {
-    const correctAnswer = word.definition;
+    // For definition-to-term direction (Dutch question → German answer)
+    // The correct answer should be the German term, not the Dutch definition
+    const correctAnswer = word.term;
     
     // For speed optimization, use a cached approach if possible
     // Otherwise generate from a reasonable pool
     const allWords = this.state?.allWords || [];
     
     // Quick generation for speed - prefer shorter, clear distractors
+    // For Dutch→German direction, use other German terms as distractors
     const wrongAnswers = allWords
       .filter(w => w.id !== word.id)
-      .map(w => w.definition)
-      .filter(definition => definition !== correctAnswer)
-      .filter(definition => definition.length < correctAnswer.length + 20) // Similar length for speed
+      .map(w => w.term)
+      .filter(term => term !== correctAnswer)
+      .filter(term => term.length < correctAnswer.length + 20) // Similar length for speed
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
 
     // Fallback if not enough words available
     while (wrongAnswers.length < 3) {
       const fallbacks = [
-        'Different meaning entirely',
-        'Unrelated concept',
-        'Alternative interpretation'
+        'das Andere',
+        'die Alternative', 
+        'der Begriff'
       ];
       
       for (const fallback of fallbacks) {

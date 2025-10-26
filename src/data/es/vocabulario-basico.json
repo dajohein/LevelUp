@@ -5,68 +5,824 @@
   "icon": "🇪🇸",
   "difficulty": "beginner",
   "words": [
-    { "id": "1", "term": "las vacaciones", "definition": "de vakantie" },
-    { "id": "2", "term": "el verano", "definition": "de zomer" },
-    { "id": "3", "term": "ir de camping", "definition": "kamperen" },
-    { "id": "4", "term": "hacer surf", "definition": "surfen" },
-    { "id": "5", "term": "francés", "definition": "Frans" },
-    { "id": "6", "term": "la costa", "definition": "de kust" },
-    { "id": "7", "term": "la playa", "definition": "het strand" },
-    { "id": "8", "term": "el apellido", "definition": "de achternaam" },
-    { "id": "9", "term": "la ciudad", "definition": "de stad" },
-    { "id": "10", "term": "el hotel", "definition": "het hotel" },
-    { "id": "11", "term": "el casco antiguo", "definition": "het oude stadscentrum" },
-    { "id": "12", "term": "quedarse", "definition": "blijven" },
-    { "id": "13", "term": "visitar", "definition": "bezoeken" },
-    { "id": "14", "term": "impresionante", "definition": "indrukwekkend" },
-    { "id": "15", "term": "deportivo/-a", "definition": "sportief" },
-    { "id": "16", "term": "aburrido/-a", "definition": "saai" },
-    { "id": "17", "term": "fenomenal", "definition": "geweldig" },
-    { "id": "18", "term": "genial", "definition": "fantastisch" },
-    { "id": "19", "term": "precioso/-a", "definition": "prachtig" },
-    { "id": "20", "term": "moderno/-a", "definition": "modern" },
-    { "id": "21", "term": "las matemáticas", "definition": "de wiskunde" },
-    { "id": "22", "term": "el recreo", "definition": "de pauze" },
-    { "id": "23", "term": "aguantar", "definition": "volhouden" },
-    { "id": "24", "term": "darse prisa", "definition": "zich haasten" },
-    { "id": "25", "term": "salir", "definition": "weggaan" },
-    { "id": "26", "term": "dar igual", "definition": "niet uitmaken" },
-    { "id": "27", "term": "gustar", "definition": "houden van" },
-    { "id": "28", "term": "poner", "definition": "zetten" },
-    { "id": "29", "term": "costar", "definition": "kosten" },
-    { "id": "30", "term": "ganar dinero", "definition": "geld verdienen" },
-    { "id": "31", "term": "la camiseta", "definition": "het T-shirt" },
-    { "id": "32", "term": "el edificio", "definition": "het gebouw" },
-    { "id": "33", "term": "tener curiosidad", "definition": "nieuwsgierig zijn" },
-    { "id": "34", "term": "la puesta del sol", "definition": "de zonsondergang" },
-    { "id": "35", "term": "la tienda", "definition": "de tent" },
-    { "id": "36", "term": "el jardín", "definition": "de tuin" },
-    { "id": "37", "term": "la pared", "definition": "de muur" },
-    { "id": "38", "term": "la iglesia", "definition": "de kerk" },
-    { "id": "39", "term": "la revista", "definition": "het tijdschrift" },
-    { "id": "40", "term": "la estrella", "definition": "de ster" },
-    { "id": "41", "term": "el lujo", "definition": "de luxe" },
-    { "id": "42", "term": "el camping", "definition": "de camping" },
-    { "id": "43", "term": "bienvenido/-a", "definition": "welkom" },
-    { "id": "44", "term": "cómodo/-a", "definition": "comfortabel" },
-    { "id": "45", "term": "incómodo/-a", "definition": "oncomfortabel" },
-    { "id": "46", "term": "nuevo/-a", "definition": "nieuw" },
-    { "id": "47", "term": "abrir", "definition": "openen" },
-    { "id": "48", "term": "dormir (ue)", "definition": "slapen" },
-    { "id": "49", "term": "pasar", "definition": "doorbrengen" },
-    { "id": "50", "term": "conocer", "definition": "leren kennen" },
-    { "id": "51", "term": "comer", "definition": "eten" },
-    { "id": "52", "term": "escribir", "definition": "schrijven" },
-    { "id": "53", "term": "romper", "definition": "breken" },
-    { "id": "54", "term": "encantar", "definition": "geweldig vinden" },
-    { "id": "55", "term": "ver", "definition": "zien" },
-    { "id": "56", "term": "jugar (ue)", "definition": "spelen" },
-    { "id": "57", "term": "enseñar", "definition": "laten zien" },
-    { "id": "58", "term": "llover (ue)", "definition": "regenen" },
-    { "id": "59", "term": "reñir(i)", "definition": "ruzie maken" },
-    { "id": "60", "term": "saber", "definition": "weten" },
-    { "id": "61", "term": "la rebaja", "definition": "de uitverkoop" },
-    { "id": "62", "term": "la oferta", "definition": "de aanbieding" },
-    { "id": "63", "term": "la papelería", "definition": "de kantoorboekhandel" }
+    {
+      "id": "1",
+      "term": "las vacaciones",
+      "definition": "de vakantie",
+      "direction": "definition-to-term",
+      "category": "tiempo libre",
+      "context": {
+        "sentence": "Mis vacaciones de verano fueron increíbles.",
+        "translation": "Mijn zomervakantie was ongelooflijk.",
+        "sentenceWithBlank": "Mis {BLANK} de verano fueron increíbles."
+      },
+      "synonyms": ["las fiestas", "el descanso"]
+    },
+    {
+      "id": "2",
+      "term": "el verano",
+      "definition": "de zomer",
+      "direction": "definition-to-term",
+      "category": "estaciones",
+      "context": {
+        "sentence": "El verano es mi estación favorita.",
+        "translation": "De zomer is mijn favoriete seizoen.",
+        "sentenceWithBlank": "{BLANK} es mi estación favorita."
+      },
+      "synonyms": ["la temporada de calor"]
+    },
+    {
+      "id": "3",
+      "term": "ir de camping",
+      "definition": "kamperen",
+      "direction": "definition-to-term",
+      "category": "actividades",
+      "context": {
+        "sentence": "Nos gusta ir de camping en las montañas.",
+        "translation": "We houden ervan om te kamperen in de bergen.",
+        "sentenceWithBlank": "Nos gusta {BLANK} en las montañas."
+      },
+      "synonyms": ["acampar"]
+    },
+    {
+      "id": "4",
+      "term": "hacer surf",
+      "definition": "surfen",
+      "direction": "definition-to-term",
+      "category": "actividades",
+      "context": {
+        "sentence": "Ella aprendió a hacer surf el año pasado.",
+        "translation": "Zij leerde vorig jaar surfen.",
+        "sentenceWithBlank": "Ella aprendió a {BLANK} el año pasado."
+      },
+      "synonyms": ["surfear"]
+    },
+    {
+      "id": "5",
+      "term": "francés",
+      "definition": "Frans",
+      "direction": "definition-to-term",
+      "category": "idiomas",
+      "context": {
+        "sentence": "Mi hermano estudia francés en la universidad.",
+        "translation": "Mijn broer studeert Frans aan de universiteit.",
+        "sentenceWithBlank": "Mi hermano estudia {BLANK} en la universidad."
+      },
+      "synonyms": ["la lengua francesa"]
+    },
+    {
+      "id": "6",
+      "term": "la costa",
+      "definition": "de kust",
+      "direction": "definition-to-term",
+      "category": "geografía",
+      "context": {
+        "sentence": "Vivimos cerca de la costa mediterránea.",
+        "translation": "We wonen dichtbij de Middellandse Zeekust.",
+        "sentenceWithBlank": "Vivimos cerca de {BLANK} mediterránea."
+      },
+      "synonyms": ["el litoral", "la orilla del mar"]
+    },
+    {
+      "id": "7",
+      "term": "la playa",
+      "definition": "het strand",
+      "direction": "definition-to-term",
+      "category": "geografía",
+      "context": {
+        "sentence": "Los niños construyen castillos en la playa.",
+        "translation": "De kinderen bouwen kastelen op het strand.",
+        "sentenceWithBlank": "Los niños construyen castillos en {BLANK}."
+      },
+      "synonyms": ["la arena", "el arenal"]
+    },
+    {
+      "id": "8",
+      "term": "el apellido",
+      "definition": "de achternaam",
+      "direction": "definition-to-term",
+      "category": "información personal",
+      "context": {
+        "sentence": "¿Cuál es tu apellido completo?",
+        "translation": "Wat is je volledige achternaam?",
+        "sentenceWithBlank": "¿Cuál es tu {BLANK} completo?"
+      },
+      "synonyms": ["el nombre de familia"]
+    },
+    {
+      "id": "9",
+      "term": "la ciudad",
+      "definition": "de stad",
+      "direction": "definition-to-term",
+      "category": "geografía",
+      "context": {
+        "sentence": "Esta ciudad tiene muchos museos interesantes.",
+        "translation": "Deze stad heeft veel interessante musea.",
+        "sentenceWithBlank": "Esta {BLANK} tiene muchos museos interesantes."
+      },
+      "synonyms": ["la urbe", "el municipio"]
+    },
+    {
+      "id": "10",
+      "term": "el hotel",
+      "definition": "het hotel",
+      "direction": "definition-to-term",
+      "category": "alojamiento",
+      "context": {
+        "sentence": "Reservamos un hotel con vista al mar.",
+        "translation": "We reserveerden een hotel met uitzicht op zee.",
+        "sentenceWithBlank": "Reservamos un {BLANK} con vista al mar."
+      },
+      "synonyms": ["el hospedaje", "la pensión"]
+    },
+    {
+      "id": "11",
+      "term": "el casco antiguo",
+      "definition": "het oude stadscentrum",
+      "direction": "definition-to-term",
+      "category": "geografía",
+      "context": {
+        "sentence": "El casco antiguo de la ciudad es muy hermoso.",
+        "translation": "Het oude stadscentrum is heel mooi.",
+        "sentenceWithBlank": "{BLANK} de la ciudad es muy hermoso."
+      },
+      "synonyms": ["el centro histórico", "la ciudad vieja"]
+    },
+    {
+      "id": "12",
+      "term": "quedarse",
+      "definition": "blijven",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Prefiero quedarme en casa esta noche.",
+        "translation": "Ik blijf liever vanavond thuis.",
+        "sentenceWithBlank": "Prefiero {BLANK} en casa esta noche."
+      },
+      "synonyms": ["permanecer", "estar"]
+    },
+    {
+      "id": "13",
+      "term": "visitar",
+      "definition": "bezoeken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a visitar a mis abuelos el domingo.",
+        "translation": "We gaan zondag mijn grootouders bezoeken.",
+        "sentenceWithBlank": "Vamos a {BLANK} a mis abuelos el domingo."
+      },
+      "synonyms": ["ir a ver", "hacer una visita"]
+    },
+    {
+      "id": "14",
+      "term": "impresionante",
+      "definition": "indrukwekkend",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La vista desde la montaña es impresionante.",
+        "translation": "Het uitzicht vanaf de berg is indrukwekkend.",
+        "sentenceWithBlank": "La vista desde la montaña es {BLANK}."
+      },
+      "synonyms": ["increíble", "asombroso", "espectacular"]
+    },
+    {
+      "id": "15",
+      "term": "deportivo/-a",
+      "definition": "sportief",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Mi padre es muy deportivo y corre cada día.",
+        "translation": "Mijn vader is heel sportief en rent elke dag.",
+        "sentenceWithBlank": "Mi padre es muy {BLANK} y corre cada día."
+      },
+      "synonyms": ["atlético", "activo"]
+    },
+    {
+      "id": "16",
+      "term": "aburrido/-a",
+      "definition": "saai",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Esta película es muy aburrida.",
+        "translation": "Deze film is heel saai.",
+        "sentenceWithBlank": "Esta película es muy {BLANK}."
+      },
+      "synonyms": ["tedioso", "monótono"]
+    },
+    {
+      "id": "17",
+      "term": "fenomenal",
+      "definition": "geweldig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El concierto estuvo fenomenal anoche.",
+        "translation": "Het concert was gisteravond geweldig.",
+        "sentenceWithBlank": "El concierto estuvo {BLANK} anoche."
+      },
+      "synonyms": ["extraordinario", "magnífico"]
+    },
+    {
+      "id": "18",
+      "term": "genial",
+      "definition": "fantastisch",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Tu idea para la fiesta es genial.",
+        "translation": "Jouw idee voor het feest is fantastisch.",
+        "sentenceWithBlank": "Tu idea para la fiesta es {BLANK}."
+      },
+      "synonyms": ["fantástico", "brillante"]
+    },
+    {
+      "id": "19",
+      "term": "precioso/-a",
+      "definition": "prachtig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Tiene una casa preciosa en el campo.",
+        "translation": "Ze heeft een prachtig huis op het platteland.",
+        "sentenceWithBlank": "Tiene una casa {BLANK} en el campo."
+      },
+      "synonyms": ["hermoso", "bello", "lindo"]
+    },
+    {
+      "id": "20",
+      "term": "moderno/-a",
+      "definition": "modern",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Este edificio tiene un diseño muy moderno.",
+        "translation": "Dit gebouw heeft een heel modern ontwerp.",
+        "sentenceWithBlank": "Este edificio tiene un diseño muy {BLANK}."
+      },
+      "synonyms": ["contemporáneo", "actual"]
+    },
+    {
+      "id": "21",
+      "term": "las matemáticas",
+      "definition": "de wiskunde",
+      "direction": "definition-to-term",
+      "category": "materias",
+      "context": {
+        "sentence": "Las matemáticas son mi materia favorita.",
+        "translation": "Wiskunde is mijn favoriete vak.",
+        "sentenceWithBlank": "{BLANK} son mi materia favorita."
+      },
+      "synonyms": ["las mates"]
+    },
+    {
+      "id": "22",
+      "term": "el recreo",
+      "definition": "de pauze",
+      "direction": "definition-to-term",
+      "category": "escuela",
+      "context": {
+        "sentence": "Los estudiantes juegan fútbol en el recreo.",
+        "translation": "De studenten spelen voetbal in de pauze.",
+        "sentenceWithBlank": "Los estudiantes juegan fútbol en {BLANK}."
+      },
+      "synonyms": ["el descanso", "el intermedio"]
+    },
+    {
+      "id": "23",
+      "term": "aguantar",
+      "definition": "volhouden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No puedo aguantar más este calor.",
+        "translation": "Ik kan deze hitte niet langer volhouden.",
+        "sentenceWithBlank": "No puedo {BLANK} más este calor."
+      },
+      "synonyms": ["soportar", "resistir"]
+    },
+    {
+      "id": "24",
+      "term": "darse prisa",
+      "definition": "zich haasten",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Tienes que darte prisa o llegarás tarde.",
+        "translation": "Je moet je haasten of je komt te laat.",
+        "sentenceWithBlank": "Tienes que {BLANK} o llegarás tarde."
+      },
+      "synonyms": ["apurarse", "correr"]
+    },
+    {
+      "id": "25",
+      "term": "salir",
+      "definition": "weggaan",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a salir de compras esta tarde.",
+        "translation": "We gaan vanmiddag winkelen.",
+        "sentenceWithBlank": "Vamos a {BLANK} de compras esta tarde."
+      },
+      "synonyms": ["irse", "marcharse"]
+    },
+    {
+      "id": "26",
+      "term": "dar igual",
+      "definition": "niet uitmaken",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Me da igual qué película vemos.",
+        "translation": "Het maakt me niet uit welke film we kijken.",
+        "sentenceWithBlank": "Me {BLANK} qué película vemos."
+      },
+      "synonyms": ["no importar", "ser indiferente"]
+    },
+    {
+      "id": "27",
+      "term": "gustar",
+      "definition": "houden van",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta mucho la música clásica.",
+        "translation": "Ik houd heel veel van klassieke muziek.",
+        "sentenceWithBlank": "Me {BLANK} mucho la música clásica."
+      },
+      "synonyms": ["encantar", "agradar"]
+    },
+    {
+      "id": "28",
+      "term": "poner",
+      "definition": "zetten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a poner la mesa para la cena.",
+        "translation": "Ik ga de tafel dekken voor het avondeten.",
+        "sentenceWithBlank": "Voy a {BLANK} la mesa para la cena."
+      },
+      "synonyms": ["colocar", "situar"]
+    },
+    {
+      "id": "29",
+      "term": "costar",
+      "definition": "kosten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Cuánto cuesta este libro?",
+        "translation": "Hoeveel kost dit boek?",
+        "sentenceWithBlank": "¿Cuánto {BLANK} este libro?"
+      },
+      "synonyms": ["valer", "tener un precio de"]
+    },
+    {
+      "id": "30",
+      "term": "ganar dinero",
+      "definition": "geld verdienen",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Trabajo los fines de semana para ganar dinero.",
+        "translation": "Ik werk in de weekenden om geld te verdienen.",
+        "sentenceWithBlank": "Trabajo los fines de semana para {BLANK}."
+      },
+      "synonyms": ["obtener ingresos", "generar dinero"]
+    },
+    {
+      "id": "31",
+      "term": "la camiseta",
+      "definition": "het T-shirt",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Me compré una camiseta nueva ayer.",
+        "translation": "Ik kocht gisteren een nieuw T-shirt.",
+        "sentenceWithBlank": "Me compré una {BLANK} nueva ayer."
+      },
+      "synonyms": ["la playera", "la remera"]
+    },
+    {
+      "id": "32",
+      "term": "el edificio",
+      "definition": "het gebouw",
+      "direction": "definition-to-term",
+      "category": "arquitectura",
+      "context": {
+        "sentence": "Ese edificio tiene más de cien años.",
+        "translation": "Dat gebouw is meer dan honderd jaar oud.",
+        "sentenceWithBlank": "Ese {BLANK} tiene más de cien años."
+      },
+      "synonyms": ["la construcción", "la estructura"]
+    },
+    {
+      "id": "33",
+      "term": "tener curiosidad",
+      "definition": "nieuwsgierig zijn",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Tengo curiosidad por saber qué pasó.",
+        "translation": "Ik ben nieuwsgierig naar wat er gebeurde.",
+        "sentenceWithBlank": "{BLANK} por saber qué pasó."
+      },
+      "synonyms": ["sentir curiosidad", "estar curioso"]
+    },
+    {
+      "id": "34",
+      "term": "la puesta del sol",
+      "definition": "de zonsondergang",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "La puesta del sol desde aquí es hermosa.",
+        "translation": "De zonsondergang vanaf hier is prachtig.",
+        "sentenceWithBlank": "{BLANK} desde aquí es hermosa."
+      },
+      "synonyms": ["el atardecer", "el ocaso"]
+    },
+    {
+      "id": "35",
+      "term": "la tienda",
+      "definition": "de tent",
+      "direction": "definition-to-term",
+      "category": "camping",
+      "context": {
+        "sentence": "Montamos la tienda junto al río.",
+        "translation": "We zetten de tent op naast de rivier.",
+        "sentenceWithBlank": "Montamos {BLANK} junto al río."
+      },
+      "synonyms": ["la carpa", "el toldo"]
+    },
+    {
+      "id": "36",
+      "term": "el jardín",
+      "definition": "de tuin",
+      "direction": "definition-to-term",
+      "category": "casa",
+      "context": {
+        "sentence": "Las flores del jardín están muy bonitas.",
+        "translation": "De bloemen in de tuin zijn heel mooi.",
+        "sentenceWithBlank": "Las flores del {BLANK} están muy bonitas."
+      },
+      "synonyms": ["el patio", "el huerto"]
+    },
+    {
+      "id": "37",
+      "term": "la pared",
+      "definition": "de muur",
+      "direction": "definition-to-term",
+      "category": "casa",
+      "context": {
+        "sentence": "Vamos a pintar la pared de azul.",
+        "translation": "We gaan de muur blauw verven.",
+        "sentenceWithBlank": "Vamos a pintar {BLANK} de azul."
+      },
+      "synonyms": ["el muro", "la muralla"]
+    },
+    {
+      "id": "38",
+      "term": "la iglesia",
+      "definition": "de kerk",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "La iglesia del pueblo es muy antigua.",
+        "translation": "De dorpskerk is heel oud.",
+        "sentenceWithBlank": "{BLANK} del pueblo es muy antigua."
+      },
+      "synonyms": ["el templo", "la catedral"]
+    },
+    {
+      "id": "39",
+      "term": "la revista",
+      "definition": "het tijdschrift",
+      "direction": "definition-to-term",
+      "category": "medios",
+      "context": {
+        "sentence": "Leo una revista de ciencia cada mes.",
+        "translation": "Ik lees elke maand een wetenschapstijdschrift.",
+        "sentenceWithBlank": "Leo una {BLANK} de ciencia cada mes."
+      },
+      "synonyms": ["la publicación", "el magazine"]
+    },
+    {
+      "id": "40",
+      "term": "la estrella",
+      "definition": "de ster",
+      "direction": "definition-to-term",
+      "category": "astronomía",
+      "context": {
+        "sentence": "Por la noche se ven muchas estrellas.",
+        "translation": "'s Nachts zie je veel sterren.",
+        "sentenceWithBlank": "Por la noche se ven muchas {BLANK}."
+      },
+      "synonyms": ["el astro", "el lucero"]
+    },
+    {
+      "id": "41",
+      "term": "el lujo",
+      "definition": "de luxe",
+      "direction": "definition-to-term",
+      "category": "estilo de vida",
+      "context": {
+        "sentence": "Vivir en el centro es un lujo.",
+        "translation": "Wonen in het centrum is een luxe.",
+        "sentenceWithBlank": "Vivir en el centro es un {BLANK}."
+      },
+      "synonyms": ["la comodidad", "el privilegio"]
+    },
+    {
+      "id": "42",
+      "term": "el camping",
+      "definition": "de camping",
+      "direction": "definition-to-term",
+      "category": "alojamiento",
+      "context": {
+        "sentence": "Pasamos una semana en el camping.",
+        "translation": "We brachten een week door op de camping.",
+        "sentenceWithBlank": "Pasamos una semana en {BLANK}."
+      },
+      "synonyms": ["el campamento", "la zona de acampada"]
+    },
+    {
+      "id": "43",
+      "term": "bienvenido/-a",
+      "definition": "welkom",
+      "direction": "definition-to-term",
+      "category": "saludos",
+      "context": {
+        "sentence": "¡Bienvenidos a nuestra casa!",
+        "translation": "Welkom in ons huis!",
+        "sentenceWithBlank": "¡{BLANK} a nuestra casa!"
+      },
+      "synonyms": ["recibido con gusto"]
+    },
+    {
+      "id": "44",
+      "term": "cómodo/-a",
+      "definition": "comfortabel",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Esta silla es muy cómoda.",
+        "translation": "Deze stoel is heel comfortabel.",
+        "sentenceWithBlank": "Esta silla es muy {BLANK}."
+      },
+      "synonyms": ["confortable", "agradable"]
+    },
+    {
+      "id": "45",
+      "term": "incómodo/-a",
+      "definition": "oncomfortabel",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Me siento incómoda en esta situación.",
+        "translation": "Ik voel me oncomfortabel in deze situatie.",
+        "sentenceWithBlank": "Me siento {BLANK} en esta situación."
+      },
+      "synonyms": ["molesto", "desagradable"]
+    },
+    {
+      "id": "46",
+      "term": "nuevo/-a",
+      "definition": "nieuw",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Estrenan una película nueva mañana.",
+        "translation": "Morgen komt er een nieuwe film uit.",
+        "sentenceWithBlank": "Estrenan una película {BLANK} mañana."
+      },
+      "synonyms": ["reciente", "fresco"]
+    },
+    {
+      "id": "47",
+      "term": "abrir",
+      "definition": "openen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Puedes abrir la ventana, por favor?",
+        "translation": "Kun je het raam openen, alsjeblieft?",
+        "sentenceWithBlank": "¿Puedes {BLANK} la ventana, por favor?"
+      },
+      "synonyms": ["destapar", "inaugurar"]
+    },
+    {
+      "id": "48",
+      "term": "dormir (ue)",
+      "definition": "slapen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Los niños duermen ocho horas cada noche.",
+        "translation": "De kinderen slapen elke nacht acht uur.",
+        "sentenceWithBlank": "Los niños {BLANK} ocho horas cada noche."
+      },
+      "synonyms": ["descansar", "reposar"]
+    },
+    {
+      "id": "49",
+      "term": "pasar",
+      "definition": "doorbrengen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a pasar las vacaciones en la playa.",
+        "translation": "We gaan de vakantie doorbrengen op het strand.",
+        "sentenceWithBlank": "Vamos a {BLANK} las vacaciones en la playa."
+      },
+      "synonyms": ["transcurrir", "vivir"]
+    },
+    {
+      "id": "50",
+      "term": "conocer",
+      "definition": "leren kennen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero conocer gente nueva en la universidad.",
+        "translation": "Ik wil nieuwe mensen leren kennen op de universiteit.",
+        "sentenceWithBlank": "Quiero {BLANK} gente nueva en la universidad."
+      },
+      "synonyms": ["encontrar", "hacer amistad"]
+    },
+    {
+      "id": "51",
+      "term": "comer",
+      "definition": "eten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Preferimos comer en casa los domingos.",
+        "translation": "We eten liever thuis op zondag.",
+        "sentenceWithBlank": "Preferimos {BLANK} en casa los domingos."
+      },
+      "synonyms": ["alimentarse", "ingerir"]
+    },
+    {
+      "id": "52",
+      "term": "escribir",
+      "definition": "schrijven",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Mi hermana escribe un diario cada día.",
+        "translation": "Mijn zus schrijft elke dag een dagboek.",
+        "sentenceWithBlank": "Mi hermana {BLANK} un diario cada día."
+      },
+      "synonyms": ["redactar", "anotar"]
+    },
+    {
+      "id": "53",
+      "term": "romper",
+      "definition": "breken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Ten cuidado de no romper el vaso.",
+        "translation": "Pas op dat je het glas niet breekt.",
+        "sentenceWithBlank": "Ten cuidado de no {BLANK} el vaso."
+      },
+      "synonyms": ["quebrar", "partir"]
+    },
+    {
+      "id": "54",
+      "term": "encantar",
+      "definition": "geweldig vinden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me encanta bailar salsa los fines de semana.",
+        "translation": "Ik vind het geweldig om salsa te dansen in de weekenden.",
+        "sentenceWithBlank": "Me {BLANK} bailar salsa los fines de semana."
+      },
+      "synonyms": ["fascinar", "gustar mucho"]
+    },
+    {
+      "id": "55",
+      "term": "ver",
+      "definition": "zien",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Desde aquí puedes ver las montañas.",
+        "translation": "Vanaf hier kun je de bergen zien.",
+        "sentenceWithBlank": "Desde aquí puedes {BLANK} las montañas."
+      },
+      "synonyms": ["observar", "mirar"]
+    },
+    {
+      "id": "56",
+      "term": "jugar (ue)",
+      "definition": "spelen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Los niños juegan fútbol en el parque.",
+        "translation": "De kinderen spelen voetbal in het park.",
+        "sentenceWithBlank": "Los niños {BLANK} fútbol en el parque."
+      },
+      "synonyms": ["divertirse", "entretenerse"]
+    },
+    {
+      "id": "57",
+      "term": "enseñar",
+      "definition": "laten zien",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Me puedes enseñar tu proyecto?",
+        "translation": "Kun je me je project laten zien?",
+        "sentenceWithBlank": "¿Me puedes {BLANK} tu proyecto?"
+      },
+      "synonyms": ["mostrar", "instruir"]
+    },
+    {
+      "id": "58",
+      "term": "llover (ue)",
+      "definition": "regenen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Parece que va a llover esta tarde.",
+        "translation": "Het lijkt erop dat het vanmiddag gaat regenen.",
+        "sentenceWithBlank": "Parece que va a {BLANK} esta tarde."
+      },
+      "synonyms": ["precipitar", "caer agua"]
+    },
+    {
+      "id": "59",
+      "term": "reñir(i)",
+      "definition": "ruzie maken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Los hermanos riñen por cualquier cosa.",
+        "translation": "De broers maken ruzie om alles.",
+        "sentenceWithBlank": "Los hermanos {BLANK} por cualquier cosa."
+      },
+      "synonyms": ["discutir", "pelear"]
+    },
+    {
+      "id": "60",
+      "term": "saber",
+      "definition": "weten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Sabes dónde está la biblioteca?",
+        "translation": "Weet je waar de bibliotheek is?",
+        "sentenceWithBlank": "¿{BLANK} dónde está la biblioteca?"
+      },
+      "synonyms": ["conocer", "tener conocimiento"]
+    },
+    {
+      "id": "61",
+      "term": "la rebaja",
+      "definition": "de uitverkoop",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "Hay muchas rebajas en enero.",
+        "translation": "Er zijn veel uitverkopen in januari.",
+        "sentenceWithBlank": "Hay muchas {BLANK} en enero."
+      },
+      "synonyms": ["el descuento", "la oferta"]
+    },
+    {
+      "id": "62",
+      "term": "la oferta",
+      "definition": "de aanbieding",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "Esta tienda tiene una buena oferta hoy.",
+        "translation": "Deze winkel heeft vandaag een goede aanbieding.",
+        "sentenceWithBlank": "Esta tienda tiene una buena {BLANK} hoy."
+      },
+      "synonyms": ["la promoción", "el descuento"]
+    },
+    {
+      "id": "63",
+      "term": "la papelería",
+      "definition": "de kantoorboekhandel",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "Compré cuadernos en la papelería.",
+        "translation": "Ik kocht schriften in de kantoorboekhandel.",
+        "sentenceWithBlank": "Compré cuadernos en {BLANK}."
+      },
+      "synonyms": ["la librería", "la tienda de material escolar"]
+    }
   ]
 }

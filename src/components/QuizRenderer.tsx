@@ -483,7 +483,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
       <>
         {quizModeToUse === 'multiple-choice' ? (
           <MultipleChoiceQuiz
-            key={`mc-${wordToUse.id}-${gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)}`} // Force remount on word change
+            key={`mc-${wordToUse.id}-${quizModeToUse}`} // Stable key based on word ID and mode
             word={gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)}
             options={optionsToUse}
             onSelect={handleSubmit}
@@ -492,11 +492,12 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
+            sessionProgress={sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)}
             context={contextForWord}
           />
         ) : quizModeToUse === 'letter-scramble' ? (
           <LetterScrambleQuiz
-            key={`ls-${wordToUse.id}-${gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+            key={`ls-${wordToUse.id}-${quizModeToUse}`} // Stable key based on word ID and mode
             word={gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)} // Always scramble the target language word (German/Spanish)
             definition={gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as hint
             context={contextForWord}
@@ -524,7 +525,8 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
                 // Standard game logic for non-enhanced sessions
                 setIsTransitioning(true);
                 
-                // Update session state
+                // Update session state ONLY for standard mode
+                // Enhanced mode handles its own state internally
                 if (correct && isSessionActive && currentSession) {
                   dispatch(incrementWordsCompleted());
                   dispatch(addCorrectAnswer({}));
@@ -540,8 +542,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
           />
         ) : quizModeToUse === 'fill-in-the-blank' ? (
           <FillInTheBlankQuiz
-            key={`fib-${wordToUse.id}-${gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+            key={`fib-${wordToUse.id}-${quizModeToUse}`} // Stable key based on word ID and mode
             word={gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)} // Always ask for the target language (German/Spanish)
+            questionWord={gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch word to translate
             userAnswer={inputValue}
             onAnswerChange={setInputValue}
             onSubmit={handleOpenQuestionSubmit}
@@ -555,7 +558,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
           />
         ) : (
           <OpenQuestionQuiz
-            key={`oq-${wordToUse.id}-${gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)}`} // Force remount on word change
+            key={`oq-${wordToUse.id}-${quizModeToUse}`} // Stable key based on word ID and mode
             word={gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as the question
             userAnswer={inputValue}
             onAnswerChange={setInputValue}

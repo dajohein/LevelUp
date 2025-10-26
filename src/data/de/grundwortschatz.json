@@ -11,7 +11,11 @@
       "definition": "de gitaar",
       "direction": "definition-to-term",
       "category": "muziekinstrumenten",
-      "context": "Snaarinstrument met 6 snaren",
+      "context": {
+        "sentence": "Meine Schwester spielt gerne Gitarre am Abend.",
+        "translation": "Mijn zus speelt graag gitaar 's avonds.",
+        "sentenceWithBlank": "Meine Schwester spielt gerne {BLANK} am Abend."
+      },
       "synonyms": []
     },
     {
@@ -20,7 +24,11 @@
       "definition": "de stad",
       "direction": "definition-to-term",
       "category": "plaatsen",
-      "context": "Grote woonplaats met veel inwoners",
+      "context": {
+        "sentence": "Die Stadt ist sehr groß und schön.",
+        "translation": "De stad is heel groot en mooi.",
+        "sentenceWithBlank": "{BLANK} ist sehr groß und schön."
+      },
       "synonyms": [
         "die Großstadt",
         "das Stadtzentrum"
@@ -32,7 +40,11 @@
       "definition": "de viool",
       "direction": "definition-to-term",
       "category": "muziekinstrumenten",
-      "context": "Strijkinstrument met 4 snaren",
+      "context": {
+        "sentence": "Sie lernt seit drei Jahren Geige spielen.",
+        "translation": "Ze leert al drie jaar viool spelen.",
+        "sentenceWithBlank": "Sie lernt seit drei Jahren {BLANK} spielen."
+      },
       "synonyms": [
         "die Violine"
       ]
@@ -43,7 +55,11 @@
       "definition": "het drumstel",
       "direction": "definition-to-term",
       "category": "muziekinstrumenten",
-      "context": "Percussie-instrument met verschillende trommels",
+      "context": {
+        "sentence": "Das Schlagzeug ist sehr laut und rhythmisch.",
+        "translation": "Het drumstel is heel luid en ritmisch.",
+        "sentenceWithBlank": "{BLANK} ist sehr laut und rhythmisch."
+      },
       "synonyms": [
         "die Drums"
       ]
@@ -54,7 +70,11 @@
       "definition": "de hobby",
       "direction": "definition-to-term",
       "category": "vrije tijd",
-      "context": "Activiteit die je doet voor plezier",
+      "context": {
+        "sentence": "Mein liebstes Hobby ist das Lesen.",
+        "translation": "Mijn liefste hobby is lezen.",
+        "sentenceWithBlank": "Mein liebstes {BLANK} ist das Lesen."
+      },
       "synonyms": [
         "das Interesse",
         "die Freizeitbeschäftigung"
@@ -66,7 +86,11 @@
       "definition": "de piano",
       "direction": "definition-to-term",
       "category": "muziekinstrumenten",
-      "context": "Toetsinstrument met 88 toetsen",
+      "context": {
+        "sentence": "Das Klavier steht im Wohnzimmer.",
+        "translation": "De piano staat in de woonkamer.",
+        "sentenceWithBlank": "{BLANK} steht im Wohnzimmer."
+      },
       "synonyms": [
         "das Piano"
       ]
@@ -77,7 +101,11 @@
       "definition": "de vakantie",
       "direction": "definition-to-term",
       "category": "vrije tijd",
-      "context": "Periode vrij van school of werk",
+      "context": {
+        "sentence": "Ich freue mich schon auf die Sommerferien.",
+        "translation": "Ik verheug me al op de zomervakantie.",
+        "sentenceWithBlank": "Ich freue mich schon auf die Sommer{BLANK}."
+      },
       "synonyms": [
         "der Urlaub"
       ]
@@ -88,7 +116,11 @@
       "definition": "aan sport doen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Fysieke activiteit beoefenen",
+      "context": {
+        "sentence": "Jeden Tag sollte man etwas Sport machen.",
+        "translation": "Elke dag zou je wat sport moeten doen.",
+        "sentenceWithBlank": "Jeden Tag sollte man etwas {BLANK}."
+      },
       "synonyms": [
         "trainieren",
         "sich bewegen"
@@ -100,7 +132,11 @@
       "definition": "bevallen",
       "direction": "definition-to-term",
       "category": "meningen",
-      "context": "Iets leuk of mooi vinden",
+      "context": {
+        "sentence": "Das Buch gefällt mir sehr gut.",
+        "translation": "Het boek bevalt me heel goed.",
+        "sentenceWithBlank": "Das Buch {BLANK} mir sehr gut."
+      },
       "synonyms": [
         "mögen",
         "toll finden"
@@ -112,7 +148,11 @@
       "definition": "dansen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Bewegen op muziek",
+      "context": {
+        "sentence": "Wir tanzen gerne auf Partys.",
+        "translation": "We dansen graag op feestjes.",
+        "sentenceWithBlank": "Wir {BLANK} gerne auf Partys."
+      },
       "synonyms": [
         "sich zur Musik bewegen"
       ]
@@ -123,7 +163,11 @@
       "definition": "fietsen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Met de fiets rijden",
+      "context": {
+        "sentence": "Am Wochenende fahren wir gerne Rad im Park.",
+        "translation": "In het weekend fietsen we graag in het park.",
+        "sentenceWithBlank": "Am Wochenende {BLANK} wir gerne im Park."
+      },
       "synonyms": [
         "mit dem Fahrrad fahren",
         "radeln"
@@ -135,7 +179,11 @@
       "definition": "gamen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Computerspelletjes spelen",
+      "context": {
+        "sentence": "Mein Bruder liebt es zu gamen.",
+        "translation": "Mijn broer houdt ervan om te gamen.",
+        "sentenceWithBlank": "Mein Bruder liebt es zu {BLANK}."
+      },
       "synonyms": [
         "Computer spielen",
         "zocken"
@@ -147,7 +195,11 @@
       "definition": "leuk zijn",
       "direction": "definition-to-term",
       "category": "meningen",
-      "context": "Plezier geven of veroorzaken",
+      "context": {
+        "sentence": "Das Spiel macht mir großen Spaß.",
+        "translation": "Het spel geeft me veel plezier.",
+        "sentenceWithBlank": "Das Spiel {BLANK} mir großen {BLANK}."
+      },
       "synonyms": [
         "Freude bereiten",
         "erfreuen"
@@ -159,7 +211,11 @@
       "definition": "lezen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Tekst bekijken en begrijpen",
+      "context": {
+        "sentence": "Mein Vater liest jeden Abend ein Buch.",
+        "translation": "Mijn vader leest elke avond een boek.",
+        "sentenceWithBlank": "Mein Vater {BLANK} jeden Abend ein Buch."
+      },
       "synonyms": [
         "studieren",
         "durchlesen"
@@ -171,7 +227,11 @@
       "definition": "naar de bioscoop gaan",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Een film bekijken in de bioscoop",
+      "context": {
+        "sentence": "Wir gehen heute Abend ins Kino.",
+        "translation": "We gaan vanavond naar de bioscoop.",
+        "sentenceWithBlank": "Wir {BLANK} heute Abend."
+      },
       "synonyms": [
         "einen Film schauen"
       ]
@@ -182,7 +242,11 @@
       "definition": "naar het museum gaan",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Kunstwerken of historische objecten bekijken",
+      "context": {
+        "sentence": "Am Sonntag gehen wir ins Museum.",
+        "translation": "Op zondag gaan we naar het museum.",
+        "sentenceWithBlank": "Am Sonntag {BLANK} wir."
+      },
       "synonyms": [
         "eine Ausstellung besuchen"
       ]
@@ -193,7 +257,11 @@
       "definition": "naar het zwembad gaan",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Zwemmen in een overdekt of openlucht zwembad",
+      "context": {
+        "sentence": "Im Sommer gehe ich oft ins Schwimmbad.",
+        "translation": "In de zomer ga ik vaak naar het zwembad.",
+        "sentenceWithBlank": "Im Sommer {BLANK} ich oft."
+      },
       "synonyms": [
         "baden gehen"
       ]
@@ -204,7 +272,11 @@
       "definition": "naar muziek luisteren",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Geluid van muziek beluisteren",
+      "context": {
+        "sentence": "Er hört gerne Musik am Abend.",
+        "translation": "Hij luistert graag naar muziek 's avonds.",
+        "sentenceWithBlank": "Er hört gerne {BLANK} am Abend."
+      },
       "synonyms": [
         "Lieder anhören"
       ]
@@ -215,7 +287,11 @@
       "definition": "paardrijden",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Op een paard rijden",
+      "context": {
+        "sentence": "Sie reitet jeden Tag im Park.",
+        "translation": "Ze rijdt elke dag paard in het park.",
+        "sentenceWithBlank": "Sie {BLANK} jeden Tag im Park."
+      },
       "synonyms": [
         "auf einem Pferd reiten"
       ]
@@ -226,7 +302,11 @@
       "definition": "skiën",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Op ski's over sneeuw glijden",
+      "context": {
+        "sentence": "Wir fahren Ski in den Bergen.",
+        "translation": "We skiën in de bergen.",
+        "sentenceWithBlank": "Wir fahren {BLANK} in den Bergen."
+      },
       "synonyms": [
         "Ski laufen"
       ]
@@ -237,7 +317,11 @@
       "definition": "spelen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Een spel of sport beoefenen",
+      "context": {
+        "sentence": "Die Kinder spielen im Garten.",
+        "translation": "De kinderen spelen in de tuin.",
+        "sentenceWithBlank": "Die Kinder {BLANK} im Garten."
+      },
       "synonyms": [
         "ein Spiel machen"
       ]
@@ -248,7 +332,11 @@
       "definition": "tennissen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "De sport tennis beoefenen",
+      "context": {
+        "sentence": "Er spielt Tennis am Wochenende.",
+        "translation": "Hij speelt tennis in het weekend.",
+        "sentenceWithBlank": "Er spielt {BLANK} am Wochenende."
+      },
       "synonyms": [
         "Tennis machen"
       ]
@@ -259,7 +347,11 @@
       "definition": "voetballen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "De sport voetbal beoefenen",
+      "context": {
+        "sentence": "Wir spielen Fußball nach der Schule.",
+        "translation": "We voetballen na school.",
+        "sentenceWithBlank": "Wir spielen {BLANK} nach der Schule."
+      },
       "synonyms": [
         "kicken",
         "Fußball machen"
@@ -271,7 +363,11 @@
       "definition": "zingen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Melodieën en teksten met de stem maken",
+      "context": {
+        "sentence": "Sie singt sehr schön.",
+        "translation": "Ze zingt heel mooi.",
+        "sentenceWithBlank": "Sie {BLANK} sehr schön."
+      },
       "synonyms": [
         "ein Lied singen"
       ]
@@ -282,7 +378,11 @@
       "definition": "zwemmen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Zich voortbewegen in het water",
+      "context": {
+        "sentence": "Ich schwimme gerne im See.",
+        "translation": "Ik zwem graag in het meer.",
+        "sentenceWithBlank": "Ich {BLANK} gerne im See."
+      },
       "synonyms": [
         "baden",
         "ins Wasser gehen"
@@ -294,7 +394,11 @@
       "definition": "met",
       "direction": "definition-to-term",
       "category": "voorzetsels",
-      "context": "Voorzetsel dat gezelschap of middel aangeeft",
+      "context": {
+        "sentence": "Sie geht mit ihrem Freund ins Kino.",
+        "translation": "Zij gaat met haar vriend naar de bioscoop.",
+        "sentenceWithBlank": "Sie geht {BLANK} ihrem Freund ins Kino."
+      },
       "synonyms": [
         "zusammen mit"
       ]
@@ -305,7 +409,11 @@
       "definition": "of",
       "direction": "definition-to-term",
       "category": "voegwoorden",
-      "context": "Voegwoord voor keuze tussen alternatieven",
+      "context": {
+        "sentence": "Möchtest du Tee oder Kaffee?",
+        "translation": "Wil je thee of koffie?",
+        "sentenceWithBlank": "Möchtest du Tee {BLANK} Kaffee?"
+      },
       "synonyms": [
         "entweder ... oder"
       ]
@@ -316,7 +424,11 @@
       "definition": "soms",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Af en toe, niet altijd",
+      "context": {
+        "sentence": "Manchmal regnet es hier.",
+        "translation": "Soms regent het hier.",
+        "sentenceWithBlank": "{BLANK} regnet es hier."
+      },
       "synonyms": [
         "gelegentlich",
         "hin und wieder"
@@ -328,7 +440,11 @@
       "definition": "dom, stom",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Niet slim of vervelend",
+      "context": {
+        "sentence": "Das ist wirklich blöd!",
+        "translation": "Dat is echt stom!",
+        "sentenceWithBlank": "Das ist wirklich {BLANK}!"
+      },
       "synonyms": [
         "dumm",
         "doof"
@@ -340,7 +456,11 @@
       "definition": "interessant",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Boeiend of de aandacht trekkend",
+      "context": {
+        "sentence": "Das Buch ist sehr interessant.",
+        "translation": "Het boek is heel interessant.",
+        "sentenceWithBlank": "Das Buch ist sehr {BLANK}."
+      },
       "synonyms": [
         "spannend",
         "faszinierend"
@@ -352,7 +472,11 @@
       "definition": "leuk",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Erg goed of fantastisch",
+      "context": {
+        "sentence": "Das Konzert war toll!",
+        "translation": "Het concert was geweldig!",
+        "sentenceWithBlank": "Das Konzert war {BLANK}!"
+      },
       "synonyms": [
         "super",
         "großartig",
@@ -365,7 +489,11 @@
       "definition": "makkelijk",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Niet moeilijk of zwaar",
+      "context": {
+        "sentence": "Die Aufgabe ist sehr leicht.",
+        "translation": "De opgave is heel makkelijk.",
+        "sentenceWithBlank": "Die Aufgabe ist sehr {BLANK}."
+      },
       "synonyms": [
         "einfach",
         "simpel"
@@ -377,7 +505,11 @@
       "definition": "moeilijk",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Niet gemakkelijk of ingewikkeld",
+      "context": {
+        "sentence": "Diese Aufgabe ist ziemlich schwierig.",
+        "translation": "Deze opgave is behoorlijk moeilijk.",
+        "sentenceWithBlank": "Diese Aufgabe ist ziemlich {BLANK}."
+      },
       "synonyms": [
         "schwer",
         "kompliziert"
@@ -389,7 +521,11 @@
       "definition": "mooi",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Aangenaam om naar te kijken",
+      "context": {
+        "sentence": "Ihre neue Frisur ist sehr schön.",
+        "translation": "Haar nieuwe kapsel is heel mooi.",
+        "sentenceWithBlank": "Ihre neue Frisur ist sehr {BLANK}."
+      },
       "synonyms": [
         "hübsch",
         "wunderschön"
@@ -401,7 +537,11 @@
       "definition": "saai",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Niet interessant of boeiend",
+      "context": {
+        "sentence": "Das Buch war total langweilig.",
+        "translation": "Het boek was totaal saai.",
+        "sentenceWithBlank": "Das Buch war total {BLANK}."
+      },
       "synonyms": [
         "öde",
         "eintönig"
@@ -413,7 +553,11 @@
       "definition": "avontuurlijk",
       "direction": "definition-to-term",
       "category": "eigenschappen",
-      "context": "Vol risico en spanning",
+      "context": {
+        "sentence": "Unser Urlaub war sehr abenteuerlich.",
+        "translation": "Onze vakantie was heel avontuurlijk.",
+        "sentenceWithBlank": "Unser Urlaub war sehr {BLANK}."
+      },
       "synonyms": [
         "riskant",
         "spannend",
@@ -426,7 +570,11 @@
       "definition": "voetballen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Informeel woord voor voetballen",
+      "context": {
+        "sentence": "Die Jungen kicken im Park.",
+        "translation": "De jongens voetballen in het park.",
+        "sentenceWithBlank": "Die Jungen {BLANK} im Park."
+      },
       "synonyms": [
         "Fußball spielen",
         "bolzen"
@@ -438,7 +586,11 @@
       "definition": "op een gegeven moment",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Op een onbepaald moment in de toekomst",
+      "context": {
+        "sentence": "Irgendwann werden wir uns wiedersehen.",
+        "translation": "Op een dag zullen we elkaar weerzien.",
+        "sentenceWithBlank": "{BLANK} werden wir uns wiedersehen."
+      },
       "synonyms": [
         "einmal",
         "eines Tages"
@@ -450,7 +602,11 @@
       "definition": "de voetbalclub",
       "direction": "definition-to-term",
       "category": "organisaties",
-      "context": "Club waar mensen samen voetballen",
+      "context": {
+        "sentence": "Der Fußballverein ist wichtig.",
+        "translation": "De voetbalclub is belangrijk.",
+        "sentenceWithBlank": "{BLANK} ist wichtig."
+      },
       "synonyms": [
         "der Fußballklub",
         "der Sportverein"
@@ -462,7 +618,11 @@
       "definition": "wisselen",
       "direction": "definition-to-term",
       "category": "werkwoorden",
-      "context": "Van de ene naar de andere overgaan",
+      "context": {
+        "sentence": "Er will den Verein wechseln.",
+        "translation": "Hij wil van club veranderen.",
+        "sentenceWithBlank": "Er will den Verein {BLANK}."
+      },
       "synonyms": [
         "ändern",
         "tauschen"
@@ -474,7 +634,11 @@
       "definition": "de tegenstander",
       "direction": "definition-to-term",
       "category": "personen",
-      "context": "Iemand tegen wie je speelt of vecht",
+      "context": {
+        "sentence": "Der Gegner ist wichtig.",
+        "translation": "De tegenstander is belangrijk.",
+        "sentenceWithBlank": "{BLANK} ist wichtig."
+      },
       "synonyms": [
         "der Konkurrent",
         "der Rivale"
@@ -486,7 +650,11 @@
       "definition": "trainen",
       "direction": "definition-to-term",
       "category": "activiteiten",
-      "context": "Oefenen om beter te worden",
+      "context": {
+        "sentence": "Ich trainiere jeden Tag im Fitnessstudio.",
+        "translation": "Ik train elke dag in de sportschool.",
+        "sentenceWithBlank": "Ich {BLANK} jeden Tag im Fitnessstudio."
+      },
       "synonyms": [
         "üben",
         "sich vorbereiten"
@@ -498,7 +666,11 @@
       "definition": "buiten",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Niet binnen, in de open lucht",
+      "context": {
+        "sentence": "Die Kinder spielen draußen.",
+        "translation": "De kinderen spelen buiten.",
+        "sentenceWithBlank": "Die Kinder spielen {BLANK}."
+      },
       "synonyms": [
         "im Freien",
         "außerhalb"
@@ -510,7 +682,11 @@
       "definition": "jammer",
       "direction": "definition-to-term",
       "category": "uitdrukkingen",
-      "context": "Uitdrukking van teleurstelling",
+      "context": {
+        "sentence": "Schade, dass du nicht kommen kannst.",
+        "translation": "Jammer dat je niet kunt komen.",
+        "sentenceWithBlank": "{BLANK}, dass du nicht kommen kannst."
+      },
       "synonyms": [
         "bedauerlich",
         "leider"
@@ -522,7 +698,11 @@
       "definition": "helaas",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Woord dat spijt uitdrukt",
+      "context": {
+        "sentence": "Leider kann ich heute nicht kommen.",
+        "translation": "Helaas kan ik vandaag niet komen.",
+        "sentenceWithBlank": "{BLANK} kann ich heute nicht kommen."
+      },
       "synonyms": [
         "bedauerlicherweise",
         "unglücklicherweise"
@@ -534,7 +714,11 @@
       "definition": "geen idee",
       "direction": "definition-to-term",
       "category": "uitdrukkingen",
-      "context": "Ik weet het niet",
+      "context": {
+        "sentence": "Ich habe keine Ahnung, was passiert ist.",
+        "translation": "Ik heb geen idee wat er is gebeurd.",
+        "sentenceWithBlank": "Ich habe {BLANK}, was passiert ist."
+      },
       "synonyms": [
         "weiß nicht",
         "keine Vorstellung"
@@ -546,7 +730,11 @@
       "definition": "zometeen, binnenkort",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Heel binnenkort, over een korte tijd",
+      "context": {
+        "sentence": "Ich komme gleich zurück.",
+        "translation": "Ik kom zo terug.",
+        "sentenceWithBlank": "Ich komme {BLANK} zurück."
+      },
       "synonyms": [
         "sofort",
         "bald"
@@ -558,7 +746,11 @@
       "definition": "af en toe, soms",
       "direction": "definition-to-term",
       "category": "bijwoorden",
-      "context": "Van tijd tot tijd, niet altijd",
+      "context": {
+        "sentence": "Manchmal ist es besser zu warten.",
+        "translation": "Soms is het beter om te wachten.",
+        "sentenceWithBlank": "{BLANK} ist es besser zu warten."
+      },
       "synonyms": [
         "gelegentlich",
         "hin und wieder"

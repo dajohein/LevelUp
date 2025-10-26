@@ -1,4 +1,22 @@
-// Redux middleware for automatic state persistence
+/**
+ * Persistence Middleware - Centralized Storage Coordination
+ * 
+ * ARCHITECTURE:
+ * Redux Actions → Persistence Middleware → Storage Orchestrator → Storage Services
+ * 
+ * RESPONSIBILITIES:
+ * - Intercepts specific Redux actions that require persistence
+ * - Coordinates debounced vs immediate saves based on action criticality
+ * - Prevents duplicate saves through centralized orchestration
+ * - Handles cross-tab synchronization
+ * 
+ * SEPARATION OF CONCERNS:
+ * - Redux Slices: Pure state management, no storage calls
+ * - Persistence Middleware: Save coordination and timing
+ * - Storage Orchestrator: Queue management and deduplication  
+ * - Storage Services: Actual localStorage/IndexedDB operations
+ */
+
 import type { Middleware } from '@reduxjs/toolkit';
 import type { RootState } from './store';
 import { storageOrchestrator } from '../services/storageOrchestrator';
@@ -9,22 +27,24 @@ import {
 } from '../services/storageService';
 import { logger } from '../services/logger';
 
-// Actions that should trigger immediate persistence (no debounce)
+// Actions requiring immediate persistence (critical state changes)
 const IMMEDIATE_PERSIST_ACTIONS = [
-  'game/setLanguage',
-  'session/startSession',
-  'session/completeSession',
-  'session/resetSession',
+  'game/setLanguage',        // Language switching affects all subsequent operations
+  'game/setCurrentModule',   // Module changes affect word selection
+  'game/resetGame',          // Game resets must be preserved
+  'session/startSession',    // Session initialization is critical
+  'session/completeSession', // Session completion triggers navigation
+  'session/resetSession',    // Session resets affect UI state
 ];
 
-// Actions that should trigger debounced persistence
+// Actions using debounced persistence (frequent updates, optimized for performance)
 const DEBOUNCED_PERSIST_ACTIONS = [
-  'game/checkAnswer',
-  'game/updateWordProgress',
-  'session/addCorrectAnswer',
-  'session/addIncorrectAnswer',
-  'session/incrementWordsCompleted',
-  'session/updateProgress',
+  'session/addCorrectAnswer',      // User progress tracking
+  'session/addIncorrectAnswer',    // Error pattern analysis
+  'session/incrementWordsCompleted', // Session progression
+  'session/updateProgress',        // Score and statistics updates
+  // NOTE: Removed game actions to prevent duplicate saves
+  // Enhanced mode handles its own state, standard mode uses session actions
 ];
 
 // Main persistence middleware - now using centralized orchestrator

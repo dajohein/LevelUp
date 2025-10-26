@@ -241,12 +241,12 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
     return enhancedWordService.getLearningAnalytics(languageCode);
   }, [languageCode]);
 
-  // Initialize on mount or when dependencies change
+  // Initialize only when explicitly requested, not automatically on mount
+  // This prevents auto-starting sessions when just navigating to game routes
   useEffect(() => {
-    if (canUseEnhancedMode()) {
-      initializeEnhancedSession();
-    }
-  }, [languageCode, moduleId]); // Only depend on external props, not internal functions
+    // Don't auto-initialize - let the user explicitly start a session
+    // Enhanced mode should only start when user chooses spaced repetition
+  }, [languageCode, moduleId]); // Dependencies tracked but no auto-init
 
   return {
     // State

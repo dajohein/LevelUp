@@ -73,8 +73,8 @@ class PWAUpdateManager {
   private listenForUpdates() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'SW_UPDATED') {
-          console.log('📢 Received update notification:', event.data);
+        if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
+          console.log('📢 Received update availability notification:', event.data);
           
           const updateInfo: UpdateInfo = {
             version: event.data.version,
@@ -84,6 +84,9 @@ class PWAUpdateManager {
 
           this.currentVersion = event.data.version;
           this.triggerUpdateCallbacks(updateInfo);
+        } else if (event.data && event.data.type === 'SW_UPDATED_APPLIED') {
+          console.log('✅ Update successfully applied:', event.data);
+          // The page will reload automatically after this message
         }
       });
     }
@@ -175,6 +178,40 @@ class PWAUpdateManager {
    */
   getCurrentVersion(): string | null {
     return this.currentVersion;
+  }
+
+  /**
+   * Check for pending update in localStorage
+   */
+  getPendingUpdate(): UpdateInfo | null {
+    try {
+      const pending = localStorage.getItem('pending-update');
+      if (pending) {
+        return JSON.parse(pending);
+      }
+    } catch (error) {
+      console.warn('Failed to parse pending update:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Clear pending update from localStorage
+   */
+  clearPendingUpdate(): void {
+    localStorage.removeItem('pending-update');
+  }
+
+  /**
+   * Apply pending update from localStorage
+   */
+  async applyPendingUpdate(): Promise<boolean> {
+    const pendingUpdate = this.getPendingUpdate();
+    if (pendingUpdate) {
+      this.clearPendingUpdate();
+      return this.applyUpdate();
+    }
+    return false;
   }
 
   /**

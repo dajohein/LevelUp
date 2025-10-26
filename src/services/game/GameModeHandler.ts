@@ -26,6 +26,7 @@ export class GameModeHandler {
       'multiple-choice', 
       'fill-in-the-blank', 
       'letter-scramble',
+      'open-answer',
       'contextual-analysis',
       'usage-example',
       'synonym-antonym'
@@ -36,6 +37,24 @@ export class GameModeHandler {
    * Get the question text based on quiz mode and word direction
    */
   getQuizQuestion(word: any, quizMode: string): string {
+    // For enhanced quiz modes, provide context-specific prompts
+    if (quizMode === 'contextual-analysis') {
+      const baseQuestion = this.isUnidirectionalMode(quizMode) 
+        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+        : this.getQuestionWord(word);
+      return `${baseQuestion} (analyze the context and meaning)`;
+    } else if (quizMode === 'usage-example') {
+      const baseQuestion = this.isUnidirectionalMode(quizMode) 
+        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+        : this.getQuestionWord(word);
+      return `${baseQuestion} (provide translation and usage example)`;
+    } else if (quizMode === 'synonym-antonym') {
+      const baseQuestion = this.isUnidirectionalMode(quizMode) 
+        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+        : this.getQuestionWord(word);
+      return `${baseQuestion} (translate and identify related concepts)`;
+    }
+    
     if (this.isUnidirectionalMode(quizMode)) {
       // Unidirectional modes: Show the source language as the question
       // Use word direction to determine which field contains the source language
@@ -57,39 +76,9 @@ export class GameModeHandler {
    */
   getQuizAnswer(word: any, quizMode: string): string {
     if (quizMode === 'fill-in-the-blank') {
-      // Fill-in-the-blank: We need to return the word that appears in the context sentence
-      // This could be either term or definition depending on the sentence language
-      if (word.context?.sentence) {
-        const sentence = word.context.sentence.toLowerCase();
-        const termLower = word.term.toLowerCase();
-        const definitionLower = word.definition.toLowerCase();
-
-        // Check if term appears in sentence
-        if (sentence.includes(termLower)) {
-          return word.term;
-        }
-        // Check if definition appears in sentence
-        if (sentence.includes(definitionLower)) {
-          return word.definition;
-        }
-
-        // Try without articles for term
-        const termWithoutArticle = word.term.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
-        if (sentence.includes(termWithoutArticle.toLowerCase())) {
-          return word.term;
-        }
-
-        // Try without articles for definition
-        const definitionWithoutArticle = word.definition
-          .replace(/^(der|die|das|ein|eine)\s+/i, '')
-          .trim();
-        if (sentence.includes(definitionWithoutArticle.toLowerCase())) {
-          return word.definition;
-        }
-      }
-
-      // Fallback: return German word (term for German words, definition for Dutch words)
-      return word.term; // Default fallback
+      // Fill-in-the-blank: ALWAYS use the target language (German) word
+      // The context sentence is in German, so we blank out the German term
+      return word.term; // German word that should be filled in
     } else if (this.isUnidirectionalMode(quizMode)) {
       // For learning German: All unidirectional modes should expect German answers
       // Use the word direction to determine which field contains the German word
@@ -135,22 +124,20 @@ export class GameModeHandler {
     // If word has explicit context field, use it
     if (word.context) {
       if (typeof word.context === 'string') {
-        return {
-          sentence: word.context,
-          translation: word.context,
-        };
+        // Skip simple string context for now (usually Dutch descriptions)
+        return undefined;
       }
+      
+      // Use structured context with German sentence and Dutch translation
       return {
-        sentence: word.context.sentence || '',
-        translation: word.context.translation || '',
+        sentence: word.context.sentence || '', // German sentence as context
+        translation: word.context.translation || '', // Dutch translation (revealed after)
       };
     }
 
     // Fallback: no context available
     return undefined;
-  }
-
-  /**
+  }  /**
    * Validate quiz mode configuration for current session
    */
   validateQuizModeConfig(
@@ -247,7 +234,7 @@ export class GameModeHandler {
    * Check if quiz mode supports options/choices
    */
   supportsOptions(quizMode: string): boolean {
-    return ['multiple-choice', 'synonym-antonym'].includes(quizMode);
+    return ['multiple-choice'].includes(quizMode);
   }
 
   /**

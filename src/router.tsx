@@ -19,6 +19,7 @@ import {
 const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
 const ComponentLibraryDemoLazy = React.lazy(() => import('./components/ComponentLibraryDemo'));
 const AdvancedAISystemDemoLazy = React.lazy(() => import('./components/AdvancedAISystemDemo'));
+const DeveloperDashboardLazy = React.lazy(() => import('./components/DeveloperDashboard'));
 
 import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
@@ -89,6 +90,14 @@ export const router = createBrowserRouter([
       {
         path: 'overview/:language',
         element: <LanguageOverview />,
+      },
+      {
+        path: 'developer-dashboard',
+        element: (
+          <LazyWrapper loadingText="Loading Developer Dashboard...">
+            <DeveloperDashboardLazy />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'loading-demo',
