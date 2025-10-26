@@ -14,7 +14,7 @@
     "build:production": "./scripts/build-with-versioning.sh",
     "preview": "vite preview",
     "test": "vitest",
-    "test:storage": "node scripts/test-storage.js",
+
     "type-check": "tsc --noEmit",
     "health:storage": "curl -s http://localhost:5173/api/health || echo 'Development environment not running. Start with: npm run dev:start'",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
