@@ -14,6 +14,7 @@ import {
   ModuleOverviewLazy,
   SessionSelectLazy,
   SessionCompletionLazy,
+  LearningStatsPageLazy,
 } from './utils/lazyComponents';
 
 const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
@@ -86,6 +87,14 @@ export const router = createBrowserRouter([
       {
         path: 'language/:languageCode/:moduleId',
         element: <ModuleProgressView />,
+      },
+      {
+        path: 'stats/:languageCode',
+        element: (
+          <LazyWrapper loadingText="Loading learning analytics...">
+            <LearningStatsPageLazy />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'overview/:language',

@@ -7,17 +7,6 @@ import { setLanguage, setCurrentModule } from '../store/gameSlice';
 import { resetSession, startSession } from '../store/sessionSlice';
 import { getModule, getModuleStats } from '../services/moduleService';
 import { Navigation } from './Navigation';
-import { AILearningDashboard } from './AILearningDashboard';
-
-// Generate stable user ID for demo
-const getDemoUserId = () => {
-  let userId = localStorage.getItem('demo_user_id');
-  if (!userId) {
-    userId = `demo_${Math.random().toString(36).substr(2, 8)}`;
-    localStorage.setItem('demo_user_id', userId);
-  }
-  return userId;
-};
 
 const Container = styled.div`
   min-height: 100vh;
@@ -247,14 +236,6 @@ export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
       <Navigation />
 
       <ContentWrapper>
-        {/* AI Learning Dashboard */}
-        {languageCode && (
-          <AILearningDashboard
-            userId={getDemoUserId()}
-            languageCode={languageCode}
-          />
-        )}
-
         <Header>
           <ModuleTitle>
             {module.icon} {module.name}

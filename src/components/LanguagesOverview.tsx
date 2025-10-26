@@ -187,6 +187,79 @@ const ProgressDot = styled.div<{ progress: number }>`
   box-shadow: ${props => (props.progress > 0 ? '0 0 6px currentColor' : 'none')};
 `;
 
+// Brain icon progress indicator
+const BrainProgressContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const BrainIcon = styled.span<{ filled: boolean; partial?: boolean }>`
+  font-size: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+  
+  /* Visual states based on progress */
+  opacity: ${props => 
+    props.filled 
+      ? '1' 
+      : props.partial 
+      ? '0.7' 
+      : '0.3'};
+      
+  filter: ${props => 
+    props.filled 
+      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' 
+      : props.partial 
+      ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)' 
+      : 'grayscale(0.8) brightness(0.5)'};
+      
+  transform: ${props => 
+    props.filled 
+      ? 'scale(1.15)' 
+      : props.partial 
+      ? 'scale(1.05)' 
+      : 'scale(0.95)'};
+
+  /* Add a subtle glow for filled brains */
+  ${props => props.filled && `
+    text-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+  `}
+
+  /* Add a gentle pulse for partial brains */
+  ${props => props.partial && `
+    animation: brainPulse 2s ease-in-out infinite;
+    text-shadow: 0 0 4px rgba(255, 152, 0, 0.3);
+  `}
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 14px;
+  }
+
+  @keyframes brainPulse {
+    0%, 100% { 
+      opacity: 0.7; 
+      transform: scale(1.05);
+    }
+    50% { 
+      opacity: 0.9; 
+      transform: scale(1.1);
+    }
+  }
+`;
+
+const ProgressText = styled.span`
+  margin-left: 6px;
+  font-size: 0.85rem;
+  color: ${props => props.theme.colors.textSecondary};
+  font-weight: 500;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 0.8rem;
+  }
+`;
+
 const ModuleCount = styled.div`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.85rem;
@@ -205,6 +278,59 @@ const ActivityIndicator = styled.div<{ active: boolean }>`
   background: ${props => (props.active ? '#4caf50' : 'rgba(255, 255, 255, 0.3)')};
   box-shadow: ${props => (props.active ? '0 0 8px rgba(76, 175, 80, 0.6)' : 'none')};
 `;
+
+// Brain progress component
+const BrainProgress: React.FC<{ progress: number }> = ({ progress }) => {
+  // Determine how many brains to fill and their states based on progress (0-100)
+  const getBrainStates = (progress: number) => {
+    if (progress === 0) return ['🧠', '🧠', '🧠']; // All dim
+    if (progress <= 25) return ['🧠', '🧠', '🧠']; // First partial
+    if (progress <= 50) return ['🧠', '🧠', '🧠']; // First full, second partial
+    if (progress <= 75) return ['🧠', '🧠', '🧠']; // Two full, third partial
+    return ['🧠', '🧠', '🧠']; // All full
+  };
+
+  const getBrainFillStates = (progress: number) => {
+    const states = [];
+    
+    // First brain: 0-33%
+    if (progress <= 0) states.push(false);
+    else if (progress <= 33) states.push('partial');
+    else states.push(true);
+    
+    // Second brain: 34-66%
+    if (progress <= 33) states.push(false);
+    else if (progress <= 66) states.push('partial');
+    else states.push(true);
+    
+    // Third brain: 67-100%
+    if (progress <= 66) states.push(false);
+    else if (progress < 100) states.push('partial');
+    else states.push(true);
+    
+    return states;
+  };
+
+  const brainEmojis = getBrainStates(progress);
+  const fillStates = getBrainFillStates(progress);
+
+  return (
+    <BrainProgressContainer>
+      {brainEmojis.map((emoji, index) => (
+        <BrainIcon 
+          key={index}
+          filled={fillStates[index] === true}
+          partial={fillStates[index] === 'partial'}
+        >
+          {emoji}
+        </BrainIcon>
+      ))}
+      <ProgressText>
+        {progress > 75 ? 'Expert' : progress > 50 ? 'Learning' : progress > 25 ? 'Started' : progress > 0 ? 'Beginner' : 'Start'}
+      </ProgressText>
+    </BrainProgressContainer>
+  );
+};
 
 export const LanguagesOverview: React.FC = () => {
   const navigate = useNavigate();
@@ -255,16 +381,11 @@ export const LanguagesOverview: React.FC = () => {
             <StatsOverview>
               <StatBadge>
                 <span>🏆</span>
-                {overallStats.totalXP.toLocaleString()} Total XP
-              </StatBadge>
-              <StatBadge>
-                <span>📚</span>
-                {overallStats.totalPracticed} / {overallStats.totalWords} Words Practiced
+                {overallStats.totalXP.toLocaleString()} XP
               </StatBadge>
               <StatBadge>
                 <span>🌍</span>
-                {overallStats.languagesStarted} Language
-                {overallStats.languagesStarted !== 1 ? 's' : ''} Started
+                {overallStats.languagesStarted} Language{overallStats.languagesStarted !== 1 ? 's' : ''}
               </StatBadge>
             </StatsOverview>
           )}
@@ -327,24 +448,21 @@ export const LanguagesOverview: React.FC = () => {
                 <CardContent>
                   {languageXP > 0 ? (
                     <ProgressSection>
-                      <XPInfo>⚡ {languageXP.toLocaleString()} XP</XPInfo>
                       <QuickStats>
-                        <ProgressDot progress={overallProgress} />
-                        <span>{Math.round(overallProgress)}% completed</span>
+                        <BrainProgress progress={overallProgress} />
                       </QuickStats>
                       <ModuleCount>
-                        {practicedWords} / {totalWords} words practiced
+                        {practicedWords} words learned
                       </ModuleCount>
                     </ProgressSection>
                   ) : (
                     <ProgressSection>
                       <QuickStats>
                         <span>🚀</span>
-                        <span>Start your journey!</span>
+                        <span>Start learning!</span>
                       </QuickStats>
                       <ModuleCount>
-                        {info.modules?.length || 0} module
-                        {(info.modules?.length || 0) !== 1 ? 's' : ''} available
+                        {info.modules?.length || 0} module{(info.modules?.length || 0) !== 1 ? 's' : ''}
                       </ModuleCount>
                     </ProgressSection>
                   )}

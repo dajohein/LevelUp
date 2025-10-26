@@ -6,29 +6,21 @@ import { RootState } from '../store/store';
 import { setLanguage, setCurrentModule } from '../store/gameSlice';
 import { resetSession, startSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
-import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
 import { DataMigrationService } from '../services/dataMigrationService';
 
 const OverviewContainer = styled.div`
-  display: flex;
   min-height: 100vh;
   padding-top: 90px; /* Account for Navigation (70px) + extra spacing */
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
   color: ${props => props.theme.colors.text};
-  gap: ${props => props.theme.spacing.lg};
-
-  /* Large tablets and below - stack vertically */
-  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
-    flex-direction: column;
-    padding-top: 80px;
-    gap: 0;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding-top: 70px;
-    gap: 0;
   }
 `;
 
@@ -38,71 +30,97 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 100%;
-  overflow-x: hidden;
-
-  /* Small tablets */
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
-    padding: ${props => props.theme.spacing.md};
-  }
+  max-width: 1200px;
+  width: 100%;
 
   /* Mobile devices */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
-  }
-
-  /* Very small mobile devices */
-  @media (max-width: 400px) {
-    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+    padding: ${props => props.theme.spacing.md};
   }
 `;
 
-const Sidebar = styled.div`
-  width: 350px;
-  padding: ${props => props.theme.spacing.lg};
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-
-  /* Large tablets and below - hide sidebar */
-  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
-    display: none;
-  }
-
-  /* Large screens - wider sidebar */
-  @media (min-width: 1400px) {
-    width: 380px;
-    padding: ${props => props.theme.spacing.xl};
-  }
-`;
-
-const MobileAnalytics = styled.div`
-  display: none;
-  width: 100%;
-  max-width: 800px;
+// Action button styling
+const ActionButtonRow = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.md};
+  justify-content: center;
   margin-bottom: ${props => props.theme.spacing.lg};
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  padding: ${props => props.theme.spacing.md};
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
 
-  /* Show analytics on tablets and smaller devices */
-  @media (max-width: ${props => props.theme.breakpoints.desktop}) {
-    display: block;
-  }
-
-  /* Mobile optimization */
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.sm};
-    border-radius: 8px;
+    gap: ${props => props.theme.spacing.sm};
     margin-bottom: ${props => props.theme.spacing.md};
   }
+`;
 
-  /* Very small mobile devices */
-  @media (max-width: 400px) {
-    padding: ${props => props.theme.spacing.xs};
-    margin-bottom: ${props => props.theme.spacing.sm};
+const ActionButton = styled.button`
+  background: rgba(255, 255, 255, 0.1);
+  color: ${props => props.theme.colors.text};
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
   }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
+    font-size: 0.85rem;
+  }
+`;
+// Simplified stats display for quick overview
+const QuickStats = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.lg};
+  margin-bottom: ${props => props.theme.spacing.lg};
+  flex-wrap: wrap;
+  justify-content: center;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    gap: ${props => props.theme.spacing.md};
+    margin-bottom: ${props => props.theme.spacing.md};
+  }
+`;
+
+const QuickStatCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: ${props => props.theme.spacing.md};
+  text-align: center;
+  min-width: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    padding: ${props => props.theme.spacing.sm};
+    min-width: 80px;
+  }
+`;
+
+const QuickStatValue = styled.div`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 4px;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    font-size: 1.3rem;
+  }
+`;
+
+const QuickStatLabel = styled.div`
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.textSecondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const Header = styled.div`
@@ -1056,298 +1074,6 @@ const EmptyState = styled.div`
   color: ${props => props.theme.colors.textSecondary};
 `;
 
-// Enhanced Language Analytics Component
-const LanguageAnalytics: React.FC<{ languageCode: string; modules: any[]; wordProgress: any }> = ({
-  languageCode,
-  modules,
-  wordProgress,
-}) => {
-  const stats = calculateLanguageStats(languageCode, modules, wordProgress);
-
-  // Calculate additional analytics
-  const totalSessions = Object.values(wordProgress).reduce(
-    (sum: number, progress: any) => sum + ((progress.timesCorrect || 0) + (progress.timesIncorrect || 0)),
-    0
-  );
-
-  const totalWordsLearned = Object.values(wordProgress).filter(
-    (progress: any) => progress.xp > 0
-  ).length;
-
-  const overallAccuracy =
-    totalSessions > 0
-      ? (Object.values(wordProgress).reduce(
-          (sum: number, progress: any) => sum + (progress.timesCorrect || 0),
-          0
-        ) /
-          totalSessions) *
-        100
-      : 0;
-
-  // Calculate streak (simplified - days with any practice)
-  const recentPractice = Object.values(wordProgress)
-    .filter((progress: any) => progress.lastPracticed)
-    .map((progress: any) => new Date(progress.lastPracticed))
-    .sort((a, b) => b.getTime() - a.getTime());
-
-  const streak =
-    recentPractice.length > 0
-      ? Math.min(
-          7,
-          recentPractice.filter(date => Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000)
-            .length
-        )
-      : 0;
-
-  // Generate module-specific recommendations
-  const generateRecommendations = () => {
-    const recommendations = [];
-
-    const incompleteModules = modules.filter(module => {
-      const moduleStats = getModuleStats(languageCode!, module.id, wordProgress);
-      return moduleStats.completionPercentage < 80;
-    });
-
-    if (incompleteModules.length > 0) {
-      const leastProgress = incompleteModules.reduce((min, module) => {
-        const moduleStats = getModuleStats(languageCode!, module.id, wordProgress);
-        const minStats = getModuleStats(languageCode!, min.id, wordProgress);
-        return moduleStats.completionPercentage < minStats.completionPercentage ? module : min;
-      });
-      recommendations.push(
-        `Focus on "${leastProgress.name}" module - ${Math.round(
-          getModuleStats(languageCode!, leastProgress.id, wordProgress).completionPercentage
-        )}% complete`
-      );
-    }
-
-    const lowAccuracyModules = modules.filter(module => {
-      const moduleWords = module.words || [];
-      const moduleProgress = moduleWords.map((word: any) => wordProgress[word.id]).filter(Boolean);
-      const moduleAccuracy =
-        moduleProgress.length > 0
-          ? (moduleProgress.reduce(
-              (sum: number, p: any) =>
-                sum + p.timesCorrect / Math.max(1, p.timesCorrect + p.timesIncorrect),
-              0
-            ) /
-              moduleProgress.length) *
-            100
-          : 0;
-      return moduleAccuracy < 70 && moduleProgress.length > 0;
-    });
-
-    if (lowAccuracyModules.length > 0) {
-      recommendations.push(
-        `Practice accuracy in ${lowAccuracyModules[0].name} - focus on repetition`
-      );
-    }
-
-    if (overallAccuracy > 85) {
-      recommendations.push('Ready for more challenging quiz modes');
-    }
-
-    if (totalWordsLearned > 20 && stats.completedModules < modules.length) {
-      recommendations.push('Consider introducing new modules to expand vocabulary');
-    }
-
-    return recommendations;
-  };
-
-  const recommendations = generateRecommendations();
-
-  // Calculate weekly progress (simplified)
-  const weeklyData = [
-    {
-      week: '2025-40',
-      sessions: Math.floor(totalSessions * 0.3),
-      words: Math.floor(totalWordsLearned * 0.25),
-      accuracy: Math.min(100, overallAccuracy + 5),
-    },
-    {
-      week: '2025-39',
-      sessions: Math.floor(totalSessions * 0.25),
-      words: Math.floor(totalWordsLearned * 0.3),
-      accuracy: Math.min(100, overallAccuracy - 2),
-    },
-    {
-      week: '2025-38',
-      sessions: Math.floor(totalSessions * 0.2),
-      words: Math.floor(totalWordsLearned * 0.2),
-      accuracy: Math.min(100, overallAccuracy - 8),
-    },
-    {
-      week: '2025-37',
-      sessions: Math.floor(totalSessions * 0.15),
-      words: Math.floor(totalWordsLearned * 0.15),
-      accuracy: Math.min(100, overallAccuracy - 12),
-    },
-  ].filter(week => week.sessions > 0);
-
-  // Recent module activity
-  const recentModuleActivity = modules
-    .map(module => {
-      const moduleWords = module.words || [];
-      const recentPractice = moduleWords
-        .map((word: any) => wordProgress[word.id])
-        .filter((progress: any) => progress && progress.lastPracticed)
-        .sort((a: any, b: any) =>
-          a && b ? new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime() : 0
-        );
-
-      if (recentPractice.length === 0) return null;
-
-      const moduleStats = getModuleStats(languageCode!, module.id, wordProgress);
-      return {
-        title: module.name,
-        wordsLearned: recentPractice.filter((p: any) => p.xp > 0).length,
-        accuracy: moduleStats.averageMastery > 0 ? Math.round(moduleStats.averageMastery) : 0,
-        lastPracticed: recentPractice[0].lastPracticed,
-      };
-    })
-    .filter(Boolean)
-    .sort((a: any, b: any) =>
-      a && b ? new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime() : 0
-    )
-    .slice(0, 3);
-
-  return (
-    <AnalyticsSection>
-      <AnalyticsTitle>📊 Learning Analytics</AnalyticsTitle>
-
-      {/* Main Stats Grid */}
-      <AnalyticsGrid style={{ gridTemplateColumns: 'repeat(2, 1fr)', marginBottom: '16px' }}>
-        <AnalyticCard>
-          <AnalyticValue>{totalSessions}</AnalyticValue>
-          <AnalyticLabel>Sessions</AnalyticLabel>
-        </AnalyticCard>
-        <AnalyticCard>
-          <AnalyticValue>{totalWordsLearned}</AnalyticValue>
-          <AnalyticLabel>Words Learned</AnalyticLabel>
-        </AnalyticCard>
-        <AnalyticCard>
-          <AnalyticValue
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-          >
-            {Math.round(overallAccuracy || 0)}%
-            {overallAccuracy > 80 && (
-              <span style={{ color: '#22c55e', fontSize: '0.8rem' }}>
-                ↗ {Math.round((overallAccuracy || 0) - 75)}%
-              </span>
-            )}
-          </AnalyticValue>
-          <AnalyticLabel>Accuracy</AnalyticLabel>
-        </AnalyticCard>
-        <AnalyticCard>
-          <AnalyticValue>{streak}</AnalyticValue>
-          <AnalyticLabel>Day Streak</AnalyticLabel>
-        </AnalyticCard>
-      </AnalyticsGrid>
-
-      {/* Recommendations */}
-      {recommendations.length > 0 && (
-        <AnalyticsSubSection>
-          <SectionHeader>🎯 Personalized Recommendations</SectionHeader>
-          <div>
-            {recommendations.slice(0, 2).map((rec, index) => (
-              <RecommendationCard key={index}>
-                <span>💡</span>
-                <span>{rec}</span>
-              </RecommendationCard>
-            ))}
-          </div>
-        </AnalyticsSubSection>
-      )}
-
-      {/* Weekly Progress */}
-      {weeklyData.length > 0 && (
-        <AnalyticsSubSection>
-          <SectionHeader>📈 Weekly Progress</SectionHeader>
-          <div>
-            {weeklyData.slice(0, 2).map(week => {
-              const maxSessions = Math.max(...weeklyData.map(w => w.sessions));
-              const progressWidth = maxSessions > 0 ? (week.sessions / maxSessions) * 100 : 0;
-              const color =
-                week.accuracy > 80 ? '#22c55e' : week.accuracy > 60 ? '#f59e0b' : '#ef4444';
-
-              return (
-                <WeeklyProgressItem key={week.week}>
-                  <WeekLabel>{week.week}</WeekLabel>
-                  <ProgressBar width={progressWidth} color={color} />
-                  <ProgressStats>
-                    {week.sessions} sessions • {week.words} words • {Math.round(week.accuracy)}%
-                  </ProgressStats>
-                </WeeklyProgressItem>
-              );
-            })}
-          </div>
-        </AnalyticsSubSection>
-      )}
-
-      {/* Recent Module Activity */}
-      {recentModuleActivity.length > 0 && (
-        <AnalyticsSubSection>
-          <SectionHeader>🕒 Recent Module Activity</SectionHeader>
-          <div>
-            {recentModuleActivity.map(
-              (activity, index) =>
-                activity && (
-                  <ActivityCard key={index}>
-                    <strong>{activity.title}</strong> • {activity.wordsLearned} words learned •{' '}
-                    {activity.accuracy}% progress
-                  </ActivityCard>
-                )
-            )}
-          </div>
-        </AnalyticsSubSection>
-      )}
-
-      {/* Directional Learning Analytics - only show when relevant */}
-      {totalWordsLearned > 5 && (
-        <AnalyticsSubSection>
-          <DirectionalStats languageCode={languageCode} />
-        </AnalyticsSubSection>
-      )}
-    </AnalyticsSection>
-  );
-};
-
-// Helper function to calculate overall language statistics
-const calculateLanguageStats = (languageCode: string, modules: any[], wordProgress: any) => {
-  if (modules.length === 0) {
-    return {
-      totalWords: 0,
-      wordsLearned: 0,
-      totalModules: 0,
-      completedModules: 0,
-      averageMastery: 0,
-      overallProgress: 0,
-    };
-  }
-
-  let totalWords = 0;
-  let wordsLearned = 0;
-  let totalMastery = 0;
-  let completedModules = 0;
-
-  modules.forEach(module => {
-    const stats = getModuleStats(languageCode!, module.id, wordProgress);
-    totalWords += stats.totalWords;
-    wordsLearned += stats.wordsLearned;
-    totalMastery += stats.averageMastery;
-    if (stats.completionPercentage >= 80) completedModules++;
-  });
-
-  return {
-    totalWords,
-    wordsLearned,
-    totalModules: modules.length,
-    completedModules,
-    averageMastery: Math.round(totalMastery / modules.length),
-    overallProgress: Math.round((wordsLearned / totalWords) * 100),
-  };
-};
-
 export const ModuleOverview: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -1445,19 +1171,43 @@ export const ModuleOverview: React.FC = () => {
             <Subtitle>Select a module to start your learning journey!</Subtitle>
           </Header>
 
+          {/* Simple stats overview */}
+          {Object.keys(wordProgress).length > 0 && (
+            <QuickStats>
+              <QuickStatCard>
+                <QuickStatValue>🧠 {Object.keys(wordProgress).filter(id => wordProgress[id]?.xp > 0).length}</QuickStatValue>
+                <QuickStatLabel>Words Learned</QuickStatLabel>
+              </QuickStatCard>
+              <QuickStatCard>
+                <QuickStatValue>📚 {modules.filter(m => {
+                  const stats = getModuleStats(languageCode!, m.id, wordProgress);
+                  return stats.completionPercentage > 0;
+                }).length}</QuickStatValue>
+                <QuickStatLabel>Modules Started</QuickStatLabel>
+              </QuickStatCard>
+              <QuickStatCard>
+                <QuickStatValue>⚡ {Object.values(wordProgress).reduce((sum: number, p: any) => sum + (p?.xp || 0), 0)}</QuickStatValue>
+                <QuickStatLabel>Total XP</QuickStatLabel>
+              </QuickStatCard>
+            </QuickStats>
+          )}
+
+          {/* Action buttons */}
+          <ActionButtonRow>
+            <ActionButton onClick={() => navigate(`/stats/${languageCode}`)}>
+              📊 View Detailed Analytics
+            </ActionButton>
+            {Object.keys(wordProgress).length > 0 && (
+              <ActionButton onClick={() => navigate(`/overview/${languageCode}`)}>
+                🏆 View Achievements
+              </ActionButton>
+            )}
+          </ActionButtonRow>
+
           {/* Mixed Practice Button - prominently placed */}
           <MainMixedPracticeButton onClick={handleMixedPractice}>
             🎯 Mixed Practice
           </MainMixedPracticeButton>
-
-          {/* Mobile Analytics - shown on small screens */}
-          <MobileAnalytics>
-            <LanguageAnalytics
-              languageCode={languageCode!}
-              modules={modules}
-              wordProgress={wordProgress}
-            />
-          </MobileAnalytics>
 
           {modules.length === 0 ? (
             <EmptyState>
@@ -1522,15 +1272,6 @@ export const ModuleOverview: React.FC = () => {
             </ModulesGrid>
           )}
         </MainContent>
-
-        {/* Desktop Sidebar Analytics */}
-        <Sidebar>
-          <LanguageAnalytics
-            languageCode={languageCode!}
-            modules={modules}
-            wordProgress={wordProgress}
-          />
-        </Sidebar>
       </OverviewContainer>
     </>
   );

@@ -39,15 +39,6 @@ const DeepDiveContainer = styled.div`
   padding: 20px;
   border: 3px solid #4c51bf;
   position: relative;
-  
-  &::after {
-    content: '🧠';
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 24px;
-    opacity: 0.7;
-  }
 `;
 
 const StreakChallengeContainer = styled.div<{ streak: number }>`
@@ -180,52 +171,6 @@ const StreakMultiplier = styled.div<{ streak: number }>`
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
-  }
-`;
-
-const AccuracyMeter = styled.div<{ accuracy: number }>`
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: ${props => 
-    props.accuracy >= 90 ? '#4CAF50' : 
-    props.accuracy >= 70 ? '#FF9800' : '#f44336'
-  };
-  font-size: 14px;
-  border: 2px solid ${props => 
-    props.accuracy >= 90 ? '#4CAF50' : 
-    props.accuracy >= 70 ? '#FF9800' : '#f44336'
-  };
-  
-  &::after {
-    content: '${props => props.accuracy}%';
-  }
-`;
-
-const BrainMeter = styled.div<{ knowledge: number }>`
-  position: absolute;
-  top: 10px;
-  right: 45px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: ${props => 
-    props.knowledge > 80 ? '#4CAF50' : 
-    props.knowledge > 50 ? '#FF9800' : '#f44336'
-  };
-  font-size: 14px;
-  border: 2px solid ${props => 
-    props.knowledge > 80 ? '#4CAF50' : 
-    props.knowledge > 50 ? '#FF9800' : '#f44336'
-  };
-  
-  &::after {
-    content: '${props => props.knowledge}%';
   }
 `;
 
@@ -474,6 +419,8 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
         word={wordToUse}
         currentIndex={getSessionStats()?.currentIndex || 0}
         totalWords={getSessionStats()?.totalWords || 1}
+        level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
+        xp={wordProgress[wordToUse.id]?.xp || 0}
         onContinue={handleContinueFromLearningCard}
         autoAdvance={true}
         autoAdvanceDelay={4000} // 4 seconds to read the word
@@ -503,6 +450,8 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             context={contextForWord}
             currentWord={(getSessionStats()?.currentIndex || 0) + 1}
             totalWords={getSessionStats()?.totalWords || 10}
+            level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
+            xp={wordProgress[wordToUse.id]?.xp || 0}
             disabled={isTransitioning}
             onAnswer={correct => {
               // Track feedback and play audio
@@ -610,7 +559,6 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
     case 'deep-dive':
       return (
         <DeepDiveContainer>
-          <BrainMeter knowledge={knowledgeLevel} />
           {quizContent}
         </DeepDiveContainer>
       );
@@ -633,7 +581,6 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
     case 'precision-mode':
       return (
         <PrecisionModeContainer>
-          <AccuracyMeter accuracy={accuracy} />
           {quizContent}
         </PrecisionModeContainer>
       );

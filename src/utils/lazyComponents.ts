@@ -24,6 +24,10 @@ export const SessionCompletionLazy = lazy(() =>
   import('../components/SessionCompletion').then(module => ({ default: module.SessionCompletion }))
 );
 
+export const LearningStatsPageLazy = lazy(() => 
+  import('../components/LearningStatsPage').then(module => ({ default: module.LearningStatsPage }))
+);
+
 // Pre-load critical components immediately (no lazy loading)
 export { LanguagesOverview } from '../components/LanguagesOverview';
 export { Navigation } from '../components/Navigation';

@@ -163,10 +163,88 @@ const Timer = styled.div`
   margin-top: 1rem;
 `;
 
+const BrainProgressContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${props => props.theme.spacing.md};
+  margin-top: ${props => props.theme.spacing.md};
+  font-size: 0.9rem;
+  color: ${props => props.theme.colors.textSecondary};
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: ${props => props.theme.spacing.sm};
+  }
+`;
+
+const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
+  width: 24px;
+  height: 24px;
+  position: relative;
+  transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+  }
+
+  &::before {
+    content: '🧠';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: ${props => 
+      props.filled 
+        ? 'none' 
+        : props.partial 
+          ? 'brightness(0.7) saturate(0.8)'
+          : 'grayscale(1) brightness(0.4)'
+    };
+    transform: ${props => props.filled || props.partial ? 'scale(1.1)' : 'scale(1)'};
+  }
+`;
+
+const BrainContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
+  // Calculate progress within current level (0-100%)
+  const progressInLevel = xp % 100;
+  
+  // Calculate how many brains should be filled
+  const brain1Filled = progressInLevel >= 33;
+  const brain2Filled = progressInLevel >= 66;
+  const brain3Filled = progressInLevel >= 99;
+  
+  const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
+  const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
+  const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;
+
+  return (
+    <BrainProgressContainer>
+      <span>Level {level}</span>
+      <BrainContainer>
+        <BrainIcon filled={brain1Filled} partial={brain1Partial} />
+        <BrainIcon filled={brain2Filled} partial={brain2Partial} />
+        <BrainIcon filled={brain3Filled} partial={brain3Partial} />
+      </BrainContainer>
+      <span>{xp} XP</span>
+    </BrainProgressContainer>
+  );
+};
+
 interface LearningCardProps {
   word: any;
   currentIndex: number;
   totalWords: number;
+  level?: number;
+  xp?: number;
   onContinue: () => void;
   autoAdvance?: boolean;
   autoAdvanceDelay?: number;
@@ -177,6 +255,8 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   word,
   currentIndex,
   totalWords,
+  level,
+  xp,
   onContinue,
   autoAdvance = true,
   autoAdvanceDelay = 3000, // 3 seconds default
@@ -265,14 +345,26 @@ export const LearningCard: React.FC<LearningCardProps> = ({
         )}
       </WordDisplay>
 
-      <Progress>
-        <ProgressText>
+      {/* Show brain progress if XP data is available, otherwise show session progress */}
+      {level !== undefined && xp !== undefined ? (
+        <BrainProgress xp={xp} level={level} />
+      ) : (
+        <Progress>
+          <ProgressText>
+            Word {currentIndex + 1} of {totalWords}
+          </ProgressText>
+          <ProgressBar>
+            <ProgressFill progress={progress} />
+          </ProgressBar>
+        </Progress>
+      )}
+      
+      {/* Always show session progress below brain progress when both are available */}
+      {level !== undefined && xp !== undefined && (
+        <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.9rem', color: '#666' }}>
           Word {currentIndex + 1} of {totalWords}
-        </ProgressText>
-        <ProgressBar>
-          <ProgressFill progress={progress} />
-        </ProgressBar>
-      </Progress>
+        </div>
+      )}
 
       <ContinueButton onClick={onContinue}>Ready to Practice</ContinueButton>
 

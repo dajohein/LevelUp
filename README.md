@@ -2,7 +2,43 @@
 
 A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
-## 🚀 **Latest: Performance Monitoring Fix (October 15, 2025)**
+## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
+
+### 🧠 **Visual Learning Progress System**
+
+- **🎯 Brain Icon Progress**: Replaced percentage numbers with intuitive 3-brain system that fills up as you learn
+- **📱 Mobile-First Design**: Decluttered UI optimized for mobile learning with clean, focused interfaces
+- **🧠 Core Learning Focus**: Removed heavy analytics from main pages, emphasizing actual learning over stats
+- **📊 Dedicated Analytics Page**: Moved detailed progress tracking to `/stats/{language}` for users who want deeper insights
+- **⚡ Faster Navigation**: Streamlined module overview with essential stats only (Words Learned, XP, Modules Started)
+- **🎯 Cleaner Module Details**: Removed AI Learning Dashboard from module pages, focusing on practice actions
+
+### ✨ **Brain Progress System**
+
+- **🧠 Visual Learning Levels**: 
+  - Empty brains = Not started
+  - 1 brain filled = Beginner (0-33%)
+  - 2 brains filled = Learning (34-66%) 
+  - 3 brains filled = Expert (67-100%)
+- **🎨 Smart Visual Feedback**: Partial brains pulse gently, filled brains have a subtle glow
+- **📱 Mobile Optimized**: Perfect brain icon sizing for touch devices
+- **🎯 Text Labels**: "Start", "Beginner", "Learning", "Expert" instead of confusing percentages
+
+### 🎨 **Key UI Improvements**
+
+- **Main Language Selection**: Beautiful brain progress indicators with learning level labels
+- **Module Overview**: Essential quick stats with brain/book/lightning icons
+- **Module Details**: Clean interface with prominent practice buttons, removed AI coaching clutter
+- **Learning Stats Page**: New dedicated page with comprehensive analytics for power users
+- **Touch-Friendly**: Optimized button sizes and spacing for mobile devices
+
+### 🎨 **New Navigation Structure**
+
+- **`/language/{code}`**: Minimalistic module overview with quick stats
+- **`/stats/{code}`**: Comprehensive learning analytics (AI Coach, detailed progress, insights)
+- **`/language/{code}/{module}`**: Clean module details focused on learning actions
+
+## 🚀 **Previous: Performance Monitoring Fix (October 15, 2025)**
 
 ### ⚡ **Critical Performance Issue Resolved**
 

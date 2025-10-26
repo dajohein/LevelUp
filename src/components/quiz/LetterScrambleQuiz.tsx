@@ -264,31 +264,81 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
   `}
 `;
 
-const ProgressContainer = styled.div`
+const BrainProgressContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
+  justify-content: center;
+  gap: ${props => props.theme.spacing.md};
   margin-top: ${props => props.theme.spacing.md};
-`;
+  font-size: 0.9rem;
+  color: ${props => props.theme.colors.textSecondary};
 
-const ProgressBar = styled.div<{ progress: number }>`
-  width: 100px;
-  height: 6px;
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: 3px;
-  overflow: hidden;
-
-  &::after {
-    content: '';
-    display: block;
-    width: ${props => props.progress}%;
-    height: 100%;
-    background-color: ${props => props.theme.colors.primary};
-    transition: width 0.3s ease;
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: ${props => props.theme.spacing.sm};
   }
 `;
+
+const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
+  width: 24px;
+  height: 24px;
+  position: relative;
+  transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+  }
+
+  &::before {
+    content: '🧠';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: ${props => 
+      props.filled 
+        ? 'none' 
+        : props.partial 
+          ? 'brightness(0.7) saturate(0.8)'
+          : 'grayscale(1) brightness(0.4)'
+    };
+    transform: ${props => props.filled || props.partial ? 'scale(1.1)' : 'scale(1)'};
+  }
+`;
+
+const BrainContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
+  // Calculate progress within current level (0-100%)
+  const progressInLevel = xp % 100;
+  
+  // Calculate how many brains should be filled
+  const brain1Filled = progressInLevel >= 33;
+  const brain2Filled = progressInLevel >= 66;
+  const brain3Filled = progressInLevel >= 99;
+  
+  const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
+  const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
+  const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;
+
+  return (
+    <BrainProgressContainer>
+      <span>Level {level}</span>
+      <BrainContainer>
+        <BrainIcon filled={brain1Filled} partial={brain1Partial} />
+        <BrainIcon filled={brain2Filled} partial={brain2Partial} />
+        <BrainIcon filled={brain3Filled} partial={brain3Partial} />
+      </BrainContainer>
+      <span>{xp} XP</span>
+    </BrainProgressContainer>
+  );
+};
 
 interface LetterScrambleQuizProps {
   word: string; // The answer the user needs to build
@@ -299,6 +349,8 @@ interface LetterScrambleQuizProps {
   };
   currentWord: number;
   totalWords: number;
+  level?: number;
+  xp?: number;
   onAnswer: (isCorrect: boolean) => void;
   disabled?: boolean;
 }
@@ -309,6 +361,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   context,
   currentWord,
   totalWords,
+  level = 0,
+  xp = 0,
   onAnswer,
   disabled = false,
 }) => {
@@ -599,12 +653,10 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         </HintContainer>
       </AnswerContainer>
 
-      <ProgressContainer>
-        <span>
-          Question {currentWord} of {totalWords}
-        </span>
-        <ProgressBar progress={progress} />
-      </ProgressContainer>
+      <BrainProgress xp={xp} level={level} />
+      <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.9rem', color: '#666' }}>
+        Question {currentWord} of {totalWords}
+      </div>
     </Container>
   );
 };
