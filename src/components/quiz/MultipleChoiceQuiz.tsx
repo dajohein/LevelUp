@@ -302,6 +302,15 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
                          sessionProgress >= 0.5 ? 'Enhanced Learning' : 
                          sessionProgress >= 0.3 ? 'Context Mode' : 'Enhanced Learning';
   
+  // Only show context before answering if the user is still learning the word
+  // Consider a word "learned" if it has significant XP (level 2+ or 200+ XP)
+  const isWordLearned = (level || 0) >= 2 || (xp || 0) >= 200;
+  
+  // Show context if:
+  // 1. User has already answered (for learning reinforcement), OR
+  // 2. User is still learning this word (low level/XP)
+  const shouldShowContext = context && (selectedOption || !isWordLearned);
+  
   // Keep enhancement data for debugging (console.log above shows it)
   // UI enhancement indicator removed for cleaner interface
   
@@ -309,17 +318,11 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
     <Container>
       
       <Word>{word}</Word>
-      {context && (
+      {shouldShowContext && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
           <ContextSentence>{context.sentence}</ContextSentence>
-          {selectedOption ? (
-            <ContextTranslation>{context.translation}</ContextTranslation>
-          ) : (
-            <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem' }}>
-              Translation will appear after answering
-            </ContextTranslation>
-          )}
+          <ContextTranslation>{context.translation}</ContextTranslation>
         </ContextSection>
       )}
       <OptionsGrid>

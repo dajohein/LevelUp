@@ -225,9 +225,9 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
   // Create a sentence with a blank if context is available
   const getSentenceWithBlank = () => {
     if (!context?.sentence) {
-      // Fallback: create a simple sentence structure
+      // If no context, just show the word as a simple translation request
       return {
-        beforeBlank: "The word means: ",
+        beforeBlank: "",
         afterBlank: ""
       };
     }
@@ -288,24 +288,22 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
 
       {questionWord && (
         <QuestionPrompt>
-          Translate: {questionWord}
+          {questionWord}
         </QuestionPrompt>
       )}
 
-      <ContextSection>
-        <ContextLabel>Complete the sentence</ContextLabel>
-        <SentenceContainer>
-          <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
-          <BlankSpace isCorrect={isCorrect} isError={isError}>
-            {showAnswer ? word : "_____"}
-          </BlankSpace>
-          <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
-        </SentenceContainer>
-      </ContextSection>
-
-      <InstructionText>
-        Type the correct German word to fill in the blank
-      </InstructionText>
+      {context?.sentence && beforeBlank && afterBlank && (
+        <ContextSection>
+          <ContextLabel>Complete the sentence</ContextLabel>
+          <SentenceContainer>
+            <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
+            <BlankSpace isCorrect={isCorrect} isError={isError}>
+              {showAnswer ? word : "_____"}
+            </BlankSpace>
+            <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
+          </SentenceContainer>
+        </ContextSection>
+      )}
 
       <AnimatedInput
         value={userAnswer}
@@ -315,7 +313,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
         isError={isError}
         hint={hint}
         disabled={disabled}
-        placeholder="Type the missing word..."
+        placeholder="Type your answer..."
       />
 
       <BrainProgress xp={xp} level={level} />

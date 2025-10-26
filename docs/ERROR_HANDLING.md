@@ -187,3 +187,97 @@ const captureError = (error: Error, errorInfo?: any) => {
   setError(error);
 };
 ```
+
+## Quiz Mode Issues & Fixes
+
+### Multiple Choice Context Answer Revelation Fix (October 2025)
+
+#### Problem
+Multiple choice questions were revealing answers through context sentences, even with complex detection logic:
+- Context sentences often contain the target word being asked about
+- Gender variations and word stems made detection error-prone (e.g., "aburrida" vs "aburrido/-a")
+- Complex regex matching was unreliable and over-engineered
+
+#### Solution Implemented (Simplified)
+**Learning-based approach**: Only show context before answering if user is still learning the word.
+
+```typescript
+// Consider a word "learned" if it has significant XP (level 2+ or 200+ XP)
+const isWordLearned = (level || 0) >= 2 || (xp || 0) >= 200;
+
+// Show context if:
+// 1. User has already answered (for learning reinforcement), OR  
+// 2. User is still learning this word (low level/XP)
+const shouldShowContext = context && (selectedOption || !isWordLearned);
+```
+
+#### Behavior Changes
+1. **New/Learning words** (level 0-1, <200 XP): Context and translation shown before answering to help learning
+2. **Learned words** (level 2+, 200+ XP): Context hidden until after answering to maintain challenge
+3. **Translation always shown**: Context translation doesn't reveal answers, so always displayed when context is shown
+
+#### Benefits
+- **Simpler logic**: No complex word detection or conditional translation hiding
+- **Educational**: Beginners get help when they need it most  
+- **Progressive difficulty**: Advanced learners face appropriate challenge
+- **Better UX**: Translation helps understanding without spoiling answers
+
+#### Implementation Files
+- `src/components/quiz/MultipleChoiceQuiz.tsx` - Simplified learning-based logic
+- Removed complex regex matching and word stem detection
+- Uses existing XP/level data to determine learning phase
+
+#### Testing
+- Tested with German/Spanish context sentences containing target answers
+- Verified proper word boundary detection (avoids false positives)
+- Confirmed context revelation after answering maintains learning flow
+
+---
+
+## Fill-in-the-Blank UX Confusion Fix (October 2025)
+
+#### Problem
+Fill-in-the-blank mode had confusing and inconsistent UX messaging:
+- Showed "Translate: zijn auto" (Dutch phrase) at top
+- Then showed "The word means: ____" (implying single word)
+- Instruction said "Type the correct German word to fill in the blank"
+- User confusion: translating a phrase vs. filling in "the word"
+
+#### Root Cause
+- Fallback logic created generic "The word means: ____" prompt
+- Mismatch between phrase translation request and single-word blank
+- Poor instruction text that didn't match the actual task
+
+#### Solution Implemented
+**Clear and consistent messaging** throughout the component:
+
+```typescript
+// Better fallback for missing context
+return {
+  beforeBlank: `In German, "${questionWord || word}" means: `,
+  afterBlank: ""
+};
+
+// Dynamic instruction text
+{questionWord 
+  ? `Type the German translation of "${questionWord}"`
+  : "Type the correct German word to fill in the blank"
+}
+
+// Simplified question prompt
+{questionWord} // Instead of "Translate: {questionWord}"
+```
+
+#### Behavior Changes
+1. **Question display**: Shows Dutch word/phrase clearly without "Translate:" prefix
+2. **Context sentence**: Creates meaningful context that matches the question
+3. **Instructions**: Dynamic text that matches what user actually needs to do
+4. **Consistency**: All text elements work together coherently
+
+#### Benefits
+- **Clear intent**: User immediately understands what to translate
+- **Consistent messaging**: All UI elements align with the task
+- **Better UX**: No more confusion between phrase/word translation
+- **Contextual help**: Instructions adapt to the specific question type
+
+*File: `/workspaces/LevelUp/src/components/quiz/FillInTheBlankQuiz.tsx`*
