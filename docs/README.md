@@ -31,7 +31,7 @@ This directory contains comprehensive technical documentation for the LevelUp la
 - **[Developer Tools](DEVELOPER_TOOLS.md)** - Centralized developer tools dashboard (window.LevelUpDev)
 - **[Development Mode](DEVELOPMENT_MODE.md)** - Development environment setup
 - **[Deployment](DEPLOYMENT.md)** - Production deployment strategies
-- **[Loading States](LOADING_STATES_IMPLEMENTATION.md)** - UI loading state management
+- **[Loading States Migration](LOADING_STATES_MIGRATION.md)** - UI loading state management
 - **[Mobile Optimization](MOBILE_OPTIMIZATION.md)** - Mobile-specific optimizations
 
 ### 📋 **Project Management**
@@ -39,9 +39,8 @@ This directory contains comprehensive technical documentation for the LevelUp la
 - **[Advanced AI Demo Complete](ADVANCED_AI_DEMO_COMPLETE.md)** - AI system implementation status
 - **[AI Challenge Data Storage Complete](AI_CHALLENGE_DATA_STORAGE_COMPLETE.md)** - Storage system completion
 - **[Security Review](SECURITY_REVIEW.md)** - Security assessment and recommendations
-- **[Next Priorities](NEXT_PRIORITIES.md)** - Development roadmap and upcoming features
 - **[Technical Debt Tracker](TECHNICAL_DEBT_TRACKER.md)** - Technical debt identification and resolution
-- **[Performance Fix Test](PERFORMANCE_FIX_TEST.md)** - Performance testing verification
+- **[Performance Monitoring Fix](PERFORMANCE_MONITORING_FIX.md)** - Performance optimization implementation
 
 ## 🎯 Current Implementation Status (October 2025)
 
