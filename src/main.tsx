@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { ThemeProvider } from '@emotion/react';
 import { RouterProvider } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { store } from './store/store';
 import { router } from './router';
 import { theme } from './styles/theme';
@@ -56,6 +57,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <OfflineBanner />
             <RouterProvider router={router} />
             <PWAManager />
+            <SpeedInsights />
           </AudioProvider>
         </ErrorBoundary>
       </ThemeProvider>

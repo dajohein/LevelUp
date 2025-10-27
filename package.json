@@ -14,7 +14,6 @@
     "build:production": "./scripts/build-with-versioning.sh",
     "preview": "vite preview",
     "test": "vitest",
-
     "type-check": "tsc --noEmit",
     "health:storage": "curl -s http://localhost:5173/api/health || echo 'Development environment not running. Start with: npm run dev:start'",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
@@ -27,6 +26,7 @@
     "@emotion/styled": "^11.11.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/uuid": "^11.0.0",
+    "@vercel/speed-insights": "^1.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
