@@ -12,6 +12,7 @@ import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import deGrammatikGrundlagen from '../data/de/grammatik-grundlagen.json';
 import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
+import esFrasesClave from '../data/es/frases-clave.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
@@ -28,6 +29,7 @@ const moduleRegistry: Record<string, Record<string, any>> = {
   },
   es: {
     'vocabulario-basico': esVocabularioBasico,
+    'frases-clave': esFrasesClave,
   },
 };
 
