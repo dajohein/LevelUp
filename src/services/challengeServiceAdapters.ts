@@ -33,7 +33,11 @@ import { logger } from './logger';
  */
 class StreakChallengeAdapter implements IChallengeService {
   async initialize(config: ChallengeConfig): Promise<void> {
-    streakChallengeService.initializeStreak(config.languageCode, config.wordProgress);
+    streakChallengeService.initializeStreak(
+      config.languageCode, 
+      config.wordProgress,
+      config.allWords // Pass module-specific or all words
+    );
   }
 
   async getNextWord(context: ChallengeContext): Promise<ChallengeResult> {
@@ -71,7 +75,8 @@ class BossBattleAdapter implements IChallengeService {
     await bossBattleService.initializeBossBattle(
       config.languageCode, 
       config.wordProgress, 
-      config.targetWords
+      config.targetWords,
+      config.allWords // Pass module-specific or all words
     );
   }
 
@@ -111,7 +116,8 @@ class PrecisionModeAdapter implements IChallengeService {
     await precisionModeService.initializePrecisionMode(
       config.languageCode, 
       config.wordProgress, 
-      config.targetWords
+      config.targetWords,
+      config.allWords // Pass module-specific or all words
     );
   }
 
@@ -161,7 +167,8 @@ class QuickDashAdapter implements IChallengeService {
       config.languageCode, 
       config.wordProgress, 
       config.targetWords || 8, 
-      config.timeLimit || 5
+      config.timeLimit || 5,
+      config.allWords // Pass module-specific or all words
     );
   }
 

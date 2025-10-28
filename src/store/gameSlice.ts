@@ -25,6 +25,7 @@ const loadPersistedState = (): Partial<GameState> => {
 
     return {
       language: savedState.language || null,
+      module: savedState.module || null,
       score: savedState.score || 0,
       streak: savedState.streak || 0,
       correctAnswers: savedState.correctAnswers || 0,

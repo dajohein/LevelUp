@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Achievement, AchievementsState } from './types';
+import { achievementsStorage } from '../services/storageService';
+import { logger } from '../services/logger';
 
 // Re-export type for convenience
 export type { Achievement };
@@ -42,9 +44,39 @@ const initialAchievements: Achievement[] = [
   },
 ];
 
+// Load persisted achievements
+const loadPersistedAchievements = (): Partial<AchievementsState> => {
+  try {
+    const savedData = achievementsStorage.load();
+    
+    // Update achievements with unlocked timestamps
+    const updatedAchievements = initialAchievements.map(achievement => {
+      if (savedData.unlockedAchievements.includes(achievement.id)) {
+        return {
+          ...achievement,
+          unlockedAt: achievement.unlockedAt || new Date().toISOString()
+        };
+      }
+      return achievement;
+    });
+
+    return {
+      achievements: updatedAchievements,
+      unlockedAchievements: savedData.unlockedAchievements,
+      latestUnlock: undefined, // Don't restore latest unlock - it's a UI state
+    };
+  } catch (error) {
+    logger.error('Failed to load persisted achievements:', error);
+    return {};
+  }
+};
+
+const persistedAchievements = loadPersistedAchievements();
+
 const initialState: AchievementsState = {
   achievements: initialAchievements,
   unlockedAchievements: [],
+  ...persistedAchievements,
 };
 
 export const achievementsSlice = createSlice({

@@ -18,6 +18,7 @@ export interface SessionContext {
   timeRemaining: number;
   targetWords: number;
   wordProgress: any;
+  moduleId?: string; // Optional module ID for module-specific practice
 }
 
 export interface SessionBonuses {
@@ -200,7 +201,8 @@ export class GameSessionManager {
     currentSession: any,
     languageCode: string,
     wordProgress: any,
-    sessionProgress: any
+    sessionProgress: any,
+    moduleId?: string // Add module parameter for module-specific practice
   ): Promise<boolean> {
     try {
       // Initialize challenge services for special modes using unified service manager
@@ -211,7 +213,7 @@ export class GameSessionManager {
           targetWords: currentSession.targetWords || 15,
         };
 
-        await challengeServiceManager.initializeSession(currentSession.id, languageCode, wordProgress, config);
+        await challengeServiceManager.initializeSession(currentSession.id, languageCode, wordProgress, config, moduleId);
 
         // Get first word using unified service manager
         const context: SessionContext = {
@@ -220,7 +222,8 @@ export class GameSessionManager {
           timeRemaining: (currentSession.timeLimit || 15) * 60,
           targetWords: currentSession.targetWords || 15,
           wordProgress,
-          languageCode
+          languageCode,
+          moduleId // Add module for module-specific practice
         };
 
         const result = await challengeServiceManager.getNextWord(currentSession.id, context);

@@ -35,6 +35,7 @@ const IMMEDIATE_PERSIST_ACTIONS = [
   'session/startSession',    // Session initialization is critical
   'session/completeSession', // Session completion triggers navigation
   'session/resetSession',    // Session resets affect UI state
+  'achievements/unlockAchievement', // Achievement unlocks should be immediately saved
 ];
 
 // Actions using debounced persistence (frequent updates, optimized for performance)

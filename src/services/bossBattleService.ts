@@ -47,17 +47,19 @@ class BossBattleService {
   initializeBossBattle(
     languageCode: string, 
     wordProgress: { [key: string]: WordProgress },
-    targetWords: number = 25
+    targetWords: number = 25,
+    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
   ): void {
-    const allWords = getWordsForLanguage(languageCode);
+    // Use provided words or get all words for language  
+    const wordsToUse = allWords || getWordsForLanguage(languageCode);
     
-    if (!allWords || allWords.length === 0) {
+    if (!wordsToUse || wordsToUse.length === 0) {
       logger.error('No words available for boss battle');
       return;
     }
 
     // Create challenge word pool with strategic difficulty distribution
-    const challengeWords = this.createBossWordPool(allWords, wordProgress);
+    const challengeWords = this.createBossWordPool(wordsToUse, wordProgress);
     
     // Create difficulty progression (gets harder towards the end)
     const difficultyProgression = this.createDifficultyProgression(targetWords);

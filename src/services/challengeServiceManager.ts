@@ -6,6 +6,7 @@
  */
 
 import { /* Word, */ getWordsForLanguage } from './wordService'; // Removed unused import
+import { getWordsForModule } from './moduleService'; // For module-specific word selection
 import { WordProgress } from '../store/types';
 import { 
   IChallengeService, 
@@ -78,25 +79,31 @@ class ChallengeServiceManager {
     sessionId: string,
     languageCode: string,
     wordProgress: { [key: string]: WordProgress },
-    options?: { targetWords?: number; timeLimit?: number; difficulty?: number }
+    options?: { targetWords?: number; timeLimit?: number; difficulty?: number },
+    moduleId?: string // Optional module ID for module-specific practice
   ): Promise<void> {
     const startTime = Date.now();
     const service = this.getService(sessionId);
 
     try {
+      // Get words based on whether module is specified
+      const allWords = moduleId 
+        ? getWordsForModule(languageCode, moduleId) 
+        : getWordsForLanguage(languageCode);
+
       const config: ChallengeConfig = {
         languageCode,
         wordProgress,
         targetWords: options?.targetWords || this.getDefaultTargetWords(sessionId),
         timeLimit: options?.timeLimit || 5,
         difficulty: options?.difficulty || 3,
-        allWords: getWordsForLanguage(languageCode) || []
+        allWords: allWords || []
       };
 
       await service.initialize(config);
       
       this.recordServiceCall(sessionId, startTime, true);
-      logger.info(`✅ Challenge service initialized: ${sessionId}`);
+      logger.info(`✅ Challenge service initialized: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ''}`);
 
     } catch (error) {
       this.recordServiceCall(sessionId, startTime, false);
@@ -117,19 +124,27 @@ class ChallengeServiceManager {
       targetWords: number;
       wordProgress: { [key: string]: WordProgress };
       languageCode: string;
+      moduleId?: string; // Optional module ID for module-specific practice
     }
   ): Promise<ChallengeResult> {
     const startTime = Date.now();
     const service = this.getService(sessionId);
 
     try {
+      // Get words based on whether module is specified
+      const allWords = context.moduleId 
+        ? getWordsForModule(context.languageCode, context.moduleId) 
+        : getWordsForLanguage(context.languageCode);
+
       const challengeContext: ChallengeContext = {
         wordsCompleted: context.wordsCompleted,
         currentStreak: context.currentStreak,
         timeRemaining: context.timeRemaining,
         targetWords: context.targetWords,
         wordProgress: context.wordProgress,
-        allWords: getWordsForLanguage(context.languageCode) || []
+        languageCode: context.languageCode,
+        moduleId: context.moduleId,
+        allWords: allWords || []
       };
 
       const result = await service.getNextWord(challengeContext);

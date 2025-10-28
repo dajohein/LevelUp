@@ -29,6 +29,8 @@ export interface ChallengeContext {
   targetWords: number;
   allWords?: Word[];
   wordProgress: { [key: string]: WordProgress };
+  languageCode: string; // Language for module-specific word selection
+  moduleId?: string; // Optional module ID for module-specific practice
 }
 
 // Standardized result from any challenge service

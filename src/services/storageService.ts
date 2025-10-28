@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   SESSION_STATE: 'levelup_session_state',
   APP_VERSION: 'levelup_app_version',
   USER_PREFERENCES: 'levelup_user_preferences',
+  ACHIEVEMENTS: 'levelup_achievements',
 } as const;
 
 // Current app version for migration handling
@@ -24,6 +25,7 @@ interface PersistentWordProgress {
 
 interface PersistentGameState {
   language: string;
+  module: string | null; // Current module ID for module-specific practice
   wordProgress: { [key: string]: WordProgress };
   score: number;
   streak: number;
@@ -38,6 +40,15 @@ interface PersistentSessionState {
   sessionTimer: number;
   language: string;
   isActive: boolean;
+  completedSessionsByLanguage: { [languageCode: string]: string[] };
+  weeklyChallengeBylanguage: {
+    [languageCode: string]: {
+      isActive: boolean;
+      targetScore: number;
+      currentScore: number;
+      rank: number;
+    };
+  };
 }
 
 interface UserPreferences {
@@ -45,6 +56,11 @@ interface UserPreferences {
   soundEnabled: boolean;
   theme: string;
   lastPlayed: string;
+}
+
+interface PersistentAchievements {
+  unlockedAchievements: string[];
+  latestUnlock: string | null;
 }
 
 // Safe JSON parsing with error handling
@@ -380,6 +396,43 @@ export const getStorageInfo = (): { size: number; keys: string[] } => {
   }, 0);
 
   return { size, keys };
+};
+
+// Achievements Storage
+export const achievementsStorage = {
+  save: (achievements: Partial<PersistentAchievements>): void => {
+    if (!isLocalStorageAvailable()) return;
+
+    try {
+      const existing = achievementsStorage.load();
+      const updated = { ...existing, ...achievements };
+      localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, safeJSONStringify(updated));
+    } catch (error) {
+      logger.error('Failed to save achievements:', error);
+    }
+  },
+
+  load: (): PersistentAchievements => {
+    if (!isLocalStorageAvailable()) {
+      return {
+        unlockedAchievements: [],
+        latestUnlock: null,
+      };
+    }
+
+    return safeJSONParse<PersistentAchievements>(
+      localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS),
+      {
+        unlockedAchievements: [],
+        latestUnlock: null,
+      }
+    );
+  },
+
+  clear: (): void => {
+    if (!isLocalStorageAvailable()) return;
+    localStorage.removeItem(STORAGE_KEYS.ACHIEVEMENTS);
+  },
 };
 
 // Export storage availability check

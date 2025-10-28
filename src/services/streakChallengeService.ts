@@ -42,16 +42,21 @@ class StreakChallengeService {
   /**
    * Initialize a new streak challenge session
    */
-  initializeStreak(languageCode: string, wordProgress: { [key: string]: WordProgress }): void {
-    const allWords = getWordsForLanguage(languageCode);
+  initializeStreak(
+    languageCode: string, 
+    wordProgress: { [key: string]: WordProgress },
+    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
+  ): void {
+    // Use provided words or get all words for language
+    const wordsToUse = allWords || getWordsForLanguage(languageCode);
     
-    if (!allWords || allWords.length === 0) {
+    if (!wordsToUse || wordsToUse.length === 0) {
       logger.error('No words available for streak challenge');
       return;
     }
 
     // Sort words by difficulty (mastery level, practice count, etc.)
-    const sortedWords = this.sortWordsByDifficulty(allWords, wordProgress);
+    const sortedWords = this.sortWordsByDifficulty(wordsToUse, wordProgress);
 
     this.state = {
       languageCode,
@@ -67,7 +72,7 @@ class StreakChallengeService {
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
-    logger.debug(`🔥 Streak challenge initialized with ${allWords.length} words`);
+    logger.debug(`🔥 Streak challenge initialized with ${wordsToUse.length} words`);
   }
 
   /**

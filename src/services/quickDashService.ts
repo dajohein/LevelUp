@@ -49,17 +49,19 @@ class QuickDashService {
     languageCode: string, 
     wordProgress: { [key: string]: WordProgress },
     targetWords: number = 8,
-    timeLimit: number = 300 // 5 minutes
+    timeLimit: number = 300, // 5 minutes
+    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
   ): Promise<void> {
-    const allWords = getWordsForLanguage(languageCode);
+    // Use provided words or get all words for language
+    const wordsToUse = allWords || getWordsForLanguage(languageCode);
     
-    if (!allWords || allWords.length === 0) {
+    if (!wordsToUse || wordsToUse.length === 0) {
       logger.error('No words available for Quick Dash challenge');
       throw new Error('No words available for Quick Dash challenge');
     }
 
     // Filter and sort words for quick learning (familiar but not mastered)
-    const quickDashWords = this.selectQuickDashWords(allWords, wordProgress);
+    const quickDashWords = this.selectQuickDashWords(wordsToUse, wordProgress);
     
     if (quickDashWords.length < targetWords) {
       logger.warn('Insufficient words for Quick Dash, padding with random words', {

@@ -9,12 +9,12 @@
  */
 
 import { store } from '../store/store';
-import { wordProgressStorage, gameStateStorage, sessionStateStorage } from './storageService';
+import { wordProgressStorage, gameStateStorage, sessionStateStorage, achievementsStorage } from './storageService';
 import { logger } from './logger';
 import type { RootState } from '../store/store';
 
 interface SaveOperation {
-  type: 'wordProgress' | 'gameState' | 'sessionState';
+  type: 'wordProgress' | 'gameState' | 'sessionState' | 'achievements';
   languageCode?: string;
   data: any;
   timestamp: number;
@@ -68,6 +68,20 @@ class StorageOrchestrator {
     const operation: SaveOperation = {
       type: 'sessionState',
       data: sessionState,
+      timestamp: Date.now(),
+      priority,
+    };
+
+    await this.queueSave(operation);
+  }
+
+  async saveAchievements(
+    achievements: any,
+    priority: 'immediate' | 'debounced' = 'immediate'
+  ): Promise<void> {
+    const operation: SaveOperation = {
+      type: 'achievements',
+      data: achievements,
       timestamp: Date.now(),
       priority,
     };
@@ -132,12 +146,14 @@ class StorageOrchestrator {
       const wordProgressOps = operations.filter(op => op.type === 'wordProgress');
       const gameStateOps = operations.filter(op => op.type === 'gameState');
       const sessionStateOps = operations.filter(op => op.type === 'sessionState');
+      const achievementsOps = operations.filter(op => op.type === 'achievements');
 
       // Execute saves (only latest for each type)
       await Promise.all([
         this.executeWordProgressSaves(wordProgressOps),
         this.executeGameStateSaves(gameStateOps),
         this.executeSessionStateSaves(sessionStateOps),
+        this.executeAchievementsSaves(achievementsOps),
       ]);
     } catch (error) {
       logger.error('Storage orchestrator error:', error);
@@ -211,6 +227,24 @@ class StorageOrchestrator {
     }
   }
 
+  private async executeAchievementsSaves(operations: SaveOperation[]): Promise<void> {
+    if (operations.length === 0) return;
+
+    // Take latest achievements operation
+    const latest = operations[operations.length - 1];
+
+    try {
+      achievementsStorage.save(latest.data);
+      this.lastSave['achievements-global'] = Date.now();
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('✅ Centralized save: achievements');
+      }
+    } catch (error) {
+      logger.error('Failed to save achievements:', error);
+    }
+  }
+
   /**
    * Save current Redux state (convenience method)
    */
@@ -224,6 +258,7 @@ class StorageOrchestrator {
     await this.saveGameState(
       {
         language: state.game.language,
+        module: state.game.module,
         score: state.game.score,
         streak: state.game.streak,
         correctAnswers: state.game.correctAnswers,
@@ -240,6 +275,16 @@ class StorageOrchestrator {
         currentSession: state.session.currentSession,
         sessionProgress: state.session.progress,
         isActive: state.session.isSessionActive,
+        completedSessionsByLanguage: state.session.completedSessionsByLanguage,
+        weeklyChallengeBylanguage: state.session.weeklyChallengeBylanguage,
+      },
+      priority
+    );
+
+    await this.saveAchievements(
+      {
+        unlockedAchievements: state.achievements.unlockedAchievements,
+        latestUnlock: state.achievements.latestUnlock?.id || null,
       },
       priority
     );

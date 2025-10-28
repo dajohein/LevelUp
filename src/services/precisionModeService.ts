@@ -55,17 +55,19 @@ class PrecisionModeService {
   async initializePrecisionMode(
     languageCode: string, 
     wordProgress: { [key: string]: WordProgress },
-    targetWords: number = 15
+    targetWords: number = 15,
+    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
   ): Promise<void> {
-    const allWords = getWordsForLanguage(languageCode);
+    // Use provided words or get all words for language
+    const wordsToUse = allWords || getWordsForLanguage(languageCode);
     
-    if (!allWords || allWords.length === 0) {
+    if (!wordsToUse || wordsToUse.length === 0) {
       logger.error('No words available for Precision Mode');
       throw new Error('No words available for Precision Mode');
     }
 
     // Select words with high confidence potential (well-known but with slight challenge)
-    const precisionWords = this.selectPrecisionWords(allWords, wordProgress);
+    const precisionWords = this.selectPrecisionWords(wordsToUse, wordProgress);
     
     if (precisionWords.length < targetWords) {
       logger.warn('Insufficient words for Precision Mode, padding with additional words', {

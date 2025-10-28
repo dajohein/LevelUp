@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { RootState } from '../store/store';
 import { 
   nextWord, 
   setCurrentWord, 
@@ -119,6 +120,9 @@ export const useEnhancedGameState = ({
 }: UseEnhancedGameStateProps): UseEnhancedGameStateReturn => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Get current module from Redux state for debugging
+  const currentModule = useSelector((state: RootState) => state.game.module);
 
   // Local UI state
   const [inputValue, setInputValue] = useState('');
@@ -352,7 +356,8 @@ export const useEnhancedGameState = ({
             timeRemaining,
             targetWords: currentSession.targetWords || 15,
             wordProgress,
-            languageCode: languageCode
+            languageCode: languageCode,
+            moduleId: currentModule || undefined // Add current module for module-specific practice
           };
 
           const result = await challengeServiceManager.getNextWord(currentSession.id, context);
@@ -410,36 +415,36 @@ export const useEnhancedGameState = ({
 
   // Learning card display logic
   useEffect(() => {
-    if (isUsingSpacedRepetition && currentWord) {
+    if (currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
-      if (
-        enhancedWordInfo &&
-        enhancedWordInfo.wordType === 'group' &&
-        !enhancedWordInfo.isReviewWord
-      ) {
-        const shouldShowCard =
-          wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement;
+      
+      // Show learning card for truly new words regardless of spaced repetition mode
+      // This ensures new words get proper introduction in both enhanced and session modes
+      const shouldShowCard = wordLearningStatus.isTrulyNewWord || 
+        (wordLearningStatus.needsReinforcement && isUsingSpacedRepetition);
+      
+      // In spaced repetition mode, use the full enhanced logic
+      if (isUsingSpacedRepetition && enhancedWordInfo &&
+          enhancedWordInfo.wordType === 'group' &&
+          !enhancedWordInfo.isReviewWord) {
         setShowLearningCard(shouldShowCard);
-
-        if (process.env.NODE_ENV === 'development' && shouldShowCard) {
-          console.log(`📚 Learning card shown for word "${currentWord.term}":`, {
-            isNew: wordLearningStatus.isTrulyNewWord,
-            needsReinforcement: wordLearningStatus.needsReinforcement,
-            wordProgress: wordProgress[currentWord.id],
-          });
-        }
-      } else {
+      } 
+      // In session mode, show learning card for truly new words only
+      else if (isSessionActive && wordLearningStatus.isTrulyNewWord) {
+        setShowLearningCard(true);
+      } 
+      // Default case - no learning card
+      else {
         setShowLearningCard(false);
       }
     } else {
       setShowLearningCard(false);
     }
-  }, [isUsingSpacedRepetition, currentWord, wordLearningStatus, getCurrentWordInfo, wordProgress]);
+  }, [isUsingSpacedRepetition, isSessionActive, currentWord, wordLearningStatus, getCurrentWordInfo, wordProgress]);
 
   // Clear stale sessions first, before any other initialization
   useEffect(() => {
     if (languageCode) {
-      console.log('🔍 Dispatching clearStaleSession first for languageCode:', languageCode);
       dispatch(clearStaleSession());
     }
   }, [languageCode, dispatch]); // Run immediately when languageCode is available
@@ -466,7 +471,8 @@ export const useEnhancedGameState = ({
           currentSession,
           languageCode,
           wordProgress,
-          sessionProgress
+          sessionProgress,
+          currentModule || undefined // Pass current module for module-specific practice
         ).then((success) => {
           if (!success) {
             dispatch(nextWord());

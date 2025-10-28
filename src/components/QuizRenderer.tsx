@@ -398,11 +398,20 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
   const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
 
+  // CRITICAL: Force multiple-choice for new words (0 XP) to ensure proper learning progression
+  const wordXP = wordProgress[wordToUse.id]?.xp || 0;
+  const isNewWord = wordXP === 0;
+  
+  if (isNewWord && quizModeToUse !== 'multiple-choice') {
+    console.log(`🎯 [NEW WORD OVERRIDE] Forcing multiple-choice for new word "${wordToUse.term}" (was: ${quizModeToUse})`);
+    quizModeToUse = 'multiple-choice';
+  }
+
   // Session-specific quiz mode overrides
   if (currentSession?.id === 'fill-in-the-blank') {
-    // Only use fill-in-the-blank if the word has context, otherwise fallback to open-answer
+    // Only use fill-in-the-blank if the word has context, otherwise fallback to multiple-choice for new words
     const hasContext = wordToUse.context && wordToUse.context.sentence;
-    quizModeToUse = hasContext ? 'fill-in-the-blank' : 'open-answer';
+    quizModeToUse = hasContext ? 'fill-in-the-blank' : (isNewWord ? 'multiple-choice' : 'open-answer');
   }
 
   // Generate unique key for current question
@@ -414,7 +423,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
 
   const quizContent =
-    showLearningCard && isUsingSpacedRepetition ? (
+    showLearningCard ? (
       <LearningCard
         word={wordToUse}
         currentIndex={getSessionStats()?.currentIndex || 0}
@@ -422,8 +431,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
         level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
         xp={wordProgress[wordToUse.id]?.xp || 0}
         onContinue={handleContinueFromLearningCard}
-        autoAdvance={true}
-        autoAdvanceDelay={4000} // 4 seconds to read the word
+        autoAdvance={false} // Simple: user controls when to continue
         reason={wordLearningStatus.isTrulyNewWord ? 'new' : 'reinforcement'}
       />
     ) : (
@@ -522,21 +530,11 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
       </>
     );
 
-  if (!isSessionActive || !currentSession) {
-    return quizContent;
-  }
+  // Handle session-specific themed rendering
+  const bossHealth = sessionProgress?.bossHealth || 100;
+  const currentSpeed = sessionProgress?.currentSpeed || 100;
 
-  // Calculate metrics for UI effects
-  const currentSpeed =
-    currentSession.id === 'quick-dash' && wordTimer > 0
-      ? Math.max(0, 100 - wordTimer * 10) // 10% per second decrease
-      : sessionTimer > 0
-      ? Math.max(0, 100 - sessionTimer * 2)
-      : 100;
-  // Removed unused variables: accuracy, knowledgeLevel
-  const bossHealth = Math.max(0, 100 - sessionProgress.wordsCompleted * 4);
-
-  switch (currentSession.id) {
+  switch (currentSession?.id) {
     case 'quick-dash':
       return (
         <QuickDashContainer>

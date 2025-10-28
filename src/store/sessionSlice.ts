@@ -184,6 +184,9 @@ const loadPersistedSessionState = (): Partial<SessionState> => {
       ...(savedState.sessionProgress && {
         progress: { ...defaultProgress, ...savedState.sessionProgress },
       }),
+      // Restore completed sessions and weekly challenge data
+      completedSessionsByLanguage: savedState.completedSessionsByLanguage || {},
+      weeklyChallengeBylanguage: savedState.weeklyChallengeBylanguage || {},
     };
   } catch (error) {
     logger.error('Failed to load persisted session state:', error);

@@ -303,10 +303,14 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   // Consider a word "learned" if it has significant XP (level 2+ or 200+ XP)
   const isWordLearned = (level || 0) >= 2 || (xp || 0) >= 200;
   
+  // Check if this is a phrase (contains multiple words) vs a single word
+  const isPhrase = word.trim().split(/\s+/).length > 1;
+  
   // Show context if:
-  // 1. User has already answered (for learning reinforcement), OR
-  // 2. User is still learning this word (low level/XP)
-  const shouldShowContext = context && (selectedOption || !isWordLearned);
+  // 1. It's NOT a phrase (phrases don't need context as they are self-contextual), AND
+  // 2. User has already answered (for learning reinforcement), OR
+  // 3. User is still learning this word (low level/XP)
+  const shouldShowContext = context && !isPhrase && (selectedOption || !isWordLearned);
   
   // Keep enhancement data for debugging (console.log above shows it)
   // UI enhancement indicator removed for cleaner interface
