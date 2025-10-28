@@ -823,6 +823,773 @@
         "sentenceWithBlank": "Compré cuadernos en {BLANK}."
       },
       "synonyms": ["la librería", "la tienda de material escolar"]
+    },
+    {
+      "id": "101",
+      "term": "la rebaja",
+      "definition": "de uitverkoop",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "Hay muchas rebajas en enero.",
+        "translation": "Er zijn veel uitverkopen in januari.",
+        "sentenceWithBlank": "Hay muchas {BLANK} en enero."
+      },
+      "synonyms": ["la oferta", "el descuento"]
+    },
+    {
+      "id": "102",
+      "term": "la oferta",
+      "definition": "de aanbieding",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "Esta oferta es muy buena.",
+        "translation": "Deze aanbieding is erg goed.",
+        "sentenceWithBlank": "Esta {BLANK} es muy buena."
+      },
+      "synonyms": ["la rebaja", "la promoción"]
+    },
+    {
+      "id": "103",
+      "term": "la planta",
+      "definition": "de verdieping",
+      "direction": "definition-to-term",
+      "category": "edificios",
+      "context": {
+        "sentence": "Vivo en la tercera planta.",
+        "translation": "Ik woon op de derde verdieping.",
+        "sentenceWithBlank": "Vivo en la tercera {BLANK}."
+      },
+      "synonyms": ["el piso"]
+    },
+    {
+      "id": "104",
+      "term": "el material escolar",
+      "definition": "de schoolspullen",
+      "direction": "definition-to-term",
+      "category": "educación",
+      "context": {
+        "sentence": "Necesito comprar material escolar.",
+        "translation": "Ik moet schoolspullen kopen.",
+        "sentenceWithBlank": "Necesito comprar {BLANK} escolar."
+      },
+      "synonyms": ["los útiles escolares"]
+    },
+    {
+      "id": "105",
+      "term": "el bolígrafo",
+      "definition": "de pen",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Escribo con un bolígrafo azul.",
+        "translation": "Ik schrijf met een blauwe pen.",
+        "sentenceWithBlank": "Escribo con un {BLANK} azul."
+      },
+      "synonyms": ["la pluma"]
+    },
+    {
+      "id": "106",
+      "term": "el lápiz de color",
+      "definition": "het kleurpotlood",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Los niños dibujan con lápices de color.",
+        "translation": "De kinderen tekenen met kleurpotloden.",
+        "sentenceWithBlank": "Los niños dibujan con {BLANK} de color."
+      },
+      "synonyms": ["el lápiz de colores"]
+    },
+    {
+      "id": "107",
+      "term": "la mochila",
+      "definition": "de rugzak",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Llevo los libros en la mochila.",
+        "translation": "Ik draag de boeken in de rugzak.",
+        "sentenceWithBlank": "Llevo los libros en la {BLANK}."
+      },
+      "synonyms": ["la cartera escolar"]
+    },
+    {
+      "id": "108",
+      "term": "las tijeras",
+      "definition": "de schaar",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Corto el papel con las tijeras.",
+        "translation": "Ik knip het papier met de schaar.",
+        "sentenceWithBlank": "Corto el papel con las {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "109",
+      "term": "la goma",
+      "definition": "de gum",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Borro el error con la goma.",
+        "translation": "Ik gum de fout weg met de gum.",
+        "sentenceWithBlank": "Borro el error con la {BLANK}."
+      },
+      "synonyms": ["la goma de borrar"]
+    },
+    {
+      "id": "110",
+      "term": "la regla",
+      "definition": "de liniaal",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Dibujo líneas rectas con la regla.",
+        "translation": "Ik teken rechte lijnen met de liniaal.",
+        "sentenceWithBlank": "Dibujo líneas rectas con la {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "111",
+      "term": "el sacapuntas",
+      "definition": "de puntenslijper",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Afilo el lápiz con el sacapuntas.",
+        "translation": "Ik slijp het potlood met de puntenslijper.",
+        "sentenceWithBlank": "Afilo el lápiz con el {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "112",
+      "term": "el estuche",
+      "definition": "het etui",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Guardo los lápices en el estuche.",
+        "translation": "Ik bewaar de potloden in het etui.",
+        "sentenceWithBlank": "Guardo los lápices en el {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "113",
+      "term": "la calculadora",
+      "definition": "de rekenmachine",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Hago las cuentas con la calculadora.",
+        "translation": "Ik doe de berekeningen met de rekenmachine.",
+        "sentenceWithBlank": "Hago las cuentas con la {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "114",
+      "term": "el cuaderno",
+      "definition": "het schrift",
+      "direction": "definition-to-term",
+      "category": "material escolar",
+      "context": {
+        "sentence": "Escribo los apuntes en el cuaderno.",
+        "translation": "Ik schrijf de aantekeningen in het schrift.",
+        "sentenceWithBlank": "Escribo los apuntes en el {BLANK}."
+      },
+      "synonyms": ["la libreta"]
+    },
+    {
+      "id": "115",
+      "term": "la clase",
+      "definition": "de les",
+      "direction": "definition-to-term",
+      "category": "educación",
+      "context": {
+        "sentence": "La clase de español es muy interesante.",
+        "translation": "De Spaanse les is erg interessant.",
+        "sentenceWithBlank": "La {BLANK} de español es muy interesante."
+      },
+      "synonyms": ["la lección"]
+    },
+    {
+      "id": "116",
+      "term": "el sol",
+      "definition": "de zon",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "El sol brilla en el cielo.",
+        "translation": "De zon schijnt aan de hemel.",
+        "sentenceWithBlank": "El {BLANK} brilla en el cielo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "117",
+      "term": "el pasatiempo",
+      "definition": "de hobby",
+      "direction": "definition-to-term",
+      "category": "tiempo libre",
+      "context": {
+        "sentence": "Mi pasatiempo favorito es leer.",
+        "translation": "Mijn favoriete hobby is lezen.",
+        "sentenceWithBlank": "Mi {BLANK} favorito es leer."
+      },
+      "synonyms": ["la afición", "el hobby"]
+    },
+    {
+      "id": "118",
+      "term": "el baloncesto",
+      "definition": "basketbal",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Juego al baloncesto con mis amigos.",
+        "translation": "Ik speel basketbal met mijn vrienden.",
+        "sentenceWithBlank": "Juego al {BLANK} con mis amigos."
+      },
+      "synonyms": ["el básquet"]
+    },
+    {
+      "id": "119",
+      "term": "el profesor",
+      "definition": "de leraar",
+      "direction": "definition-to-term",
+      "category": "educación",
+      "context": {
+        "sentence": "El profesor explica la lección.",
+        "translation": "De leraar legt de les uit.",
+        "sentenceWithBlank": "El {BLANK} explica la lección."
+      },
+      "synonyms": ["el maestro"]
+    },
+    {
+      "id": "120",
+      "term": "la profesora",
+      "definition": "de lerares",
+      "direction": "definition-to-term",
+      "category": "educación",
+      "context": {
+        "sentence": "La profesora es muy amable.",
+        "translation": "De lerares is erg vriendelijk.",
+        "sentenceWithBlank": "La {BLANK} es muy amable."
+      },
+      "synonyms": ["la maestra"]
+    },
+    {
+      "id": "121",
+      "term": "el violín",
+      "definition": "de viool",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "Toco el violín en la orquesta.",
+        "translation": "Ik speel viool in het orkest.",
+        "sentenceWithBlank": "Toco el {BLANK} en la orquesta."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "122",
+      "term": "el piano",
+      "definition": "de piano",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "Mi hermana toca el piano muy bien.",
+        "translation": "Mijn zus speelt erg goed piano.",
+        "sentenceWithBlank": "Mi hermana toca el {BLANK} muy bien."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "123",
+      "term": "el saxófono",
+      "definition": "de saxofoon",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "El saxófono suena muy bien en el jazz.",
+        "translation": "De saxofoon klinkt erg goed in jazz.",
+        "sentenceWithBlank": "El {BLANK} suena muy bien en el jazz."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "124",
+      "term": "la batería",
+      "definition": "de drums",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "Toco la batería en una banda de rock.",
+        "translation": "Ik speel drums in een rockband.",
+        "sentenceWithBlank": "Toco la {BLANK} en una banda de rock."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "125",
+      "term": "la guitarra",
+      "definition": "de gitaar",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "Aprendo a tocar la guitarra.",
+        "translation": "Ik leer gitaar spelen.",
+        "sentenceWithBlank": "Aprendo a tocar la {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "126",
+      "term": "la flauta",
+      "definition": "de fluit",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "La flauta tiene un sonido dulce.",
+        "translation": "De fluit heeft een zoete klank.",
+        "sentenceWithBlank": "La {BLANK} tiene un sonido dulce."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "127",
+      "term": "el bajo",
+      "definition": "de (contra)bas",
+      "direction": "definition-to-term",
+      "category": "música",
+      "context": {
+        "sentence": "El bajo marca el ritmo de la música.",
+        "translation": "De bas bepaalt het ritme van de muziek.",
+        "sentenceWithBlank": "El {BLANK} marca el ritmo de la música."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "128",
+      "term": "italiano",
+      "definition": "Italiaans",
+      "direction": "definition-to-term",
+      "category": "idiomas",
+      "context": {
+        "sentence": "Hablo italiano con fluidez.",
+        "translation": "Ik spreek vloeiend Italiaans.",
+        "sentenceWithBlank": "Hablo {BLANK} con fluidez."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "129",
+      "term": "francés",
+      "definition": "Frans",
+      "direction": "definition-to-term",
+      "category": "idiomas",
+      "context": {
+        "sentence": "Estudio francés en la universidad.",
+        "translation": "Ik studeer Frans aan de universiteit.",
+        "sentenceWithBlank": "Estudio {BLANK} en la universidad."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "130",
+      "term": "holandés",
+      "definition": "Nederlands",
+      "direction": "definition-to-term",
+      "category": "idiomas",
+      "context": {
+        "sentence": "El holandés es mi lengua materna.",
+        "translation": "Nederlands is mijn moedertaal.",
+        "sentenceWithBlank": "El {BLANK} es mi lengua materna."
+      },
+      "synonyms": ["neerlandés"]
+    },
+    {
+      "id": "131",
+      "term": "español",
+      "definition": "Spaans",
+      "direction": "definition-to-term",
+      "category": "idiomas",
+      "context": {
+        "sentence": "Aprendo español para viajar.",
+        "translation": "Ik leer Spaans om te reizen.",
+        "sentenceWithBlank": "Aprendo {BLANK} para viajar."
+      },
+      "synonyms": ["castellano"]
+    },
+    {
+      "id": "132",
+      "term": "americano",
+      "definition": "Amerikaans",
+      "direction": "definition-to-term",
+      "category": "nacionalidades",
+      "context": {
+        "sentence": "Mi amigo americano vive en Nueva York.",
+        "translation": "Mijn Amerikaanse vriend woont in New York.",
+        "sentenceWithBlank": "Mi amigo {BLANK} vive en Nueva York."
+      },
+      "synonyms": ["estadounidense"]
+    },
+    {
+      "id": "133",
+      "term": "salir",
+      "definition": "weggaan/uitgaan",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a salir con mis amigos.",
+        "translation": "Ik ga uit met mijn vrienden.",
+        "sentenceWithBlank": "Voy a {BLANK} con mis amigos."
+      },
+      "synonyms": ["irse"]
+    },
+    {
+      "id": "134",
+      "term": "poner",
+      "definition": "zetten, plaatsen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a poner la mesa.",
+        "translation": "Ik ga de tafel dekken.",
+        "sentenceWithBlank": "Voy a {BLANK} la mesa."
+      },
+      "synonyms": ["colocar"]
+    },
+    {
+      "id": "135",
+      "term": "abrir",
+      "definition": "openen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a abrir la ventana.",
+        "translation": "Ik ga het raam openen.",
+        "sentenceWithBlank": "Voy a {BLANK} la ventana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "136",
+      "term": "dormir",
+      "definition": "slapen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Necesito dormir ocho horas.",
+        "translation": "Ik moet acht uur slapen.",
+        "sentenceWithBlank": "Necesito {BLANK} ocho horas."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "137",
+      "term": "escribir",
+      "definition": "schrijven",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta escribir cartas.",
+        "translation": "Ik vind het leuk om brieven te schrijven.",
+        "sentenceWithBlank": "Me gusta {BLANK} cartas."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "138",
+      "term": "romper",
+      "definition": "breken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Ten cuidado de no romper el vaso.",
+        "translation": "Zorg ervoor dat je het glas niet breekt.",
+        "sentenceWithBlank": "Ten cuidado de no {BLANK} el vaso."
+      },
+      "synonyms": ["quebrar"]
+    },
+    {
+      "id": "139",
+      "term": "encantar",
+      "definition": "heel leuk vinden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me encanta la música clásica.",
+        "translation": "Ik vind klassieke muziek heel leuk.",
+        "sentenceWithBlank": "Me {BLANK} la música clásica."
+      },
+      "synonyms": ["fascinar"]
+    },
+    {
+      "id": "140",
+      "term": "las vacaciones",
+      "definition": "de vakantie",
+      "direction": "definition-to-term",
+      "category": "tiempo libre",
+      "context": {
+        "sentence": "Mis vacaciones de verano fueron increíbles.",
+        "translation": "Mijn zomervakantie was ongelooflijk.",
+        "sentenceWithBlank": "Mis {BLANK} de verano fueron increíbles."
+      },
+      "synonyms": ["las fiestas", "el descanso"]
+    },
+    {
+      "id": "141",
+      "term": "el verano",
+      "definition": "de zomer",
+      "direction": "definition-to-term",
+      "category": "estaciones",
+      "context": {
+        "sentence": "El verano es mi estación favorita.",
+        "translation": "De zomer is mijn favoriete seizoen.",
+        "sentenceWithBlank": "{BLANK} es mi estación favorita."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "142",
+      "term": "ir de camping",
+      "definition": "kamperen",
+      "direction": "definition-to-term",
+      "category": "tiempo libre",
+      "context": {
+        "sentence": "Vamos a ir de camping este fin de semana.",
+        "translation": "We gaan dit weekend kamperen.",
+        "sentenceWithBlank": "Vamos a {BLANK} de camping este fin de semana."
+      },
+      "synonyms": ["acampar"]
+    },
+    {
+      "id": "143",
+      "term": "la tienda",
+      "definition": "de tent",
+      "direction": "definition-to-term",
+      "category": "camping",
+      "context": {
+        "sentence": "Montamos la tienda en el bosque.",
+        "translation": "We zetten de tent op in het bos.",
+        "sentenceWithBlank": "Montamos la {BLANK} en el bosque."
+      },
+      "synonyms": ["la carpa"]
+    },
+    {
+      "id": "144",
+      "term": "fantástico",
+      "definition": "geweldig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El concierto fue fantástico.",
+        "translation": "Het concert was geweldig.",
+        "sentenceWithBlank": "El concierto fue {BLANK}."
+      },
+      "synonyms": ["genial", "estupendo"]
+    },
+    {
+      "id": "145",
+      "term": "conocer",
+      "definition": "leren kennen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero conocer gente nueva.",
+        "translation": "Ik wil nieuwe mensen leren kennen.",
+        "sentenceWithBlank": "Quiero {BLANK} gente nueva."
+      },
+      "synonyms": ["encontrar"]
+    },
+    {
+      "id": "146",
+      "term": "el mar",
+      "definition": "de zee",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "Me gusta nadar en el mar.",
+        "translation": "Ik zwem graag in de zee.",
+        "sentenceWithBlank": "Me gusta nadar en el {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "147",
+      "term": "impresionante",
+      "definition": "indrukwekkend",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La vista desde la montaña es impresionante.",
+        "translation": "Het uitzicht vanaf de berg is indrukwekkend.",
+        "sentenceWithBlank": "La vista desde la montaña es {BLANK}."
+      },
+      "synonyms": ["espectacular"]
+    },
+    {
+      "id": "148",
+      "term": "deportivo",
+      "definition": "sportief",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Es una persona muy deportiva.",
+        "translation": "Hij/zij is een erg sportief persoon.",
+        "sentenceWithBlank": "Es una persona muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "149",
+      "term": "aburrido",
+      "definition": "saai",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La película fue muy aburrida.",
+        "translation": "De film was erg saai.",
+        "sentenceWithBlank": "La película fue muy {BLANK}."
+      },
+      "synonyms": ["tedioso"]
+    },
+    {
+      "id": "150",
+      "term": "genial",
+      "definition": "fantastisch",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Tu idea es genial.",
+        "translation": "Jouw idee is fantastisch.",
+        "sentenceWithBlank": "Tu idea es {BLANK}."
+      },
+      "synonyms": ["fantástico", "estupendo"]
+    },
+    {
+      "id": "151",
+      "term": "precioso",
+      "definition": "prachtig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El paisaje es precioso.",
+        "translation": "Het landschap is prachtig.",
+        "sentenceWithBlank": "El paisaje es {BLANK}."
+      },
+      "synonyms": ["hermoso", "bello"]
+    },
+    {
+      "id": "152",
+      "term": "moderno",
+      "definition": "modern",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Vivo en un apartamento moderno.",
+        "translation": "Ik woon in een modern appartement.",
+        "sentenceWithBlank": "Vivo en un apartamento {BLANK}."
+      },
+      "synonyms": ["contemporáneo"]
+    },
+    {
+      "id": "153",
+      "term": "simpático",
+      "definition": "aardig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Mi vecino es muy simpático.",
+        "translation": "Mijn buurman is erg aardig.",
+        "sentenceWithBlank": "Mi vecino es muy {BLANK}."
+      },
+      "synonyms": ["amable"]
+    },
+    {
+      "id": "154",
+      "term": "gustar",
+      "definition": "leuk vinden, lekker vinden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta la comida italiana.",
+        "translation": "Ik vind Italiaans eten lekker.",
+        "sentenceWithBlank": "Me {BLANK} la comida italiana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "155",
+      "term": "visitar",
+      "definition": "bezoeken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a visitar a mis abuelos.",
+        "translation": "Ik ga mijn grootouders bezoeken.",
+        "sentenceWithBlank": "Voy a {BLANK} a mis abuelos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "156",
+      "term": "volver",
+      "definition": "teruggaan",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a volver a casa tarde.",
+        "translation": "Ik ga laat naar huis terugkeren.",
+        "sentenceWithBlank": "Voy a {BLANK} a casa tarde."
+      },
+      "synonyms": ["regresar"]
+    },
+    {
+      "id": "157",
+      "term": "poner",
+      "definition": "plaatsen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a poner los libros en la mesa.",
+        "translation": "Ik ga de boeken op de tafel plaatsen.",
+        "sentenceWithBlank": "Voy a {BLANK} los libros en la mesa."
+      },
+      "synonyms": ["colocar"]
+    },
+    {
+      "id": "158",
+      "term": "romper",
+      "definition": "breken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No quiero romper el plato.",
+        "translation": "Ik wil het bord niet breken.",
+        "sentenceWithBlank": "No quiero {BLANK} el plato."
+      },
+      "synonyms": ["quebrar"]
+    },
+    {
+      "id": "159",
+      "term": "enseñar",
+      "definition": "laten zien",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Te voy a enseñar mi casa.",
+        "translation": "Ik ga je mijn huis laten zien.",
+        "sentenceWithBlank": "Te voy a {BLANK} mi casa."
+      },
+      "synonyms": ["mostrar"]
     }
   ]
 }

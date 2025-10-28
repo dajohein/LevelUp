@@ -1,0 +1,321 @@
+{
+  "id": "frases-clave",
+  "name": "Frases Clave",
+  "description": "Frases esenciales para conversaciones sobre vacaciones y pasatiempos.",
+  "icon": "💬",
+  "difficulty": "intermediate",
+  "words": [
+    {
+      "id": "1",
+      "term": "¿Has ido de vacaciones este verano?",
+      "definition": "Ben je deze zomer op vakantie geweest?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Has ido de vacaciones este verano?",
+        "translation": "Ben je deze zomer op vakantie geweest?",
+        "sentenceWithBlank": "¿Has ido de {BLANK} este verano?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "2",
+      "term": "¿Lo has pasado bien?",
+      "definition": "Heb je het leuk gehad?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Lo has pasado bien?",
+        "translation": "Heb je het leuk gehad?",
+        "sentenceWithBlank": "¿Lo has {BLANK} bien?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "3",
+      "term": "¿Has ido de camping?",
+      "definition": "Heb je gekampeerd?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Has ido de camping?",
+        "translation": "Heb je gekampeerd?",
+        "sentenceWithBlank": "¿Has ido de {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "4",
+      "term": "¿Has conocido a gente nueva?",
+      "definition": "Heb je nieuwe mensen leren kennen?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Has conocido a gente nueva?",
+        "translation": "Heb je nieuwe mensen leren kennen?",
+        "sentenceWithBlank": "¿Has conocido a {BLANK} nueva?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "5",
+      "term": "¿Te gusta la comida italiana?",
+      "definition": "Vind je het Italiaanse eten lekker?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Te gusta la comida italiana?",
+        "translation": "Vind je het Italiaanse eten lekker?",
+        "sentenceWithBlank": "¿Te gusta la {BLANK} italiana?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "6",
+      "term": "Oye, ¿has estado en Roma alguna vez?",
+      "definition": "Zeg, ben je wel eens in Rome geweest?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "Oye, ¿has estado en Roma alguna vez?",
+        "translation": "Zeg, ben je wel eens in Rome geweest?",
+        "sentenceWithBlank": "Oye, ¿has estado en {BLANK} alguna vez?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "7",
+      "term": "Sí, hemos estado en Italia.",
+      "definition": "Ja, we zijn in Italië geweest.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "Sí, hemos estado en Italia.",
+        "translation": "Ja, we zijn in Italië geweest.",
+        "sentenceWithBlank": "Sí, hemos estado en {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "8",
+      "term": "Sí, ha sido fenomenal.",
+      "definition": "Ja, het was heel leuk.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "Sí, ha sido fenomenal.",
+        "translation": "Ja, het was heel leuk.",
+        "sentenceWithBlank": "Sí, ha sido {BLANK}."
+      },
+      "synonyms": ["No, ha sido aburrido."]
+    },
+    {
+      "id": "9",
+      "term": "No, he estado en un hotel con mis padres.",
+      "definition": "Nee, ik ben met mijn ouders in een hotel geweest.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "No, he estado en un hotel con mis padres.",
+        "translation": "Nee, ik ben met mijn ouders in een hotel geweest.",
+        "sentenceWithBlank": "No, he estado en un {BLANK} con mis padres."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "10",
+      "term": "Sí, he conocido a un chico francés.",
+      "definition": "Ja, ik heb een Franse jongen ontmoet.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "Sí, he conocido a un chico francés.",
+        "translation": "Ja, ik heb een Franse jongen ontmoet.",
+        "sentenceWithBlank": "Sí, he conocido a un {BLANK} francés."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "11",
+      "term": "Sí, me gusta mucho la pizza.",
+      "definition": "Ja, ik vind pizza erg lekker.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "Sí, me gusta mucho la pizza.",
+        "translation": "Ja, ik vind pizza erg lekker.",
+        "sentenceWithBlank": "Sí, me gusta mucho la {BLANK}."
+      },
+      "synonyms": ["No, no me gusta."]
+    },
+    {
+      "id": "12",
+      "term": "No, nunca he estado en Roma.",
+      "definition": "Nee, ik ben nog nooit in Rome geweest.",
+      "direction": "definition-to-term",
+      "category": "respuestas vacaciones",
+      "context": {
+        "sentence": "No, nunca he estado en Roma.",
+        "translation": "Nee, ik ben nog nooit in Rome geweest.",
+        "sentenceWithBlank": "No, nunca he estado en {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "13",
+      "term": "¿Cuál es tu pasatiempo favorito?",
+      "definition": "Wat is je hobby?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "¿Cuál es tu pasatiempo favorito?",
+        "translation": "Wat is je hobby?",
+        "sentenceWithBlank": "¿Cuál es tu {BLANK} favorito?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "14",
+      "term": "¿Qué más te gusta hacer?",
+      "definition": "Wat doe je nog meer graag?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "¿Qué más te gusta hacer?",
+        "translation": "Wat doe je nog meer graag?",
+        "sentenceWithBlank": "¿Qué más te gusta {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "15",
+      "term": "¿Desde cuándo tocas la guitarra?",
+      "definition": "Sinds wanneer speel je gitaar?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "¿Desde cuándo tocas la guitarra?",
+        "translation": "Sinds wanneer speel je gitaar?",
+        "sentenceWithBlank": "¿Desde cuándo tocas la {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "16",
+      "term": "¿Qué tipo de música te gusta?",
+      "definition": "Wat voor soort muziek vind je leuk?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "¿Qué tipo de música te gusta?",
+        "translation": "Wat voor soort muziek vind je leuk?",
+        "sentenceWithBlank": "¿Qué tipo de {BLANK} te gusta?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "17",
+      "term": "¿Has ido al último concierto de Manu Chao?",
+      "definition": "Ben je naar het laatste concert van Manu Chao geweest?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "¿Has ido al último concierto de Manu Chao?",
+        "translation": "Ben je naar het laatste concert van Manu Chao geweest?",
+        "sentenceWithBlank": "¿Has ido al último {BLANK} de Manu Chao?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "18",
+      "term": "No lo conozco. ¿Es famoso?",
+      "definition": "Ik ken hem niet. Is hij beroemd?",
+      "direction": "definition-to-term",
+      "category": "preguntas pasatiempos",
+      "context": {
+        "sentence": "No lo conozco. ¿Es famoso?",
+        "translation": "Ik ken hem niet. Is hij beroemd?",
+        "sentenceWithBlank": "No lo conozco. ¿Es {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "19",
+      "term": "Me gusta escuchar música.",
+      "definition": "Ik houd van muziek luisteren.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "Me gusta escuchar música.",
+        "translation": "Ik houd van muziek luisteren.",
+        "sentenceWithBlank": "Me gusta {BLANK} música."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "20",
+      "term": "También me gusta tocar la guitarra.",
+      "definition": "Ik vind gitaar spelen ook leuk.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "También me gusta tocar la guitarra.",
+        "translation": "Ik vind gitaar spelen ook leuk.",
+        "sentenceWithBlank": "También me gusta tocar la {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "21",
+      "term": "Desde el año pasado.",
+      "definition": "Sinds vorig jaar.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "Desde el año pasado.",
+        "translation": "Sinds vorig jaar.",
+        "sentenceWithBlank": "Desde el {BLANK} pasado."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "22",
+      "term": "Me gusta la música pop y rock.",
+      "definition": "Ik houd van pop- en rockmuziek.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "Me gusta la música pop y rock.",
+        "translation": "Ik houd van pop- en rockmuziek.",
+        "sentenceWithBlank": "Me gusta la música {BLANK} y rock."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "23",
+      "term": "Sí, con mi padre y un amigo.",
+      "definition": "Ja, met mijn vader en een vriend.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "Sí, con mi padre y un amigo.",
+        "translation": "Ja, met mijn vader en een vriend.",
+        "sentenceWithBlank": "Sí, con mi {BLANK} y un amigo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "24",
+      "term": "Sí, es muy famoso en España.",
+      "definition": "Ja, hij is erg beroemd in Spanje.",
+      "direction": "definition-to-term",
+      "category": "respuestas pasatiempos",
+      "context": {
+        "sentence": "Sí, es muy famoso en España.",
+        "translation": "Ja, hij is erg beroemd in Spanje.",
+        "sentenceWithBlank": "Sí, es muy {BLANK} en España."
+      },
+      "synonyms": []
+    }
+  ]
+}

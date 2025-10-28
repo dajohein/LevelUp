@@ -9,6 +9,13 @@
       "description": "Palabras esenciales en español para la conversación diaria.",
       "icon": "🇪🇸",
       "difficulty": "beginner"
+    },
+    {
+      "id": "frases-clave",
+      "name": "Frases Clave",
+      "description": "Frases esenciales para conversaciones sobre vacaciones y pasatiempos.",
+      "icon": "💬",
+      "difficulty": "intermediate"
     }
   ]
 }
