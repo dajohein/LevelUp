@@ -6,7 +6,7 @@
   "difficulty": "intermediate",
   "words": [
     {
-      "id": "1",
+      "id": "160",
       "term": "¿Has ido de vacaciones este verano?",
       "definition": "Ben je deze zomer op vakantie geweest?",
       "direction": "definition-to-term",
@@ -19,7 +19,7 @@
       "synonyms": []
     },
     {
-      "id": "2",
+      "id": "161",
       "term": "¿Lo has pasado bien?",
       "definition": "Heb je het leuk gehad?",
       "direction": "definition-to-term",
@@ -32,7 +32,7 @@
       "synonyms": []
     },
     {
-      "id": "3",
+      "id": "162",
       "term": "¿Has ido de camping?",
       "definition": "Heb je gekampeerd?",
       "direction": "definition-to-term",
@@ -44,8 +44,7 @@
       },
       "synonyms": []
     },
-    {
-      "id": "4",
+    "id": "163",
       "term": "¿Has conocido a gente nueva?",
       "definition": "Heb je nieuwe mensen leren kennen?",
       "direction": "definition-to-term",
@@ -58,7 +57,7 @@
       "synonyms": []
     },
     {
-      "id": "5",
+      "id": "164",
       "term": "¿Te gusta la comida italiana?",
       "definition": "Vind je het Italiaanse eten lekker?",
       "direction": "definition-to-term",
@@ -71,7 +70,22 @@
       "synonyms": []
     },
     {
-      "id": "6",
+      "id": "165",,
+    {
+      "id": "164",
+      "term": "¿Te gusta la comida italiana?",
+      "definition": "Vind je het Italiaanse eten lekker?",
+      "direction": "definition-to-term",
+      "category": "preguntas vacaciones",
+      "context": {
+        "sentence": "¿Te gusta la comida italiana?",
+        "translation": "Vind je het Italiaanse eten lekker?",
+        "sentenceWithBlank": "¿Te gusta la {BLANK} italiana?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "165",
       "term": "Oye, ¿has estado en Roma alguna vez?",
       "definition": "Zeg, ben je wel eens in Rome geweest?",
       "direction": "definition-to-term",
@@ -84,7 +98,7 @@
       "synonyms": []
     },
     {
-      "id": "7",
+      "id": "166",
       "term": "Sí, hemos estado en Italia.",
       "definition": "Ja, we zijn in Italië geweest.",
       "direction": "definition-to-term",
@@ -97,7 +111,7 @@
       "synonyms": []
     },
     {
-      "id": "8",
+      "id": "167",
       "term": "Sí, ha sido fenomenal.",
       "definition": "Ja, het was heel leuk.",
       "direction": "definition-to-term",
@@ -110,7 +124,7 @@
       "synonyms": ["No, ha sido aburrido."]
     },
     {
-      "id": "9",
+      "id": "168",
       "term": "No, he estado en un hotel con mis padres.",
       "definition": "Nee, ik ben met mijn ouders in een hotel geweest.",
       "direction": "definition-to-term",
@@ -123,7 +137,7 @@
       "synonyms": []
     },
     {
-      "id": "10",
+      "id": "169",
       "term": "Sí, he conocido a un chico francés.",
       "definition": "Ja, ik heb een Franse jongen ontmoet.",
       "direction": "definition-to-term",
@@ -136,7 +150,7 @@
       "synonyms": []
     },
     {
-      "id": "11",
+      "id": "170",
       "term": "Sí, me gusta mucho la pizza.",
       "definition": "Ja, ik vind pizza erg lekker.",
       "direction": "definition-to-term",
@@ -149,7 +163,7 @@
       "synonyms": ["No, no me gusta."]
     },
     {
-      "id": "12",
+      "id": "171",
       "term": "No, nunca he estado en Roma.",
       "definition": "Nee, ik ben nog nooit in Rome geweest.",
       "direction": "definition-to-term",
@@ -162,7 +176,7 @@
       "synonyms": []
     },
     {
-      "id": "13",
+      "id": "172",
       "term": "¿Cuál es tu pasatiempo favorito?",
       "definition": "Wat is je hobby?",
       "direction": "definition-to-term",
@@ -175,7 +189,7 @@
       "synonyms": []
     },
     {
-      "id": "14",
+      "id": "173",
       "term": "¿Qué más te gusta hacer?",
       "definition": "Wat doe je nog meer graag?",
       "direction": "definition-to-term",
@@ -188,7 +202,7 @@
       "synonyms": []
     },
     {
-      "id": "15",
+      "id": "174",
       "term": "¿Desde cuándo tocas la guitarra?",
       "definition": "Sinds wanneer speel je gitaar?",
       "direction": "definition-to-term",
@@ -201,7 +215,7 @@
       "synonyms": []
     },
     {
-      "id": "16",
+      "id": "175",
       "term": "¿Qué tipo de música te gusta?",
       "definition": "Wat voor soort muziek vind je leuk?",
       "direction": "definition-to-term",
@@ -214,7 +228,7 @@
       "synonyms": []
     },
     {
-      "id": "17",
+      "id": "176",
       "term": "¿Has ido al último concierto de Manu Chao?",
       "definition": "Ben je naar het laatste concert van Manu Chao geweest?",
       "direction": "definition-to-term",
@@ -227,7 +241,7 @@
       "synonyms": []
     },
     {
-      "id": "18",
+      "id": "177",
       "term": "No lo conozco. ¿Es famoso?",
       "definition": "Ik ken hem niet. Is hij beroemd?",
       "direction": "definition-to-term",
@@ -240,7 +254,7 @@
       "synonyms": []
     },
     {
-      "id": "19",
+      "id": "178",
       "term": "Me gusta escuchar música.",
       "definition": "Ik houd van muziek luisteren.",
       "direction": "definition-to-term",
@@ -253,7 +267,7 @@
       "synonyms": []
     },
     {
-      "id": "20",
+      "id": "179",
       "term": "También me gusta tocar la guitarra.",
       "definition": "Ik vind gitaar spelen ook leuk.",
       "direction": "definition-to-term",
@@ -266,7 +280,7 @@
       "synonyms": []
     },
     {
-      "id": "21",
+      "id": "180",
       "term": "Desde el año pasado.",
       "definition": "Sinds vorig jaar.",
       "direction": "definition-to-term",
@@ -279,7 +293,7 @@
       "synonyms": []
     },
     {
-      "id": "22",
+      "id": "181",
       "term": "Me gusta la música pop y rock.",
       "definition": "Ik houd van pop- en rockmuziek.",
       "direction": "definition-to-term",
@@ -292,7 +306,7 @@
       "synonyms": []
     },
     {
-      "id": "23",
+      "id": "182",
       "term": "Sí, con mi padre y un amigo.",
       "definition": "Ja, met mijn vader en een vriend.",
       "direction": "definition-to-term",
@@ -305,7 +319,7 @@
       "synonyms": []
     },
     {
-      "id": "24",
+      "id": "183",
       "term": "Sí, es muy famoso en España.",
       "definition": "Ja, hij is erg beroemd in Spanje.",
       "direction": "definition-to-term",
