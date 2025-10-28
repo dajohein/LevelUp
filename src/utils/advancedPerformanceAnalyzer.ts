@@ -259,7 +259,7 @@ export const enablePerformanceTracking = () => {
     window.__ENABLE_PERFORMANCE_TRACKING__ = true;
     // Re-initialize the analyzer with tracking enabled
     performanceAnalyzer.cleanup();
-    const newAnalyzer = new PerformanceAnalyzer();
+    new PerformanceAnalyzer();
     console.log('🔍 Performance tracking enabled - use analyzePerformance() to get report');
   }
 };

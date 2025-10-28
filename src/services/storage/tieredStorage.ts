@@ -482,7 +482,7 @@ export class TieredStorageService implements TieredStorageProvider {
   }
 
   // IndexedDB tier methods
-  private async getFromIndexedDB<T>(key: string, options: StorageOptions): Promise<StorageResult<T>> {
+  private async getFromIndexedDB<T>(key: string, _options: StorageOptions): Promise<StorageResult<T>> {
     try {
       const result = await indexedDBStorage.get<any>(key);
       

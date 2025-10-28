@@ -154,14 +154,7 @@ const LevelBadge = styled.div`
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 `;
 
-const XPInfo = styled.div`
-  color: ${props => props.theme.colors.primary};
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-`;
+// Removed unused styled component: XPInfo
 
 const QuickStats = styled.div`
   display: flex;
@@ -172,20 +165,7 @@ const QuickStats = styled.div`
   font-weight: 500;
 `;
 
-const ProgressDot = styled.div<{ progress: number }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${props =>
-    props.progress > 50
-      ? '#4caf50'
-      : props.progress > 20
-      ? '#ff9800'
-      : props.progress > 0
-      ? '#2196f3'
-      : 'rgba(255, 255, 255, 0.3)'};
-  box-shadow: ${props => (props.progress > 0 ? '0 0 6px currentColor' : 'none')};
-`;
+// Removed unused styled components: XPInfo, ProgressDot
 
 // Brain icon progress indicator
 const BrainProgressContainer = styled.div`

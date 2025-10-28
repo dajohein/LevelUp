@@ -10,8 +10,7 @@ import { WordProgress } from '../store/types';
 import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
-  ChallengeAIContext, 
-  AIEnhancedWordSelection 
+  ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
@@ -350,7 +349,7 @@ class QuickDashService {
   /**
    * Get quiz mode optimized for speed
    */
-  private getSpeedOptimizedQuizMode(word: Word, timePressure: number): QuickDashResult['quizMode'] {
+  private getSpeedOptimizedQuizMode(_word: Word, timePressure: number): QuickDashResult['quizMode'] {
     // Under high time pressure, favor faster quiz modes
     if (timePressure > 0.7) {
       return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
@@ -410,9 +409,9 @@ class QuickDashService {
   }
 
   /**
-   * Calculate current session accuracy
+   * Calculate current accuracy
    */
-  private calculateCurrentAccuracy(wordProgress: { [key: string]: WordProgress }): number {
+  private calculateCurrentAccuracy(_wordProgress: { [key: string]: WordProgress }): number {
     if (!this.state || this.state.currentWordIndex === 0) return 1.0;
     
     // This would typically be calculated from the actual session results

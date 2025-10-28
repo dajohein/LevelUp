@@ -71,7 +71,7 @@ export class DeepDiveService {
    * Initialize Deep Dive session
    */
   async initializeDeepDive(
-    languageCode: string,
+    // languageCode: string, // Removed unused parameter
     targetWords: number = 15,
     explorationDepth: number = 3
   ): Promise<{
@@ -228,8 +228,8 @@ export class DeepDiveService {
 
     // Generate contextual content - pass candidates for better option generation
     const options = this.generateOptions(selectedWord, quizMode, candidates);
-    const contextSentence = this.generateContextSentence(selectedWord, comprehensionDepth);
-    const comprehensionQuestions = this.generateComprehensionQuestions(selectedWord, quizMode, comprehensionDepth);
+    const contextSentence = this.generateContextSentence(selectedWord); // Removed unused comprehensionDepth parameter
+    const comprehensionQuestions = this.generateComprehensionQuestions(selectedWord, comprehensionDepth); // Removed unused quizMode parameter
 
     // Update phase based on progress
     this.updateExplorationPhase(sessionProgress, comprehensionDepth);
@@ -267,7 +267,7 @@ export class DeepDiveService {
     userId: string,
     wordId: string,
     isCorrect: boolean,
-    timeSpent: number,
+    // timeSpent: number, // Removed unused parameter
     comprehensionLevel: number,
     explorationScore: number,
     wasAIEnhanced: boolean = false
@@ -600,7 +600,7 @@ export class DeepDiveService {
   /**
    * Generate context sentence for word exploration
    */
-  private generateContextSentence(word: Word, comprehensionDepth: number): string {
+  private generateContextSentence(word: Word /* comprehensionDepth: number */): string { // Removed unused parameter
     // This would ideally use real context data or AI-generated sentences
     // For now, using the word's definition context
     if (word.context && word.context.sentence) {
@@ -616,7 +616,7 @@ export class DeepDiveService {
    */
   private generateComprehensionQuestions(
     word: Word,
-    quizMode: DeepDiveResult['quizMode'],
+    // quizMode: DeepDiveResult['quizMode'], // Removed unused parameter
     comprehensionDepth: number
   ): Array<{
     question: string;

@@ -75,7 +75,7 @@ export class FillInTheBlankService {
    * Initialize Fill in the Blank session
    */
   async initializeFillInTheBlank(
-    languageCode: string,
+    // languageCode: string, // Removed unused parameter
     targetWords: number = 20,
     initialComplexity: 'simple' | 'moderate' | 'complex' = 'simple'
   ): Promise<{
@@ -206,9 +206,9 @@ export class FillInTheBlankService {
 
     // Generate sentence and calculate parameters
     const sentence = this.generateSentence(selectedWord, sentenceComplexity);
-    const blankPosition = this.calculateBlankPosition(sentence, selectedWord.term);
+    const blankPosition = this.calculateBlankPosition(sentence); // Removed unused argument
     const options = this.generateOptions(selectedWord, sentenceComplexity);
-    const contextualClues = this.extractContextualClues(sentence, selectedWord.term);
+    const contextualClues = this.extractContextualClues(sentence); // Removed unused argument
     
     timeAllocated = this.calculateCompletionTime(selectedWord, sentenceComplexity);
     const difficultyLevel = this.calculateDifficultyLevel(selectedWord, wordProgress[selectedWord.id]);
@@ -251,7 +251,7 @@ export class FillInTheBlankService {
     userId: string,
     wordId: string,
     isCorrect: boolean,
-    timeSpent: number,
+    // timeSpent: number, // Removed unused parameter
     sentenceComplexity: 'simple' | 'moderate' | 'complex',
     contextualAccuracy: number,
     wasAIEnhanced: boolean = false,
@@ -445,7 +445,7 @@ export class FillInTheBlankService {
   /**
    * Calculate blank position in sentence
    */
-  private calculateBlankPosition(sentence: string, wordTerm: string): number {
+  private calculateBlankPosition(sentence: string /* wordTerm: string */): number { // Removed unused parameter
     const blankIndex = sentence.indexOf('______');
     return blankIndex !== -1 ? blankIndex : 0;
   }
@@ -523,7 +523,7 @@ export class FillInTheBlankService {
    */
   private generateWordTypeDistractors(word: Word, complexity: 'simple' | 'moderate' | 'complex'): string[] {
     // This is a simplified approach - ideally we'd have POS tagging
-    const term = word.term.toLowerCase();
+    // const term = word.term.toLowerCase(); // Removed unused variable
     const definition = word.definition.toLowerCase();
     
     // Heuristic detection of word type based on definition patterns
@@ -553,7 +553,7 @@ export class FillInTheBlankService {
   /**
    * Extract contextual clues from sentence
    */
-  private extractContextualClues(sentence: string, wordTerm: string): string[] {
+  private extractContextualClues(sentence: string /* wordTerm: string */): string[] { // Removed unused parameter
     const clues: string[] = [];
     
     // Look for defining words/phrases

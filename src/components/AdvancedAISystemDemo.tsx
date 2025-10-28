@@ -10,8 +10,7 @@ import styled from '@emotion/styled';
 import { useAILearning } from '../hooks/useAILearning';
 
 import { 
-  adaptiveLearningEngine,
-  userLearningProfileStorage
+  adaptiveLearningEngine
 } from '../services';
 import { BaseButton, Card } from './ui';
 import { theme } from '../styles/theme';

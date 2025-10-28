@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import { FaUser, FaChartLine, FaTrophy, FaClock, FaBrain, FaSync, FaTrash, FaCog } from 'react-icons/fa';
+import { FaUser, FaChartLine, FaTrophy, FaClock, FaBrain, FaSync, FaTrash } from 'react-icons/fa';
 import { Navigation } from './Navigation';
 import { getAvailableLanguages } from '../services/moduleService';
 import { getAllLanguageProgress } from '../services/progressService';

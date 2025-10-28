@@ -11,8 +11,8 @@ import { WordProgress } from '../store/types';
 import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
-  ChallengeAIContext, 
-  AIEnhancedWordSelection 
+  ChallengeAIContext 
+  // AIEnhancedWordSelection // Removed unused import
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
@@ -139,7 +139,7 @@ class BossBattleService {
       };
     }
 
-    return this.generateAIEnhancedBossQuiz(selectedWord, currentDifficultyLevel, isFinalBoss, wordProgress, bossPhase);
+    return this.generateAIEnhancedBossQuiz(selectedWord, currentDifficultyLevel, isFinalBoss, bossPhase, wordProgress);
   }
 
   /**
@@ -297,7 +297,9 @@ class BossBattleService {
 
   /**
    * Generate quiz format for boss word
+   * @deprecated Currently unused - may be implemented in future boss battle features
    */
+  // @ts-ignore - Unused method for future implementation
   private generateBossQuiz(
     word: Word, 
     difficultyLevel: number, 
@@ -582,8 +584,8 @@ class BossBattleService {
     word: Word,
     difficultyLevel: number,
     isFinalBoss: boolean,
-    wordProgress: { [key: string]: WordProgress },
-    bossPhase: string
+    bossPhase: string,
+    wordProgress: { [key: string]: WordProgress }
   ): Promise<{
     word: Word;
     options: string[];

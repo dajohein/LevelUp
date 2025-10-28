@@ -179,10 +179,11 @@ export const PWAUpdateNotification: React.FC = () => {
     setTimeout(() => setUpdateInfo(null), 300);
   };
 
-  const handleRefresh = () => {
-    console.log('🔄 User forced refresh');
-    window.location.reload();
-  };
+  // Note: handleRefresh function removed as it was unused
+  // const handleRefresh = () => {
+  //   console.log('🔄 User forced refresh');
+  //   window.location.reload();
+  // };
 
   if (!updateInfo) return null;
 

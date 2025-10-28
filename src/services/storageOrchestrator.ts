@@ -175,66 +175,6 @@ class StorageOrchestrator {
     }
   }
 
-  /**
-   * Compute and persist per-module progress summaries to help module views load quickly.
-   * This mirrors previous behavior where module summaries were stored separately.
-   */
-  private persistModuleSummaries(languageCode: string, wordProgress: Record<string, any>) {
-    try {
-      // Lazy-import to avoid circular dependency at module load time
-      const { getModulesForLanguage } = require('./moduleService');
-
-      const modules = getModulesForLanguage(languageCode) || [];
-      const moduleSummaries: Record<string, any> = {};
-
-      modules.forEach((m: any) => {
-        const moduleWords = m.words || [];
-        const totalWords = moduleWords.length;
-        const completed = moduleWords.reduce((acc: number, w: any) => {
-          const progress = wordProgress[w.id];
-          return acc + (progress && (progress.timesCorrect || progress.xp) ? 1 : 0);
-        }, 0);
-
-        const averageMastery = moduleWords.length
-          ? Math.round(
-              moduleWords.reduce((sum: number, w: any) => {
-                const p = wordProgress[w.id];
-                const xp = p && typeof p.xp === 'number' ? p.xp : 0;
-                return sum + xp;
-              }, 0) / Math.max(1, moduleWords.length)
-            )
-          : 0;
-
-        moduleSummaries[m.id] = {
-          moduleId: m.id,
-          languageCode,
-          completionPercentage: totalWords === 0 ? 0 : Math.round((completed / totalWords) * 100),
-          wordsLearned: completed,
-          totalWords,
-          lastAccessed: Date.now(),
-          averageMastery,
-        };
-      });
-
-      // Save to localStorage under a single key for module progress summaries
-      const key = 'levelup_module_progress';
-      const existingRaw = localStorage.getItem(key);
-      const existing = existingRaw ? JSON.parse(existingRaw) : {};
-      existing[languageCode] = moduleSummaries;
-      localStorage.setItem(key, JSON.stringify(existing));
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(
-          `💾 Persisted module summaries for ${languageCode} (${
-            Object.keys(moduleSummaries).length
-          } modules)`
-        );
-      }
-    } catch (err) {
-      logger.error('Failed to persist module summaries:', err);
-    }
-  }
-
   private async executeGameStateSaves(operations: SaveOperation[]): Promise<void> {
     if (operations.length === 0) return;
 

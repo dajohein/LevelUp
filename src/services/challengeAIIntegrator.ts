@@ -76,7 +76,7 @@ export interface ChallengeAIEnhancements {
 
 class ChallengeAIIntegrator {
   private isAIEnabled: boolean = true;
-  private performanceBuffer: Map<string, any[]> = new Map();
+  // private performanceBuffer: Map<string, any[]> = new Map(); // Removed unused field
 
   constructor() {
     // Initialize with default settings
@@ -158,22 +158,46 @@ class ChallengeAIIntegrator {
 
       const analysis = await this.analyzeChallenge(context);
       
-      // AI-driven quiz mode selection based on cognitive load
-      let aiRecommendedMode = originalQuizMode;
-      let difficultyAdjustment = 0;
-      let interventionNeeded = false;
-      const reasoning: string[] = [];
+      // Get real word progress data for AI decision making
+      const currentWordProgress = wordProgress[originalWord.id] || {
+        wordId: originalWord.id,
+        xp: 0,
+        lastPracticed: new Date().toISOString(),
+        timesCorrect: 0,
+        timesIncorrect: 0
+      };
 
-      // Apply cognitive load adjustments
+      // Use AI engine with real word data for optimal quiz mode selection
+      const aiDecision = await adaptiveLearningEngine.selectOptimalQuizMode(
+        {
+          recentPerformance: context.userState.recentPerformance,
+          currentStreak: context.currentProgress.consecutiveCorrect,
+          sessionDuration: context.currentProgress.sessionDuration,
+          challengeType: context.sessionType,
+          // Include word-specific progress for better AI decisions
+          wordProgress: currentWordProgress
+        },
+        originalWord,
+        context.challengeContext.currentDifficulty / 100,
+        context.sessionType
+      );
+      
+      // AI-driven quiz mode selection based on cognitive load
+      let aiRecommendedMode = aiDecision.quizMode;
+      let difficultyAdjustment = aiDecision.difficultyAdjustment;
+      let interventionNeeded = false;
+      const reasoning: string[] = [...aiDecision.reasoning];
+
+      // Additional cognitive load adjustments on top of AI baseline
       if (analysis.cognitiveLoad.level === 'high' || analysis.cognitiveLoad.level === 'overload') {
         // User is struggling - make it easier
-        aiRecommendedMode = this.getEasierQuizMode(originalQuizMode);
+        aiRecommendedMode = this.getEasierQuizMode(originalQuizMode) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
         difficultyAdjustment = -1;
         interventionNeeded = true;
         reasoning.push(`High cognitive load detected - switching to easier ${aiRecommendedMode} mode`);
       } else if (analysis.cognitiveLoad.level === 'low' && analysis.momentum.trend === 'increasing') {
         // User is doing well - can handle more challenge
-        aiRecommendedMode = this.getHarderQuizMode(originalQuizMode);
+        aiRecommendedMode = this.getHarderQuizMode(originalQuizMode) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
         difficultyAdjustment = 1;
         reasoning.push(`Low cognitive load + positive momentum - increasing challenge with ${aiRecommendedMode}`);
       } else if (context.sessionType === 'deep-dive') {
@@ -187,7 +211,7 @@ class ChallengeAIIntegrator {
           // Only switch if it's different from current mode and compatible
           if (randomEnhancement !== originalQuizMode && 
               ['multiple-choice', 'contextual-analysis', 'usage-example', 'synonym-antonym'].includes(randomEnhancement)) {
-            aiRecommendedMode = randomEnhancement;
+            aiRecommendedMode = randomEnhancement as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
             interventionNeeded = true;
             reasoning.push(`Deep Dive AI enhancement - exploring ${aiRecommendedMode} for deeper understanding`);
           }
@@ -200,13 +224,13 @@ class ChallengeAIIntegrator {
           aiRecommendedMode, 
           context.currentProgress.currentStreak || 0,
           analysis.cognitiveLoad
-        );
+        ) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
       } else if (context.sessionType === 'boss-battle') {
         aiRecommendedMode = this.adjustForBossBattle(
           aiRecommendedMode,
           context.challengeContext.phaseProgress || 0,
           analysis.cognitiveLoad
-        );
+        ) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
       }
 
       // Apply momentum-based adjustments

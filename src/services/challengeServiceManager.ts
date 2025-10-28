@@ -5,15 +5,15 @@
  * that maps to service adapters conforming to IChallengeService.
  */
 
-import { Word, getWordsForLanguage } from './wordService';
+import { /* Word, */ getWordsForLanguage } from './wordService'; // Removed unused import
 import { WordProgress } from '../store/types';
 import { 
   IChallengeService, 
   ChallengeConfig, 
   ChallengeContext, 
   ChallengeResult, 
-  ServiceRegistry,
-  StandardQuizMode
+  ServiceRegistry
+  // StandardQuizMode // Removed unused import
 } from './challengeServiceInterface';
 import {
   streakChallengeAdapter,

@@ -11,32 +11,17 @@ import { testAllGameServicesPerformance } from './testAllGameServicesPerformance
 import { testImmediateImprovements } from './testImmediateImprovements';
 import { testPerformanceFix } from './testPerformanceFix';
 import { testDataMigration, testDirectionalAnalytics, testMigrationStatus, runAllTests as migrationRunAllTests } from './migrationTests';
-import performanceAnalyzer, { enablePerformanceTracking, disablePerformanceTracking, analyzePerformance } from './advancedPerformanceAnalyzer';
-import { developmentCacheManager, getDevCacheStats, clearDevCaches } from './developmentCacheManager';
+import { enablePerformanceTracking, disablePerformanceTracking, analyzePerformance } from './advancedPerformanceAnalyzer';
+import { getDevCacheStats, clearDevCaches } from './developmentCacheManager';
 
 // Services
 import { enhancedStorage } from '../services/storage/enhancedStorage';
-import { logger } from '../services/logger';
 
 // Types (using interface definitions instead of importing non-existent types)
 interface ChallengeResult {
   success: boolean;
   score: number;
   timeMs: number;
-  error?: string;
-}
-
-interface WordProgress {
-  wordId: string;
-  xp: number;
-  lastPracticed: string;
-  timesCorrect: number;
-  timesIncorrect: number;
-}
-
-interface StorageResult<T> {
-  success: boolean;
-  data: T;
   error?: string;
 }
 

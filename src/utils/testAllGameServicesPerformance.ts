@@ -5,7 +5,6 @@
 
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { enhancedWordService } from '../services/enhancedWordService';
-import { deepDiveService } from '../services/deepDiveService';
 import { storageOrchestrator } from '../services/storageOrchestrator';
 import { store } from '../store/store';
 import { setLanguage } from '../store/gameSlice';

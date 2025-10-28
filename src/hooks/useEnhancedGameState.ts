@@ -285,11 +285,7 @@ export const useEnhancedGameState = ({
       currentSession,
       isSessionActive,
       sessionTimer,
-      sessionProgress,
-      wordProgress,
-      languageCode,
-      isUsingSpacedRepetition,
-      gameLanguage || undefined
+      sessionProgress
     );
 
     // Trigger delayed transition

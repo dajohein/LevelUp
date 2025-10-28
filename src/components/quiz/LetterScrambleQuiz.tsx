@@ -50,20 +50,7 @@ const Word = styled.div`
   }
 `;
 
-const ContextSection = styled.div`
-  background-color: ${props => props.theme.colors.surface};
-  border-radius: ${props => props.theme.borderRadius.md};
-  padding: ${props => props.theme.spacing.md};
-  margin: ${props => props.theme.spacing.sm} 0;
-  border-left: 4px solid ${props => props.theme.colors.primary};
-  max-width: 600px;
-  width: 100%;
-
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
-    padding: ${props => props.theme.spacing.sm};
-    margin: ${props => props.theme.spacing.xs} 0;
-  }
-`;
+// Removed unused styled component: ContextSection
 
 const AnswerContainer = styled.div`
   display: flex;
@@ -358,7 +345,7 @@ interface LetterScrambleQuizProps {
 export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   word,
   definition,
-  context,
+  // context, // Removed unused parameter
   currentWord,
   totalWords,
   level = 0,
@@ -579,7 +566,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     };
   }, [availableLetters, userAnswer, disabled, showResult, addLetter, removeLetter]);
 
-  const progress = (currentWord / totalWords) * 100;
+  // Removed unused variable: progress
 
   return (
     <Container>

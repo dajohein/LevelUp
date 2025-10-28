@@ -32,7 +32,7 @@ export class GameStateManager {
    * Initialize game state for a new session
    */
   initializeGame(options: GameInitializationOptions): void {
-    const { languageCode, moduleId, sessionType, resetPrevious = true } = options;
+    const { languageCode, moduleId, /* sessionType, */ resetPrevious = true } = options; // Removed unused destructured variable
 
     if (resetPrevious) {
       // Reset previous game state
@@ -182,7 +182,7 @@ export class GameStateManager {
   /**
    * Handle navigation away from game
    */
-  handleGameNavigation(targetPath: string): {
+  handleGameNavigation(): {
     shouldSaveState: boolean;
     shouldWarnUser: boolean;
     warningMessage?: string;

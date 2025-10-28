@@ -533,18 +533,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
       : sessionTimer > 0
       ? Math.max(0, 100 - sessionTimer * 2)
       : 100;
-  const accuracy =
-    sessionProgress.correctAnswers + sessionProgress.incorrectAnswers > 0
-      ? Math.round(
-          (sessionProgress.correctAnswers /
-            (sessionProgress.correctAnswers + sessionProgress.incorrectAnswers)) *
-            100
-        )
-      : 100;
-  const knowledgeLevel = Math.min(
-    100,
-    sessionProgress.correctAnswers * 5 + sessionProgress.currentStreak * 10
-  );
+  // Removed unused variables: accuracy, knowledgeLevel
   const bossHealth = Math.max(0, 100 - sessionProgress.wordsCompleted * 4);
 
   switch (currentSession.id) {

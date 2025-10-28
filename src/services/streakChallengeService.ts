@@ -11,8 +11,7 @@ import { WordProgress } from '../store/types';
 import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
-  ChallengeAIContext, 
-  AIEnhancedWordSelection 
+  ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
@@ -227,41 +226,6 @@ class StreakChallengeService {
     }
 
     return selectedWord;
-  }
-
-  /**
-   * Generate quiz format and options for selected word
-   */
-  private generateQuizForWord(word: Word, streak: number): {
-    word: Word;
-    options: string[];
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-  } {
-    // Quiz mode selection based on streak (gets harder)
-    let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-    
-    if (streak < 5) {
-      // Early streak: easier modes
-      quizMode = Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
-    } else if (streak < 10) {
-      // Mid streak: mixed modes
-      const rand = Math.random();
-      if (rand < 0.4) quizMode = 'multiple-choice';
-      else if (rand < 0.7) quizMode = 'letter-scramble';
-      else quizMode = 'open-answer';
-    } else {
-      // High streak: harder modes
-      const rand = Math.random();
-      if (rand < 0.2) quizMode = 'multiple-choice';
-      else if (rand < 0.4) quizMode = 'letter-scramble';
-      else if (rand < 0.7) quizMode = 'open-answer';
-      else quizMode = 'fill-in-the-blank';
-    }
-
-    // Generate options for multiple choice
-    const options = this.generateOptions(word, quizMode);
-
-    return { word, options, quizMode };
   }
 
   /**
@@ -581,7 +545,7 @@ class StreakChallengeService {
   /**
    * Generate quiz mode for difficulty tier (baseline logic)
    */
-  private generateQuizModeForTier(tier: number, streak: number): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' {
+  private generateQuizModeForTier(tier: number, _streak: number): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' {
     // Tier 1 (0-2 streak): Easier modes
     if (tier === 1) {
       return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';

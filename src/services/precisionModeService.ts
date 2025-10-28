@@ -10,8 +10,7 @@ import { WordProgress } from '../store/types';
 import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
-  ChallengeAIContext, 
-  AIEnhancedWordSelection 
+  ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
@@ -418,14 +417,14 @@ class PrecisionModeService {
   }
 
   /**
+  /**
    * Get quiz mode optimized for confidence
    */
-  private getConfidenceOptimizedQuizMode(word: Word, errorRisk: number): PrecisionModeResult['quizMode'] {
+  private getConfidenceOptimizedQuizMode(_word: Word, errorRisk: number): PrecisionModeResult['quizMode'] {
     // Higher error risk = easier quiz modes
     if (errorRisk > 0.6) {
       return 'multiple-choice'; // Safest option
     }
-    
     if (errorRisk > 0.4) {
       return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
     }
@@ -468,7 +467,7 @@ class PrecisionModeService {
   /**
    * Generate error prevention hints
    */
-  private generateErrorPreventionHints(word: Word, quizMode: string): string[] {
+  private generateErrorPreventionHints(_word: Word, quizMode: string): string[] {
     const hints: string[] = [];
     
     if (quizMode === 'multiple-choice') {

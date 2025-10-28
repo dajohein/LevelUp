@@ -5,8 +5,7 @@
 
 import { storageOrchestrator } from '../services/storageOrchestrator';
 import { store } from '../store/store';
-import { checkAnswer } from '../store/gameSlice';
-import { addCorrectAnswer, addIncorrectAnswer } from '../store/sessionSlice';
+import { addCorrectAnswer } from '../store/sessionSlice';
 import { logger } from '../services/logger';
 
 export const testSaveOptimization = async () => {

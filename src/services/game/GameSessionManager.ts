@@ -50,10 +50,10 @@ export class GameSessionManager {
     isSessionActive: boolean,
     sessionTimer: number,
     sessionProgress: any,
-    wordProgress: any,
-    languageCode: string,
-    isUsingSpacedRepetition: boolean,
-    gameLanguage?: string
+    // wordProgress: any, // Removed unused parameter
+    // languageCode: string, // Removed unused parameter
+    // isUsingSpacedRepetition: boolean, // Removed unused parameter
+    // gameLanguage?: string // Removed unused parameter
   ): Promise<SessionCompletionResult> {
     // Update session counter if answer was correct and we're in a session
     if (isCorrect && isSessionActive && currentSession) {

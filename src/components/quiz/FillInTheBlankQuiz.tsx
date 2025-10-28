@@ -106,12 +106,7 @@ const QuestionPrompt = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
-const InstructionText = styled.div`
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
-  margin-bottom: ${props => props.theme.spacing.md};
-  text-align: center;
-`;
+// Removed unused styled component: InstructionText
 
 const BrainProgressContainer = styled.div`
   display: flex;

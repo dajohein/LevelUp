@@ -288,7 +288,7 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   disabled,
   level = 1,
   xp = 0,
-  direction,
+  // direction, // Removed unused parameter
   enhancementLevel,
   originalQuizMode,
   sessionProgress = 0,
@@ -297,10 +297,7 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   console.log('🎯 MultipleChoiceQuiz props:', { context, enhancementLevel, originalQuizMode, level, xp, sessionProgress });
   
   // Show enhancement indicator when session has progressed (indicating advanced modes are active)
-  const isEnhanced = sessionProgress >= 0.3 || context || enhancementLevel === 'advanced';
-  const enhancementText = sessionProgress >= 0.7 ? 'Advanced Deep Dive' : 
-                         sessionProgress >= 0.5 ? 'Enhanced Learning' : 
-                         sessionProgress >= 0.3 ? 'Context Mode' : 'Enhanced Learning';
+  // Removed unused variables: isEnhanced, enhancementText
   
   // Only show context before answering if the user is still learning the word
   // Consider a word "learned" if it has significant XP (level 2+ or 200+ XP)
