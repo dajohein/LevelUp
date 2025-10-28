@@ -396,22 +396,24 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
   const wordToUse = enhancedWordInfo?.word || currentWord;
   let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
-  const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
-
-  // CRITICAL: Force multiple-choice for new words (0 XP) to ensure proper learning progression
-  const wordXP = wordProgress[wordToUse.id]?.xp || 0;
-  const isNewWord = wordXP === 0;
-  
-  if (isNewWord && quizModeToUse !== 'multiple-choice') {
-    console.log(`🎯 [NEW WORD OVERRIDE] Forcing multiple-choice for new word "${wordToUse.term}" (was: ${quizModeToUse})`);
-    quizModeToUse = 'multiple-choice';
-  }
+  let optionsToUse = enhancedWordInfo?.options || currentOptions || [];
 
   // Session-specific quiz mode overrides
   if (currentSession?.id === 'fill-in-the-blank') {
-    // Only use fill-in-the-blank if the word has context, otherwise fallback to multiple-choice for new words
+    // Only use fill-in-the-blank if the word has context, otherwise respect the original mode
     const hasContext = wordToUse.context && wordToUse.context.sentence;
-    quizModeToUse = hasContext ? 'fill-in-the-blank' : (isNewWord ? 'multiple-choice' : 'open-answer');
+    if (!hasContext && quizModeToUse === 'fill-in-the-blank') {
+      // If no context available for fill-in-blank, fall back to the word service's recommendation
+      const wordXP = wordProgress[wordToUse.id]?.xp || 0;
+      quizModeToUse = wordXP < 20 ? 'multiple-choice' : 'open-answer';
+    }
+  }
+
+  // If quiz mode was changed and we need options for multiple-choice, generate them
+  if (quizModeToUse === 'multiple-choice' && optionsToUse.length === 0) {
+    // This shouldn't happen if services are working properly, but as a safety net:
+    console.warn(`⚠️ Multiple-choice mode selected but no options provided for word "${wordToUse.term}"`);
+    // For now, we'll let it render empty and the services should be fixed
   }
 
   // Generate unique key for current question

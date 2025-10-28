@@ -213,7 +213,9 @@ class DeepDiveAdapter implements IChallengeService {
   }
 
   async getNextWord(context: ChallengeContext): Promise<ChallengeResult> {
-    const allWords = context.allWords || getWordsForLanguage(context.wordProgress ? Object.keys(context.wordProgress)[0]?.split('-')[0] : 'en') || [];
+    // Use allWords from context if available (module-specific or language-specific)
+    // This ensures quiz options are generated from the same word pool as the questions
+    const allWords = context.allWords || getWordsForLanguage(context.languageCode) || [];
     
     const result = await deepDiveService.getNextDeepDiveWord(
       allWords,
@@ -241,14 +243,8 @@ class DeepDiveAdapter implements IChallengeService {
       
       // If Deep Dive didn't provide options (for open-ended modes), generate them
       if (!result.options || result.options.length === 0) {
-        // Generate multiple choice options using the Deep Dive service's method
-        const deepDiveServiceAny = deepDiveService as any;
-        if (deepDiveServiceAny.generateMultipleChoiceOptions) {
-          finalOptions = deepDiveServiceAny.generateMultipleChoiceOptions(result.word, allWords);
-        } else {
-          // Fallback: generate basic options
-          finalOptions = this.generateBasicOptions(result.word, allWords);
-        }
+        // Generate module-scoped options for better learning experience
+        finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
       } else {
         finalOptions = result.options;
       }
@@ -277,13 +273,47 @@ class DeepDiveAdapter implements IChallengeService {
     };
   }
 
+  /**
+   * Generate basic multiple choice options (fallback method)
+   * Now uses module-scoped approach for better learning experience
+   */
   private generateBasicOptions(word: any, allWords: any[]): string[] {
+    // Delegate to the module-scoped method for consistency
+    const context = { languageCode: 'es' }; // TODO: Get actual language from context
+    return this.generateModuleScopedOptions(word, context.languageCode, allWords);
+  }
+
+  /**
+   * Generate multiple choice options scoped to the same module as the word
+   */
+  private generateModuleScopedOptions(word: Word, languageCode: string, allWords: Word[]): string[] {
+    const { getModulesForLanguage, getWordsForModule } = require('./moduleService');
+    
     const direction = word.direction || 'definition-to-term';
     const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
     
-    // Get 3 random incorrect options
+    // Find which module this word belongs to
+    const modules = getModulesForLanguage(languageCode);
+    let moduleWords: Word[] = [];
+    
+    for (const module of modules) {
+      const wordsInModule = getWordsForModule(languageCode, module.id);
+      if (wordsInModule.some(w => w.id === word.id)) {
+        moduleWords = wordsInModule;
+        console.log(`🎯 Found word "${word.term}" in module "${module.name}" with ${wordsInModule.length} words`);
+        break;
+      }
+    }
+    
+    // If we couldn't find the module or module has too few words, fallback to all words
+    if (moduleWords.length < 4) {
+      console.log(`⚠️ Module has only ${moduleWords.length} words, using all available words for options`);
+      moduleWords = allWords;
+    }
+    
+    // Generate options from module words
     const incorrectOptions: string[] = [];
-    const shuffledWords = [...allWords].sort(() => 0.5 - Math.random());
+    const shuffledWords = [...moduleWords].sort(() => 0.5 - Math.random());
     
     for (const candidate of shuffledWords) {
       if (candidate.id !== word.id && incorrectOptions.length < 3) {
@@ -294,10 +324,29 @@ class DeepDiveAdapter implements IChallengeService {
       }
     }
     
+    // If still not enough options, pad with remaining words from allWords
+    if (incorrectOptions.length < 3) {
+      const remainingWords = allWords.filter(w => 
+        w.id !== word.id && 
+        !moduleWords.some(mw => mw.id === w.id)
+      );
+      
+      for (const candidate of remainingWords) {
+        if (incorrectOptions.length < 3) {
+          const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
+          if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
+            incorrectOptions.push(incorrectAnswer);
+          }
+        }
+      }
+    }
+    
     // Create final options with correct answer at random position
     const options = [...incorrectOptions];
     const correctPos = Math.floor(Math.random() * 4);
     options.splice(correctPos, 0, correctAnswer);
+    
+    console.log(`🎯 Generated module-scoped options for "${word.term}": [${options.join(', ')}]`);
     
     return options;
   }
@@ -324,7 +373,9 @@ class FillInTheBlankAdapter implements IChallengeService {
   }
 
   async getNextWord(context: ChallengeContext): Promise<ChallengeResult> {
-    const allWords = context.allWords || getWordsForLanguage(context.wordProgress ? Object.keys(context.wordProgress)[0]?.split('-')[0] : 'en') || [];
+    // Use allWords from context if available (module-specific or language-specific)
+    // This ensures quiz options are generated from the same word pool as the questions
+    const allWords = context.allWords || getWordsForLanguage(context.languageCode) || [];
     
     const result = await fillInTheBlankService.getNextFillInTheBlankWord(
       allWords,

@@ -349,26 +349,61 @@ class QuickDashService {
   }
 
   /**
-   * Get quiz mode optimized for speed
+   * Get quiz mode optimized for speed and user mastery level
    */
-  private getSpeedOptimizedQuizMode(_word: Word, timePressure: number): QuickDashResult['quizMode'] {
-    // Under high time pressure, favor faster quiz modes
-    if (timePressure > 0.7) {
+  private getSpeedOptimizedQuizMode(word: Word, timePressure: number): QuickDashResult['quizMode'] {
+    // Get the word's mastery level to inform quiz mode selection
+    const wordMastery = (word as any).currentMastery || 0; // Should be set by word selection logic
+    
+    // For very low mastery (new words), prioritize multiple-choice even under time pressure
+    if (wordMastery < 20) {
+      return 'multiple-choice';
+    }
+    
+    // For low mastery, prefer simpler modes but allow some variety
+    if (wordMastery < 40) {
+      if (timePressure > 0.7) {
+        return 'multiple-choice';
+      }
       return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
     }
     
-    if (timePressure > 0.4) {
+    // For medium mastery, balance speed with challenge
+    if (wordMastery < 70) {
+      if (timePressure > 0.7) {
+        return Math.random() < 0.6 ? 'multiple-choice' : 'letter-scramble';
+      }
+      if (timePressure > 0.4) {
+        const rand = Math.random();
+        if (rand < 0.4) return 'multiple-choice';
+        if (rand < 0.7) return 'letter-scramble';
+        return word.context ? 'fill-in-the-blank' : 'letter-scramble';
+      }
+      // Low pressure - allow more variety
       const rand = Math.random();
-      if (rand < 0.5) return 'multiple-choice';
-      if (rand < 0.8) return 'letter-scramble';
-      return 'fill-in-the-blank';
+      if (rand < 0.3) return 'multiple-choice';
+      if (rand < 0.6) return 'letter-scramble';
+      if (rand < 0.8 && word.context) return 'fill-in-the-blank';
+      return 'open-answer';
     }
     
-    // Low pressure allows all modes
+    // For high mastery, challenge with harder modes but respect time pressure
+    if (timePressure > 0.7) {
+      return Math.random() < 0.4 ? 'multiple-choice' : 'letter-scramble';
+    }
+    if (timePressure > 0.4) {
+      const rand = Math.random();
+      if (rand < 0.3) return 'multiple-choice';
+      if (rand < 0.5) return 'letter-scramble';
+      if (rand < 0.7 && word.context) return 'fill-in-the-blank';
+      return 'open-answer';
+    }
+    
+    // Low pressure with high mastery - prefer challenging modes
     const rand = Math.random();
-    if (rand < 0.3) return 'multiple-choice';
-    if (rand < 0.6) return 'letter-scramble';
-    if (rand < 0.8) return 'fill-in-the-blank';
+    if (rand < 0.2) return 'multiple-choice';
+    if (rand < 0.4) return 'letter-scramble';
+    if (rand < 0.7 && word.context) return 'fill-in-the-blank';
     return 'open-answer';
   }
 

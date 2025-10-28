@@ -1,22 +1,24 @@
 /**
  * Test script for immediate improvements
- * Verifies backend migration, IndexedDB integration, and storage analytics
+ * Verifies backend migration, IndexedDB integration, storage analytics, and module-scoped quiz generation
  */
 
 import { enhancedStorage } from '../services/storage/enhancedStorage';
 import { indexedDBStorage } from '../services/storage/indexedDB';
 import { storageUtils } from '../services/storage/index';
 import { tieredStorage } from '../services/storage/tieredStorage';
+import { testModuleScopedQuizGeneration } from './testModuleScopedQuiz';
 
 export async function testImmediateImprovements() {
-  console.log('�� Testing Immediate Improvements...');
+  console.log('🧪 Testing Immediate Improvements...');
   
   const results = {
     backendMigration: false,
     indexedDBIntegration: false,
     storageAnalytics: false,
     migrationUtilities: false,
-    tieredStorage: false
+    tieredStorage: false,
+    moduleScopedQuiz: false
   };
 
   try {
@@ -89,6 +91,16 @@ export async function testImmediateImprovements() {
       }
     } else {
       console.log('❌ Tiered storage failed:', tierSetResult.error);
+    }
+
+    // Test 6: Module-Scoped Quiz Generation
+    console.log('\n6️⃣ Testing Module-Scoped Quiz Generation...');
+    try {
+      await testModuleScopedQuizGeneration();
+      console.log('✅ Module-scoped quiz generation working');
+      results.moduleScopedQuiz = true;
+    } catch (error) {
+      console.log('❌ Module-scoped quiz generation failed:', error.message);
     }
 
   } catch (error) {
