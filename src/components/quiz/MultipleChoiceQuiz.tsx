@@ -289,9 +289,9 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   level = 1,
   xp = 0,
   // direction, // Removed unused parameter
-  enhancementLevel,
-  originalQuizMode,
-  sessionProgress = 0,
+  enhancementLevel: _enhancementLevel, // Prefix with underscore to indicate intentionally unused
+  originalQuizMode: _originalQuizMode, // Prefix with underscore to indicate intentionally unused
+  sessionProgress: _sessionProgress = 0, // Prefix with underscore to indicate intentionally unused
   context,
 }) => {
   // Show enhancement indicator when session has progressed (indicating advanced modes are active)

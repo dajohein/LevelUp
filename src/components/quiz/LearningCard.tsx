@@ -179,8 +179,8 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   word,
   currentIndex,
   totalWords,
-  level,
-  xp,
+  level: _level, // Prefix with underscore to indicate intentionally unused
+  xp: _xp, // Prefix with underscore to indicate intentionally unused
   onContinue,
   autoAdvance = true,
   autoAdvanceDelay = 3000, // 3 seconds default

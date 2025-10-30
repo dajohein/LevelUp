@@ -100,7 +100,7 @@ export async function testImmediateImprovements() {
       console.log('✅ Module-scoped quiz generation working');
       results.moduleScopedQuiz = true;
     } catch (error) {
-      console.log('❌ Module-scoped quiz generation failed:', error.message);
+      console.log('❌ Module-scoped quiz generation failed:', (error as Error).message);
     }
 
   } catch (error) {

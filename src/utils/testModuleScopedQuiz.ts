@@ -7,7 +7,6 @@
 
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { getWordsForModule } from '../services/moduleService';
-import { logger } from '../services/logger';
 
 export const testModuleScopedQuizGeneration = async () => {
   console.log('🧪 Testing Module-Scoped Quiz Generation...\n');
@@ -57,14 +56,10 @@ export const testModuleScopedQuizGeneration = async () => {
           let optionsValid = true;
           let optionAnalysis = '';
           
-          if (result.quizMode === 'multiple-choice') {
+          if (result.quizMode === 'multiple-choice' && result.word) {
             // Count how many options could come from the same module
-            const correctAnswer = result.word.direction === 'definition-to-term' 
-              ? result.word.term 
-              : result.word.definition;
-            
             const moduleAnswers = moduleWords.map(w => 
-              result.word.direction === 'definition-to-term' ? w.term : w.definition
+              result.word!.direction === 'definition-to-term' ? w.term : w.definition
             );
             
             const optionsFromModule = result.options.filter(opt => moduleAnswers.includes(opt));
@@ -87,7 +82,7 @@ export const testModuleScopedQuizGeneration = async () => {
       challengeServiceManager.resetSession(testCase.sessionType);
       
     } catch (error) {
-      console.log(`   ❌ Error testing ${testCase.sessionType}: ${error.message}`);
+      console.log(`   ❌ Error testing ${testCase.sessionType}: ${(error as Error).message}`);
     }
   }
   
