@@ -94,6 +94,14 @@ export const getModuleStats = (
   const words = getWordsForModule(languageCode, moduleId);
   const totalWords = words.length;
 
+  // Debug logging - minimal for performance
+  console.log(`🔍 getModuleStats for ${moduleId}:`, {
+    totalWords,
+    wordsWithProgress: `${words.filter(word => wordProgress[word.id]?.xp > 0).length}/${totalWords}`,
+    wordProgressKeys: Object.keys(wordProgress).length,
+    sampleModuleWordIDs: words.slice(0, 3).map(w => w.id)
+  });
+
   if (totalWords === 0) {
     return {
       totalWords: 0,
@@ -128,6 +136,15 @@ export const getModuleStats = (
 
   const averageMastery = Math.round(totalMastery / totalWords);
   const practicePercentage = Math.round((wordsWithProgress / totalWords) * 100);
+
+  // Debug the calculation
+  console.log(`📊 Stats calculation for ${moduleId}:`, {
+    wordsWithProgress,
+    totalWords,
+    practicePercentage,
+    completedWords,
+    averageMastery
+  });
 
   return {
     totalWords,

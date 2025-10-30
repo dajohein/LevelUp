@@ -313,7 +313,6 @@ export interface QuizRendererProps {
   
   // Session state
   currentSession: any;
-  isSessionActive: boolean;
   sessionProgress: any;
   getSessionStats: () => any;
   
@@ -325,10 +324,6 @@ export interface QuizRendererProps {
   lastSelectedAnswer: string;
   feedbackQuestionKey: string;
   
-  // Timing state
-  wordTimer: number;
-  sessionTimer: number;
-  
   // Context
   contextForWord: any;
   
@@ -336,23 +331,6 @@ export interface QuizRendererProps {
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition: (transitionType?: 'enhanced' | 'standard' | 'quiz', additionalData?: any) => Promise<void>;
-  handleEnhancedAnswer: (isCorrect: boolean) => any;
-  
-  // Audio
-  playCorrect: () => void;
-  playIncorrect: () => void;
-  
-  // Redux actions
-  dispatch: any;
-  incrementWordsCompleted: any;
-  addCorrectAnswer: any;
-  addIncorrectAnswer: any;
-  
-  // Feedback state setters
-  setLastAnswerCorrect: (correct: boolean) => void;
-  setFeedbackQuestionKey: (key: string) => void;
-  setIsTransitioning: (transitioning: boolean) => void;
 }
 
 export const QuizRenderer: React.FC<QuizRendererProps> = ({
@@ -365,7 +343,6 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   showLearningCard,
   wordLearningStatus,
   currentSession,
-  isSessionActive,
   sessionProgress,
   getSessionStats,
   isTransitioning,
@@ -374,23 +351,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   lastAnswerCorrect,
   lastSelectedAnswer,
   feedbackQuestionKey,
-  wordTimer,
-  sessionTimer,
   contextForWord,
   handleSubmit,
   handleOpenQuestionSubmit,
   handleContinueFromLearningCard,
-  handleWordTransition,
-  handleEnhancedAnswer,
-  playCorrect,
-  playIncorrect,
-  dispatch,
-  incrementWordsCompleted,
-  addCorrectAnswer,
-  addIncorrectAnswer,
-  setLastAnswerCorrect,
-  setFeedbackQuestionKey,
-  setIsTransitioning
 }) => {
   // Get word info from enhanced system if available
   const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
@@ -464,39 +428,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             xp={wordProgress[wordToUse.id]?.xp || 0}
             disabled={isTransitioning}
             onAnswer={correct => {
-              // Track feedback and play audio
-              setLastAnswerCorrect(correct);
-              setFeedbackQuestionKey(`${wordToUse.id}-${wordToUse.term}-${Date.now()}`); // Track unique question instance
-              if (correct) {
-                playCorrect();
-              } else {
-                playIncorrect();
-              }
-
-              // Handle enhanced vs standard game logic
-              if (isUsingSpacedRepetition) {
-                // Process answer through enhanced learning system
-                const result = handleEnhancedAnswer(correct);
-                
-                // Use non-blocking transition handler
-                handleWordTransition('enhanced', result);
-              } else {
-                // Standard game logic for non-enhanced sessions
-                setIsTransitioning(true);
-                
-                // Update session state ONLY for standard mode
-                // Enhanced mode handles its own state internally
-                if (correct && isSessionActive && currentSession) {
-                  dispatch(incrementWordsCompleted());
-                  dispatch(addCorrectAnswer({}));
-                }
-                if (!correct && isSessionActive) {
-                  dispatch(addIncorrectAnswer());
-                }
-
-                // Use non-blocking transition handler for quiz modes
-                handleWordTransition('quiz');
-              }
+              // Use the unified handleSubmit for consistent word progress tracking
+              const targetAnswer = gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse);
+              handleSubmit(correct ? targetAnswer : 'incorrect_answer');
             }}
           />
         ) : quizModeToUse === 'fill-in-the-blank' ? (

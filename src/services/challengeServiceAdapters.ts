@@ -25,7 +25,8 @@ import { precisionModeService } from './precisionModeService';
 import { quickDashService } from './quickDashService';
 import { deepDiveService } from './deepDiveService';
 import { fillInTheBlankService } from './fillInTheBlankService';
-import { getWordsForLanguage } from './wordService';
+import { getWordsForLanguage, Word } from './wordService';
+import { getModulesForLanguage, getWordsForModule } from './moduleService';
 import { logger } from './logger';
 
 /**
@@ -213,9 +214,17 @@ class DeepDiveAdapter implements IChallengeService {
   }
 
   async getNextWord(context: ChallengeContext): Promise<ChallengeResult> {
-    // Use allWords from context if available (module-specific or language-specific)
-    // This ensures quiz options are generated from the same word pool as the questions
-    const allWords = context.allWords || getWordsForLanguage(context.languageCode) || [];
+    // Use allWords from context - this is already correctly set by challengeServiceManager
+    // to either module-specific words or all language words based on context.moduleId
+    const allWords = context.allWords || [];
+    
+    if (allWords.length === 0) {
+      logger.warn(`🔍 No words available for Deep Dive in context:`, {
+        languageCode: context.languageCode,
+        moduleId: context.moduleId,
+        hasAllWords: !!context.allWords
+      });
+    }
     
     const result = await deepDiveService.getNextDeepDiveWord(
       allWords,
@@ -287,8 +296,6 @@ class DeepDiveAdapter implements IChallengeService {
    * Generate multiple choice options scoped to the same module as the word
    */
   private generateModuleScopedOptions(word: Word, languageCode: string, allWords: Word[]): string[] {
-    const { getModulesForLanguage, getWordsForModule } = require('./moduleService');
-    
     const direction = word.direction || 'definition-to-term';
     const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
     
@@ -373,9 +380,17 @@ class FillInTheBlankAdapter implements IChallengeService {
   }
 
   async getNextWord(context: ChallengeContext): Promise<ChallengeResult> {
-    // Use allWords from context if available (module-specific or language-specific)
-    // This ensures quiz options are generated from the same word pool as the questions
-    const allWords = context.allWords || getWordsForLanguage(context.languageCode) || [];
+    // Use allWords from context - this is already correctly set by challengeServiceManager
+    // to either module-specific words or all language words based on context.moduleId
+    const allWords = context.allWords || [];
+    
+    if (allWords.length === 0) {
+      logger.warn(`🔍 No words available for Fill In The Blank in context:`, {
+        languageCode: context.languageCode,
+        moduleId: context.moduleId,
+        hasAllWords: !!context.allWords
+      });
+    }
     
     const result = await fillInTheBlankService.getNextFillInTheBlankWord(
       allWords,

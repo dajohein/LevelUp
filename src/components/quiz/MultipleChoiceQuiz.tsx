@@ -294,18 +294,6 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   sessionProgress = 0,
   context,
 }) => {
-  console.log('🎯 MultipleChoiceQuiz props:', { 
-    word, 
-    options, 
-    optionsCount: options.length,
-    context, 
-    enhancementLevel, 
-    originalQuizMode, 
-    level, 
-    xp, 
-    sessionProgress 
-  });
-  
   // Show enhancement indicator when session has progressed (indicating advanced modes are active)
   // Removed unused variables: isEnhanced, enhancementText
   

@@ -1088,26 +1088,27 @@ export const ModuleOverview: React.FC = () => {
   const reduxWordProgress = useSelector((state: RootState) => state.game.wordProgress);
   const currentLanguage = useSelector((state: RootState) => state.game.language);
 
-  // Load word progress for the current language
-  // If Redux doesn't have the progress for this language, load it from storage
-  const wordProgress = useMemo(() => {
-    if (!languageCode) return {};
-
-    // If Redux has progress for the current language, use it
-    if (currentLanguage === languageCode && Object.keys(reduxWordProgress).length > 0) {
-      return reduxWordProgress;
-    }
-
-    // Load directly from storage for this language with automatic migration
-    return DataMigrationService.safeLoadWordProgress(languageCode);
-  }, [languageCode, reduxWordProgress, currentLanguage]);
-
-  // Ensure the Redux store has the correct language set when we navigate to this page
-  React.useEffect(() => {
+  // Set language IMMEDIATELY if needed (synchronous)
+  React.useLayoutEffect(() => {
     if (languageCode && currentLanguage !== languageCode) {
       dispatch(setLanguage(languageCode));
     }
   }, [languageCode, currentLanguage, dispatch]);
+
+  // Load word progress for the current language
+  // Always prefer Redux state when language matches, fallback to storage otherwise
+  const wordProgress = useMemo(() => {
+    if (!languageCode) return {};
+
+    // If Redux has the correct language set and has word progress, use it
+    if (currentLanguage === languageCode && Object.keys(reduxWordProgress).length > 0) {
+      return reduxWordProgress;
+    }
+
+    // Fallback: Load directly from storage for this language with automatic migration
+    // This handles the case where Redux hasn't been updated yet
+    return DataMigrationService.safeLoadWordProgress(languageCode);
+  }, [languageCode, reduxWordProgress, currentLanguage]);
 
   const language = useMemo(() => {
     if (!languageCode) return null;

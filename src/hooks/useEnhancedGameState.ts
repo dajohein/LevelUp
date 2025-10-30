@@ -6,7 +6,8 @@ import {
   nextWord, 
   setCurrentWord, 
   setLanguage, 
-  setCurrentModule 
+  setCurrentModule,
+  checkAnswer
 } from '../store/gameSlice';
 import {
   addTimeElapsed,
@@ -262,6 +263,10 @@ export const useEnhancedGameState = ({
     } else {
       playIncorrect();
     }
+
+    // CRITICAL: Dispatch game/checkAnswer action to update word progress
+    // This ensures word progress is saved and modules show correct completion percentages
+    dispatch(checkAnswer(answer));
 
     // Handle enhanced vs standard game logic
     if (isUsingSpacedRepetition) {

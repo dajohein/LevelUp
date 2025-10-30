@@ -128,7 +128,7 @@ export const gameSlice = createSlice({
         state.capitalizationFeedback = undefined;
       }
 
-            // Update word progress with enhanced directional tracking
+      // Update word progress with enhanced directional tracking
       const wordId = state.currentWord.id;
       const currentProgress = state.wordProgress[wordId] || {
         wordId,

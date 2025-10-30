@@ -40,11 +40,12 @@ const IMMEDIATE_PERSIST_ACTIONS = [
 
 // Actions using debounced persistence (frequent updates, optimized for performance)
 const DEBOUNCED_PERSIST_ACTIONS = [
+  'game/checkAnswer',              // Word progress updates from quiz answers
   'session/addCorrectAnswer',      // User progress tracking
   'session/addIncorrectAnswer',    // Error pattern analysis
   'session/incrementWordsCompleted', // Session progression
   'session/updateProgress',        // Score and statistics updates
-  // NOTE: Removed game actions to prevent duplicate saves
+  // NOTE: Removed other game actions to prevent duplicate saves
   // Enhanced mode handles its own state, standard mode uses session actions
 ];
 
