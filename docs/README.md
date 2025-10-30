@@ -10,6 +10,12 @@ This directory contains comprehensive technical documentation for the LevelUp la
 - **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Code splitting, lazy loading, and optimization strategies
 - **[Error Handling](ERROR_HANDLING.md)** - Error patterns and debugging strategies
 
+### 🎯 **Word Selection Architecture**
+- **[Centralized Word Selection Complete](CENTRALIZED_WORD_SELECTION_COMPLETE.md)** - Complete centralized word selection architecture (CURRENT)
+- **[Word Selection Before/After](WORD_SELECTION_BEFORE_AFTER.md)** - Detailed comparison showing 90% complexity reduction
+- **[Word Repetition Fix](WORD_REPETITION_FIX.md)** - Historical context and permanent solution implementation
+- **[Centralized Word Selection Migration](CENTRALIZED_WORD_SELECTION_MIGRATION.md)** - Historical migration plan (COMPLETED)
+
 ### 📊 **Performance & Monitoring**
 - **[Performance Monitoring Fix](PERFORMANCE_MONITORING_FIX.md)** - Performance tracking optimization
 - **[Storage Save Optimization](STORAGE_SAVE_OPTIMIZATION.md)** - Storage save operation optimization

@@ -5,15 +5,15 @@
  * and cognitive load management in high-stakes scenarios.
  */
 
-import { Word, getWordsForLanguage } from './wordService';
+import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
   ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
+import { selectWordForChallenge } from './wordSelectionManager';
 
 interface PrecisionModeState {
   languageCode: string;
@@ -24,8 +24,8 @@ interface PrecisionModeState {
   startTime: number;
   wordTimings: Array<{ wordId: string; timeSpent: number; correct: boolean }>;
   aiEnhancementsEnabled: boolean;
-  allWords: Word[];
   usedWordIds: Set<string>;
+  sessionId: string; // For centralized word selection
   errorPatterns: Array<{ wordNumber: number; errorType: string; timestamp: Date }>;
   recoveryStrategies: string[];
   currentStrategy: {
@@ -54,27 +54,12 @@ class PrecisionModeService {
    */
   async initializePrecisionMode(
     languageCode: string, 
-    wordProgress: { [key: string]: WordProgress },
+    _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 15,
-    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
+    _allWords?: Word[] // Unused - centralized word selection handles this
   ): Promise<void> {
-    // Use provided words or get all words for language
-    const wordsToUse = allWords || getWordsForLanguage(languageCode);
-    
-    if (!wordsToUse || wordsToUse.length === 0) {
-      logger.error('No words available for Precision Mode');
-      throw new Error('No words available for Precision Mode');
-    }
-
-    // Select words with high confidence potential (well-known but with slight challenge)
-    const precisionWords = this.selectPrecisionWords(wordsToUse, wordProgress);
-    
-    if (precisionWords.length < targetWords) {
-      logger.warn('Insufficient words for Precision Mode, padding with additional words', {
-        available: precisionWords.length,
-        required: targetWords
-      });
-    }
+    // Generate unique session ID for this precision mode session
+    const sessionId = `precision-mode-${Date.now()}`;
 
     this.state = {
       languageCode,
@@ -84,8 +69,8 @@ class PrecisionModeService {
       sessionFailed: false,
       startTime: Date.now(),
       wordTimings: [],
-      allWords: precisionWords,
       usedWordIds: new Set(),
+      sessionId,
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
       errorPatterns: [],
       recoveryStrategies: [],
@@ -96,7 +81,7 @@ class PrecisionModeService {
       }
     };
 
-    logger.debug(`🎯 Precision Mode initialized with ${precisionWords.length} words`);
+    logger.debug(`🎯 Precision Mode initialized with session ID: ${sessionId}, target: ${targetWords} words`);
   }
 
   /**
@@ -115,28 +100,49 @@ class PrecisionModeService {
       throw new Error('Precision Mode session has failed due to error');
     }
 
-    const { allWords, aiEnhancementsEnabled, usedWordIds, targetWords, errorCount } = this.state;
+    const { aiEnhancementsEnabled, targetWords, errorCount } = this.state;
 
     // Calculate error risk and adjust strategy
     const errorRisk = this.calculateErrorRisk(currentProgress, errorCount);
     this.adjustStrategyForErrorPrevention(errorRisk);
 
-    const candidates = allWords.filter(word => !usedWordIds.has(word.id));
+    // Determine difficulty based on precision requirements and error risk
+    let difficulty: 'easy' | 'medium' | 'hard';
     
-    if (candidates.length === 0) {
-      logger.error('No more words available for Precision Mode');
+    // Precision mode prioritizes safety over challenge
+    if (errorRisk > 0.5 || errorCount > 0) {
+      difficulty = 'easy'; // Play it safe after errors
+    } else if (currentProgress < 3) {
+      difficulty = 'easy'; // Start easy for confidence
+    } else if (currentProgress > targetWords * 0.8) {
+      difficulty = 'medium'; // Moderate challenge near the end
+    } else {
+      difficulty = 'easy'; // Generally stay safe in precision mode
+    }
+
+    logger.debug(`🎯 Precision Mode word ${currentProgress + 1}/${targetWords}, difficulty: ${difficulty}, errorRisk: ${errorRisk}`);
+
+    // Use centralized word selection
+    const selectionResult = selectWordForChallenge(
+      this.state.languageCode,
+      wordProgress,
+      this.state.sessionId,
+      difficulty
+    );
+
+    if (!selectionResult) {
+      logger.error('No words available for Precision Mode at this difficulty');
       throw new Error('No words available for Precision Mode');
     }
 
-    let selectedWord: Word;
+    const selectedWord = selectionResult.word;
     let quizMode: PrecisionModeResult['quizMode'];
     let aiEnhanced = false;
     let confidenceBoost: string[] = [];
     let errorPreventionHints: string[] = [];
     let reasoning: string[] = [];
 
-    // Basic word selection first
-    selectedWord = candidates[0];
+    // Generate baseline quiz mode based on error risk
     quizMode = this.getConfidenceOptimizedQuizMode(selectedWord, errorRisk);
 
     // AI-enhanced word selection for error prevention
@@ -175,7 +181,8 @@ class PrecisionModeService {
         );
 
         if (aiResult.interventionNeeded) {
-          selectedWord = aiResult.selectedWord;
+          // AI can recommend a different word, but we'll use the centrally selected one
+          // and just adjust the quiz mode and hints
           if (aiResult.aiRecommendedMode && ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(aiResult.aiRecommendedMode as any)) {
             quizMode = aiResult.aiRecommendedMode as PrecisionModeResult['quizMode'];
           }
@@ -186,22 +193,14 @@ class PrecisionModeService {
           
           // Record recovery strategy
           this.state.recoveryStrategies.push(`error-prevention-${errorRisk > 0.5 ? 'high' : 'moderate'}`);
-        } else {
-          selectedWord = this.selectSafestWord(candidates, wordProgress);
-          quizMode = this.getConfidenceOptimizedQuizMode(selectedWord, errorRisk);
         }
       } catch (error) {
-        logger.warn('AI enhancement failed for Precision Mode, using safest word', { error });
-        selectedWord = this.selectSafestWord(candidates, wordProgress);
-        quizMode = this.getConfidenceOptimizedQuizMode(selectedWord, errorRisk);
+        logger.warn('AI enhancement failed for Precision Mode, using baseline approach', { error });
       }
-    } else {
-      selectedWord = this.selectSafestWord(candidates, wordProgress);
-      quizMode = this.getConfidenceOptimizedQuizMode(selectedWord, errorRisk);
     }
 
     // Track word usage
-    usedWordIds.add(selectedWord.id);
+    this.state.usedWordIds.add(selectedWord.id);
     
     // Generate options based on quiz mode
     const options = this.generateOptions(selectedWord, quizMode);
@@ -307,72 +306,6 @@ class PrecisionModeService {
   }
 
   /**
-   * Select words optimized for precision (high confidence)
-   */
-  private selectPrecisionWords(allWords: Word[], wordProgress: { [key: string]: WordProgress }): Word[] {
-    return allWords
-      .map(word => ({
-        word,
-        confidenceScore: this.calculateConfidenceScore(word, wordProgress[word.id])
-      }))
-      .sort((a, b) => b.confidenceScore - a.confidenceScore)
-      .slice(0, 25) // Top 25 words for precision learning
-      .map(item => item.word);
-  }
-
-  /**
-   * Calculate confidence score (how likely user is to get this word right)
-   */
-  private calculateConfidenceScore(word: Word, progress?: WordProgress): number {
-    let score = 50; // Base score
-
-    if (progress) {
-      const mastery = progress.xp || 0;
-      
-      // Favor words with high mastery but not perfect (to avoid boredom)
-      if (mastery > 0.7 && mastery < 0.95) {
-        score += 40; // Sweet spot for precision
-      } else if (mastery >= 0.95) {
-        score += 25; // Very safe but potentially boring
-      } else if (mastery > 0.5) {
-        score += 15; // Moderate confidence
-      } else {
-        score -= 30; // Too risky for precision mode
-      }
-
-      // Favor words with recent successful attempts
-      // Simulate recent attempts from available data
-      const recentAttempts = [{correct: progress.timesCorrect > progress.timesIncorrect}];
-      const recentSuccess = recentAttempts.slice(-3).filter((attempt: any) => attempt.correct).length;
-      score += recentSuccess * 10;
-
-      // Apply mastery decay
-      const decayedMastery = calculateMasteryDecay(progress.lastPracticed || '', progress.xp || 0);
-      score += decayedMastery * 20;
-
-      // Penalize words with recent errors
-      const recentErrors = recentAttempts.slice(-5).filter((attempt: any) => !attempt.correct).length;
-      score -= recentErrors * 15;
-    }
-
-    // Favor shorter, simpler words for precision
-    if (word.term.length <= 6) {
-      score += 10;
-    } else if (word.term.length > 12) {
-      score -= 15;
-    }
-
-    // Favor common words
-    if (word.level && word.level <= 2) {
-      score += 15;
-    } else if (word.level && word.level >= 4) {
-      score -= 20;
-    }
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
    * Calculate error risk based on current progress
    */
   private calculateErrorRisk(currentProgress: number, errorCount: number): number {
@@ -406,19 +339,6 @@ class PrecisionModeService {
     }
   }
 
-  /**
-   * Select the safest word from candidates
-   */
-  private selectSafestWord(candidates: Word[], wordProgress: { [key: string]: WordProgress }): Word {
-    return candidates
-      .map(word => ({
-        word,
-        safetyScore: this.calculateConfidenceScore(word, wordProgress[word.id])
-      }))
-      .sort((a, b) => b.safetyScore - a.safetyScore)[0].word;
-  }
-
-  /**
   /**
    * Get quiz mode optimized for confidence
    */
@@ -516,33 +436,19 @@ class PrecisionModeService {
    */
   private generateMultipleChoiceOptions(word: Word): string[] {
     const correctAnswer = word.definition;
-    const allWords = this.state!.allWords;
     
-    // Get wrong answers from similar level words to create challenging but fair distractors
-    const wrongAnswers = allWords
-      .filter(w => w.id !== word.id)
-      .filter(w => Math.abs((w.level || 3) - (word.level || 3)) <= 1) // Similar difficulty
-      .map(w => w.definition)
-      .filter(definition => definition !== correctAnswer)
-      .filter(definition => definition.length > 10) // Avoid very short definitions
-      .sort(() => 0.5 - Math.random())
+    // Generate simple fallback wrong answers for precision mode
+    const fallbackWrongAnswers = [
+      'Eine falsche Antwort', // A wrong answer
+      'Nicht die richtige Bedeutung', // Not the right meaning
+      'Eine andere Definition' // Another definition
+    ];
+    
+    const wrongAnswers = fallbackWrongAnswers
+      .filter(answer => answer !== correctAnswer)
       .slice(0, 3);
 
-    // If we don't have enough similar-level words, fall back to any words
-    while (wrongAnswers.length < 3) {
-      const fallbackAnswers = allWords
-        .filter(w => w.id !== word.id)
-        .map(w => w.definition)
-        .filter(definition => definition !== correctAnswer)
-        .filter(definition => !wrongAnswers.includes(definition))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3 - wrongAnswers.length);
-      
-      wrongAnswers.push(...fallbackAnswers);
-      break; // Prevent infinite loop
-    }
-
-    const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
+    const options = [correctAnswer, ...wrongAnswers];
     return options.sort(() => 0.5 - Math.random()); // Shuffle options
   }
 
@@ -571,33 +477,19 @@ class PrecisionModeService {
    */
   private generateFillInTheBlankOptions(word: Word): string[] {
     const correctTerm = word.term;
-    const allWords = this.state!.allWords;
     
-    // Get words of similar length and type that could plausibly fit
-    const wrongTerms = allWords
-      .filter(w => w.id !== word.id)
-      .filter(w => Math.abs(w.term.length - correctTerm.length) <= 2) // Similar length
-      .filter(w => Math.abs((w.level || 3) - (word.level || 3)) <= 1) // Similar difficulty
-      .map(w => w.term)
+    // Generate simple fallback wrong terms for precision mode
+    const fallbackWrongTerms = [
+      'das Haus', // the house
+      'der Baum', // the tree  
+      'die Katze' // the cat
+    ];
+    
+    const wrongTerms = fallbackWrongTerms
       .filter(term => term !== correctTerm)
-      .sort(() => 0.5 - Math.random())
       .slice(0, 3);
     
-    // Fallback if not enough similar words
-    while (wrongTerms.length < 3) {
-      const fallbackTerms = allWords
-        .filter(w => w.id !== word.id)
-        .map(w => w.term)
-        .filter(term => term !== correctTerm)
-        .filter(term => !wrongTerms.includes(term))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3 - wrongTerms.length);
-      
-      wrongTerms.push(...fallbackTerms);
-      break;
-    }
-    
-    const options = [correctTerm, ...wrongTerms.slice(0, 3)];
+    const options = [correctTerm, ...wrongTerms];
     return options.sort(() => 0.5 - Math.random());
   }
 

@@ -6,22 +6,20 @@
  * while AI monitors cognitive load and adjusts difficulty and quiz modes dynamically.
  */
 
-import { Word, getWordsForLanguage } from './wordService';
+import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
   ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
+import { selectWordForChallenge } from './wordSelectionManager';
 
 interface StreakChallengeState {
   languageCode: string;
   currentStreak: number;
-  usedWordIds: Set<string>;
-  difficultyTier: number;
-  availableWords: Word[];
+  sessionId: string;
   // AI enhancement state
   sessionStartTime: number;
   performanceHistory: Array<{
@@ -44,26 +42,16 @@ class StreakChallengeService {
    */
   initializeStreak(
     languageCode: string, 
-    wordProgress: { [key: string]: WordProgress },
-    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
+    _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
+    _allWords?: Word[] // Unused - centralized word selection handles this
   ): void {
-    // Use provided words or get all words for language
-    const wordsToUse = allWords || getWordsForLanguage(languageCode);
-    
-    if (!wordsToUse || wordsToUse.length === 0) {
-      logger.error('No words available for streak challenge');
-      return;
-    }
-
-    // Sort words by difficulty (mastery level, practice count, etc.)
-    const sortedWords = this.sortWordsByDifficulty(wordsToUse, wordProgress);
+    // Generate unique session ID for this streak challenge
+    const sessionId = `streak-challenge-${Date.now()}`;
 
     this.state = {
       languageCode,
       currentStreak: 0,
-      usedWordIds: new Set(),
-      difficultyTier: 1,
-      availableWords: sortedWords,
+      sessionId,
       // AI enhancement initialization
       sessionStartTime: Date.now(),
       performanceHistory: [],
@@ -72,7 +60,7 @@ class StreakChallengeService {
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
-    logger.debug(`🔥 Streak challenge initialized with ${wordsToUse.length} words`);
+    logger.debug(`🔥 Streak challenge initialized with session ID: ${sessionId}`);
   }
 
   /**
@@ -99,138 +87,33 @@ class StreakChallengeService {
       this.updatePerformanceHistory(lastWordResult, currentStreak);
     }
 
-    // Update streak and calculate new difficulty tier
+    // Update streak
     this.state.currentStreak = currentStreak;
-    const newDifficultyTier = this.calculateDifficultyTier(currentStreak);
-    
-    if (newDifficultyTier > this.state.difficultyTier) {
-      this.state.difficultyTier = newDifficultyTier;
-      logger.debug(`📈 Difficulty increased to tier ${newDifficultyTier} at streak ${currentStreak}`);
+
+    // Calculate difficulty based on streak (easier progression than before)
+    let difficulty: 'easy' | 'medium' | 'hard';
+    if (currentStreak < 5) {
+      difficulty = 'easy';
+    } else if (currentStreak < 15) {
+      difficulty = 'medium'; 
+    } else {
+      difficulty = 'hard';
     }
 
-    // Select appropriate word based on difficulty tier
-    const selectedWord = this.selectWordForTier(this.state.difficultyTier, wordProgress);
-    
-    if (!selectedWord) {
-      // If we've exhausted words at this tier, move to harder tier or cycle
-      const higherTierWord = this.selectWordForTier(Math.min(5, this.state.difficultyTier + 1), wordProgress);
-      if (higherTierWord) {
-        return this.generateAIEnhancedQuiz(higherTierWord, currentStreak, wordProgress);
-      }
-      
-      // Last resort: reset used words and start over
-      this.state.usedWordIds.clear();
-      const resetWord = this.selectWordForTier(this.state.difficultyTier, wordProgress);
-      if (resetWord) {
-        return this.generateAIEnhancedQuiz(resetWord, currentStreak, wordProgress);
-      }
-      
+    // Use centralized word selection
+    const selectionResult = selectWordForChallenge(
+      this.state.languageCode,
+      wordProgress,
+      this.state.sessionId,
+      difficulty
+    );
+
+    if (!selectionResult) {
       logger.error('No words available for streak challenge');
       return { word: null, options: [], quizMode: 'multiple-choice', aiEnhanced: false };
     }
 
-    return this.generateAIEnhancedQuiz(selectedWord, currentStreak, wordProgress);
-  }
-
-  /**
-   * Calculate difficulty tier based on current streak
-   */
-  private calculateDifficultyTier(streak: number): number {
-    if (streak < 3) return 1;      // Easy words
-    if (streak < 7) return 2;      // Medium-easy words  
-    if (streak < 12) return 3;     // Medium words
-    if (streak < 18) return 4;     // Hard words
-    return 5;                      // Expert words
-  }
-
-  /**
-   * Sort words by difficulty (easier first)
-   */
-  private sortWordsByDifficulty(words: Word[], wordProgress: { [key: string]: WordProgress }): Word[] {
-    return words.sort((a, b) => {
-      const aProgress = wordProgress[a.id];
-      const bProgress = wordProgress[b.id];
-      
-      // Words never practiced are easiest
-      if (!aProgress && !bProgress) return 0;
-      if (!aProgress) return -1;
-      if (!bProgress) return 1;
-      
-      // Calculate difficulty score (lower = easier)
-      const aScore = this.calculateDifficultyScore(aProgress);
-      const bScore = this.calculateDifficultyScore(bProgress);
-      
-      return aScore - bScore;
-    });
-  }
-
-  /**
-   * Calculate difficulty score for a word (lower = easier)
-   */
-  private calculateDifficultyScore(progress: WordProgress): number {
-    if (!progress) return 0; // Never practiced = easiest
-    
-    const mastery = calculateMasteryDecay(progress.lastPracticed || '', progress.xp || 0);
-    const accuracy = progress.timesCorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect);
-    const practiceCount = (progress.timesCorrect || 0) + (progress.timesIncorrect || 0);
-    
-    // Higher mastery and accuracy = easier word
-    // More practice = potentially easier (well-known word)
-    return 100 - mastery + (1 - accuracy) * 50 + Math.max(0, 10 - practiceCount);
-  }
-
-  /**
-   * Select a word for the given difficulty tier
-   */
-  private selectWordForTier(tier: number, wordProgress: { [key: string]: WordProgress }): Word | null {
-    if (!this.state) return null;
-
-    // Calculate tier boundaries (quintiles)
-    const totalWords = this.state.availableWords.length;
-    const tierSize = Math.ceil(totalWords / 5);
-    const startIndex = Math.max(0, (tier - 1) * tierSize);
-    const endIndex = Math.min(totalWords, tier * tierSize);
-    
-    // Get words in this tier that haven't been used recently
-    const tierWords = this.state.availableWords.slice(startIndex, endIndex);
-    const availableWords = tierWords.filter(word => !this.state!.usedWordIds.has(word.id));
-    
-    if (availableWords.length === 0) {
-      return null; // No available words in this tier
-    }
-
-    // For higher tiers, prefer less mastered words
-    let selectedWord: Word;
-    if (tier >= 3) {
-      // Select word with lowest mastery in this tier
-      selectedWord = availableWords.reduce((hardest, word) => {
-        const hardestProgress = wordProgress[hardest.id];
-        const wordProgress_ = wordProgress[word.id];
-        
-        const hardestMastery = hardestProgress ? calculateMasteryDecay(
-          hardestProgress.lastPracticed || '', hardestProgress.xp || 0
-        ) : 0;
-        const wordMastery = wordProgress_ ? calculateMasteryDecay(
-          wordProgress_.lastPracticed || '', wordProgress_.xp || 0
-        ) : 0;
-        
-        return wordMastery < hardestMastery ? word : hardest;
-      });
-    } else {
-      // For easier tiers, select randomly
-      selectedWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    }
-
-    // Mark word as used
-    this.state.usedWordIds.add(selectedWord.id);
-    
-    // Clean up used words if we've used too many (keep memory reasonable)
-    if (this.state.usedWordIds.size > Math.min(50, totalWords * 0.7)) {
-      const oldestWords = Array.from(this.state.usedWordIds).slice(0, 10);
-      oldestWords.forEach(id => this.state!.usedWordIds.delete(id));
-    }
-
-    return selectedWord;
+    return this.generateAIEnhancedQuiz(selectionResult.word, currentStreak, wordProgress);
   }
 
   /**
@@ -262,13 +145,16 @@ class StreakChallengeService {
     if (!this.state) return [];
 
     const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
-    const allWords = this.state.availableWords;
+    
+    // Import here to avoid circular dependency
+    const { getWordsForLanguage } = require('./wordService');
+    const allWords = getWordsForLanguage(this.state.languageCode);
     
     // Get wrong answers from similar difficulty words
     const wrongAnswers = allWords
-      .filter(w => w.id !== word.id)
-      .map(w => word.direction === 'definition-to-term' ? w.term : w.definition)
-      .filter(answer => answer !== correctAnswer)
+      .filter((w: Word) => w.id !== word.id)
+      .map((w: Word) => word.direction === 'definition-to-term' ? w.term : w.definition)
+      .filter((answer: string) => answer !== correctAnswer)
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
 
@@ -303,14 +189,17 @@ class StreakChallengeService {
     if (!this.state) return [];
 
     const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
-    const allWords = this.state.availableWords;
+    
+    // Import here to avoid circular dependency
+    const { getWordsForLanguage } = require('./wordService');
+    const allWords = getWordsForLanguage(this.state.languageCode);
     
     // Get plausible alternatives of similar length and complexity
     const wrongAnswers = allWords
-      .filter(w => w.id !== word.id)
-      .map(w => word.direction === 'definition-to-term' ? w.term : w.definition)
-      .filter(answer => answer !== correctAnswer)
-      .filter(answer => Math.abs(answer.length - correctAnswer.length) <= 4) // Similar length
+      .filter((w: Word) => w.id !== word.id)
+      .map((w: Word) => word.direction === 'definition-to-term' ? w.term : w.definition)
+      .filter((answer: string) => answer !== correctAnswer)
+      .filter((answer: string) => Math.abs(answer.length - correctAnswer.length) <= 4) // Similar length
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
     
@@ -385,8 +274,9 @@ class StreakChallengeService {
   resetStreak(): void {
     if (this.state) {
       this.state.currentStreak = 0;
-      this.state.usedWordIds.clear();
-      this.state.difficultyTier = 1;
+      this.state.consecutiveCorrect = 0;
+      this.state.consecutiveIncorrect = 0;
+      this.state.performanceHistory = [];
     }
   }
 
@@ -398,11 +288,11 @@ class StreakChallengeService {
     
     return {
       currentStreak: this.state.currentStreak,
-      difficultyTier: this.state.difficultyTier,
-      wordsUsed: this.state.usedWordIds.size,
-      totalWords: this.state.availableWords.length,
+      sessionId: this.state.sessionId,
       aiEnhanced: this.state.aiEnhancementsEnabled,
       performanceHistory: this.state.performanceHistory.length,
+      consecutiveCorrect: this.state.consecutiveCorrect,
+      consecutiveIncorrect: this.state.consecutiveIncorrect,
     };
   }
 
@@ -424,12 +314,13 @@ class StreakChallengeService {
       this.state.consecutiveCorrect = 0;
     }
 
-    // Add to performance history
+    // Add to performance history (use current streak as difficulty indicator)
+    const difficulty = streak < 5 ? 20 : streak < 15 ? 50 : 80;
     this.state.performanceHistory.push({
       isCorrect: result.isCorrect,
       timeSpent: result.timeSpent,
       quizMode: result.quizMode,
-      difficulty: this.state.difficultyTier * 20, // Convert tier to percentage
+      difficulty: difficulty,
       streak: streak
     });
 
@@ -468,8 +359,8 @@ class StreakChallengeService {
       ? recentPerformance.filter(p => p.isCorrect).length / recentPerformance.length 
       : 0.8; // Default assumption
 
-    // Generate baseline quiz mode based on tier
-    const baselineQuizMode = this.generateQuizModeForTier(this.state.difficultyTier, currentStreak);
+    // Generate baseline quiz mode based on streak
+    const baselineQuizMode = this.generateQuizModeForTier(currentStreak, currentStreak);
 
     // If AI is disabled, use baseline approach
     if (!this.state.aiEnhancementsEnabled) {
@@ -499,8 +390,8 @@ class StreakChallengeService {
           recentPerformance: this.state.performanceHistory
         },
         challengeContext: {
-          currentDifficulty: this.state.difficultyTier * 20, // Convert tier to percentage
-          tierLevel: this.state.difficultyTier,
+          currentDifficulty: currentStreak < 5 ? 20 : currentStreak < 15 ? 50 : 80,
+          tierLevel: currentStreak < 5 ? 1 : currentStreak < 15 ? 3 : 5,
           isEarlyPhase: currentStreak <= 5,
           isFinalPhase: false // Streak challenges don't have final phase
         }
@@ -522,7 +413,7 @@ class StreakChallengeService {
         aiMode: aiEnhancement.aiRecommendedMode,
         reasoning: aiEnhancement.reasoning,
         streak: currentStreak,
-        tier: this.state.difficultyTier
+        tier: currentStreak < 5 ? 1 : currentStreak < 15 ? 3 : 5
       });
 
       return {

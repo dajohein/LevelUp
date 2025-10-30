@@ -12,11 +12,12 @@
  */
 
 import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
-import { calculateMasteryDecay } from './masteryService';
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
+import { selectWordForChallenge } from './wordSelectionManager';
+import { calculateMasteryDecay } from './masteryService';
 
 export interface FillInTheBlankResult {
   word: Word;
@@ -36,6 +37,8 @@ export interface FillInTheBlankResult {
 interface FillInTheBlankState {
   isActive: boolean;
   startTime: number;
+  languageCode: string;
+  sessionId: string;
   currentComplexity: 'simple' | 'moderate' | 'complex';
   sentencePatterns: Array<{
     pattern: string;
@@ -64,6 +67,8 @@ export class FillInTheBlankService {
   private state: FillInTheBlankState = {
     isActive: false,
     startTime: 0,
+    languageCode: '',
+    sessionId: '',
     currentComplexity: 'simple',
     sentencePatterns: [],
     contextualStrategies: [],
@@ -75,7 +80,7 @@ export class FillInTheBlankService {
    * Initialize Fill in the Blank session
    */
   async initializeFillInTheBlank(
-    // languageCode: string, // Removed unused parameter
+    languageCode: string,
     targetWords: number = 20,
     initialComplexity: 'simple' | 'moderate' | 'complex' = 'simple'
   ): Promise<{
@@ -85,17 +90,19 @@ export class FillInTheBlankService {
     complexityLevels: string[];
   }> {
     try {
+      const sessionId = `fill-blank-${Date.now()}`;
+
       this.state = {
         isActive: true,
         startTime: Date.now(),
+        languageCode,
+        sessionId,
         currentComplexity: initialComplexity,
         sentencePatterns: this.initializeSentencePatterns(),
         contextualStrategies: [],
         languagePatterns: [],
         analyticsBuffer: []
       };
-
-      const sessionId = `fill-blank-${Date.now()}`;
       const complexityMultiplier = this.getComplexityMultiplier(initialComplexity);
       const estimatedDuration = targetWords * (25 * complexityMultiplier);
 
@@ -124,23 +131,47 @@ export class FillInTheBlankService {
    * Get next Fill in the Blank challenge with AI enhancement
    */
   async getNextFillInTheBlankWord(
-    candidates: Word[],
     wordProgress: { [key: string]: WordProgress },
     currentProgress: number,
     targetWords: number,
     aiEnhancementsEnabled: boolean = true
   ): Promise<FillInTheBlankResult> {
-    if (candidates.length === 0) {
-      throw new Error('No words available for Fill in the Blank');
+    if (!this.state.isActive) {
+      throw new Error('Fill in the Blank session not initialized');
     }
 
     // Calculate contextual parameters
     const sessionProgress = currentProgress / targetWords;
     const sentenceComplexity = this.calculateSentenceComplexity(sessionProgress);
-    const contextualDifficulty = this.calculateContextualDifficulty(candidates, wordProgress);
+    
+    // Determine difficulty based on sentence complexity and session progress
+    let difficulty: 'easy' | 'medium' | 'hard';
+    
+    if (sentenceComplexity === 'complex' || sessionProgress > 0.7) {
+      difficulty = 'hard'; // Complex sentences or advanced session
+    } else if (sentenceComplexity === 'moderate' || sessionProgress > 0.3) {
+      difficulty = 'medium'; // Moderate sentences or mid-session
+    } else {
+      difficulty = 'easy'; // Simple sentences or early session
+    }
 
-    // Basic word selection first
-    let selectedWord = this.selectWordForContext(candidates, wordProgress, sentenceComplexity);
+    logger.debug(`📝 Fill in the Blank parameters: currentProgress=${currentProgress}, targetWords=${targetWords}, sessionProgress=${sessionProgress}, sentenceComplexity=${sentenceComplexity}, difficulty=${difficulty}`);
+
+    // Use centralized word selection
+    const selectionResult = selectWordForChallenge(
+      this.state.languageCode,
+      wordProgress,
+      this.state.sessionId,
+      difficulty
+    );
+
+    if (!selectionResult) {
+      throw new Error('No words available for Fill in the Blank');
+    }
+
+    const selectedWord = selectionResult.word;
+    const contextualDifficulty = sessionProgress * 80 + (sentenceComplexity === 'complex' ? 30 : sentenceComplexity === 'moderate' ? 15 : 0);
+
     let aiEnhanced = false;
     let languageHints: string[] = [];
     let contextualSupport: string[] = [];
@@ -180,16 +211,16 @@ export class FillInTheBlankService {
         );
 
         if (aiResult.interventionNeeded) {
-          selectedWord = aiResult.selectedWord;
+          // AI can suggest adaptations, but we use the centrally selected word
           aiEnhanced = true;
           languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
           contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
           reasoning = aiResult.reasoning || [];
           
-          // Record contextual adaptation strategy
-          this.state.contextualStrategies.push(`complexity-${sentenceComplexity}`);
+          // Record contextual strategy
+          this.state.contextualStrategies.push(`contextual-complexity-${sentenceComplexity}`);
         } else {
-          // Fallback to standard contextual logic
+          // Fallback to standard Fill in the Blank logic
           languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
           contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
         }
@@ -199,16 +230,16 @@ export class FillInTheBlankService {
         contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
       }
     } else {
-      // Standard fill-in-the-blank logic without AI
+      // Standard Fill in the Blank logic without AI
       languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
       contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
     }
 
     // Generate sentence and calculate parameters
     const sentence = this.generateSentence(selectedWord, sentenceComplexity);
-    const blankPosition = this.calculateBlankPosition(sentence); // Removed unused argument
+    const blankPosition = this.calculateBlankPosition(sentence);
     const options = this.generateOptions(selectedWord, sentenceComplexity);
-    const contextualClues = this.extractContextualClues(sentence); // Removed unused argument
+    const contextualClues = this.extractContextualClues(sentence);
     
     timeAllocated = this.calculateCompletionTime(selectedWord, sentenceComplexity);
     const difficultyLevel = this.calculateDifficultyLevel(selectedWord, wordProgress[selectedWord.id]);
@@ -282,52 +313,6 @@ export class FillInTheBlankService {
   }
 
   /**
-   * Calculate contextual word score for Fill in the Blank selection
-   */
-  private calculateContextualScore(word: Word, progress?: WordProgress): number {
-    let score = 50; // Base score
-
-    if (progress) {
-      const mastery = progress.xp || 0;
-      
-      // Moderate mastery is ideal for contextual challenges
-      if (mastery >= 30 && mastery <= 70) {
-        score += 20;
-      } else if (mastery < 30) {
-        score += 10; // Still valuable for learning
-      } else {
-        score += 5; // High mastery words for consolidation
-      }
-
-      // Recent practice indicates familiarity
-      if (progress.lastPracticed) {
-        const daysSinceLastSeen = (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60 * 24);
-        
-        // Prefer words that could benefit from contextual reinforcement
-        if (daysSinceLastSeen > 3 && daysSinceLastSeen < 14) {
-          score += 15;
-        }
-      }
-
-      // Apply mastery decay for realistic assessment
-      const decayedMastery = calculateMasteryDecay(progress.lastPracticed || '', progress.xp || 0);
-      score += decayedMastery * 12;
-    }
-
-    // Favor words suitable for sentence contexts
-    if (word.term.length >= 4 && word.term.length <= 10) {
-      score += 15; // Good length for sentence integration
-    }
-
-    // Favor words that can be used in various contexts
-    if (word.level && word.level >= 2 && word.level <= 4) {
-      score += 10; // Intermediate words work well in sentences
-    }
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
    * Calculate sentence complexity based on session progress
    */
   private calculateSentenceComplexity(sessionProgress: number): 'simple' | 'moderate' | 'complex' {
@@ -338,58 +323,6 @@ export class FillInTheBlankService {
     } else {
       return 'complex';
     }
-  }
-
-  /**
-   * Calculate contextual difficulty for word selection
-   */
-  private calculateContextualDifficulty(candidates: Word[], wordProgress: { [key: string]: WordProgress }): number {
-    const avgMastery = candidates.reduce((sum, word) => {
-      const progress = wordProgress[word.id];
-      return sum + (progress?.xp || 0);
-    }, 0) / candidates.length;
-
-    const avgLevel = candidates.reduce((sum, word) => sum + (word.level || 3), 0) / candidates.length;
-
-    return Math.min(100, (avgMastery * 0.6) + (avgLevel * 8));
-  }
-
-  /**
-   * Select optimal word for contextual usage
-   */
-  private selectWordForContext(
-    candidates: Word[],
-    wordProgress: { [key: string]: WordProgress },
-    sentenceComplexity: 'simple' | 'moderate' | 'complex'
-  ): Word {
-    const scoredWords = candidates.map(word => ({
-      word,
-      score: this.calculateContextualScore(word, wordProgress[word.id])
-    }));
-
-    // Add complexity-based selection preference
-    scoredWords.forEach(item => {
-      if (sentenceComplexity === 'complex') {
-        // Complex sentences: prefer sophisticated words
-        if (item.word.level && item.word.level >= 4) {
-          item.score += 20;
-        }
-        if (item.word.term.length >= 7) {
-          item.score += 10;
-        }
-      } else if (sentenceComplexity === 'simple') {
-        // Simple sentences: prefer accessible words
-        if (item.word.level && item.word.level <= 3) {
-          item.score += 15;
-        }
-        if (item.word.term.length <= 7) {
-          item.score += 10;
-        }
-      }
-    });
-
-    scoredWords.sort((a, b) => b.score - a.score);
-    return scoredWords[0].word;
   }
 
   /**
@@ -617,7 +550,7 @@ export class FillInTheBlankService {
     let difficulty = word.level || 3; // Default to medium
     
     if (progress) {
-      const mastery = progress.xp || 0;
+      const mastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
       
       // Adjust based on mastery
       if (mastery > 70) {
@@ -787,6 +720,8 @@ export class FillInTheBlankService {
     this.state = {
       isActive: false,
       startTime: 0,
+      languageCode: '',
+      sessionId: '',
       currentComplexity: 'simple',
       sentencePatterns: [],
       contextualStrategies: [],

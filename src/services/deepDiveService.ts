@@ -12,11 +12,12 @@
  */
 
 import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
-import { calculateMasteryDecay } from './masteryService';
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
+import { selectWordForChallenge } from './wordSelectionManager';
+import { calculateMasteryDecay } from './masteryService';
 
 export interface DeepDiveResult {
   word: Word;
@@ -41,6 +42,8 @@ interface DeepDiveState {
   startTime: number;
   currentPhase: 'exploration' | 'validation' | 'consolidation';
   explorationDepth: number; // 1-5 scale
+  languageCode: string;
+  sessionId: string;
   comprehensionStrategies: string[];
   contextualConnections: Array<{
     word: string;
@@ -62,6 +65,8 @@ export class DeepDiveService {
     startTime: 0,
     currentPhase: 'exploration',
     explorationDepth: 1,
+    languageCode: '',
+    sessionId: '',
     comprehensionStrategies: [],
     contextualConnections: [],
     analyticsBuffer: []
@@ -71,7 +76,7 @@ export class DeepDiveService {
    * Initialize Deep Dive session
    */
   async initializeDeepDive(
-    // languageCode: string, // Removed unused parameter
+    languageCode: string,
     targetWords: number = 15,
     explorationDepth: number = 3
   ): Promise<{
@@ -85,17 +90,19 @@ export class DeepDiveService {
       const validTargetWords = typeof targetWords === 'number' && !isNaN(targetWords) && targetWords > 0 ? targetWords : 15;
       const validExplorationDepth = typeof explorationDepth === 'number' && !isNaN(explorationDepth) ? Math.max(1, Math.min(5, explorationDepth)) : 3;
       
+      const sessionId = `deep-dive-${Date.now()}`;
+
       this.state = {
         isActive: true,
         startTime: Date.now(),
         currentPhase: 'exploration',
         explorationDepth: validExplorationDepth,
+        languageCode,
+        sessionId,
         comprehensionStrategies: [],
         contextualConnections: [],
         analyticsBuffer: []
       };
-
-      const sessionId = `deep-dive-${Date.now()}`;
       const estimatedDuration = validTargetWords * (30 + validExplorationDepth * 15); // Base 30s + depth factor
 
       const explorationPhases = [
@@ -128,14 +135,13 @@ export class DeepDiveService {
    * Get next Deep Dive word with AI enhancement
    */
   async getNextDeepDiveWord(
-    candidates: Word[],
     wordProgress: { [key: string]: WordProgress },
     currentProgress: number,
     targetWords: number,
     aiEnhancementsEnabled: boolean = true
   ): Promise<DeepDiveResult> {
-    if (candidates.length === 0) {
-      throw new Error('No words available for Deep Dive');
+    if (!this.state.isActive) {
+      throw new Error('Deep Dive session not initialized');
     }
 
     // Input validation and sanitization
@@ -144,18 +150,34 @@ export class DeepDiveService {
     
     // Calculate exploration parameters - prevent division by zero and NaN
     const sessionProgress = validCurrentProgress / validTargetWords;
+    const comprehensionDepth = this.calculateComprehensionDepth(sessionProgress);
     
-    // Basic word selection first to determine mastery
-    let selectedWord = this.selectWordForComprehension(candidates, wordProgress, 2); // Use base depth for initial selection
+    // Determine difficulty based on comprehension depth and session progress
+    let difficulty: 'easy' | 'medium' | 'hard';
     
-    // Now calculate depth based on both session progress AND word mastery
-    const comprehensionDepth = this.calculateComprehensionDepth(sessionProgress, selectedWord, wordProgress);
-    const contextualComplexity = this.calculateContextualComplexity(candidates, wordProgress);
+    if (comprehensionDepth >= 4 || sessionProgress > 0.6) {
+      difficulty = 'hard'; // Deep exploration or advanced session
+    } else if (comprehensionDepth >= 3 || sessionProgress > 0.3) {
+      difficulty = 'medium'; // Moderate exploration
+    } else {
+      difficulty = 'easy'; // Initial exploration phase
+    }
 
-    logger.debug(`🕳️ Deep Dive parameters: currentProgress=${validCurrentProgress}, targetWords=${validTargetWords}, sessionProgress=${sessionProgress}, comprehensionDepth=${comprehensionDepth}`);
+    logger.debug(`🕳️ Deep Dive parameters: currentProgress=${validCurrentProgress}, targetWords=${validTargetWords}, sessionProgress=${sessionProgress}, comprehensionDepth=${comprehensionDepth}, difficulty=${difficulty}`);
 
-    // Re-select word for comprehension with updated depth (might change selection)
-    selectedWord = this.selectWordForComprehension(candidates, wordProgress, comprehensionDepth);
+    // Use centralized word selection
+    const selectionResult = selectWordForChallenge(
+      this.state.languageCode,
+      wordProgress,
+      this.state.sessionId,
+      difficulty
+    );
+
+    if (!selectionResult) {
+      throw new Error('No words available for Deep Dive');
+    }
+
+    const selectedWord = selectionResult.word;
     let quizMode: DeepDiveResult['quizMode'] = this.getComprehensionQuizMode(selectedWord, comprehensionDepth);
     let aiEnhanced = false;
     let contextualHints: string[] = [];
@@ -168,8 +190,8 @@ export class DeepDiveService {
       const aiContext: ChallengeAIContext = {
         sessionType: 'deep-dive',
         currentProgress: {
-          wordsCompleted: currentProgress,
-          targetWords: targetWords,
+          wordsCompleted: validCurrentProgress,
+          targetWords: validTargetWords,
           consecutiveCorrect: 0,
           consecutiveIncorrect: 0,
           recentAccuracy: this.calculateCurrentAccuracy(wordProgress),
@@ -181,8 +203,8 @@ export class DeepDiveService {
         challengeContext: {
           currentDifficulty: 50 + (comprehensionDepth * 10),
           contextualLearning: true,
-          isEarlyPhase: currentProgress < 3,
-          isFinalPhase: currentProgress >= targetWords - 3
+          isEarlyPhase: validCurrentProgress < 3,
+          isFinalPhase: validCurrentProgress >= validTargetWords - 3
         }
       };
 
@@ -195,7 +217,7 @@ export class DeepDiveService {
         );
 
         if (aiResult.interventionNeeded) {
-          selectedWord = aiResult.selectedWord;
+          // AI can suggest a different mode, but we use the centrally selected word
           if (aiResult.aiRecommendedMode && ['multiple-choice', 'contextual-analysis', 'usage-example', 'synonym-antonym'].includes(aiResult.aiRecommendedMode as any)) {
             quizMode = aiResult.aiRecommendedMode as DeepDiveResult['quizMode'];
           }
@@ -226,10 +248,10 @@ export class DeepDiveService {
     timeAllocated = this.calculateComprehensionTime(selectedWord, quizMode, comprehensionDepth);
     const difficultyLevel = this.calculateDifficultyLevel(selectedWord, wordProgress[selectedWord.id]);
 
-    // Generate contextual content - pass candidates for better option generation
-    const options = this.generateOptions(selectedWord, quizMode, candidates);
-    const contextSentence = this.generateContextSentence(selectedWord); // Removed unused comprehensionDepth parameter
-    const comprehensionQuestions = this.generateComprehensionQuestions(selectedWord, comprehensionDepth); // Removed unused quizMode parameter
+    // Generate contextual content with simple fallback options
+    const options = this.generateOptions(selectedWord, quizMode);
+    const contextSentence = this.generateContextSentence(selectedWord);
+    const comprehensionQuestions = this.generateComprehensionQuestions(selectedWord, comprehensionDepth);
 
     // Update phase based on progress
     this.updateExplorationPhase(sessionProgress, comprehensionDepth);
@@ -241,7 +263,7 @@ export class DeepDiveService {
       wordId: selectedWord.id,
       comprehensionLevel: comprehensionDepth,
       explorationTime: timeAllocated,
-      contextualUnderstanding: contextualComplexity,
+      contextualUnderstanding: comprehensionDepth * 20, // Simple contextual complexity based on depth
       timestamp: Date.now()
     });
 
@@ -296,51 +318,9 @@ export class DeepDiveService {
   }
 
   /**
-   * Calculate word comprehension score for Deep Dive selection
+   * Calculate comprehension depth based on session progress
    */
-  private calculateComprehensionScore(word: Word, progress?: WordProgress): number {
-    let score = 50; // Base score
-
-    if (progress) {
-      const mastery = progress.xp || 0;
-      
-      // Higher mastery words need deeper exploration
-      score += mastery * 0.8;
-
-      // Recent practice indicates familiarity
-      if (progress.lastPracticed) {
-        const daysSinceLastSeen = (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60 * 24);
-        
-        // Prefer words that haven't been deeply explored recently
-        if (daysSinceLastSeen > 7) {
-          score += 20;
-        } else if (daysSinceLastSeen < 1) {
-          score -= 10;
-        }
-      }
-
-      // Apply mastery decay for realistic comprehension assessment
-      const decayedMastery = calculateMasteryDecay(progress.lastPracticed || '', progress.xp || 0);
-      score += decayedMastery * 15;
-    }
-
-    // Favor words suitable for deep exploration
-    if (word.term.length >= 6) {
-      score += 15; // Longer words often have more to explore
-    }
-
-    // Favor words with higher complexity (if level available)
-    if (word.level && word.level >= 3) {
-      score += 20; // Complex words benefit from deep dive
-    }
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
-   * Calculate comprehension depth based on session progress and word mastery
-   */
-  private calculateComprehensionDepth(sessionProgress: number, selectedWord?: Word, wordProgress?: { [key: string]: WordProgress }): number {
+  private calculateComprehensionDepth(sessionProgress: number): number {
     // Input validation - handle NaN and invalid values
     const validSessionProgress = typeof sessionProgress === 'number' && !isNaN(sessionProgress) ? Math.max(0, Math.min(1, sessionProgress)) : 0;
     
@@ -348,92 +328,11 @@ export class DeepDiveService {
     const baseDepth = this.state.explorationDepth || 2; // Default depth if not set
     const progressBonus = Math.floor(validSessionProgress * 2);
     
-    let sessionBasedDepth = Math.min(5, Math.max(1, baseDepth + progressBonus));
+    const result = Math.min(5, Math.max(1, baseDepth + progressBonus));
     
-    // Consider individual word mastery if available
-    let masteryBonus = 0;
-    if (selectedWord && wordProgress && wordProgress[selectedWord.id]) {
-      const wordMastery = wordProgress[selectedWord.id];
-      const masteryLevel = (wordMastery.xp || 0) / 100; // Convert XP to mastery level (0-N)
-      
-      if (masteryLevel >= 3) {
-        masteryBonus = 2; // Very high mastery → advanced modes
-      } else if (masteryLevel >= 2) {
-        masteryBonus = 1; // High mastery → intermediate modes
-      } else if (masteryLevel >= 1) {
-        masteryBonus = 0; // Some mastery → no bonus
-      }
-      
-      logger.debug(`🕳️ Word mastery: ${selectedWord.term} has ${wordMastery.xp || 0} XP (level ${masteryLevel.toFixed(1)}) → bonus +${masteryBonus}`);
-    }
-    
-    const result = Math.min(5, Math.max(1, sessionBasedDepth + masteryBonus));
-    
-    console.log(`🕳️ DEPTH CALCULATION for "${selectedWord?.term}":`, {
-      sessionProgress: validSessionProgress,
-      sessionBasedDepth,
-      wordXP: selectedWord && wordProgress && wordProgress[selectedWord.id] ? wordProgress[selectedWord.id].xp : 'unknown',
-      masteryBonus,
-      finalDepth: result
-    });
-    
-    logger.debug(`🕳️ Comprehension depth: sessionProgress=${validSessionProgress}, baseDepth=${baseDepth}, progressBonus=${progressBonus}, masteryBonus=${masteryBonus}, result=${result}`);
+    logger.debug(`🕳️ Comprehension depth: sessionProgress=${validSessionProgress}, baseDepth=${baseDepth}, progressBonus=${progressBonus}, result=${result}`);
     
     return result;
-  }
-
-  /**
-   * Calculate contextual complexity for word selection
-   */
-  private calculateContextualComplexity(candidates: Word[], wordProgress: { [key: string]: WordProgress }): number {
-    if (candidates.length === 0) return 0; // Prevent division by zero
-    
-    const avgMastery = candidates.reduce((sum, word) => {
-      const progress = wordProgress[word.id];
-      return sum + (progress?.xp || 0);
-    }, 0) / candidates.length;
-
-    return Math.min(100, avgMastery / 2); // 0-100 scale
-  }
-
-  /**
-   * Select optimal word for comprehension exploration
-   */
-  private selectWordForComprehension(
-    candidates: Word[],
-    wordProgress: { [key: string]: WordProgress },
-    comprehensionDepth: number
-  ): Word {
-    // Input validation
-    const validComprehensionDepth = typeof comprehensionDepth === 'number' && !isNaN(comprehensionDepth) ? Math.max(1, Math.min(5, comprehensionDepth)) : 2;
-    
-    const scoredWords = candidates.map(word => ({
-      word,
-      score: this.calculateComprehensionScore(word, wordProgress[word.id])
-    }));
-
-    // Add depth-based selection preference
-    scoredWords.forEach(item => {
-      if (validComprehensionDepth >= 4) {
-        // High depth: prefer complex words
-        if (item.word.level && item.word.level >= 4) {
-          item.score += 25;
-        }
-      } else if (validComprehensionDepth <= 2) {
-        // Low depth: prefer approachable words
-        if (item.word.level && item.word.level <= 3) {
-          item.score += 15;
-        }
-      }
-    });
-
-    scoredWords.sort((a, b) => b.score - a.score);
-    
-    // Select from top 20% to add variety instead of always picking the same word
-    const topCandidates = scoredWords.slice(0, Math.max(1, Math.floor(scoredWords.length * 0.2)));
-    const randomIndex = Math.floor(Math.random() * topCandidates.length);
-    
-    return topCandidates[randomIndex].word;
   }
 
   /**
@@ -520,7 +419,7 @@ export class DeepDiveService {
     let difficulty = word.level || 3; // Default to medium
     
     if (progress) {
-      const mastery = progress.xp || 0;
+      const mastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
       
       // Adjust based on mastery
       if (mastery > 80) {
@@ -666,58 +565,38 @@ export class DeepDiveService {
   /**
    * Generate comprehensive quiz options for deep learning
    */
-  private generateOptions(word: Word, quizMode: DeepDiveResult['quizMode'], candidates: Word[] = []): string[] {
+  private generateOptions(word: Word, quizMode: DeepDiveResult['quizMode']): string[] {
     switch (quizMode) {
       case 'multiple-choice':
-        return this.generateMultipleChoiceOptions(word, candidates);
+        return this.generateMultipleChoiceOptions(word);
       case 'contextual-analysis':
       case 'usage-example':
       case 'synonym-antonym':
         // These are open-ended question modes - no options needed
         return [];
       default:
-        return this.generateMultipleChoiceOptions(word, candidates);
+        return this.generateMultipleChoiceOptions(word);
     }
   }
 
   /**
-   * Generate multiple choice options with enhanced candidate selection
+   * Generate multiple choice options with simple fallbacks
    */
-  private generateMultipleChoiceOptions(word: Word, candidates: Word[] = []): string[] {
+  private generateMultipleChoiceOptions(word: Word): string[] {
     // Use the word's direction to determine correct answer
     const direction = word.direction || 'definition-to-term';
     const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
 
-    // Get incorrect options from other candidate words
-    const optionCandidates = candidates.filter(w => w.id !== word.id);
+    // Generate simple fallback wrong answers for deep dive
+    const fallbackWrongAnswers = [
+      'Erste falsche Antwort', // First wrong answer
+      'Zweite falsche Antwort', // Second wrong answer
+      'Dritte falsche Antwort'  // Third wrong answer
+    ];
     
-    if (optionCandidates.length === 0) {
-      // Fallback: use the existing multiple choice generation for single word
-      return this.generateStandaloneMultipleChoiceOptions(word);
-    }
-
-    // Get random incorrect options from candidates
-    const incorrectOptions: string[] = [];
-    const shuffledCandidates = [...optionCandidates].sort(() => 0.5 - Math.random());
-    
-    for (let i = 0; i < Math.min(3, shuffledCandidates.length); i++) {
-      const candidate = shuffledCandidates[i];
-      const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
-      if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
-        incorrectOptions.push(incorrectAnswer);
-      }
-    }
-
-    // If we don't have enough options, pad with fallback options
-    while (incorrectOptions.length < 3) {
-      const fallbackOptions = this.generateStandaloneMultipleChoiceOptions(word);
-      for (const option of fallbackOptions) {
-        if (option !== correctAnswer && !incorrectOptions.includes(option) && incorrectOptions.length < 3) {
-          incorrectOptions.push(option);
-        }
-      }
-      break; // Prevent infinite loop
-    }
+    const incorrectOptions = fallbackWrongAnswers
+      .filter(answer => answer !== correctAnswer)
+      .slice(0, 3);
 
     // Create final options array with correct answer inserted at random position
     const options = [...incorrectOptions];
@@ -725,61 +604,6 @@ export class DeepDiveService {
     options.splice(correctPos, 0, correctAnswer);
     
     return options.slice(0, 4); // Ensure exactly 4 options
-  }
-
-  /**
-   * Generate standalone multiple choice options for deep understanding
-   */
-  private generateStandaloneMultipleChoiceOptions(word: Word): string[] {
-    const correctAnswer = word.definition;
-    
-    // For deep dive, we want more sophisticated distractors that test true understanding
-    const wrongAnswers: string[] = [];
-    
-    // Generate theme-based distractors based on word characteristics
-    if (correctAnswer.includes('study') || correctAnswer.includes('learn')) {
-      wrongAnswers.push('The process of forgetting information over time');
-      wrongAnswers.push('A method of avoiding intellectual challenges');
-      wrongAnswers.push('The tendency to reject new information');
-    } else if (correctAnswer.includes('process') || correctAnswer.includes('method')) {
-      wrongAnswers.push('A static state without change or development');
-      wrongAnswers.push('An unpredictable series of random events');
-      wrongAnswers.push('A fixed outcome determined in advance');
-    } else if (correctAnswer.includes('feeling') || correctAnswer.includes('emotion')) {
-      wrongAnswers.push('A logical reasoning pattern without sentiment');
-      wrongAnswers.push('A mathematical calculation method');
-      wrongAnswers.push('A systematic approach to problem-solving');
-    } else {
-      // Generic academic-sounding distractors
-      wrongAnswers.push('A theoretical framework for analyzing concepts');
-      wrongAnswers.push('A systematic approach to understanding patterns');
-      wrongAnswers.push('A methodological process for evaluation');
-    }
-    
-    // Filter to get best 3 distractors
-    const selectedDistractors = wrongAnswers
-      .filter(distractor => distractor !== correctAnswer)
-      .filter(distractor => Math.abs(distractor.length - correctAnswer.length) < 50) // Similar length
-      .slice(0, 3);
-    
-    // If we need more, add fallback distractors
-    while (selectedDistractors.length < 3) {
-      const fallbacks = [
-        'An alternative interpretation of the concept',
-        'A different perspective on the subject matter',
-        'A contrasting viewpoint on the topic'
-      ];
-      
-      for (const fallback of fallbacks) {
-        if (!selectedDistractors.includes(fallback) && selectedDistractors.length < 3) {
-          selectedDistractors.push(fallback);
-        }
-      }
-      break;
-    }
-
-    const options = [correctAnswer, ...selectedDistractors];
-    return options.sort(() => 0.5 - Math.random()); // Shuffle options
   }
 
   /**
@@ -841,6 +665,8 @@ export class DeepDiveService {
       startTime: 0,
       currentPhase: 'exploration',
       explorationDepth: 1,
+      languageCode: '',
+      sessionId: '',
       comprehensionStrategies: [],
       contextualConnections: [],
       analyticsBuffer: []

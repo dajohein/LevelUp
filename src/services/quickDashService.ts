@@ -5,27 +5,26 @@
  * for cognitive load management under time constraints.
  */
 
-import { Word, getWordsForLanguage } from './wordService';
+import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { calculateMasteryDecay } from './masteryService';
 import { 
   challengeAIIntegrator, 
   ChallengeAIContext
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
+import { selectWordForChallenge } from './wordSelectionManager';
 
 interface QuickDashState {
   languageCode: string;
   targetWords: number;
   timeLimit: number; // seconds
+  sessionId: string;
   currentWordIndex: number;
   startTime: number;
   wordTimers: number[]; // time spent on each word
   pressurePoints: Array<{ timeRemaining: number; accuracy: number }>;
   aiEnhancementsEnabled: boolean;
-  allWords: Word[];
-  usedWordIds: Set<string>;
   speedOptimizations: string[];
 }
 
@@ -47,44 +46,28 @@ class QuickDashService {
    */
   async initializeQuickDash(
     languageCode: string, 
-    wordProgress: { [key: string]: WordProgress },
+    _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 8,
     timeLimit: number = 300, // 5 minutes
-    allWords?: Word[] // Optional pre-filtered words (e.g., module-specific)
+    _allWords?: Word[] // Unused - centralized word selection handles this
   ): Promise<void> {
-    // Use provided words or get all words for language
-    const wordsToUse = allWords || getWordsForLanguage(languageCode);
-    
-    if (!wordsToUse || wordsToUse.length === 0) {
-      logger.error('No words available for Quick Dash challenge');
-      throw new Error('No words available for Quick Dash challenge');
-    }
-
-    // Filter and sort words for quick learning (familiar but not mastered)
-    const quickDashWords = this.selectQuickDashWords(wordsToUse, wordProgress);
-    
-    if (quickDashWords.length < targetWords) {
-      logger.warn('Insufficient words for Quick Dash, padding with random words', {
-        available: quickDashWords.length,
-        required: targetWords
-      });
-    }
+    // Generate unique session ID for this quick dash challenge
+    const sessionId = `quick-dash-${Date.now()}`;
 
     this.state = {
       languageCode,
       targetWords,
       timeLimit,
+      sessionId,
       currentWordIndex: 0,
       startTime: Date.now(),
       wordTimers: [],
       pressurePoints: [],
-      allWords: quickDashWords,
-      usedWordIds: new Set(),
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
       speedOptimizations: []
     };
 
-    logger.debug(`⚡ Quick Dash initialized with ${quickDashWords.length} words for ${timeLimit}s`);
+    logger.debug(`⚡ Quick Dash initialized with session ID: ${sessionId}, target: ${targetWords} words in ${timeLimit}s`);
   }
 
   /**
@@ -100,28 +83,39 @@ class QuickDashService {
       throw new Error('Quick Dash must be initialized first');
     }
 
-    const { allWords, aiEnhancementsEnabled, usedWordIds, targetWords } = this.state;
+    const { aiEnhancementsEnabled, targetWords } = this.state;
 
-    // Calculate time pressure and select appropriate word
+    // Calculate time pressure
     const timePressure = this.calculateTimePressure(timeRemaining);
-    const candidates = allWords.filter(word => !usedWordIds.has(word.id));
     
-    if (candidates.length === 0) {
+    // Determine difficulty based on time pressure and progress
+    let difficulty: 'easy' | 'medium' | 'hard';
+    if (timePressure > 0.7 || timeRemaining < 60) {
+      difficulty = 'easy'; // High time pressure = easier words
+    } else if (timePressure > 0.4) {
+      difficulty = 'medium';
+    } else {
+      difficulty = 'hard'; // Low time pressure = can handle harder words
+    }
+
+    // Use centralized word selection
+    const selectionResult = selectWordForChallenge(
+      this.state.languageCode,
+      wordProgress,
+      this.state.sessionId,
+      difficulty
+    );
+
+    if (!selectionResult) {
       logger.error('No more words available for Quick Dash');
       throw new Error('No words available for Quick Dash');
     }
 
-    let selectedWord: Word;
-    let quizMode: QuickDashResult['quizMode'];
+    const selectedWord = selectionResult.word;
+    let quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
     let aiEnhanced = false;
     let speedHints: string[] = [];
     let reasoning: string[] = [];
-    let timeAllocated: number;
-
-    // Basic word selection first
-    // Basic word selection first - just pick the first candidate for now
-    selectedWord = candidates[0];
-    quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
 
     // AI-enhanced word selection for time optimization
     if (aiEnhancementsEnabled && timePressure > 0.3) {
@@ -159,7 +153,6 @@ class QuickDashService {
         );
 
         if (aiResult.interventionNeeded) {
-          selectedWord = aiResult.selectedWord;
           if (aiResult.aiRecommendedMode && ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(aiResult.aiRecommendedMode as any)) {
             quizMode = aiResult.aiRecommendedMode as QuickDashResult['quizMode'];
           }
@@ -169,25 +162,14 @@ class QuickDashService {
           
           // Record speed optimization patterns
           this.state.speedOptimizations.push(`time-pressure-${timePressure > 0.7 ? 'high' : 'moderate'}`);
-        } else {
-          selectedWord = candidates[Math.floor(Math.random() * candidates.length)];
-          quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
         }
       } catch (error) {
         logger.warn('AI enhancement failed for Quick Dash, using fallback', { error });
-        selectedWord = candidates[Math.floor(Math.random() * candidates.length)];
-        quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
       }
-    } else {
-      selectedWord = candidates[Math.floor(Math.random() * candidates.length)];
-      quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
     }
 
     // Calculate optimal time allocation for this word
-    timeAllocated = this.calculateTimeAllocation(timeRemaining, targetWords - currentProgress);
-
-    // Track word usage
-    usedWordIds.add(selectedWord.id);
+    const timeAllocated = this.calculateTimeAllocation(timeRemaining, targetWords - currentProgress);
     
     // Generate options based on quiz mode
     const options = this.generateOptions(selectedWord, quizMode);
@@ -267,68 +249,6 @@ class QuickDashService {
     } catch (error) {
       logger.error('Failed to save Quick Dash performance', { userId, error });
     }
-  }
-
-  /**
-   * Select words optimized for speed learning
-   */
-  private selectQuickDashWords(allWords: Word[], wordProgress: { [key: string]: WordProgress }): Word[] {
-    return allWords
-      .map(word => ({
-        word,
-        speedScore: this.calculateSpeedScore(word, wordProgress[word.id])
-      }))
-      .sort((a, b) => b.speedScore - a.speedScore)
-      .slice(0, 20) // Top 20 words for speed learning
-      .map(item => item.word);
-  }
-
-  /**
-   * Calculate speed learning suitability score
-   */
-  private calculateSpeedScore(word: Word, progress?: WordProgress): number {
-    let score = 50; // Base score
-
-    if (progress) {
-      // Favor words with some familiarity but room for improvement
-      const mastery = progress.xp || 0;
-      if (mastery > 0.3 && mastery < 0.8) {
-        score += 30; // Sweet spot for speed learning
-      } else if (mastery >= 0.8) {
-        score += 10; // Good for confidence building
-      } else {
-        score -= 20; // Too unfamiliar for speed mode
-      }
-
-      // Favor words with recent activity (faster recall)
-      const daysSinceLastSeen = progress.lastPracticed ?
-        (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60 * 24) : 30;
-      if (daysSinceLastSeen < 3) {
-        score += 20;
-      } else if (daysSinceLastSeen < 7) {
-        score += 10;
-      }
-
-      // Apply mastery decay for realistic difficulty
-      const decayedMastery = calculateMasteryDecay(progress.lastPracticed || '', progress.xp || 0);
-      score += decayedMastery * 15;
-    }
-
-    // Favor shorter words for speed
-    if (word.term.length <= 6) {
-      score += 15;
-    } else if (word.term.length <= 10) {
-      score += 5;
-    } else {
-      score -= 10;
-    }
-
-    // Favor common words (if level rating available)
-    if (word.level && word.level <= 3) {
-      score += 10;
-    }
-
-    return Math.max(0, Math.min(100, score));
   }
 
   /**
@@ -486,17 +406,17 @@ class QuickDashService {
     // The correct answer should be the German term, not the Dutch definition
     const correctAnswer = word.term;
     
-    // For speed optimization, use a cached approach if possible
-    // Otherwise generate from a reasonable pool
-    const allWords = this.state?.allWords || [];
+    // Import here to avoid circular dependency
+    const { getWordsForLanguage } = require('./wordService');
+    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
     
     // Quick generation for speed - prefer shorter, clear distractors
     // For Dutch→German direction, use other German terms as distractors
     const wrongAnswers = allWords
-      .filter(w => w.id !== word.id)
-      .map(w => w.term)
-      .filter(term => term !== correctAnswer)
-      .filter(term => term.length < correctAnswer.length + 20) // Similar length for speed
+      .filter((w: Word) => w.id !== word.id)
+      .map((w: Word) => w.term)
+      .filter((term: string) => term !== correctAnswer)
+      .filter((term: string) => term.length < correctAnswer.length + 20) // Similar length for speed
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
 
@@ -545,14 +465,17 @@ class QuickDashService {
    */
   private generateFillInTheBlankOptions(word: Word): string[] {
     const correctTerm = word.term;
-    const allWords = this.state?.allWords || [];
+    
+    // Import here to avoid circular dependency
+    const { getWordsForLanguage } = require('./wordService');
+    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
     
     // For speed mode, prefer clearly different options
     const wrongTerms = allWords
-      .filter(w => w.id !== word.id)
-      .map(w => w.term)
-      .filter(term => term !== correctTerm)
-      .filter(term => Math.abs(term.length - correctTerm.length) <= 3) // Speed-friendly length
+      .filter((w: Word) => w.id !== word.id)
+      .map((w: Word) => w.term)
+      .filter((term: string) => term !== correctTerm)
+      .filter((term: string) => Math.abs(term.length - correctTerm.length) <= 3) // Speed-friendly length
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
     

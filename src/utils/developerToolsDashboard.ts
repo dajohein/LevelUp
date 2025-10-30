@@ -13,6 +13,10 @@ import { testPerformanceFix } from './testPerformanceFix';
 import { testDataMigration, testDirectionalAnalytics, testMigrationStatus, runAllTests as migrationRunAllTests } from './migrationTests';
 import { enablePerformanceTracking, disablePerformanceTracking, analyzePerformance } from './advancedPerformanceAnalyzer';
 import { getDevCacheStats, clearDevCaches } from './developmentCacheManager';
+import { runWordRepetitionTests } from './testWordRepetitionFix';
+
+// Centralized word selection
+import { wordSelectionManager } from '../services/wordSelectionManager';
 
 // Services
 import { enhancedStorage } from '../services/storage/enhancedStorage';
@@ -49,6 +53,53 @@ class LevelUpDeveloperTools {
     immediateImprovements: testImmediateImprovements,
     performanceFix: testPerformanceFix,
 
+    // Word selection and repetition tests
+    wordRepetition: runWordRepetitionTests,
+
+    // Centralized word selection testing
+    centralizedWordSelection: {
+      getSessionReport: () => {
+        const sessions = (wordSelectionManager as any).sessionTrackers;
+        const activeSessions = sessions.size;
+        let totalWordsTracked = 0;
+        const sessionsDetail: Array<{ sessionId: string; stats: any }> = [];
+
+        for (const [sessionId] of sessions) {
+          const stats = wordSelectionManager.getSessionStats(sessionId);
+          if (stats) {
+            totalWordsTracked += stats.usedWordsCount;
+            sessionsDetail.push({ sessionId, stats });
+          }
+        }
+
+        return {
+          activeSessions,
+          totalWordsTracked,
+          sessionsDetail
+        };
+      },
+      testCentralizedSelection: () => {
+        console.log('🧪 Testing centralized word selection...');
+        // Create test session
+        const sessionId = 'test-centralized-selection';
+        wordSelectionManager.createSession(sessionId, 8);
+        
+        // Test selection
+        const result = wordSelectionManager.selectWord({
+          languageCode: 'es',
+          prioritizeStruggling: true,
+          difficulty: 'adaptive'
+        }, {}, sessionId);
+        
+        console.log('✅ Centralized selection result:', result);
+        return result;
+      },
+      cleanupOldSessions: () => {
+        wordSelectionManager.cleanupOldSessions();
+        console.log('🗑️ Cleaned up old word selection sessions');
+      }
+    },
+
     // Data migration tests
     migration: {
       runAllTests: migrationRunAllTests,
@@ -68,6 +119,7 @@ class LevelUpDeveloperTools {
         gameServices: await testAllGameServicesPerformance(),
         immediateImprovements: await testImmediateImprovements(),
         performanceFix: await testPerformanceFix(),
+        wordRepetition: runWordRepetitionTests(),
         migration: await migrationRunAllTests()
       };
 
@@ -358,6 +410,7 @@ class LevelUpDeveloperTools {
 🔧 Testing:
   LevelUpDev.testing.saveOptimization()   // Test storage optimization
   LevelUpDev.testing.gameServicesPerformance() // Test services
+  LevelUpDev.testing.wordRepetition()     // Test word repetition fix
 
 📊 Performance:
   LevelUpDev.performance.getReport()      // Get performance report

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getRandomWord, getRandomWordFromModule } from '../services/wordService';
+import { selectWordForRegularSession } from '../services/wordSelectionManager';
 import { calculateMasteryGain } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
@@ -61,6 +61,7 @@ const initialState: GameState = {
   bestStreak: 0,
   totalAttempts: 0,
   correctAnswers: 0,
+  recentlyUsedWords: [],
   wordProgress: {},
   ...persistedState,
 };
@@ -71,23 +72,36 @@ export const gameSlice = createSlice({
   reducers: {
     nextWord: state => {
       if (state.language) {
-        // Get words based on whether we have a specific module or not
-        const { word, options, quizMode } = state.module
-          ? getRandomWordFromModule(
-              state.language,
-              state.module,
-              state.wordProgress,
-              state.lastWordId
-            )
-          : getRandomWord(state.language, state.wordProgress, state.lastWordId);
+        // Use centralized word selection - create a unique session ID for game
+        const sessionId = `game-session-${state.language}-${state.module || 'all'}`;
+        
+        // Get words using centralized selection
+        const result = selectWordForRegularSession(
+          state.language,
+          state.wordProgress,
+          sessionId,
+          state.module || undefined
+        );
 
-        state.currentWord = word;
-        state.currentOptions = options;
-        state.quizMode = quizMode;
-        state.isCorrect = null;
-        state.lastAnswer = undefined;
-        state.capitalizationFeedback = undefined;
-        state.lastWordId = word?.id;
+        if (result) {
+          state.currentWord = result.word;
+          state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term); // Convert Word objects to strings
+          state.quizMode = 'multiple-choice'; // Default quiz mode, can be enhanced later
+          state.isCorrect = null;
+          state.lastAnswer = undefined;
+          state.capitalizationFeedback = undefined;
+          state.lastWordId = result.word.id;
+          
+          // Update recently used words list
+          if (result.word.id) {
+            const recentlyUsed = state.recentlyUsedWords || [];
+            const maxRecentWords = 8; // Track last 8 words to prevent repetition
+            
+            // Add current word to the beginning and limit the array size
+            const updatedRecent = [result.word.id, ...recentlyUsed.filter(id => id !== result.word.id)].slice(0, maxRecentWords);
+            state.recentlyUsedWords = updatedRecent;
+          }
+        }
       }
     },
 
@@ -104,6 +118,16 @@ export const gameSlice = createSlice({
       state.lastAnswer = undefined;
       state.capitalizationFeedback = undefined;
       state.lastWordId = word?.id;
+      
+      // Update recently used words list
+      if (word?.id) {
+        const recentlyUsed = state.recentlyUsedWords || [];
+        const maxRecentWords = 8; // Track last 8 words to prevent repetition
+        
+        // Add current word to the beginning and limit the array size
+        const updatedRecent = [word.id, ...recentlyUsed.filter(id => id !== word.id)].slice(0, maxRecentWords);
+        state.recentlyUsedWords = updatedRecent;
+      }
     },
     checkAnswer: (state, action: PayloadAction<string>) => {
       if (!state.currentWord) return;
@@ -247,15 +271,26 @@ export const gameSlice = createSlice({
       state.streak = 0;
       state.isCorrect = null;
       state.lastAnswer = undefined;
+      state.recentlyUsedWords = []; // Reset recently used words for new language
 
       // Load word progress for this language only (no merging) with automatic migration
       const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
       state.wordProgress = savedWordProgress;
 
       // Initialize first word
-      const { word, options } = getRandomWord(languageCode, state.wordProgress);
-      state.currentWord = word;
-      state.currentOptions = options;
+      const sessionId = `game-session-${languageCode}-all`;
+      const result = selectWordForRegularSession(languageCode, state.wordProgress, sessionId);
+      
+      if (result) {
+        state.currentWord = result.word;
+        state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term);
+        state.lastWordId = result.word.id;
+        
+        // Initialize recently used words with first word
+        if (result.word.id) {
+          state.recentlyUsedWords = [result.word.id];
+        }
+      }
 
       // Persistence handled by middleware
     },
@@ -273,13 +308,24 @@ export const gameSlice = createSlice({
         wordProgress: preservedProgress,
         language: preservedLanguage,
         module: preservedModule,
+        recentlyUsedWords: [], // Reset recently used words on game reset
       });
 
       // Get new word if language is set
       if (preservedLanguage) {
-        const { word, options } = getRandomWord(preservedLanguage, preservedProgress);
-        state.currentWord = word;
-        state.currentOptions = options;
+        const sessionId = `game-session-${preservedLanguage}-${preservedModule || 'all'}`;
+        const result = selectWordForRegularSession(preservedLanguage, preservedProgress, sessionId, preservedModule || undefined);
+        
+        if (result) {
+          state.currentWord = result.word;
+          state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term);
+          state.lastWordId = result.word.id;
+          
+          // Initialize recently used words with first word
+          if (result.word.id) {
+            state.recentlyUsedWords = [result.word.id];
+          }
+        }
       }
 
       // Persistence handled by middleware

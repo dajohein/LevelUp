@@ -105,6 +105,7 @@ export interface GameState {
   correctAnswers: number;
   lastAnswer?: string;
   lastWordId?: string; // Track last word to prevent immediate repetition
+  recentlyUsedWords?: string[]; // Track recently used words to prevent repetition
   wordProgress: { [key: string]: WordProgress }; // Track progress per word
   capitalizationFeedback?: string; // Feedback for language-specific capitalization errors
 }
