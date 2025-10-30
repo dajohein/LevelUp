@@ -123,31 +123,6 @@ const BossBattleContainer = styled.div<{ damage?: boolean }>`
   `}
 `;
 
-const SpeedMeter = styled.div<{ speed: number }>`
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: ${props => 
-    props.speed > 70 ? '#4CAF50' : 
-    props.speed > 30 ? '#FF9800' : '#f44336'
-  };
-  font-size: 14px;
-  border: 2px solid ${props => 
-    props.speed > 70 ? '#4CAF50' : 
-    props.speed > 30 ? '#FF9800' : '#f44336'
-  };
-  animation: ${props => props.speed > 80 ? 'speedPulse 1s ease-in-out infinite alternate' : 'none'};
-  
-  @keyframes speedPulse {
-    from { transform: scale(1); }
-    to { transform: scale(1.05); }
-  }
-`;
-
 const StreakMultiplier = styled.div<{ streak: number }>`
   position: absolute;
   top: 10px;
@@ -468,13 +443,11 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
 
   // Handle session-specific themed rendering
   const bossHealth = sessionProgress?.bossHealth || 100;
-  const currentSpeed = sessionProgress?.currentSpeed || 100;
 
   switch (currentSession?.id) {
     case 'quick-dash':
       return (
         <QuickDashContainer>
-          <SpeedMeter speed={currentSpeed}>Speed: {currentSpeed}%</SpeedMeter>
           {quizContent}
         </QuickDashContainer>
       );
