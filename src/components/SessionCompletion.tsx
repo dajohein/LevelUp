@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -237,13 +237,15 @@ export const SessionCompletion: React.FC<SessionCompletionProps> = ({ languageCo
 
   const { progress, currentSession } = useSelector((state: RootState) => state.session);
 
-  if (!currentSession && !isNavigating) {
-    const sessionRoute = moduleId
-      ? `/sessions/${languageCode}/${moduleId}`
-      : `/sessions/${languageCode}`;
-    navigate(sessionRoute);
-    return null;
-  }
+  useEffect(() => {
+    if (!currentSession && !isNavigating) {
+      setIsNavigating(true);
+      const sessionRoute = moduleId
+        ? `/sessions/${languageCode}/${moduleId}`
+        : `/sessions/${languageCode}`;
+      navigate(sessionRoute);
+    }
+  }, [currentSession, isNavigating, moduleId, languageCode, navigate]);
 
   if (!currentSession) {
     // If we're navigating and currentSession is null, show loading

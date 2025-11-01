@@ -325,9 +325,9 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
         </ContextSection>
       )}
       <OptionsGrid>
-        {options.map(option => (
+        {options.map((option, index) => (
           <Option
-            key={option}
+            key={`option-${index}-${option}`}
             onClick={() => onSelect(option)}
             disabled={disabled}
             isCorrect={isCorrect && option === selectedOption}

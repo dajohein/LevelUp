@@ -1186,10 +1186,10 @@ export const ModuleOverview: React.FC = () => {
                 <QuickStatLabel>Words Learned</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
-                <QuickStatValue>📚 {modules.filter(m => {
+                <QuickStatValue>📚 {useMemo(() => modules.filter(m => {
                   const stats = getModuleStats(languageCode!, m.id, wordProgress);
                   return stats.completionPercentage > 0;
-                }).length}</QuickStatValue>
+                }).length, [modules, languageCode, wordProgress])}</QuickStatValue>
                 <QuickStatLabel>Modules Started</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
