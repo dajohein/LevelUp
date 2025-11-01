@@ -126,7 +126,11 @@ class ChallengeAIIntegrator {
       logger.debug(`🧠 AI Analysis for ${context.sessionType}:`, {
         cognitiveLoad: cognitiveLoad.level,
         momentum: momentum.trend,
-        intervention: shouldIntervene
+        intervention: shouldIntervene,
+        performanceDataPoints: context.userState.recentPerformance.length,
+        recentAccuracy: context.currentProgress.recentAccuracy,
+        consecutiveCorrect: context.currentProgress.consecutiveCorrect,
+        consecutiveIncorrect: context.currentProgress.consecutiveIncorrect
       });
 
       return {

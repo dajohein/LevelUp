@@ -33,7 +33,7 @@ export interface EnhancedGameState {
 
 export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
   const { wordProgress } = useSelector((state: RootState) => state.game);
-  const { currentSession } = useSelector((state: RootState) => state.session);
+  const { currentSession, progress: sessionProgress } = useSelector((state: RootState) => state.session);
 
   const [enhancedState, setEnhancedState] = useState<EnhancedGameState>({
     isUsingSpacedRepetition: false,
@@ -176,17 +176,30 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
       };
     }
 
-    // Return basic stats if system is not active yet
+    // For non-enhanced sessions (Deep Dive, etc.), use real session progress from Redux
+    if (currentSession && sessionProgress) {
+      return {
+        currentIndex: sessionProgress.wordsCompleted,
+        totalWords: currentSession.targetWords,
+        correctAnswers: sessionProgress.correctAnswers,
+        accuracy: sessionProgress.wordsCompleted > 0 ? sessionProgress.correctAnswers / sessionProgress.wordsCompleted : 0,
+        timeElapsed: sessionProgress.timeElapsed,
+        sessionType: currentSession.name || 'Learning Session',
+        isEnhanced: false,
+      };
+    }
+
+    // Return basic stats if no session is active
     return {
       currentIndex: 0,
-      totalWords: 10,
+      totalWords: 20, // Default Deep Dive target
       correctAnswers: 0,
       accuracy: 0,
       timeElapsed: 0,
-      sessionType: 'Enhanced Learning',
-      isEnhanced: true,
+      sessionType: 'Learning Session',
+      isEnhanced: false,
     };
-  }, [enhancedState]);
+  }, [enhancedState, currentSession, sessionProgress]);
 
   /**
    * Reset enhanced session

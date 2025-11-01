@@ -364,8 +364,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
 
   const quizContent =
-    showLearningCard ? (
+    showLearningCard && !isTransitioning ? ( // Don't show learning card during transitions
       <LearningCard
+        key={`learning-${wordToUse.id}`} // Force re-render for each word
         word={wordToUse}
         currentIndex={getSessionStats()?.currentIndex || 0}
         totalWords={getSessionStats()?.totalWords || 1}

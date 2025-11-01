@@ -5,7 +5,7 @@
  * for cognitive load management under time constraints.
  */
 
-import { Word } from './wordService';
+import { Word, getWordsForLanguage } from './wordService';
 import { WordProgress } from '../store/types';
 import { 
   challengeAIIntegrator, 
@@ -406,8 +406,7 @@ class QuickDashService {
     // The correct answer should be the German term, not the Dutch definition
     const correctAnswer = word.term;
     
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
+    // Use imported function from top-level import
     const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
     
     // Quick generation for speed - prefer shorter, clear distractors
@@ -436,7 +435,12 @@ class QuickDashService {
       break;
     }
 
+    console.log(`🔍 Quick Dash Debug: Word "${word.term}", collected ${wrongAnswers.length} wrong answers: [${wrongAnswers.join(', ')}]`);
+
     const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
+    
+    console.log(`🎯 Quick Dash Generated options for "${word.term}": [${options.join(', ')}] (${options.length} total)`);
+    
     return options.sort(() => 0.5 - Math.random()); // Quick shuffle
   }
 

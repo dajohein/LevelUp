@@ -226,36 +226,54 @@ class DeepDiveAdapter implements IChallengeService {
       });
     }
     
+    // FIXED: Correct parameter alignment for getNextDeepDiveWord
+    // Signature: (wordProgress, currentProgress, targetWords, aiEnhancementsEnabled)
     const result = await deepDiveService.getNextDeepDiveWord(
-      allWords,
-      context.wordProgress,
-      context.wordsCompleted,
-      context.targetWords
+      context.wordProgress,     // ✅ wordProgress: { [key: string]: WordProgress }
+      context.wordsCompleted,   // ✅ currentProgress: number (how many completed)
+      context.targetWords,      // ✅ targetWords: number (session target)
+      true                      // ✅ aiEnhancementsEnabled: boolean
     );
 
-    // Handle specialized quiz modes - map them to Redux-compatible modes
+    // Handle specialized quiz modes - improve variety while maintaining compatibility
     let standardQuizMode: StandardQuizMode;
     let finalOptions: string[] = [];
     
     if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(result.quizMode as string)) {
-      // For enhanced modes, force multiple-choice and generate options if needed
-      standardQuizMode = 'multiple-choice';
+      // Check word mastery level to avoid giving difficult modes to new words
+      const wordProgress = context.wordProgress[result.word.id];
+      const masteryLevel = wordProgress?.masteryLevel || 0;
+      const isNewWord = masteryLevel === 0;
       
-      logger.debug(`🎯 Enhanced quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`);
+      // For enhanced modes, use varied quiz types but respect mastery level
+      const enhancedModeMapping: { [key: string]: StandardQuizMode } = {
+        'contextual-analysis': isNewWord ? 'multiple-choice' : (Math.random() > 0.5 ? 'multiple-choice' : 'fill-in-the-blank'),
+        'usage-example': isNewWord ? 'multiple-choice' : (Math.random() > 0.3 ? 'open-answer' : 'multiple-choice'),
+        'synonym-antonym': isNewWord ? 'multiple-choice' : (Math.random() > 0.4 ? 'letter-scramble' : 'multiple-choice')
+      };
+      
+      standardQuizMode = enhancedModeMapping[result.quizMode as string] || 'multiple-choice';
+      
+      logger.debug(`🎯 Enhanced quiz mode: ${result.quizMode} → ${standardQuizMode} for word "${result.word.term}" (mastery: ${masteryLevel})`);
       
       console.log(`🎯 ENHANCED MODE DETECTED:`, {
         originalMode: result.quizMode,
         word: result.word.term,
-        convertedTo: 'multiple-choice',
-        aiEnhanced: result.aiEnhanced
+        convertedTo: standardQuizMode,
+        aiEnhanced: result.aiEnhanced,
+        masteryLevel,
+        isNewWord
       });
       
-      // If Deep Dive didn't provide options (for open-ended modes), generate them
-      if (!result.options || result.options.length === 0) {
-        // Generate module-scoped options for better learning experience
+      // Generate appropriate options based on the converted mode
+      if (standardQuizMode === 'multiple-choice') {
         finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
+      } else if (standardQuizMode === 'fill-in-the-blank') {
+        // For fill-in-the-blank, provide the full definition as a single option
+        finalOptions = [result.word.definition];
       } else {
-        finalOptions = result.options;
+        // For open-answer and letter-scramble, no options needed
+        finalOptions = [];
       }
     } else if (['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(result.quizMode as string)) {
       standardQuizMode = result.quizMode as StandardQuizMode;
@@ -348,18 +366,48 @@ class DeepDiveAdapter implements IChallengeService {
       }
     }
     
+    console.log(`🔍 Debug: Word "${word.term}", collected ${incorrectOptions.length} incorrect options: [${incorrectOptions.join(', ')}]`);
+    
     // Create final options with correct answer at random position
     const options = [...incorrectOptions];
-    const correctPos = Math.floor(Math.random() * 4);
+    
+    // Ensure we have exactly 3 incorrect options before adding the correct one
+    while (options.length < 3) {
+      // Fallback: duplicate some options if needed (shouldn't happen but safety check)
+      const fallbackWords = allWords.filter(w => w.id !== word.id);
+      for (const candidate of fallbackWords) {
+        if (options.length < 3) {
+          const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
+          if (incorrectAnswer !== correctAnswer && !options.includes(incorrectAnswer)) {
+            options.push(incorrectAnswer);
+          }
+        }
+      }
+      break; // Prevent infinite loop
+    }
+    
+    // Now we should have exactly 3 incorrect options, add the correct one
+    const correctPos = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
     options.splice(correctPos, 0, correctAnswer);
     
-    console.log(`🎯 Generated module-scoped options for "${word.term}": [${options.join(', ')}]`);
+    // Final safety check: ensure we have exactly 4 options
+    if (options.length !== 4) {
+      console.warn(`⚠️ Expected 4 options but got ${options.length} for word "${word.term}"`);
+      // Emergency fallback: pad or trim to exactly 4
+      while (options.length < 4) {
+        options.push('Option ' + options.length); // Emergency placeholder
+      }
+      options.splice(4); // Trim to exactly 4
+    }
+    
+    console.log(`🎯 Generated module-scoped options for "${word.term}": [${options.join(', ')}] (${options.length} total)`);
     
     return options;
   }
 
   recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {
-    // Deep dive doesn't have a recordCompletion method, so we simulate it
+    // Record completion in Deep Dive service for analytics and AI
+    deepDiveService.recordWordCompletion(wordId, correct, timeSpent);
     return { sessionContinues: true };
   }
 

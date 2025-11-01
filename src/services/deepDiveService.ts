@@ -187,18 +187,25 @@ export class DeepDiveService {
 
     // AI-enhanced word selection for deep understanding
     if (aiEnhancementsEnabled && comprehensionDepth >= 2) {
+      // Build recent performance data from analytics buffer and current session
+      const recentPerformance = this.buildRecentPerformanceData(
+        validCurrentProgress, 
+        sessionProgress, 
+        wordProgress
+      );
+
       const aiContext: ChallengeAIContext = {
         sessionType: 'deep-dive',
         currentProgress: {
           wordsCompleted: validCurrentProgress,
           targetWords: validTargetWords,
-          consecutiveCorrect: 0,
-          consecutiveIncorrect: 0,
+          consecutiveCorrect: this.calculateConsecutiveCorrect(wordProgress),
+          consecutiveIncorrect: this.calculateConsecutiveIncorrect(wordProgress),
           recentAccuracy: this.calculateCurrentAccuracy(wordProgress),
           sessionDuration: (Date.now() - this.state.startTime) / 1000
         },
         userState: {
-          recentPerformance: []
+          recentPerformance: recentPerformance
         },
         challengeContext: {
           currentDifficulty: 50 + (comprehensionDepth * 10),
@@ -315,6 +322,30 @@ export class DeepDiveService {
     } catch (error) {
       logger.error('❌ Failed to record Deep Dive completion:', error);
     }
+  }
+
+  /**
+   * Record word completion and update internal tracking
+   */
+  recordWordCompletion(wordId: string, isCorrect: boolean, responseTime: number): void {
+    // Add to analytics buffer for AI analysis
+    this.state.analyticsBuffer.push({
+      wordId,
+      comprehensionLevel: this.state.explorationDepth,
+      explorationTime: responseTime / 1000, // Convert to seconds
+      contextualUnderstanding: this.state.explorationDepth * 20,
+      timestamp: Date.now()
+    });
+
+    // Limit buffer size to prevent memory bloat
+    if (this.state.analyticsBuffer.length > 50) {
+      this.state.analyticsBuffer = this.state.analyticsBuffer.slice(-30);
+    }
+
+    // Update contextual connections
+    this.updateContextualConnections(wordId, this.state.explorationDepth);
+
+    logger.debug(`🕳️ Word completion recorded: ${wordId}, correct: ${isCorrect}, time: ${responseTime}ms`);
   }
 
   /**
@@ -654,6 +685,88 @@ export class DeepDiveService {
     const totalCorrect = progressEntries.reduce((sum, p) => sum + (p.timesCorrect || 0), 0);
 
     return totalAttempts > 0 ? totalCorrect / totalAttempts : 1.0;
+  }
+
+  /**
+   * Calculate consecutive correct answers from recent word progress
+   */
+  private calculateConsecutiveCorrect(wordProgress: { [key: string]: WordProgress }): number {
+    // Simple implementation - count recent consecutive correct answers
+    // This could be enhanced with analytics buffer tracking
+    const recentEntries = Object.values(wordProgress)
+      .filter(p => p.lastPracticed && (Date.now() - new Date(p.lastPracticed).getTime()) < 300000) // Last 5 minutes
+      .sort((a, b) => new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime());
+    
+    let consecutive = 0;
+    for (const entry of recentEntries) {
+      if (entry.timesCorrect && entry.timesCorrect > (entry.timesIncorrect || 0)) {
+        consecutive++;
+      } else {
+        break;
+      }
+    }
+    return consecutive;
+  }
+
+  /**
+   * Calculate consecutive incorrect answers from recent word progress
+   */
+  private calculateConsecutiveIncorrect(wordProgress: { [key: string]: WordProgress }): number {
+    // Simple implementation - count recent consecutive incorrect answers
+    const recentEntries = Object.values(wordProgress)
+      .filter(p => p.lastPracticed && (Date.now() - new Date(p.lastPracticed).getTime()) < 300000) // Last 5 minutes
+      .sort((a, b) => new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime());
+    
+    let consecutive = 0;
+    for (const entry of recentEntries) {
+      if (entry.timesIncorrect && entry.timesIncorrect > (entry.timesCorrect || 0)) {
+        consecutive++;
+      } else {
+        break;
+      }
+    }
+    return consecutive;
+  }
+
+  /**
+   * Build recent performance data for AI analysis
+   */
+  private buildRecentPerformanceData(
+    _currentProgress: number, 
+    _sessionProgress: number, 
+    wordProgress: { [key: string]: WordProgress }
+  ): any[] {
+    // Build performance data from analytics buffer and word progress
+    const performanceData: any[] = [];
+    
+    // Add analytics buffer data
+    this.state.analyticsBuffer.forEach(entry => {
+      performanceData.push({
+        timestamp: entry.timestamp,
+        correct: true, // Assume correct for now - could be enhanced
+        responseTime: entry.explorationTime * 1000, // Convert to ms
+        comprehensionLevel: entry.comprehensionLevel,
+        score: entry.comprehensionLevel * 20 // Simple scoring
+      });
+    });
+
+    // Add recent word progress data
+    const recentEntries = Object.values(wordProgress)
+      .filter(p => p.lastPracticed && (Date.now() - new Date(p.lastPracticed).getTime()) < 600000) // Last 10 minutes
+      .sort((a, b) => new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime())
+      .slice(0, 10); // Last 10 words
+
+    recentEntries.forEach(entry => {
+      performanceData.push({
+        timestamp: new Date(entry.lastPracticed).getTime(),
+        correct: (entry.timesCorrect || 0) > (entry.timesIncorrect || 0),
+        responseTime: 3000, // Default response time
+        score: entry.xp || 0
+      });
+    });
+
+    // Sort by timestamp (most recent first)
+    return performanceData.sort((a, b) => b.timestamp - a.timestamp).slice(0, 20);
   }
 
   /**
