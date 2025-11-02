@@ -28,10 +28,12 @@ This directory contains comprehensive technical documentation for the LevelUp la
 ### �📖 **Content Creation Guides**
 - **[Language Module Guide](LANGUAGE_MODULE_GUIDE.md)** - Comprehensive guide for creating educational language modules
 
-### 🤖 **AI & Analytics**
-- **[AI Implementation Summary](AI_IMPLEMENTATION_SUMMARY.md)** - Complete AI system overview
-- **[AI Learning Coach](AI_LEARNING_COACH.md)** - Learning analytics and recommendations
-- **[AI Adaptive Learning](AI_ADAPTIVE_LEARNING.md)** - Adaptive learning algorithms
+### 🤖 **AI System Documentation**
+- **[AI Implementation Summary](AI_IMPLEMENTATION_SUMMARY.md)** - High-level overview of AI features built
+- **[AI Learning Engine](AI_LEARNING_ENGINE.md)** - Complete AI system implementation guide
+- **[AI Learning Coach](AI_LEARNING_COACH.md)** - Behavioral analytics and learning guidance system (456 lines)
+- **[AI Adaptive Learning](AI_ADAPTIVE_LEARNING.md)** - Real-time challenge intervention and quiz mode selection
+- **[AI Challenge Data Storage](AI_CHALLENGE_DATA_STORAGE_COMPLETE.md)** - Challenge performance data storage implementation
 
 ### 🔧 **Development & Deployment**
 - **[Developer Tools](DEVELOPER_TOOLS.md)** - Centralized developer tools dashboard (window.LevelUpDev)

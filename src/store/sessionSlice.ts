@@ -167,13 +167,6 @@ export const sessionTypes: SessionType[] = [
 const loadPersistedSessionState = (): Partial<SessionState> => {
   try {
     const savedState = sessionStateStorage.load();
-    console.log('🔍 Loading persisted session state:', {
-      hasCurrentSession: !!savedState.currentSession,
-      sessionId: savedState.currentSession?.id,
-      isActive: savedState.isActive,
-      language: savedState.language,
-      sessionTimer: savedState.sessionTimer
-    });
     
     return {
       currentLanguage: savedState.language || '',
@@ -195,13 +188,6 @@ const loadPersistedSessionState = (): Partial<SessionState> => {
 };
 
 const persistedSessionState = loadPersistedSessionState();
-
-console.log('🔍 Persisted session state after loading:', {
-  currentLanguage: persistedSessionState.currentLanguage,
-  currentSession: persistedSessionState.currentSession?.id,
-  isSessionActive: persistedSessionState.isSessionActive,
-  sessionStartTime: persistedSessionState.sessionStartTime
-});
 
 /**
  * Session state persistence follows the centralized architecture pattern.
@@ -254,6 +240,56 @@ const sessionSlice = createSlice({
 
     updateProgress: (state, action: PayloadAction<Partial<SessionProgress>>) => {
       state.progress = { ...state.progress, ...action.payload };
+    },
+
+    /**
+     * UNIFIED ACTION: Handle complete answer submission in one action
+     * This replaces the need for multiple separate actions (checkAnswer + addCorrectAnswer + incrementWordsCompleted)
+     */
+    handleAnswerSubmission: (
+      state,
+      action: PayloadAction<{
+        isCorrect: boolean;
+        bonuses?: {
+          timeBonus?: number;
+          streakBonus?: number;
+          contextBonus?: number;
+          perfectRecallBonus?: number;
+        };
+        isSessionActive: boolean;
+        currentSession: any;
+      }>
+    ) => {
+      const {
+        isCorrect,
+        bonuses = {},
+        isSessionActive,
+        currentSession
+      } = action.payload;
+
+      // 1. Update session progress (if in an active session)
+      if (isSessionActive && currentSession) {
+        if (isCorrect) {
+          state.progress.wordsCompleted += 1;
+          state.progress.correctAnswers += 1;
+          state.progress.currentStreak += 1;
+          state.progress.longestStreak = Math.max(
+            state.progress.longestStreak,
+            state.progress.currentStreak
+          );
+
+          // Add bonuses
+          const totalBonus = Object.values(bonuses).reduce((sum, bonus) => sum + (bonus || 0), 0);
+          state.progress.score += 100 + totalBonus; // Base score + bonuses
+          state.progress.bonusPoints += totalBonus;
+        } else {
+          state.progress.incorrectAnswers += 1;
+          state.progress.currentStreak = 0; // Reset streak on incorrect answer
+        }
+      }
+
+      // Note: Word progress updates should be handled in gameSlice to maintain separation of concerns
+      // This action focuses only on session-related state
     },
 
     addCorrectAnswer: (
@@ -405,23 +441,13 @@ const sessionSlice = createSlice({
     },
 
     clearStaleSession: state => {
-      console.log('🔍 clearStaleSession called with:', {
-        hasCurrentSession: !!state.currentSession,
-        sessionId: state.currentSession?.id,
-        isSessionActive: state.isSessionActive,
-        sessionStartTime: state.sessionStartTime
-      });
-      
       // With the new loading logic, sessions are never auto-restored as active
       // This action is now primarily for explicit cleanup of inactive sessions
       if (state.currentSession && !state.isSessionActive) {
-        console.log(`🧹 Clearing inactive session: ${state.currentSession.id}`);
         state.currentSession = null;
         state.progress = defaultProgress;
         state.isSessionActive = false;
         state.sessionStartTime = 0;
-      } else {
-        console.log('✅ No session cleanup needed');
       }
     },
 
@@ -449,6 +475,7 @@ export const {
   setLanguage,
   startSession,
   updateProgress,
+  handleAnswerSubmission,
   addCorrectAnswer,
   addIncorrectAnswer,
   incrementWordsCompleted,

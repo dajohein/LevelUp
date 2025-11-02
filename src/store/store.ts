@@ -6,6 +6,7 @@ import sessionReducer from './sessionSlice';
 import type { GameState } from './types';
 import type { AchievementsState } from './types';
 import type { SessionState } from './sessionSlice';
+// Use simplified persistence middleware
 import { persistenceMiddleware } from './persistenceMiddleware';
 
 const reducer = {

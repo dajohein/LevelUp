@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
-import { persistenceUtils } from '../store/persistenceMiddleware';
 import {
   isLocalStorageAvailable,
   getStorageInfo,
@@ -309,7 +308,7 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
   const handleExportData = () => {
     try {
       const data = {
-        wordProgress: persistenceUtils.getStorageInfo(),
+        wordProgress: getStorageInfo(),
         exportDate: new Date().toISOString(),
         version: '2.0.0',
       };

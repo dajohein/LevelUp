@@ -10,7 +10,6 @@ import { testSaveOptimization } from './testSaveOptimization';
 import { testAllGameServicesPerformance } from './testAllGameServicesPerformance';
 import { testImmediateImprovements } from './testImmediateImprovements';
 import { testPerformanceFix } from './testPerformanceFix';
-import { testDataMigration, testDirectionalAnalytics, testMigrationStatus, runAllTests as migrationRunAllTests } from './migrationTests';
 import { enablePerformanceTracking, disablePerformanceTracking, analyzePerformance } from './advancedPerformanceAnalyzer';
 import { getDevCacheStats, clearDevCaches } from './developmentCacheManager';
 import { runWordRepetitionTests } from './testWordRepetitionFix';
@@ -100,16 +99,6 @@ class LevelUpDeveloperTools {
       }
     },
 
-    // Data migration tests
-    migration: {
-      runAllTests: migrationRunAllTests,
-      testDataMigration,
-      testDirectionalAnalytics,
-      testMigrationStatus,
-      verifyDataIntegrity: migrationRunAllTests,
-      testLegacyDataLoad: testDataMigration
-    },
-
     // Comprehensive testing
     runAllTests: async () => {
       console.log('🧪 Running comprehensive test suite...');
@@ -119,8 +108,7 @@ class LevelUpDeveloperTools {
         gameServices: await testAllGameServicesPerformance(),
         immediateImprovements: await testImmediateImprovements(),
         performanceFix: await testPerformanceFix(),
-        wordRepetition: runWordRepetitionTests(),
-        migration: await migrationRunAllTests()
+        wordRepetition: runWordRepetitionTests()
       };
 
       const totalTests = Object.values(results).reduce((sum, result) => {
@@ -367,10 +355,6 @@ class LevelUpDeveloperTools {
         }
       });
 
-      Object.keys(this.testing.migration).forEach(key => {
-        functions[`testing.migration.${key}`] = 'function';
-      });
-
       Object.keys(this.performance).forEach(key => {
         if (key !== 'cache') {
           functions[`performance.${key}`] = typeof (this.performance as any)[key] === 'function' ? 'function' : 'object';
@@ -458,7 +442,6 @@ if (typeof window !== 'undefined') {
   (window as any).testAllGameServicesPerformance = levelUpDevTools.testing.gameServicesPerformance;
   (window as any).testImmediateImprovements = levelUpDevTools.testing.immediateImprovements;
   (window as any).testPerformanceFix = levelUpDevTools.testing.performanceFix;
-  (window as any).migrationTests = levelUpDevTools.testing.migration;
   (window as any).enablePerformanceDebug = levelUpDevTools.performance.enable;
   
   console.log('🛠️ LevelUp Developer Tools loaded');

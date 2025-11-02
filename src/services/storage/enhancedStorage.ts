@@ -71,22 +71,24 @@ class EnhancedStorageService {
 
       const result = await asyncStorage.set(key, wordProgress, options);
 
-      // Update analytics
-      if (result.success) {
-        this.analytics.hits++;
-        if (this.config.cacheLanguageData) {
-          // Cache frequently accessed summary data
-          await this.cacheLanguageSummary(languageCode, wordProgress);
-        }
-      } else {
-        this.analytics.misses++;
+      // Update cache on successful save (CRITICAL: Keep cache synchronized!)
+      if (result.success && this.config.cacheLanguageData) {
+        await smartCache.set(
+          key, 
+          wordProgress, 
+          24 * 60 * 60 * 1000, // 24 hours
+          [`word_progress_${languageCode}`]
+        );
+        
+        // Cache frequently accessed summary data
+        await this.cacheLanguageSummary(languageCode, wordProgress);
       }
 
       const duration = performance.now() - startTime;
       this.analytics.totalTime += duration;
 
       if (this.config.debugMode) {
-        logger.debug(`💾 Saved word progress for ${languageCode} (${Math.round(duration)}ms)`);
+        logger.debug(`💾 Saved word progress for ${languageCode} (${Math.round(duration)}ms, cached: ${this.config.cacheLanguageData})`);
       }
 
       return result;
@@ -106,11 +108,43 @@ class EnhancedStorageService {
       remoteStorage.setCurrentLanguage(languageCode);
       
       const key = `word_progress_${languageCode}`;
+      
+      // First, try cache (CRITICAL: Actually use cache for reads!)
+      if (this.config.cacheLanguageData) {
+        const cached = await smartCache.get<Record<string, WordProgress>>(key);
+        if (cached) {
+          this.analytics.hits++;
+          const duration = performance.now() - startTime;
+          this.analytics.totalTime += duration;
+          
+          if (this.config.debugMode) {
+            const wordCount = Object.keys(cached).length;
+            logger.debug(`⚡ Cache hit: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`);
+          }
+          
+          return { success: true, data: cached };
+        }
+      }
+      
+      // Cache miss - load from storage
       const result = await asyncStorage.get<Record<string, WordProgress>>(key);
 
-      // Update analytics
+      // Update analytics - this is a cache miss if we got here
       if (result.success && result.data) {
-        this.analytics.hits++;
+        this.analytics.misses++;
+        
+        // Cache the loaded data for future hits
+        if (this.config.cacheLanguageData) {
+          await smartCache.set(
+            key, 
+            result.data, 
+            24 * 60 * 60 * 1000, // 24 hours
+            [`word_progress_${languageCode}`]
+          );
+          
+          // Also cache summary data
+          await this.cacheLanguageSummary(languageCode, result.data);
+        }
       } else {
         this.analytics.misses++;
       }
@@ -120,13 +154,14 @@ class EnhancedStorageService {
 
       if (this.config.debugMode && result.success) {
         const wordCount = Object.keys(result.data || {}).length;
-        logger.debug(`📖 Loaded ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`);
+        logger.debug(`📖 Storage load: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`);
       }
 
       return result;
     } catch (error) {
       logger.error(`Failed to load word progress for ${languageCode}:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.analytics.misses++;
       return { success: false, error: errorMessage };
     }
   }
@@ -337,149 +372,6 @@ class EnhancedStorageService {
       compressionSavings: this.analytics.compressionSavings,
       cacheStats,
     };
-  }
-
-  /**
-   * Migration support for backend transition
-   */
-  async migrateToBackend(): Promise<StorageResult<void>> {
-    try {
-      logger.info('🚀 Backend migration starting...');
-      
-      // Step 1: Collect all local data
-      const migrationData = await this.collectMigrationData();
-      
-      // Step 2: Validate data integrity
-      const validation = await this.validateMigrationData(migrationData);
-      if (!validation.success) {
-        return { success: false, error: `Migration validation failed: ${validation.error}` };
-      }
-      
-      // Step 3: Create backup before migration
-      const backupResult = await this.createMigrationBackup(migrationData);
-      if (!backupResult.success) {
-        return { success: false, error: `Backup creation failed: ${backupResult.error}` };
-      }
-      
-      // Step 4: Migrate to backend (when backend is available)
-      // This will be implemented when backend endpoints are ready
-      logger.info('� Backend endpoints not configured - migration prepared but not executed');
-      
-      // Step 5: Verify migration success
-      logger.info('✅ Migration preparation completed successfully');
-      
-      return { 
-        success: true
-      };
-      
-    } catch (error) {
-      logger.error('Backend migration failed', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Migration failed' };
-    }
-  }
-
-  /**
-   * Helper methods for backend migration
-   */
-  private async collectMigrationData(): Promise<any> {
-    const migrationData: any = {};
-    
-    try {
-      // Collect all progress data
-      const progressKeys = await asyncStorage.getKeys('word_progress_*');
-      if (progressKeys.success && progressKeys.data) {
-        for (const key of progressKeys.data) {
-          const data = await asyncStorage.get(key);
-          if (data.success) {
-            migrationData[key] = data.data;
-          }
-        }
-      }
-      
-      // Collect analytics data
-      const analyticsKeys = await asyncStorage.getKeys('analytics_*');
-      if (analyticsKeys.success && analyticsKeys.data) {
-        for (const key of analyticsKeys.data) {
-          const data = await asyncStorage.get(key);
-          if (data.success) {
-            migrationData[key] = data.data;
-          }
-        }
-      }
-      
-      // Collect session data
-      const sessionKeys = await asyncStorage.getKeys('session_*');
-      if (sessionKeys.success && sessionKeys.data) {
-        for (const key of sessionKeys.data) {
-          const data = await asyncStorage.get(key);
-          if (data.success) {
-            migrationData[key] = data.data;
-          }
-        }
-      }
-      
-      logger.info(`📦 Collected ${Object.keys(migrationData).length} data items for migration`);
-      return migrationData;
-    } catch (error) {
-      logger.error('Failed to collect migration data', error);
-      throw error;
-    }
-  }
-
-  private async validateMigrationData(data: any): Promise<StorageResult<void>> {
-    try {
-      // Validate data structure and integrity
-      const errors: string[] = [];
-      
-      // Check for required data types
-      const hasProgressData = Object.keys(data).some(key => key.startsWith('word_progress_'));
-      if (!hasProgressData) {
-        errors.push('No progress data found');
-      }
-      
-      // Validate data format
-      for (const [key, value] of Object.entries(data)) {
-        if (value === null || value === undefined) {
-          errors.push(`Invalid data for key: ${key}`);
-        }
-      }
-      
-      if (errors.length > 0) {
-        return { success: false, error: errors.join(', ') };
-      }
-      
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Validation failed' };
-    }
-  }
-
-  private async createMigrationBackup(data: any): Promise<StorageResult<void>> {
-    try {
-      const backupKey = `migration_backup_${Date.now()}`;
-      const backup = {
-        timestamp: Date.now(),
-        version: '1.0',
-        data: data,
-        metadata: {
-          itemCount: Object.keys(data).length,
-          totalSize: JSON.stringify(data).length
-        }
-      };
-      
-      const result = await asyncStorage.set(backupKey, backup, {
-        compress: true,
-        ttl: 30 * 24 * 60 * 60 * 1000 // 30 days
-      });
-      
-      if (result.success) {
-        logger.info(`💾 Migration backup created: ${backupKey}`);
-      }
-      
-      return result;
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Backup failed' };
-    }
   }
 
   async exportAllData(): Promise<StorageResult<any>> {

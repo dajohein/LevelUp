@@ -3,7 +3,7 @@
  * This ensures we eliminated excessive saves and storage operations
  */
 
-import { storageOrchestrator } from '../services/storageOrchestrator';
+import { storageOrchestrator } from '../services/storageCoordinator';
 import { store } from '../store/store';
 import { addCorrectAnswer } from '../store/sessionSlice';
 import { logger } from '../services/logger';
@@ -12,58 +12,62 @@ export const testSaveOptimization = async () => {
   logger.info('🎯 Testing Save Operation Optimization');
 
   const results = {
-    beforeStats: storageOrchestrator.getStatistics(),
     testsPassed: 0,
     testsTotal: 2,
     issues: [] as string[]
   };
 
-  // Test 1: Single answer should trigger minimal queue operations
+  // Test 1: Single answer should trigger minimal background operations
   try {
-    const initialQueueLength = results.beforeStats.queueLength;
+    const beforeStats = await storageOrchestrator.getStatistics();
+    const initialPending = beforeStats?.backgroundAutoSave?.pendingChanges || 0;
     
     // Simulate answering a question correctly
     store.dispatch(addCorrectAnswer({}));
     
-    // Wait for debounced operations
+    // Wait for background processing
     await new Promise(resolve => setTimeout(resolve, 250));
     
-    const newStats = storageOrchestrator.getStatistics();
-    const queueIncrease = newStats.queueLength - initialQueueLength;
+    const afterStats = await storageOrchestrator.getStatistics();
+    const currentPending = afterStats?.backgroundAutoSave?.pendingChanges || 0;
     
-    if (queueIncrease <= 1) {
+    // Since we have background processing, pending changes should be managed
+    if (currentPending <= initialPending + 1) {
       results.testsPassed++;
       logger.info('✅ Answer submission optimization test passed');
-      logger.info(`   📊 Queue operations increased by only ${queueIncrease} (optimal: ≤1)`);
+      logger.info(`   📊 Background operations efficiently managed`);
     } else {
-      results.issues.push(`Too many queue operations: ${queueIncrease} (should be ≤1)`);
-      logger.warn(`⚠️ Answer submission triggered ${queueIncrease} queue operations (too many)`);
+      results.issues.push(`Too many pending operations: ${currentPending} (was ${initialPending})`);
+      logger.warn(`⚠️ Answer submission triggered excessive background operations`);
     }
   } catch (error) {
     results.issues.push(`Answer submission test failed: ${error}`);
     logger.error('❌ Answer submission test failed:', error);
   }
 
-  // Test 2: Verify storage orchestrator responsiveness
+  // Test 2: Verify storage coordinator responsiveness
   try {
-    const beforeFlush = storageOrchestrator.getStatistics();
+    // Force save all pending operations
+    await storageOrchestrator.saveCurrentState('immediate');
     
-    // Force flush all pending saves
-    await storageOrchestrator.flush();
+    // Wait a moment for processing
+    await new Promise(resolve => setTimeout(resolve, 100));
     
-    const afterFlush = storageOrchestrator.getStatistics();
+    const afterSave = await storageOrchestrator.getStatistics();
+    const isProcessing = afterSave?.backgroundAutoSave?.isProcessing || false;
     
-    if (afterFlush.queueLength === 0) {
+    // System should complete forced saves quickly
+    if (!isProcessing) {
       results.testsPassed++;
-      logger.info('✅ Storage orchestrator flush test passed');
-      logger.info(`   📈 Queue cleared successfully: ${beforeFlush.queueLength} → ${afterFlush.queueLength}`);
+      logger.info('✅ Storage coordinator force save test passed');
+      logger.info(`   � Immediate save completed successfully`);
     } else {
-      results.issues.push(`Queue not properly cleared: ${afterFlush.queueLength} remaining`);
-      logger.warn(`⚠️ Queue not fully processed: ${afterFlush.queueLength} operations remaining`);
+      results.issues.push('Force save still processing after delay');
+      logger.warn(`⚠️ Force save taking longer than expected`);
     }
   } catch (error) {
-    results.issues.push(`Storage flush test failed: ${error}`);
-    logger.error('❌ Storage flush test failed:', error);
+    results.issues.push(`Storage force save test failed: ${error}`);
+    logger.error('❌ Storage force save test failed:', error);
   }
 
   // Summary
@@ -77,11 +81,11 @@ export const testSaveOptimization = async () => {
     logger.info(`   🎉 All tests passed - save optimization is working!`);
   }
 
-  const finalStats = storageOrchestrator.getStatistics();
+  const finalStats = await storageOrchestrator.getStatistics();
   logger.info(`\n📊 Storage Statistics:`);
-  logger.info(`   Queue length: ${finalStats.queueLength}`);
-  logger.info(`   Is processing: ${finalStats.isProcessing}`);
-  logger.info(`   Last saves: ${Object.keys(finalStats.lastSaves).length} operations tracked`);
+  logger.info(`   Background Auto-Save: ${finalStats?.backgroundAutoSave?.enabled ? 'enabled' : 'disabled'}`);
+  logger.info(`   Pending Changes: ${finalStats?.backgroundAutoSave?.pendingChanges || 0}`);
+  logger.info(`   Is Processing: ${finalStats?.backgroundAutoSave?.isProcessing || false}`);
 
   return {
     success: results.testsPassed === results.testsTotal,

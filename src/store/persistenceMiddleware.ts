@@ -1,165 +1,244 @@
 /**
- * Persistence Middleware - Centralized Storage Coordination
+ * Persistence Middleware - Background Auto-Save Architecture
  * 
- * ARCHITECTURE:
- * Redux Actions → Persistence Middleware → Storage Orchestrator → Storage Services
+ * SIMPLIFIED ARCHITECTURE:
+ * Redux Actions → Persistence Middleware → Background Auto-Save → Storage Services
  * 
- * RESPONSIBILITIES:
- * - Intercepts specific Redux actions that require persistence
- * - Coordinates debounced vs immediate saves based on action criticality
- * - Prevents duplicate saves through centralized orchestration
- * - Handles cross-tab synchronization
+ * KEY IMPROVEMENTS:
+ * - Simplified from complex immediate vs debounced logic
+ * - Background auto-save handles all timing and coordination
+ * - Kept intelligent action batching for queue optimization
+ * - Much cleaner and easier to maintain
  * 
- * SEPARATION OF CONCERNS:
- * - Redux Slices: Pure state management, no storage calls
- * - Persistence Middleware: Save coordination and timing
- * - Storage Orchestrator: Queue management and deduplication  
- * - Storage Services: Actual localStorage/IndexedDB operations
+ * BENEFITS:
+ * - Non-blocking UI (storage operations don't block game interactions)
+ * - Better performance (background processing + smart batching)
+ * - Simpler logic flow and easier debugging
+ * - Maintained backward compatibility
  */
 
 import type { Middleware } from '@reduxjs/toolkit';
 import type { RootState } from './store';
-import { storageOrchestrator } from '../services/storageOrchestrator';
-import { 
-  gameStateStorage, 
-  sessionStateStorage, 
-  wordProgressStorage 
-} from '../services/storageService';
 import { logger } from '../services/logger';
+import BackgroundAutoSave from '../services/storage/backgroundAutoSave';
+import { enhancedStorage } from '../services/storage/enhancedStorage';
 
-// Actions requiring immediate persistence (critical state changes)
-const IMMEDIATE_PERSIST_ACTIONS = [
-  'game/setLanguage',        // Language switching affects all subsequent operations
-  'game/setCurrentModule',   // Module changes affect word selection
-  'game/resetGame',          // Game resets must be preserved
-  'session/startSession',    // Session initialization is critical
-  'session/completeSession', // Session completion triggers navigation
-  'session/resetSession',    // Session resets affect UI state
-  'achievements/unlockAchievement', // Achievement unlocks should be immediately saved
+// Critical actions that need immediate saving (bypass background queue)
+const CRITICAL_ACTIONS = [
+  'game/setLanguage',           // Language switches must be immediate
+  'session/completeSession',    // Session completion triggers navigation
+  'achievements/unlockAchievement', // Achievements should be immediately saved
 ];
 
-// Actions using debounced persistence (frequent updates, optimized for performance)
-const DEBOUNCED_PERSIST_ACTIONS = [
-  'game/checkAnswer',              // Word progress updates from quiz answers
-  'session/addCorrectAnswer',      // User progress tracking
-  'session/addIncorrectAnswer',    // Error pattern analysis
-  'session/incrementWordsCompleted', // Session progression
-  'session/updateProgress',        // Score and statistics updates
-  // NOTE: Removed other game actions to prevent duplicate saves
-  // Enhanced mode handles its own state, standard mode uses session actions
+// Actions that trigger state changes needing persistence
+const PERSIST_ACTIONS = [
+  'game/checkAnswer',
+  'game/setCurrentModule', 
+  'game/resetGame',
+  'session/startSession',
+  'session/addCorrectAnswer',
+  'session/addIncorrectAnswer', 
+  'session/incrementWordsCompleted',
+  'session/updateProgress',
+  'session/resetSession',
 ];
 
-// Main persistence middleware - now using centralized orchestrator
-export const persistenceMiddleware: Middleware<{}, RootState> = (_store) => next => action => {
-  // Execute the action first
+// Action groups for intelligent batching (reduces queue size)
+const RELATED_ACTION_GROUPS = [
+  ['game/checkAnswer', 'session/addCorrectAnswer', 'session/addIncorrectAnswer', 'session/incrementWordsCompleted'],
+];
+
+// Background auto-save instance
+let backgroundAutoSave: BackgroundAutoSave | null = null;
+
+// Simplified batching state
+let batchTimeout: NodeJS.Timeout | null = null;
+let pendingBatchActions = new Set<string>();
+
+// Initialize background auto-save system
+const getAutoSave = () => {
+  if (!backgroundAutoSave) {
+    backgroundAutoSave = new BackgroundAutoSave(
+      enhancedStorage,
+      logger,
+      {
+        interval: 30000,      // 30s auto-save
+        maxPendingActions: 20, // Reduced since we're batching better
+        idleThreshold: 2000,   // 2s idle (faster response)
+        enabled: true
+      }
+    );
+    
+    logger.debug('🤖 Background auto-save initialized (simplified)');
+    
+    // Make available for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).__BACKGROUND_AUTOSAVE__ = backgroundAutoSave;
+    }
+  }
+  return backgroundAutoSave;
+};
+
+// Simplified queue helper
+const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action: any) => {
+  const actionType = action.type;
+  const priority = CRITICAL_ACTIONS.includes(actionType) ? 'high' : 'medium';
+  
+  // Queue appropriate state based on action type
+  if (actionType.startsWith('game/')) {
+    autoSave.queueChange('gameState', state.game, undefined, priority);
+    
+    // Queue word progress if language exists
+    const languageCode = state.game?.language;
+    if (languageCode && state.game?.wordProgress?.[languageCode]) {
+      autoSave.queueChange('wordProgress', state.game.wordProgress[languageCode], languageCode, priority);
+    }
+  }
+  
+  if (actionType.startsWith('session/')) {
+    autoSave.queueChange('sessionState', state.session, undefined, priority);
+  }
+  
+  if (actionType.startsWith('achievements/')) {
+    autoSave.queueChange('achievements', state.achievements, undefined, priority);
+  }
+};
+
+// Simplified persistence middleware
+export const persistenceMiddleware: Middleware<{}, RootState> = (store) => next => action => {
+  // Execute action first
   const result = next(action);
+  
+  // Only process actions that need persistence
+  if (!PERSIST_ACTIONS.includes(action.type) && !CRITICAL_ACTIONS.includes(action.type)) {
+    return result;
+  }
 
   try {
-    // Handle immediate persistence actions
-    if (IMMEDIATE_PERSIST_ACTIONS.includes(action.type)) {
-      // Use centralized orchestrator for immediate saves
-      storageOrchestrator.saveCurrentState('immediate');
+    const autoSave = getAutoSave();
+    const state = store.getState();
+    
+    // Handle critical actions immediately
+    if (CRITICAL_ACTIONS.includes(action.type)) {
+      queueStateChange(autoSave, state, action);
+      autoSave.forceSave(); // Immediate save for critical actions
+      return result;
     }
-
-    // Handle debounced persistence actions
-    else if (DEBOUNCED_PERSIST_ACTIONS.includes(action.type)) {
-      // Use centralized orchestrator for debounced saves
-      storageOrchestrator.saveCurrentState('debounced');
+    
+    // Handle related action groups with intelligent batching
+    const isRelatedAction = RELATED_ACTION_GROUPS.some(group => group.includes(action.type));
+    
+    if (isRelatedAction) {
+      // Add to pending batch
+      pendingBatchActions.add(action.type);
+      
+      // Clear existing timeout
+      if (batchTimeout) {
+        clearTimeout(batchTimeout);
+      }
+      
+      // Set new batch timeout
+      batchTimeout = setTimeout(() => {
+        if (pendingBatchActions.size > 0) {
+          // Queue state for all related actions in one go
+          queueStateChange(autoSave, store.getState(), action);
+          
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug(`🔄 Batched ${pendingBatchActions.size} related actions: ${Array.from(pendingBatchActions).join(', ')}`);
+          }
+          
+          pendingBatchActions.clear();
+        }
+        batchTimeout = null;
+      }, 50); // 50ms batch window
+      
+    } else {
+      // Non-related action - queue immediately
+      queueStateChange(autoSave, state, action);
     }
+    
   } catch (error) {
     logger.error('Persistence middleware error:', error);
-    // Don't throw - let the app continue working even if persistence fails
+    // Don't throw - keep app working
   }
 
   return result;
 };
 
-// Storage event listener for cross-tab synchronization
+// Simplified utilities for debugging and cleanup
+export const persistenceUtils = {
+  // Get background auto-save status
+  getStatus: () => {
+    return backgroundAutoSave?.getStatus() || { 
+      enabled: false, 
+      pendingChanges: 0, 
+      isProcessing: false, 
+      lastActionTime: 0,
+      config: null 
+    };
+  },
+
+  // Force immediate save
+  forceSave: async () => {
+    if (backgroundAutoSave) {
+      await backgroundAutoSave.forceSave();
+      logger.debug('🚀 Manual save completed');
+    }
+  },
+
+  // Update configuration
+  updateConfig: (config: any) => {
+    if (backgroundAutoSave) {
+      backgroundAutoSave.updateConfig(config);
+      logger.debug('🔧 Config updated', config);
+    }
+  },
+
+  // Get simple analytics
+  getAnalytics: () => {
+    const status = backgroundAutoSave?.getStatus();
+    const analytics = (typeof window !== 'undefined') ? (window as any).__SAVE_ANALYTICS__?.getAnalytics() : null;
+    
+    return {
+      autoSave: status,
+      backgroundSaves: analytics
+    };
+  },
+
+  // Cleanup
+  cleanup: async () => {
+    if (backgroundAutoSave) {
+      await backgroundAutoSave.cleanup();
+      logger.debug('🧹 Cleanup completed');
+    }
+  }
+};
+
+// Setup cross-tab sync (simplified)
 export const setupStorageSync = (store: any) => {
   const handleStorageChange = (event: StorageEvent) => {
     if (!event.key || !event.newValue) return;
 
     try {
-      // Handle word progress changes from other tabs
-      if (event.key === 'levelup_word_progress') {
-        const newWordProgress = JSON.parse(event.newValue);
-        const currentLanguage = store.getState().game.language;
-
-        if (currentLanguage && newWordProgress[currentLanguage]) {
-          // Update the current language's word progress
-          store.dispatch({
-            type: 'game/syncWordProgress',
-            payload: newWordProgress[currentLanguage],
-          });
-        }
+      // Handle critical state changes from other tabs
+      if (event.key === 'levelup_game_state') {
+        const newGameState = JSON.parse(event.newValue);
+        store.dispatch({ type: 'game/syncFromStorage', payload: newGameState });
       }
-
-      // Handle session state changes from other tabs
-      else if (event.key === 'levelup_session_state') {
+      
+      if (event.key === 'levelup_session_state') {
         const newSessionState = JSON.parse(event.newValue);
-
-        // Sync session state if it changed in another tab
-        store.dispatch({
-          type: 'session/syncSessionState',
-          payload: newSessionState,
-        });
+        store.dispatch({ type: 'session/syncFromStorage', payload: newSessionState });
       }
+      
     } catch (error) {
       logger.error('Storage sync error:', error);
     }
   };
 
-  // Listen for storage changes from other tabs
   window.addEventListener('storage', handleStorageChange);
-
-  // Return cleanup function
+  
   return () => {
     window.removeEventListener('storage', handleStorageChange);
   };
-};
-
-// Utilities for manual persistence control
-export const persistenceUtils = {
-  // Force immediate save of all state
-  saveAll: async () => {
-    await storageOrchestrator.flush();
-  },
-
-  // Clear all persisted data
-  clearAll: () => {
-    gameStateStorage.clear();
-    sessionStateStorage.clear();
-    wordProgressStorage.clear();
-  },
-
-  // Get storage usage information
-  getStorageInfo: () => {
-    try {
-      const gameState = localStorage.getItem('levelup_game_state');
-      const sessionState = localStorage.getItem('levelup_session_state');
-      const wordProgress = localStorage.getItem('levelup_word_progress');
-
-      const sizes = {
-        gameState: gameState ? gameState.length : 0,
-        sessionState: sessionState ? sessionState.length : 0,
-        wordProgress: wordProgress ? wordProgress.length : 0,
-      };
-
-      const total = Object.values(sizes).reduce((sum, size) => sum + size, 0);
-
-      return {
-        sizes,
-        total,
-        totalKB: Math.round((total / 1024) * 100) / 100,
-      };
-    } catch (error) {
-      logger.error('Error getting storage info:', error);
-      return { sizes: {}, total: 0, totalKB: 0 };
-    }
-  },
-
-  // Get orchestrator statistics
-  getOrchestratorStats: () => {
-    return storageOrchestrator.getStatistics();
-  },
 };

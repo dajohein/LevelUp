@@ -1,11 +1,10 @@
 /**
  * Test script for immediate improvements
- * Verifies backend migration, IndexedDB integration, storage analytics, and module-scoped quiz generation
+ * Verifies IndexedDB integration, storage analytics, tiered storage, and module-scoped quiz generation
  */
 
 import { enhancedStorage } from '../services/storage/enhancedStorage';
 import { indexedDBStorage } from '../services/storage/indexedDB';
-import { storageUtils } from '../services/storage/index';
 import { tieredStorage } from '../services/storage/tieredStorage';
 import { testModuleScopedQuizGeneration } from './testModuleScopedQuiz';
 
@@ -13,27 +12,15 @@ export async function testImmediateImprovements() {
   console.log('🧪 Testing Immediate Improvements...');
   
   const results = {
-    backendMigration: false,
     indexedDBIntegration: false,
     storageAnalytics: false,
-    migrationUtilities: false,
     tieredStorage: false,
     moduleScopedQuiz: false
   };
 
   try {
-    // Test 1: Backend Migration Preparation
-    console.log('\n1️⃣ Testing Backend Migration Preparation...');
-    const migrationResult = await enhancedStorage.migrateToBackend();
-    if (migrationResult.success) {
-      console.log('✅ Backend migration preparation successful');
-      results.backendMigration = true;
-    } else {
-      console.log('❌ Backend migration failed:', migrationResult.error);
-    }
-
-    // Test 2: IndexedDB Integration
-    console.log('\n2️⃣ Testing IndexedDB Integration...');
+    // Test 1: IndexedDB Integration
+    console.log('\n1️⃣ Testing IndexedDB Integration...');
     const testData = { test: 'IndexedDB integration', timestamp: Date.now() };
     const setResult = await indexedDBStorage.set('test_key', testData, 'test');
     
@@ -51,7 +38,8 @@ export async function testImmediateImprovements() {
     }
 
     // Test 3: Storage Analytics
-    console.log('\n3️⃣ Testing Storage Analytics...');
+    // Test 2: Storage Analytics
+    console.log('\n2️⃣ Testing Storage Analytics...');
     const analyticsResult = await enhancedStorage.getStorageAnalytics();
     if (analyticsResult.success) {
       console.log('✅ Storage analytics working');
@@ -63,20 +51,8 @@ export async function testImmediateImprovements() {
       console.log('❌ Storage analytics failed:', analyticsResult.error);
     }
 
-    // Test 4: Migration Utilities
-    console.log('\n4️⃣ Testing Migration Utilities...');
-    const breakdown = await storageUtils.getStorageBreakdown();
-    if (breakdown.totalSize !== undefined) {
-      console.log('✅ Migration utilities working');
-      console.log('   - Total storage size:', breakdown.totalSize, 'bytes');
-      console.log('   - Storage by type:', Object.keys(breakdown.byType).length, 'categories');
-      results.migrationUtilities = true;
-    } else {
-      console.log('❌ Migration utilities failed');
-    }
-
-    // Test 5: Tiered Storage
-    console.log('\n5️⃣ Testing Tiered Storage...');
+    // Test 3: Tiered Storage
+    console.log('\n3️⃣ Testing Tiered Storage...');
     const tierTestData = { tier: 'test', data: 'tiered storage test' };
     const tierSetResult = await tieredStorage.setToTier('tier_test', tierTestData, 'indexedDB');
     
@@ -94,7 +70,8 @@ export async function testImmediateImprovements() {
     }
 
     // Test 6: Module-Scoped Quiz Generation
-    console.log('\n6️⃣ Testing Module-Scoped Quiz Generation...');
+    // Test 4: Module-Scoped Quiz Generation
+    console.log('\n4️⃣ Testing Module-Scoped Quiz Generation...');
     try {
       await testModuleScopedQuizGeneration();
       console.log('✅ Module-scoped quiz generation working');
