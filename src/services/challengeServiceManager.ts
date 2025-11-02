@@ -97,7 +97,8 @@ class ChallengeServiceManager {
         targetWords: options?.targetWords || this.getDefaultTargetWords(sessionId),
         timeLimit: options?.timeLimit || 5,
         difficulty: options?.difficulty || 3,
-        allWords: allWords || []
+        allWords: allWords || [],
+        moduleId // Pass moduleId for module-specific challenges
       };
 
       await service.initialize(config);

@@ -13,9 +13,22 @@ import {
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
+import { selectQuizMode } from './quizModeSelectionUtils';
+import { userLearningProfileStorage } from './storage/userLearningProfile';
+
+interface BossBattleSessionResults {
+  completedWords: number;
+  totalTargetWords: number;
+  accuracy: number;
+  totalTimeSpent: number;
+  finalBossReached: boolean;
+  finalBossDefeated: boolean;
+  aiEnhancementsUsed: number;
+}
 
 interface BossBattleState {
   languageCode: string;
+  moduleId?: string; // Track selected module
   wordsCompleted: number;
   targetWords: number;
   sessionId: string;
@@ -43,13 +56,15 @@ class BossBattleService {
     languageCode: string, 
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 25,
-    _allWords?: Word[] // Unused - centralized word selection handles this
+    _allWords?: Word[], // Unused - centralized word selection handles this
+    moduleId?: string // Module for scoped challenges
   ): void {
     // Generate unique session ID for this boss battle
     const sessionId = `boss-battle-${Date.now()}`;
 
     this.state = {
       languageCode,
+      moduleId, // Store module for word selection
       wordsCompleted: 0,
       targetWords,
       sessionId,
@@ -121,7 +136,8 @@ class BossBattleService {
       this.state.languageCode,
       wordProgress,
       this.state.sessionId,
-      difficulty
+      difficulty,
+      this.state.moduleId // Pass module for scoped selection
     );
 
     if (!selectionResult) {
@@ -138,7 +154,7 @@ class BossBattleService {
     const selectedWord = selectionResult.word;
     const currentDifficultyLevel = progressPercentage * 100; // Convert to 0-100 scale
 
-    return this.generateAIEnhancedBossQuiz(selectedWord, currentDifficultyLevel, isFinalBoss, bossPhase, wordProgress);
+    return this.generateAIEnhancedBossQuiz(selectedWord, currentDifficultyLevel, bossPhase, wordProgress);
   }
 
   /**
@@ -193,7 +209,6 @@ class BossBattleService {
   private async generateAIEnhancedBossQuiz(
     word: Word,
     difficultyLevel: number,
-    isFinalBoss: boolean,
     bossPhase: string,
     wordProgress: { [key: string]: WordProgress }
   ): Promise<{
@@ -217,8 +232,13 @@ class BossBattleService {
     // Calculate progress percentage for AI context
     const progressPercentage = this.state.wordsCompleted / this.state.targetWords;
 
-    // Generate baseline quiz mode based on difficulty
-    const baselineQuizMode = this.generateBossQuizMode(difficultyLevel, isFinalBoss);
+    // Generate baseline quiz mode using simplified selection
+    const baselineQuizMode = selectQuizMode({
+      word,
+      wordProgress,
+      context: 'boss-battle',
+      allowOpenAnswer: true
+    });
 
     // If AI is disabled, use baseline approach
     if (!this.state.aiEnhancementsEnabled) {
@@ -300,139 +320,11 @@ class BossBattleService {
   }
 
   /**
-   * Generate quiz mode based on boss difficulty
+   * Generate options for boss battle quiz - now handled by adapter
    */
-  private generateBossQuizMode(
-    difficultyLevel: number,
-    isFinalBoss: boolean
-  ): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' {
-    if (isFinalBoss) {
-      // Final boss always gets the hardest mode
-      return 'open-answer';
-    }
-    
-    // Scale quiz difficulty with boss progression
-    if (difficultyLevel >= 85) {
-      return Math.random() < 0.7 ? 'open-answer' : 'fill-in-the-blank';
-    } else if (difficultyLevel >= 65) {
-      return Math.random() < 0.5 ? 'fill-in-the-blank' : 'letter-scramble';
-    } else {
-      return Math.random() < 0.6 ? 'letter-scramble' : 'multiple-choice';
-    }
-  }
-
-  /**
-   * Generate options for boss battle quiz
-   */
-  private generateBossOptions(word: Word, quizMode: string): string[] {
-    switch (quizMode) {
-      case 'multiple-choice':
-        return this.generateBossMultipleChoiceOptions(word);
-      case 'letter-scramble':
-        return this.generateBossLetterScrambleOptions(word);
-      case 'fill-in-the-blank':
-        return this.generateBossFillInTheBlankOptions(word);
-      case 'open-answer':
-      default:
-        return []; // Open answer doesn't need options
-    }
-  }
-
-  /**
-   * Generate challenging multiple choice options
-   */
-  private generateBossMultipleChoiceOptions(word: Word): string[] {
-    const correctAnswer = word.term;
-    
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
-    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
-    
-    // Get challenging wrong answers
-    const wrongAnswers = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => w.term)
-      .filter((term: string) => term !== correctAnswer)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-
-    // Fallback if not enough words
-    while (wrongAnswers.length < 3) {
-      const fallbacks = ['der Boss', 'die Herausforderung', 'das Finale'];
-      for (const fallback of fallbacks) {
-        if (!wrongAnswers.includes(fallback) && wrongAnswers.length < 3) {
-          wrongAnswers.push(fallback);
-        }
-      }
-      break;
-    }
-
-    const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
-    return options.sort(() => 0.5 - Math.random()); // Shuffle options
-  }
-
-  /**
-   * Generate challenging letter scramble options
-   */
-  private generateBossLetterScrambleOptions(word: Word): string[] {
-    const correctTerm = word.term;
-    const options = [correctTerm];
-    
-    // Generate increasingly scrambled versions for boss battle
-    for (let i = 0; i < 3; i++) {
-      const scrambled = this.createBossScramble(correctTerm, 80 + i * 5); // High difficulty
-      options.push(scrambled);
-    }
-    
-    return options.sort(() => 0.5 - Math.random());
-  }
-
-  /**
-   * Generate challenging fill-in-the-blank options
-   */
-  private generateBossFillInTheBlankOptions(word: Word): string[] {
-    const correctTerm = word.term;
-    
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
-    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
-    
-    // Get challenging alternatives
-    const wrongTerms = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => w.term)
-      .filter((term: string) => term !== correctTerm)
-      .slice(0, 3);
-    
-    const options = [correctTerm, ...wrongTerms.slice(0, 3)];
-    return options.sort(() => 0.5 - Math.random());
-  }
-
-  /**
-   * Create boss-level scramble (more challenging)
-   */
-  private createBossScramble(text: string, difficulty: number): string {
-    const words = text.split(' ');
-    return words.map(word => this.scrambleBossWord(word, difficulty)).join(' ');
-  }
-
-  /**
-   * Scramble individual word with boss-level difficulty
-   */
-  private scrambleBossWord(word: string, difficulty: number): string {
-    if (word.length <= 3) return word; // Don't scramble very short words
-    
-    const chars = word.split('');
-    const scrambleIntensity = Math.min(Math.floor((difficulty / 100) * word.length), word.length - 1);
-    
-    // Boss-level scrambling: more aggressive shuffling
-    for (let i = 0; i < scrambleIntensity; i++) {
-      const idx1 = Math.floor(Math.random() * chars.length);
-      const idx2 = Math.floor(Math.random() * chars.length);
-      [chars[idx1], chars[idx2]] = [chars[idx2], chars[idx1]];
-    }
-    
-    return chars.join('');
+  private generateBossOptions(_word: Word, _quizMode: string): string[] {
+    // All option generation now handled by adapter for proper module scoping
+    return [];
   }
 
   /**
@@ -478,9 +370,67 @@ class BossBattleService {
   }
 
   /**
+   * Record boss battle completion and analytics
+   */
+  async recordBossBattleCompletion(
+    userId: string,
+    wordId: string,
+    isCorrect: boolean,
+    timeSpent: number,
+    bossPhase: string,
+    difficultyLevel: number,
+    wasAIEnhanced: boolean = false
+  ): Promise<void> {
+    if (!this.state) {
+      throw new Error('Boss battle session not initialized');
+    }
+
+    try {
+      await userLearningProfileStorage.updateBossBattleData(userId || 'default_user', {
+        wordsCompleted: this.state.wordsCompleted,
+        completed: isCorrect,
+        wasAIEnhanced: wasAIEnhanced,
+        finalBossReached: this.state.wordsCompleted >= this.state.targetWords - 1,
+        finalBossDefeated: isCorrect && this.state.wordsCompleted >= this.state.targetWords - 1,
+        phasePerformance: {
+          [bossPhase]: {
+            accuracy: isCorrect ? 1.0 : 0.0,
+            avgTime: timeSpent,
+            adaptations: wasAIEnhanced ? 1 : 0
+          }
+        },
+        quizMode: 'boss-battle',
+        cognitiveLoad: difficultyLevel > 70 ? 'high' : difficultyLevel > 40 ? 'moderate' : 'low'
+      });
+
+      // Update internal state
+      if (isCorrect) {
+        this.state.consecutiveCorrect++;
+        this.state.consecutiveIncorrect = 0;
+      } else {
+        this.state.consecutiveIncorrect++;
+        this.state.consecutiveCorrect = 0;
+      }
+
+      // Record performance history
+      this.state.performanceHistory.push({
+        isCorrect,
+        timeSpent,
+        quizMode: 'boss-battle',
+        difficulty: difficultyLevel,
+        bossPhase
+      });
+
+      logger.debug(`⚔️ Boss battle completion recorded: ${wordId}, correct: ${isCorrect}, phase: ${bossPhase}`);
+    } catch (error) {
+      logger.error('❌ Failed to record boss battle completion:', error);
+    }
+  }
+
+  /**
    * Save boss battle performance data
    */
-  async saveBossPerformance(userId: string, sessionResults: any): Promise<void> {
+  async saveBossPerformance(userId: string, sessionResults: BossBattleSessionResults): Promise<void> {
     logger.debug(`💾 Saving boss battle performance for user ${userId}`);
     // Note: This method is used by example files but actual implementation
     // would depend on specific storage requirements. For now, we just log.

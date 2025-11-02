@@ -15,9 +15,11 @@ import {
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
+import { getWordMasteryTier, generateQuizModeForMastery } from './quizModeSelectionUtils';
 
 interface StreakChallengeState {
   languageCode: string;
+  moduleId?: string; // Track selected module
   currentStreak: number;
   sessionId: string;
   // AI enhancement state
@@ -43,13 +45,15 @@ class StreakChallengeService {
   initializeStreak(
     languageCode: string, 
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
-    _allWords?: Word[] // Unused - centralized word selection handles this
+    _allWords?: Word[], // Unused - centralized word selection handles this
+    moduleId?: string // Module for scoped challenges
   ): void {
     // Generate unique session ID for this streak challenge
     const sessionId = `streak-challenge-${Date.now()}`;
 
     this.state = {
       languageCode,
+      moduleId, // Store module for word selection
       currentStreak: 0,
       sessionId,
       // AI enhancement initialization
@@ -60,7 +64,7 @@ class StreakChallengeService {
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
-    logger.debug(`🔥 Streak challenge initialized with session ID: ${sessionId}`);
+    logger.debug(`🔥 Streak challenge initialized with session ID: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ' (all words)'}`);
   }
 
   /**
@@ -100,12 +104,13 @@ class StreakChallengeService {
       difficulty = 'hard';
     }
 
-    // Use centralized word selection
+    // Use centralized word selection with module support
     const selectionResult = selectWordForChallenge(
       this.state.languageCode,
       wordProgress,
       this.state.sessionId,
-      difficulty
+      difficulty,
+      this.state.moduleId // Pass module for scoped selection
     );
 
     if (!selectionResult) {
@@ -117,155 +122,11 @@ class StreakChallengeService {
   }
 
   /**
-   * Generate multiple choice options
+   * Generate options - now handled by adapter for consistent module scoping
    */
-  private generateOptions(word: Word, quizMode: string): string[] {
-    switch (quizMode) {
-      case 'multiple-choice':
-        return this.generateMultipleChoiceOptions(word);
-      
-      case 'letter-scramble':
-        return this.generateLetterScrambleOptions(word);
-      
-      case 'open-answer':
-        return []; // Open answer doesn't need options
-      
-      case 'fill-in-the-blank':
-        return this.generateFillInTheBlankOptions(word);
-      
-      default:
-        return [];
-    }
-  }
-
-  /**
-   * Generate multiple choice options for streak challenge
-   */
-  private generateMultipleChoiceOptions(word: Word): string[] {
-    if (!this.state) return [];
-
-    const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
-    
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
-    const allWords = getWordsForLanguage(this.state.languageCode);
-    
-    // Get wrong answers from similar difficulty words
-    const wrongAnswers = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => word.direction === 'definition-to-term' ? w.term : w.definition)
-      .filter((answer: string) => answer !== correctAnswer)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-
-    const options = [correctAnswer, ...wrongAnswers];
-    return options.sort(() => 0.5 - Math.random()); // Shuffle options
-  }
-
-  /**
-   * Generate letter scramble options for streak challenge
-   */
-  private generateLetterScrambleOptions(word: Word): string[] {
-    const correctTerm = word.direction === 'definition-to-term' ? word.term : word.definition;
-    const options = [correctTerm];
-    
-    // Generate scrambled versions
-    for (let i = 0; i < 3; i++) {
-      let scrambled = this.scrambleText(correctTerm, i + 1);
-      // Ensure we don't duplicate the correct answer
-      while (options.includes(scrambled) || scrambled === correctTerm) {
-        scrambled = this.scrambleText(correctTerm, Math.random() * 3 + 1);
-      }
-      options.push(scrambled);
-    }
-    
-    return options.sort(() => 0.5 - Math.random());
-  }
-
-  /**
-   * Generate fill-in-the-blank options for streak challenge
-   */
-  private generateFillInTheBlankOptions(word: Word): string[] {
-    if (!this.state) return [];
-
-    const correctAnswer = word.direction === 'definition-to-term' ? word.term : word.definition;
-    
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
-    const allWords = getWordsForLanguage(this.state.languageCode);
-    
-    // Get plausible alternatives of similar length and complexity
-    const wrongAnswers = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => word.direction === 'definition-to-term' ? w.term : w.definition)
-      .filter((answer: string) => answer !== correctAnswer)
-      .filter((answer: string) => Math.abs(answer.length - correctAnswer.length) <= 4) // Similar length
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-    
-    // Fallback if not enough similar words
-    while (wrongAnswers.length < 3) {
-      const fallbacks = ['alternative', 'different', 'another'];
-      for (const fallback of fallbacks) {
-        if (!wrongAnswers.includes(fallback) && wrongAnswers.length < 3) {
-          wrongAnswers.push(fallback);
-        }
-      }
-      break;
-    }
-    
-    const options = [correctAnswer, ...wrongAnswers];
-    return options.sort(() => 0.5 - Math.random());
-  }
-
-  /**
-   * Scramble text for letter-scramble quiz mode
-   */
-  private scrambleText(text: string, level: number): string {
-    const words = text.split(' ');
-    
-    if (words.length === 1) {
-      // Single word - scramble letters
-      return this.scrambleWord(words[0], level);
-    } else {
-      // Multiple words - scramble word order and individual words
-      const scrambledWords = words.map(word => this.scrambleWord(word, level * 0.5));
-      return scrambledWords.sort(() => 0.5 - Math.random()).join(' ');
-    }
-  }
-
-  /**
-   * Scramble individual word
-   */
-  private scrambleWord(word: string, level: number): string {
-    if (word.length <= 2) return word; // Don't scramble very short words
-    
-    const chars = word.split('');
-    
-    switch (Math.floor(level) % 3) {
-      case 0:
-        // Light scramble - swap adjacent characters
-        for (let i = 0; i < chars.length - 1; i += 2) {
-          [chars[i], chars[i + 1]] = [chars[i + 1], chars[i]];
-        }
-        break;
-      
-      case 1:
-        // Medium scramble - reverse order
-        chars.reverse();
-        break;
-      
-      case 2:
-      default:
-        // Heavy scramble - random shuffle
-        for (let i = chars.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [chars[i], chars[j]] = [chars[j], chars[i]];
-        }
-        break;
-    }
-    
-    return chars.join('');
+  private generateOptions(_word: Word, _quizMode: string): string[] {
+    // All option generation now handled by adapter for proper module scoping
+    return [];
   }
 
   /**
@@ -359,8 +220,12 @@ class StreakChallengeService {
       ? recentPerformance.filter(p => p.isCorrect).length / recentPerformance.length 
       : 0.8; // Default assumption
 
-    // Generate baseline quiz mode based on streak
-    const baselineQuizMode = this.generateQuizModeForTier(currentStreak, currentStreak);
+    // Get word's experience level for quiz mode selection
+    const wordXP = wordProgress[word.id]?.xp || 0;
+    const wordMasteryLevel = getWordMasteryTier(wordXP);
+    
+    // Generate baseline quiz mode based on WORD EXPERIENCE, not streak
+    const baselineQuizMode = generateQuizModeForMastery(wordMasteryLevel);
 
     // If AI is disabled, use baseline approach
     if (!this.state.aiEnhancementsEnabled) {
@@ -390,9 +255,9 @@ class StreakChallengeService {
           recentPerformance: this.state.performanceHistory
         },
         challengeContext: {
-          currentDifficulty: currentStreak < 5 ? 20 : currentStreak < 15 ? 50 : 80,
-          tierLevel: currentStreak < 5 ? 1 : currentStreak < 15 ? 3 : 5,
-          isEarlyPhase: currentStreak <= 5,
+          currentDifficulty: wordXP < 20 ? 20 : wordXP < 100 ? 50 : 80,
+          tierLevel: wordMasteryLevel,
+          isEarlyPhase: wordXP === 0, // New word is early phase
           isFinalPhase: false // Streak challenges don't have final phase
         }
       };
@@ -436,45 +301,6 @@ class StreakChallengeService {
         reasoning: ['AI enhancement failed - using baseline selection']
       };
     }
-  }
-
-  /**
-   * Generate quiz mode for difficulty tier (baseline logic)
-   */
-  private generateQuizModeForTier(tier: number, _streak: number): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' {
-    // Tier 1 (0-2 streak): Easier modes
-    if (tier === 1) {
-      return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
-    }
-    
-    // Tier 2 (3-6 streak): Mixed easier modes
-    if (tier === 2) {
-      return Math.random() < 0.5 ? 'multiple-choice' : 'letter-scramble';
-    }
-    
-    // Tier 3 (7-11 streak): Introduce open-answer
-    if (tier === 3) {
-      const rand = Math.random();
-      if (rand < 0.3) return 'multiple-choice';
-      if (rand < 0.6) return 'letter-scramble';
-      return 'open-answer';
-    }
-    
-    // Tier 4 (12-17 streak): More challenging
-    if (tier === 4) {
-      const rand = Math.random();
-      if (rand < 0.2) return 'multiple-choice';
-      if (rand < 0.4) return 'letter-scramble';
-      if (rand < 0.7) return 'open-answer';
-      return 'fill-in-the-blank';
-    }
-    
-    // Tier 5 (18+ streak): Expert level
-    const rand = Math.random();
-    if (rand < 0.1) return 'multiple-choice';
-    if (rand < 0.2) return 'letter-scramble';
-    if (rand < 0.5) return 'open-answer';
-    return 'fill-in-the-blank';
   }
 
   /**

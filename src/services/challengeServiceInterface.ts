@@ -19,6 +19,7 @@ export interface ChallengeConfig {
   timeLimit?: number;
   difficulty?: number;
   allWords?: Word[];
+  moduleId?: string; // For module-specific challenges
 }
 
 // Generic context for getting next word
@@ -29,8 +30,8 @@ export interface ChallengeContext {
   targetWords: number;
   allWords?: Word[];
   wordProgress: { [key: string]: WordProgress };
-  languageCode: string; // Language for module-specific word selection
-  moduleId?: string; // Optional module ID for module-specific practice
+  languageCode: string;
+  moduleId?: string; // For module-specific challenges
 }
 
 // Standardized result from any challenge service

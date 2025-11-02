@@ -14,9 +14,12 @@ import {
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
+import { selectQuizMode } from './quizModeSelectionUtils';
+import { calculateAdaptiveTimeAllocation, generateHints } from './challengeServiceUtils';
 
 interface QuickDashState {
   languageCode: string;
+  moduleId?: string; // Module for scoped challenges
   targetWords: number;
   timeLimit: number; // seconds
   sessionId: string;
@@ -49,13 +52,15 @@ class QuickDashService {
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 8,
     timeLimit: number = 300, // 5 minutes
-    _allWords?: Word[] // Unused - centralized word selection handles this
+    _allWords?: Word[], // Unused - centralized word selection handles this
+    moduleId?: string // Module for scoped challenges
   ): Promise<void> {
     // Generate unique session ID for this quick dash challenge
     const sessionId = `quick-dash-${Date.now()}`;
 
     this.state = {
       languageCode,
+      moduleId, // Store module for word selection
       targetWords,
       timeLimit,
       sessionId,
@@ -103,7 +108,8 @@ class QuickDashService {
       this.state.languageCode,
       wordProgress,
       this.state.sessionId,
-      difficulty
+      difficulty,
+      this.state.moduleId // Pass module for scoped selection
     );
 
     if (!selectionResult) {
@@ -112,7 +118,12 @@ class QuickDashService {
     }
 
     const selectedWord = selectionResult.word;
-    let quizMode = this.getSpeedOptimizedQuizMode(selectedWord, timePressure);
+    let quizMode = selectQuizMode({
+      word: selectedWord,
+      wordProgress,
+      context: 'high-pressure',
+      allowOpenAnswer: true
+    });
     let aiEnhanced = false;
     let speedHints: string[] = [];
     let reasoning: string[] = [];
@@ -157,7 +168,11 @@ class QuickDashService {
             quizMode = aiResult.aiRecommendedMode as QuickDashResult['quizMode'];
           }
           aiEnhanced = true;
-          speedHints = this.generateSpeedHints(selectedWord, quizMode, timePressure);
+          speedHints = generateHints({
+            word: selectedWord,
+            quizMode,
+            context: 'speed'
+          });
           reasoning = aiResult.reasoning || [];
           
           // Record speed optimization patterns
@@ -169,7 +184,7 @@ class QuickDashService {
     }
 
     // Calculate optimal time allocation for this word
-    const timeAllocated = this.calculateTimeAllocation(timeRemaining, targetWords - currentProgress);
+    const timeAllocated = calculateAdaptiveTimeAllocation(timeRemaining, targetWords - currentProgress, 'quick-dash');
     
     // Generate options based on quiz mode
     const options = this.generateOptions(selectedWord, quizMode);
@@ -266,103 +281,6 @@ class QuickDashService {
     }
     
     return Math.max(0, 1 - timeRatio);
-  }
-
-  /**
-   * Get quiz mode optimized for speed and user mastery level
-   */
-  private getSpeedOptimizedQuizMode(word: Word, timePressure: number): QuickDashResult['quizMode'] {
-    // Get the word's mastery level to inform quiz mode selection
-    const wordMastery = (word as any).currentMastery || 0; // Should be set by word selection logic
-    
-    // For very low mastery (new words), prioritize multiple-choice even under time pressure
-    if (wordMastery < 20) {
-      return 'multiple-choice';
-    }
-    
-    // For low mastery, prefer simpler modes but allow some variety
-    if (wordMastery < 40) {
-      if (timePressure > 0.7) {
-        return 'multiple-choice';
-      }
-      return Math.random() < 0.7 ? 'multiple-choice' : 'letter-scramble';
-    }
-    
-    // For medium mastery, balance speed with challenge
-    if (wordMastery < 70) {
-      if (timePressure > 0.7) {
-        return Math.random() < 0.6 ? 'multiple-choice' : 'letter-scramble';
-      }
-      if (timePressure > 0.4) {
-        const rand = Math.random();
-        if (rand < 0.4) return 'multiple-choice';
-        if (rand < 0.7) return 'letter-scramble';
-        return word.context ? 'fill-in-the-blank' : 'letter-scramble';
-      }
-      // Low pressure - allow more variety
-      const rand = Math.random();
-      if (rand < 0.3) return 'multiple-choice';
-      if (rand < 0.6) return 'letter-scramble';
-      if (rand < 0.8 && word.context) return 'fill-in-the-blank';
-      return 'open-answer';
-    }
-    
-    // For high mastery, challenge with harder modes but respect time pressure
-    if (timePressure > 0.7) {
-      return Math.random() < 0.4 ? 'multiple-choice' : 'letter-scramble';
-    }
-    if (timePressure > 0.4) {
-      const rand = Math.random();
-      if (rand < 0.3) return 'multiple-choice';
-      if (rand < 0.5) return 'letter-scramble';
-      if (rand < 0.7 && word.context) return 'fill-in-the-blank';
-      return 'open-answer';
-    }
-    
-    // Low pressure with high mastery - prefer challenging modes
-    const rand = Math.random();
-    if (rand < 0.2) return 'multiple-choice';
-    if (rand < 0.4) return 'letter-scramble';
-    if (rand < 0.7 && word.context) return 'fill-in-the-blank';
-    return 'open-answer';
-  }
-
-  /**
-   * Generate speed hints for time optimization
-   */
-  private generateSpeedHints(word: Word, quizMode: string, timePressure: number): string[] {
-    const hints: string[] = [];
-    
-    if (timePressure > 0.6) {
-      hints.push('Focus on first impression - trust your instinct');
-    }
-    
-    if (quizMode === 'multiple-choice') {
-      hints.push('Eliminate obviously wrong answers first');
-    }
-    
-    if (quizMode === 'letter-scramble') {
-      hints.push('Look for familiar letter patterns');
-    }
-    
-    if (word.term.length > 8) {
-      hints.push('Break long words into smaller parts');
-    }
-    
-    return hints;
-  }
-
-  /**
-   * Calculate optimal time allocation per word
-   */
-  private calculateTimeAllocation(timeRemaining: number, wordsRemaining: number): number {
-    if (wordsRemaining <= 0) return timeRemaining;
-    
-    const baseTime = timeRemaining / wordsRemaining;
-    const minTime = 10; // Minimum 10 seconds per word
-    const maxTime = 45; // Maximum 45 seconds per word
-    
-    return Math.max(minTime, Math.min(maxTime, baseTime));
   }
 
   /**

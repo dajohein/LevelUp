@@ -17,7 +17,13 @@ import { WordProgress } from '../store/types';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
-import { calculateMasteryDecay } from './masteryService';
+import { 
+  calculateWordDifficulty,
+  calculateTimeAllocation,
+  getComplexityMultiplier,
+  generateHints,
+  generateSupport
+} from './challengeServiceUtils';
 
 export interface FillInTheBlankResult {
   word: Word;
@@ -38,6 +44,7 @@ interface FillInTheBlankState {
   isActive: boolean;
   startTime: number;
   languageCode: string;
+  moduleId?: string; // Module for scoped challenges
   sessionId: string;
   currentComplexity: 'simple' | 'moderate' | 'complex';
   sentencePatterns: Array<{
@@ -82,7 +89,8 @@ export class FillInTheBlankService {
   async initializeFillInTheBlank(
     languageCode: string,
     targetWords: number = 20,
-    initialComplexity: 'simple' | 'moderate' | 'complex' = 'simple'
+    initialComplexity: 'simple' | 'moderate' | 'complex' = 'simple',
+    moduleId?: string // Module for scoped challenges
   ): Promise<{
     success: boolean;
     sessionId: string;
@@ -96,6 +104,7 @@ export class FillInTheBlankService {
         isActive: true,
         startTime: Date.now(),
         languageCode,
+        moduleId,
         sessionId,
         currentComplexity: initialComplexity,
         sentencePatterns: this.initializeSentencePatterns(),
@@ -103,7 +112,7 @@ export class FillInTheBlankService {
         languagePatterns: [],
         analyticsBuffer: []
       };
-      const complexityMultiplier = this.getComplexityMultiplier(initialComplexity);
+      const complexityMultiplier = getComplexityMultiplier(initialComplexity);
       const estimatedDuration = targetWords * (25 * complexityMultiplier);
 
       const complexityLevels = ['Simple sentences', 'Moderate complexity', 'Complex structures'];
@@ -162,7 +171,8 @@ export class FillInTheBlankService {
       this.state.languageCode,
       wordProgress,
       this.state.sessionId,
-      difficulty
+      difficulty,
+      this.state.moduleId
     );
 
     if (!selectionResult) {
@@ -213,26 +223,54 @@ export class FillInTheBlankService {
         if (aiResult.interventionNeeded) {
           // AI can suggest adaptations, but we use the centrally selected word
           aiEnhanced = true;
-          languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
-          contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
+          languageHints = generateHints({
+            word: selectedWord,
+            quizMode: 'fill-in-the-blank',
+            context: 'normal'
+          });
+          contextualSupport = generateSupport({
+            context: 'normal',
+            challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+          });
           reasoning = aiResult.reasoning || [];
           
           // Record contextual strategy
           this.state.contextualStrategies.push(`contextual-complexity-${sentenceComplexity}`);
         } else {
           // Fallback to standard Fill in the Blank logic
-          languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
-          contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
+          languageHints = generateHints({
+            word: selectedWord,
+            quizMode: 'fill-in-the-blank',
+            context: 'normal'
+          });
+          contextualSupport = generateSupport({
+            context: 'normal',
+            challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+          });
         }
       } catch (error) {
         logger.warn('⚠️ AI enhancement failed for Fill in the Blank, using fallback:', error);
-        languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
-        contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
+        languageHints = generateHints({
+          word: selectedWord,
+          quizMode: 'fill-in-the-blank',
+          context: 'normal'
+        });
+        contextualSupport = generateSupport({
+          context: 'normal',
+          challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+        });
       }
     } else {
       // Standard Fill in the Blank logic without AI
-      languageHints = this.generateLanguageHints(selectedWord, sentenceComplexity);
-      contextualSupport = this.generateContextualSupport(selectedWord, sentenceComplexity);
+      languageHints = generateHints({
+        word: selectedWord,
+        quizMode: 'fill-in-the-blank',
+        context: 'normal'
+      });
+      contextualSupport = generateSupport({
+        context: 'normal',
+        challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+      });
     }
 
     // Generate sentence and calculate parameters
@@ -241,8 +279,8 @@ export class FillInTheBlankService {
     const options = this.generateOptions(selectedWord, sentenceComplexity);
     const contextualClues = this.extractContextualClues(sentence);
     
-    timeAllocated = this.calculateCompletionTime(selectedWord, sentenceComplexity);
-    const difficultyLevel = this.calculateDifficultyLevel(selectedWord, wordProgress[selectedWord.id]);
+    const difficultyLevel = calculateWordDifficulty(selectedWord, wordProgress[selectedWord.id]);
+    timeAllocated = calculateTimeAllocation(selectedWord, 'fill-in-blank', difficultyLevel, 'fill-in-the-blank');
 
     // Update complexity based on progress
     this.updateSentenceComplexity(sessionProgress, contextualDifficulty);
@@ -510,60 +548,6 @@ export class FillInTheBlankService {
   }
 
   /**
-   * Calculate completion time allocation
-   */
-  private calculateCompletionTime(word: Word, complexity: 'simple' | 'moderate' | 'complex'): number {
-    let baseTime = 30; // Base time for fill-in-the-blank
-
-    // Complexity adjustments
-    const complexityMultiplier = this.getComplexityMultiplier(complexity);
-    baseTime *= complexityMultiplier;
-
-    // Word complexity adjustments
-    if (word.term.length > 8) {
-      baseTime += 10;
-    }
-
-    if (word.level && word.level >= 4) {
-      baseTime += 10;
-    }
-
-    return Math.max(20, Math.min(90, baseTime));
-  }
-
-  /**
-   * Get complexity multiplier
-   */
-  private getComplexityMultiplier(complexity: 'simple' | 'moderate' | 'complex'): number {
-    switch (complexity) {
-      case 'simple': return 1.0;
-      case 'moderate': return 1.3;
-      case 'complex': return 1.6;
-      default: return 1.0;
-    }
-  }
-
-  /**
-   * Calculate difficulty level
-   */
-  private calculateDifficultyLevel(word: Word, progress?: WordProgress): number {
-    let difficulty = word.level || 3; // Default to medium
-    
-    if (progress) {
-      const mastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
-      
-      // Adjust based on mastery
-      if (mastery > 70) {
-        difficulty = Math.max(1, difficulty - 1);
-      } else if (mastery < 40) {
-        difficulty = Math.min(5, difficulty + 1);
-      }
-    }
-
-    return difficulty;
-  }
-
-  /**
    * Calculate naturalness score for generated sentence
    */
   private calculateNaturalnessScore(sentence: string): number {
@@ -587,66 +571,6 @@ export class FillInTheBlankService {
     }
     
     return Math.max(0, Math.min(100, score));
-  }
-
-  /**
-   * Generate language hints for contextual understanding
-   */
-  private generateLanguageHints(word: Word, complexity: 'simple' | 'moderate' | 'complex'): string[] {
-    const hints: string[] = [];
-    
-    switch (complexity) {
-      case 'simple':
-        hints.push('Read the sentence aloud to hear what sounds right');
-        hints.push('Think about which word fits the meaning');
-        break;
-      case 'moderate':
-        hints.push('Consider the grammatical structure of the sentence');
-        hints.push('Look for clues about word type (noun, verb, adjective)');
-        break;
-      case 'complex':
-        hints.push('Analyze the sophisticated vocabulary and sentence structure');
-        hints.push('Consider subtle nuances in meaning and context');
-        break;
-    }
-
-    hints.push('Use context clues to determine the best fit');
-    
-    if (word.term.length > 7) {
-      hints.push('Break down longer words into familiar parts');
-    }
-
-    return hints;
-  }
-
-  /**
-   * Generate contextual support messages
-   */
-  private generateContextualSupport(word: Word, complexity: 'simple' | 'moderate' | 'complex'): string[] {
-    const support: string[] = [];
-    
-    support.push('Context is key to understanding meaning');
-    support.push('Read the entire sentence before choosing');
-    
-    switch (complexity) {
-      case 'simple':
-        support.push('Simple sentences help build confidence');
-        break;
-      case 'moderate':
-        support.push('Moderate complexity builds understanding');
-        break;
-      case 'complex':
-        support.push('Complex sentences develop advanced comprehension');
-        break;
-    }
-    
-    if (word.level && word.level >= 4) {
-      support.push('Advanced vocabulary expands your expression');
-    }
-    
-    support.push('Each sentence teaches natural language usage');
-    
-    return support;
   }
 
   /**
@@ -721,6 +645,7 @@ export class FillInTheBlankService {
       isActive: false,
       startTime: 0,
       languageCode: '',
+      moduleId: undefined,
       sessionId: '',
       currentComplexity: 'simple',
       sentencePatterns: [],

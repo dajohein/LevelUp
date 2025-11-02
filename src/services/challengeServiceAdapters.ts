@@ -27,6 +27,7 @@ import { deepDiveService } from './deepDiveService';
 import { fillInTheBlankService } from './fillInTheBlankService';
 import { getWordsForLanguage, Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
+import { generateModuleScopedOptions, generateScrambledVersions } from './optionGenerationUtils';
 import { logger } from './logger';
 
 /**
@@ -37,7 +38,8 @@ class StreakChallengeAdapter implements IChallengeService {
     streakChallengeService.initializeStreak(
       config.languageCode, 
       config.wordProgress,
-      config.allWords // Pass module-specific or all words
+      config.allWords, // Pass module-specific or all words
+      config.moduleId // Pass module for scoped challenges
     );
   }
 
@@ -47,9 +49,24 @@ class StreakChallengeAdapter implements IChallengeService {
       context.wordProgress
     );
 
+    // Generate appropriate options based on quiz mode using shared utilities
+    let finalOptions: string[] = [];
+    if (result.quizMode === 'multiple-choice') {
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, context.allWords || []);
+      console.log(`🎯 Streak Challenge: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`);
+    } else if (result.quizMode === 'letter-scramble') {
+      // Use easy difficulty for streak building
+      finalOptions = [result.word.term, ...generateScrambledVersions(result.word.term, 'easy')];
+    } else if (result.quizMode === 'fill-in-the-blank') {
+      finalOptions = [result.word.definition];
+    } else {
+      // For open-answer, no options needed
+      finalOptions = [];
+    }
+
     return {
       word: result.word,
-      options: result.options,
+      options: finalOptions,
       quizMode: result.quizMode,
       aiEnhanced: result.aiEnhanced,
       metadata: {
@@ -77,7 +94,8 @@ class BossBattleAdapter implements IChallengeService {
       config.languageCode, 
       config.wordProgress, 
       config.targetWords,
-      config.allWords // Pass module-specific or all words
+      config.allWords, // Pass module-specific or all words
+      config.moduleId // Pass module ID for scoped challenges
     );
   }
 
@@ -87,9 +105,24 @@ class BossBattleAdapter implements IChallengeService {
       context.wordProgress
     );
 
+    // Generate appropriate options based on quiz mode using shared utilities
+    let finalOptions: string[] = [];
+    if (result.quizMode === 'multiple-choice') {
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, context.allWords || []);
+      console.log(`🎯 Boss Battle: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`);
+    } else if (result.quizMode === 'letter-scramble') {
+      // Use boss-level difficulty for maximum challenge
+      finalOptions = [result.word.term, ...generateScrambledVersions(result.word.term, 'boss')];
+    } else if (result.quizMode === 'fill-in-the-blank') {
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, context.allWords || []);
+    } else {
+      // For open-answer, no options needed
+      finalOptions = [];
+    }
+
     return {
       word: result.word,
-      options: result.options,
+      options: finalOptions,
       quizMode: result.quizMode,
       aiEnhanced: result.aiEnhanced,
       metadata: {
@@ -118,7 +151,8 @@ class PrecisionModeAdapter implements IChallengeService {
       config.languageCode, 
       config.wordProgress, 
       config.targetWords,
-      config.allWords // Pass module-specific or all words
+      config.allWords, // Pass module-specific or all words
+      config.moduleId // Pass moduleId for module-specific challenges
     );
   }
 
@@ -128,9 +162,25 @@ class PrecisionModeAdapter implements IChallengeService {
       context.wordProgress
     );
 
+    // FIXED: Generate module-scoped options instead of using Precision Mode's internal options
+    let finalOptions: string[] = [];
+    if (result.quizMode === 'multiple-choice') {
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, context.allWords || []);
+      console.log(`🎯 Precision Mode: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`);
+    } else if (result.quizMode === 'fill-in-the-blank') {
+      finalOptions = [result.word.definition];
+    } else if (result.quizMode === 'letter-scramble') {
+      // Generate scrambled letters for letter scramble with precision difficulty
+      const correctTerm = result.word.term;
+      finalOptions = [correctTerm, ...generateScrambledVersions(correctTerm, 'hard')]; // Precision = hard difficulty
+    } else {
+      // For open-answer, no options needed
+      finalOptions = [];
+    }
+
     return {
       word: result.word,
-      options: result.options,
+      options: finalOptions, // Use centrally generated options
       quizMode: result.quizMode,
       aiEnhanced: result.aiEnhanced,
       metadata: {
@@ -169,7 +219,8 @@ class QuickDashAdapter implements IChallengeService {
       config.wordProgress, 
       config.targetWords || 8, 
       config.timeLimit || 5,
-      config.allWords // Pass module-specific or all words
+      config.allWords, // Pass module-specific or all words
+      config.moduleId // Pass module ID for scoped challenges
     );
   }
 
@@ -180,9 +231,18 @@ class QuickDashAdapter implements IChallengeService {
       context.timeRemaining || 0
     );
 
+    // Generate module-scoped options for consistent 4-option multiple choice
+    let finalOptions: string[] = [];
+    if (result.quizMode === 'multiple-choice') {
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, context.allWords || []);
+      console.log(`🎯 Quick Dash: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`);
+    } else {
+      finalOptions = result.options;
+    }
+
     return {
       word: result.word,
-      options: result.options,
+      options: finalOptions,
       quizMode: result.quizMode,
       aiEnhanced: result.aiEnhanced,
       metadata: {
@@ -209,7 +269,8 @@ class DeepDiveAdapter implements IChallengeService {
     await deepDiveService.initializeDeepDive(
       config.languageCode, 
       config.targetWords || 20, 
-      config.difficulty || 3
+      config.difficulty || 3,
+      config.moduleId // Pass module ID for scoped challenges
     );
   }
 
@@ -242,7 +303,7 @@ class DeepDiveAdapter implements IChallengeService {
     if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(result.quizMode as string)) {
       // Check word mastery level to avoid giving difficult modes to new words
       const wordProgress = context.wordProgress[result.word.id];
-      const masteryLevel = wordProgress?.masteryLevel || 0;
+      const masteryLevel = wordProgress?.xp || 0; // Use XP instead of masteryLevel
       const isNewWord = masteryLevel === 0;
       
       // For enhanced modes, use varied quiz types but respect mastery level
@@ -277,12 +338,33 @@ class DeepDiveAdapter implements IChallengeService {
       }
     } else if (['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(result.quizMode as string)) {
       standardQuizMode = result.quizMode as StandardQuizMode;
-      finalOptions = result.options || [];
+      
+      // Generate appropriate options based on the quiz mode
+      if (standardQuizMode === 'multiple-choice') {
+        finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
+      } else if (standardQuizMode === 'letter-scramble') {
+        // Determine difficulty based on challenge context
+        const difficultyMap: { [key: string]: 'easy' | 'medium' | 'hard' | 'boss' } = {
+          'deep-dive': 'medium',     // Deep learning = moderate scrambling
+          'streak': 'easy',          // Streak building = easier scrambling  
+          'quick-dash': 'hard',      // Speed challenge = harder scrambling
+          'boss-battle': 'boss',     // Boss battle = maximum scrambling
+          'precision': 'hard'        // Precision = hard scrambling
+        };
+        
+        const sessionType = context.metadata?.sessionType || 'medium';
+        const scrambleDifficulty = difficultyMap[sessionType] || 'medium';
+        
+        finalOptions = [result.word.term, ...generateScrambledVersions(result.word.term, scrambleDifficulty)];
+      } else {
+        // For open-answer and fill-in-the-blank, no options needed
+        finalOptions = [];
+      }
       
       logger.debug(`🎯 Standard quiz mode: ${result.quizMode} for word "${result.word.term}"`);
     } else {
       standardQuizMode = 'multiple-choice';
-      finalOptions = result.options || [];
+      finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
       
       logger.debug(`🎯 Fallback quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`);
     }
@@ -304,105 +386,9 @@ class DeepDiveAdapter implements IChallengeService {
    * Generate basic multiple choice options (fallback method)
    * Now uses module-scoped approach for better learning experience
    */
-  private generateBasicOptions(word: any, allWords: any[]): string[] {
-    // Delegate to the module-scoped method for consistency
-    const context = { languageCode: 'es' }; // TODO: Get actual language from context
-    return this.generateModuleScopedOptions(word, context.languageCode, allWords);
-  }
-
-  /**
-   * Generate multiple choice options scoped to the same module as the word
-   */
-  private generateModuleScopedOptions(word: Word, languageCode: string, allWords: Word[]): string[] {
-    const direction = word.direction || 'definition-to-term';
-    const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
-    
-    // Find which module this word belongs to
-    const modules = getModulesForLanguage(languageCode);
-    let moduleWords: Word[] = [];
-    
-    for (const module of modules) {
-      const wordsInModule = getWordsForModule(languageCode, module.id);
-      if (wordsInModule.some(w => w.id === word.id)) {
-        moduleWords = wordsInModule;
-        console.log(`🎯 Found word "${word.term}" in module "${module.name}" with ${wordsInModule.length} words`);
-        break;
-      }
-    }
-    
-    // If we couldn't find the module or module has too few words, fallback to all words
-    if (moduleWords.length < 4) {
-      console.log(`⚠️ Module has only ${moduleWords.length} words, using all available words for options`);
-      moduleWords = allWords;
-    }
-    
-    // Generate options from module words
-    const incorrectOptions: string[] = [];
-    const shuffledWords = [...moduleWords].sort(() => 0.5 - Math.random());
-    
-    for (const candidate of shuffledWords) {
-      if (candidate.id !== word.id && incorrectOptions.length < 3) {
-        const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
-        if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
-          incorrectOptions.push(incorrectAnswer);
-        }
-      }
-    }
-    
-    // If still not enough options, pad with remaining words from allWords
-    if (incorrectOptions.length < 3) {
-      const remainingWords = allWords.filter(w => 
-        w.id !== word.id && 
-        !moduleWords.some(mw => mw.id === w.id)
-      );
-      
-      for (const candidate of remainingWords) {
-        if (incorrectOptions.length < 3) {
-          const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
-          if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
-            incorrectOptions.push(incorrectAnswer);
-          }
-        }
-      }
-    }
-    
-    console.log(`🔍 Debug: Word "${word.term}", collected ${incorrectOptions.length} incorrect options: [${incorrectOptions.join(', ')}]`);
-    
-    // Create final options with correct answer at random position
-    const options = [...incorrectOptions];
-    
-    // Ensure we have exactly 3 incorrect options before adding the correct one
-    while (options.length < 3) {
-      // Fallback: duplicate some options if needed (shouldn't happen but safety check)
-      const fallbackWords = allWords.filter(w => w.id !== word.id);
-      for (const candidate of fallbackWords) {
-        if (options.length < 3) {
-          const incorrectAnswer = direction === 'definition-to-term' ? candidate.term : candidate.definition;
-          if (incorrectAnswer !== correctAnswer && !options.includes(incorrectAnswer)) {
-            options.push(incorrectAnswer);
-          }
-        }
-      }
-      break; // Prevent infinite loop
-    }
-    
-    // Now we should have exactly 3 incorrect options, add the correct one
-    const correctPos = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
-    options.splice(correctPos, 0, correctAnswer);
-    
-    // Final safety check: ensure we have exactly 4 options
-    if (options.length !== 4) {
-      console.warn(`⚠️ Expected 4 options but got ${options.length} for word "${word.term}"`);
-      // Emergency fallback: pad or trim to exactly 4
-      while (options.length < 4) {
-        options.push('Option ' + options.length); // Emergency placeholder
-      }
-      options.splice(4); // Trim to exactly 4
-    }
-    
-    console.log(`🎯 Generated module-scoped options for "${word.term}": [${options.join(', ')}] (${options.length} total)`);
-    
-    return options;
+  private generateBasicOptions(word: any, allWords: any[], languageCode: string): string[] {
+    // Use the provided language code instead of hardcoded 'es'
+    return generateModuleScopedOptions(word, languageCode, allWords);
   }
 
   recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {

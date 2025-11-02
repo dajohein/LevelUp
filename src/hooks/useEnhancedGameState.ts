@@ -135,6 +135,9 @@ export const useEnhancedGameState = ({
   const [wordStartTime, setWordStartTime] = useState<number | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showLearningCard, setShowLearningCard] = useState(false);
+  
+  // Ref to prevent multiple session initializations
+  const sessionInitializedRef = useRef(false);
 
   // Feedback state for enhanced learning system
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState<boolean | null>(null);
@@ -422,6 +425,7 @@ export const useEnhancedGameState = ({
   useEffect(() => {
     if (currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
+      const wordXP = wordProgress[currentWord.id]?.xp || 0;
       
       // Show learning card for truly new words regardless of spaced repetition mode
       // This ensures new words get proper introduction in both enhanced and session modes
@@ -435,7 +439,8 @@ export const useEnhancedGameState = ({
         setShowLearningCard(shouldShowCard);
       } 
       // In session mode, show learning card for truly new words only
-      else if (isSessionActive && wordLearningStatus.isTrulyNewWord) {
+      // FIXED: Also check XP directly to ensure 0 XP words always get learning cards
+      else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordXP === 0)) {
         setShowLearningCard(true);
       } 
       // Default case - no learning card
@@ -471,7 +476,9 @@ export const useEnhancedGameState = ({
       }
 
       // Only initialize session if one is actually active (user has started a session)
-      if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
+      // FIXED: Add sessionInitialized ref to prevent multiple initializations
+      if (!isUsingSpacedRepetition && isSessionActive && currentSession && !sessionInitializedRef.current) {
+        sessionInitializedRef.current = true;
         gameServices.sessionManager.initializeSession(
           currentSession,
           languageCode,
@@ -488,7 +495,7 @@ export const useEnhancedGameState = ({
         });
       }
     }
-  }, [dispatch, languageCode, moduleId, isSessionActive, currentSession?.id]); // Added session deps
+  }, [dispatch, languageCode, moduleId, isSessionActive]); // Removed currentSession?.id to prevent re-runs
 
   // Session state management
   useEffect(() => {
@@ -497,6 +504,8 @@ export const useEnhancedGameState = ({
       setSessionTimer(0);
       setWordTimer(0);
       setWordStartTime(Date.now());
+      // Reset session initialization flag when a new session becomes active
+      sessionInitializedRef.current = false;
     }
   }, [isSessionActive, currentSession?.id]);
 
@@ -510,7 +519,7 @@ export const useEnhancedGameState = ({
           sessionProgress.wordsCompleted >= currentSession.targetWords) ||
         (currentSession.timeLimit && sessionTimer >= currentSession.timeLimit * 60) ||
         (currentSession.allowedMistakes !== undefined &&
-          sessionProgress.incorrectAnswers >= currentSession.allowedMistakes);
+          sessionProgress.incorrectAnswers > currentSession.allowedMistakes);
 
       if (shouldComplete) {
         setSessionCompleted(true);
