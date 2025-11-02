@@ -17,6 +17,7 @@ import { WordProgress } from '../store/types';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
+import { FillInTheBlankSessionData } from '../types/challengeTypes';
 import { 
   calculateWordDifficulty,
   calculateTimeAllocation,
@@ -328,7 +329,7 @@ export class FillInTheBlankService {
     contextualClueUsage: number = 0.5
   ): Promise<void> {
     try {
-      await userLearningProfileStorage.updateFillInTheBlankData(userId || 'default_user', {
+      const sessionData: FillInTheBlankSessionData = {
         completed: isCorrect,
         contextualAccuracy: contextualAccuracy,
         contextUtilization: contextUtilization,
@@ -339,7 +340,9 @@ export class FillInTheBlankService {
         semanticAccuracy: contextualAccuracy,
         syntacticAccuracy: isCorrect ? 1.0 : 0.0,
         pragmaticAccuracy: contextualAccuracy
-      });
+      };
+
+      await userLearningProfileStorage.updateFillInTheBlankData(userId || 'default_user', sessionData);
 
       // Track language pattern understanding
       this.updateLanguagePatterns(wordId, sentenceComplexity, contextualAccuracy);

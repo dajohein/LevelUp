@@ -427,6 +427,16 @@ class WordSelectionManager {
       maxRecentTracking: tracker.maxRecentTracking
     };
   }
+
+  /**
+   * Get available words for option generation
+   * Uses the same logic as word selection to ensure consistency
+   */
+  public getAvailableWords(languageCode: string, moduleId?: string): Word[] {
+    return moduleId 
+      ? getWordsForModule(languageCode, moduleId)
+      : getWordsForLanguage(languageCode);
+  }
 }
 
 // Export singleton instance
@@ -480,3 +490,157 @@ export const selectWordForReview = (
     maxRecentTracking: 15
   }, wordProgress, sessionId);
 };
+
+// Option generation interface for centralized quiz mode support
+export interface OptionGenerationParams {
+  correctWord: Word;
+  languageCode: string;
+  moduleId?: string;
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'fill-in-the-blank';
+  optionCount?: number;
+  difficultyBias?: 'easier' | 'similar' | 'harder';
+}
+
+export interface OptionGenerationResult {
+  options: string[];
+  reasoning?: string[];
+}
+
+/**
+ * Generate quiz options using centralized word selection logic
+ */
+export const generateQuizOptions = (
+  params: OptionGenerationParams
+): OptionGenerationResult => {
+  const { correctWord, languageCode, moduleId, quizMode, optionCount = 3, difficultyBias = 'similar' } = params;
+  
+  // Get word pool using centralized logic
+  const wordPool = wordSelectionManager.getAvailableWords(languageCode, moduleId);
+  
+  switch (quizMode) {
+    case 'multiple-choice':
+      return generateMultipleChoiceOptions(correctWord, wordPool, optionCount, difficultyBias);
+    case 'letter-scramble':
+      return generateLetterScrambleOptions(correctWord);
+    case 'fill-in-the-blank':
+      return generateFillInTheBlankOptions(correctWord, wordPool, optionCount);
+    default:
+      return { options: [] };
+  }
+};
+
+/**
+ * Generate multiple choice distractors
+ */
+function generateMultipleChoiceOptions(
+  correctWord: Word,
+  wordPool: Word[],
+  optionCount: number,
+  difficultyBias: 'easier' | 'similar' | 'harder'
+): OptionGenerationResult {
+  const correctAnswer = correctWord.term;
+  const reasoning: string[] = [];
+  
+  // Filter out the correct word
+  const candidates = wordPool.filter(w => w.id !== correctWord.id);
+  
+  // Apply difficulty bias for distractor selection
+  let weightedCandidates = candidates;
+  if (difficultyBias === 'similar') {
+    // Prefer words with similar length or complexity
+    weightedCandidates = candidates
+      .filter(w => Math.abs(w.term.length - correctAnswer.length) <= 3)
+      .concat(candidates.filter(w => Math.abs(w.term.length - correctAnswer.length) > 3));
+    reasoning.push('Selected distractors with similar word length for balanced difficulty');
+  } else if (difficultyBias === 'easier') {
+    // Prefer clearly different options for easier recognition
+    weightedCandidates = candidates
+      .filter(w => Math.abs(w.term.length - correctAnswer.length) > 2)
+      .concat(candidates);
+    reasoning.push('Selected clearly different distractors for easier difficulty');
+  }
+  
+  // Select distractors avoiding duplicates
+  const wrongAnswers: string[] = [];
+  const usedTerms = new Set([correctAnswer]);
+  
+  for (const candidate of weightedCandidates) {
+    if (wrongAnswers.length >= optionCount) break;
+    if (!usedTerms.has(candidate.term)) {
+      wrongAnswers.push(candidate.term);
+      usedTerms.add(candidate.term);
+    }
+  }
+  
+  // Fill with fallbacks if needed
+  const fallbacks = ['das Andere', 'die Alternative', 'der Begriff'];
+  for (const fallback of fallbacks) {
+    if (wrongAnswers.length >= optionCount) break;
+    if (!usedTerms.has(fallback)) {
+      wrongAnswers.push(fallback);
+      usedTerms.add(fallback);
+    }
+  }
+  
+  // Shuffle and combine with correct answer
+  const allOptions = [correctAnswer, ...wrongAnswers.slice(0, optionCount)];
+  
+  // Fisher-Yates shuffle
+  for (let i = allOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+  }
+  
+  return { options: allOptions, reasoning };
+}
+
+/**
+ * Generate letter scramble options
+ */
+function generateLetterScrambleOptions(correctWord: Word): OptionGenerationResult {
+  const letters = correctWord.term.split('');
+  
+  // Fisher-Yates shuffle for letter scrambling
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letters[i], letters[j]] = [letters[j], letters[i]];
+  }
+  
+  const scrambledWord = letters.join('');
+  
+  // Ensure it's actually scrambled (not same as original)
+  if (scrambledWord === correctWord.term && letters.length > 1) {
+    // Swap first two letters if identical to original
+    [letters[0], letters[1]] = [letters[1], letters[0]];
+  }
+  
+  return { 
+    options: [letters.join('')],
+    reasoning: ['Generated scrambled version of the target word']
+  };
+}
+
+/**
+ * Generate fill-in-the-blank options
+ */
+function generateFillInTheBlankOptions(
+  correctWord: Word,
+  wordPool: Word[],
+  optionCount: number
+): OptionGenerationResult {
+  // For fill-in-the-blank, we typically just return the correct word
+  // The "options" are potential fills, with the correct one being the target
+  const reasoning = ['Fill-in-the-blank uses the target word as the correct option'];
+  
+  // Could generate alternative words as distractors for multiple-choice fill-in-the-blank
+  const alternatives = wordPool
+    .filter(w => w.id !== correctWord.id)
+    .filter(w => w.term.length <= correctWord.term.length + 3) // Similar length
+    .slice(0, optionCount - 1)
+    .map(w => w.term);
+  
+  return { 
+    options: [correctWord.term, ...alternatives],
+    reasoning 
+  };
+}

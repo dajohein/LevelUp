@@ -15,16 +15,7 @@ import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { selectQuizMode } from './quizModeSelectionUtils';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
-
-interface BossBattleSessionResults {
-  completedWords: number;
-  totalTargetWords: number;
-  accuracy: number;
-  totalTimeSpent: number;
-  finalBossReached: boolean;
-  finalBossDefeated: boolean;
-  aiEnhancementsUsed: number;
-}
+import { BossBattleSessionData } from '../types/challengeTypes';
 
 interface BossBattleState {
   languageCode: string;
@@ -430,7 +421,7 @@ class BossBattleService {
   /**
    * Save boss battle performance data
    */
-  async saveBossPerformance(userId: string, sessionResults: BossBattleSessionResults): Promise<void> {
+  async saveBossPerformance(userId: string, sessionResults: BossBattleSessionData): Promise<void> {
     logger.debug(`💾 Saving boss battle performance for user ${userId}`);
     // Note: This method is used by example files but actual implementation
     // would depend on specific storage requirements. For now, we just log.

@@ -16,6 +16,7 @@ import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { getWordMasteryTier, generateQuizModeForMastery } from './quizModeSelectionUtils';
+import { StreakChallengeSessionData } from '../types/challengeTypes';
 
 interface StreakChallengeState {
   languageCode: string;
@@ -308,16 +309,7 @@ class StreakChallengeService {
    */
   async saveStreakPerformance(
     userId: string,
-    sessionData: {
-      streak: number;
-      wordsCompleted: number;
-      accuracy: number;
-      wasAIEnhanced: boolean;
-      tier: number;
-      quizMode: string;
-      cognitiveLoad: 'low' | 'moderate' | 'high' | 'overload';
-      adaptationsUsed: string[];
-    }
+    sessionData: StreakChallengeSessionData
   ): Promise<void> {
     try {
       await userLearningProfileStorage.updateStreakChallengeData(userId, sessionData);

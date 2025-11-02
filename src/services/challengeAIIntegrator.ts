@@ -10,6 +10,7 @@ import { simpleAILearningCoach, CognitiveLoad, LearningMomentum } from './simple
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 import { logger } from './logger';
+import { AIInterventionData } from '../types/challengeTypes';
 
 export interface ChallengeAIContext {
   sessionType: 'streak-challenge' | 'boss-battle' | 'quick-dash' | 'deep-dive' | 'precision-mode' | 'fill-in-the-blank';
@@ -417,15 +418,7 @@ class ChallengeAIIntegrator {
    */
   async saveAIPerformanceData(
     userId: string,
-    interventionData: {
-      type: 'quiz-mode-easier' | 'quiz-mode-harder' | 'cognitive-load-support' | 'momentum-boost';
-      successful: boolean;
-      beforeAccuracy: number;
-      afterAccuracy: number;
-      beforeTime: number;
-      afterTime: number;
-      wasAISession: boolean;
-    }
+    interventionData: AIInterventionData
   ): Promise<void> {
     try {
       // Import here to avoid circular dependency

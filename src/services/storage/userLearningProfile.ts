@@ -8,6 +8,15 @@
 
 import { tieredStorage } from './tieredStorage';
 import { logger } from '../logger';
+import { 
+  BossBattleSessionData, 
+  StreakChallengeSessionData, 
+  AIInterventionData, 
+  QuickDashSessionData,
+  DeepDiveSessionData,
+  PrecisionModeSessionData,
+  FillInTheBlankSessionData
+} from '../../types/challengeTypes';
 import type {
   LearningPersonality,
   LearningMomentum,
@@ -673,16 +682,7 @@ export class UserLearningProfileStorage {
    */
   async updateStreakChallengeData(
     userId: string, 
-    sessionData: {
-      streak: number;
-      wordsCompleted: number;
-      wasAIEnhanced: boolean;
-      cognitiveLoad: 'low' | 'moderate' | 'high' | 'overload';
-      quizMode: string;
-      tier: number;
-      accuracy: number;
-      adaptationsUsed: string[];
-    }
+    sessionData: StreakChallengeSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -751,16 +751,7 @@ export class UserLearningProfileStorage {
    */
   async updateBossBattleData(
     userId: string,
-    sessionData: {
-      wordsCompleted: number;
-      completed: boolean;
-      wasAIEnhanced: boolean;
-      finalBossReached: boolean;
-      finalBossDefeated: boolean;
-      phasePerformance: { [phase: string]: { accuracy: number; avgTime: number; adaptations: number } };
-      quizMode: string;
-      cognitiveLoad: 'low' | 'moderate' | 'high' | 'overload';
-    }
+    sessionData: BossBattleSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -834,15 +825,7 @@ export class UserLearningProfileStorage {
    */
   async updateAIPerformanceData(
     userId: string,
-    interventionData: {
-      type: 'quiz-mode-easier' | 'quiz-mode-harder' | 'cognitive-load-support' | 'momentum-boost';
-      successful: boolean;
-      beforeAccuracy: number;
-      afterAccuracy: number;
-      beforeTime: number;
-      afterTime: number;
-      wasAISession: boolean;
-    }
+    interventionData: AIInterventionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -883,16 +866,7 @@ export class UserLearningProfileStorage {
    */
   async updateQuickDashData(
     userId: string,
-    sessionData: {
-      completed: boolean;
-      score: number;
-      timePerWord: number;
-      totalTime: number;
-      accuracy: number;
-      wasAIEnhanced: boolean;
-      pressurePoints: Array<{ timeRemaining: number; accuracy: number }>;
-      timeOptimizations: string[];
-    }
+    sessionData: QuickDashSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -971,18 +945,7 @@ export class UserLearningProfileStorage {
    */
   async updateDeepDiveData(
     userId: string,
-    sessionData: {
-      completed: boolean;
-      wordsLearned: number;
-      retentionRate: number;
-      contextualLearningScore: number;
-      repetitionCount: number;
-      contextVariations: number;
-      wasAIEnhanced: boolean;
-      firstAttemptAccuracy: number;
-      improvementAfterContext: number;
-      contextualHintUsage: number;
-    }
+    sessionData: DeepDiveSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -1045,17 +1008,7 @@ export class UserLearningProfileStorage {
    */
   async updatePrecisionModeData(
     userId: string,
-    sessionData: {
-      completed: boolean;
-      failurePoint: number; // word number where failure occurred (0 if completed)
-      accuracy: number;
-      averageTimePerWord: number;
-      wasAIEnhanced: boolean;
-      errorTypes: string[];
-      quizModeUsed: string;
-      cognitiveLoadStrategy: string;
-      mistakeDetails?: { wordNumber: number; errorType: string; timestamp: Date };
-    }
+    sessionData: PrecisionModeSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {
@@ -1126,18 +1079,7 @@ export class UserLearningProfileStorage {
    */
   async updateFillInTheBlankData(
     userId: string,
-    sessionData: {
-      completed: boolean;
-      contextualAccuracy: number;
-      contextUtilization: number;
-      sentenceComplexity: 'simple' | 'moderate' | 'complex';
-      wasAIEnhanced: boolean;
-      contextualClueUsage: number;
-      grammarRecognition: number;
-      semanticAccuracy: number;
-      syntacticAccuracy: number;
-      pragmaticAccuracy: number;
-    }
+    sessionData: FillInTheBlankSessionData
   ): Promise<void> {
     const profile = await this.loadProfile(userId);
     if (!profile) {

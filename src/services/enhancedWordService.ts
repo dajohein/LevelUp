@@ -16,6 +16,7 @@ import { WordProgress } from '../store/types';
 import { Word, getWordsForLanguage } from './wordService';
 import { getWordsForModule } from './moduleService';
 import { learningCacheService } from './cacheService';
+import { selectWordForRegularSession } from './wordSelectionManager';
 import {
   interleaveSessionWords,
   LearningSession,
@@ -314,7 +315,6 @@ class EnhancedWordService {
     quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
   } {
     // Use the centralized word selection system
-    const { selectWordForRegularSession } = require('./wordSelectionManager');
     const sessionId = `enhanced-fallback-${Date.now()}`;
 
     const result = selectWordForRegularSession(languageCode, wordProgress, sessionId, moduleId);

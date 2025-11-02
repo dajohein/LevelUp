@@ -18,6 +18,7 @@ import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { calculateWordDifficulty, calculateTimeAllocation } from './challengeServiceUtils';
+import { DeepDiveSessionData } from '../types/challengeTypes';
 import { generateHints, generateSupport } from './challengeServiceUtils';
 
 export interface DeepDiveResult {
@@ -335,7 +336,7 @@ export class DeepDiveService {
     wasAIEnhanced: boolean = false
   ): Promise<void> {
     try {
-      await userLearningProfileStorage.updateDeepDiveData(userId || 'default_user', {
+      const sessionData: DeepDiveSessionData = {
         completed: isCorrect,
         wordsLearned: isCorrect ? 1 : 0,
         retentionRate: comprehensionLevel / 5.0,
@@ -346,7 +347,9 @@ export class DeepDiveService {
         firstAttemptAccuracy: isCorrect ? 1.0 : 0.0,
         improvementAfterContext: 0,
         contextualHintUsage: 0
-      });
+      };
+
+      await userLearningProfileStorage.updateDeepDiveData(userId || 'default_user', sessionData);
 
       // Track contextual connections
       this.updateContextualConnections(wordId, comprehensionLevel);

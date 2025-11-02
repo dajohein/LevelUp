@@ -7,6 +7,7 @@
 
 // Main Analytics Service
 export { EnhancedAnalyticsService } from './enhancedAnalytics';
+import { EnhancedAnalyticsService } from './enhancedAnalytics';
 
 // Core Services
 export { AnalyticsCollector } from './collector';
@@ -50,8 +51,7 @@ export function createAnalyticsService(
   config: Partial<typeof DEFAULT_ANALYTICS_CONFIG> = {}
 ) {
   const finalConfig = { ...DEFAULT_ANALYTICS_CONFIG, ...config };
-  // Import here to avoid circular dependency
-  const { EnhancedAnalyticsService } = require('./enhancedAnalytics');
+  // Use imported EnhancedAnalyticsService
   return new EnhancedAnalyticsService(storage, finalConfig);
 }
 

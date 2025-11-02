@@ -25,7 +25,7 @@ import { precisionModeService } from './precisionModeService';
 import { quickDashService } from './quickDashService';
 import { deepDiveService } from './deepDiveService';
 import { fillInTheBlankService } from './fillInTheBlankService';
-import { getWordsForLanguage, Word } from './wordService';
+import { Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
 import { generateModuleScopedOptions, generateScrambledVersions } from './optionGenerationUtils';
 import { logger } from './logger';
@@ -328,7 +328,7 @@ class DeepDiveAdapter implements IChallengeService {
       
       // Generate appropriate options based on the converted mode
       if (standardQuizMode === 'multiple-choice') {
-        finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
+        finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
       } else if (standardQuizMode === 'fill-in-the-blank') {
         // For fill-in-the-blank, provide the full definition as a single option
         finalOptions = [result.word.definition];
@@ -341,7 +341,7 @@ class DeepDiveAdapter implements IChallengeService {
       
       // Generate appropriate options based on the quiz mode
       if (standardQuizMode === 'multiple-choice') {
-        finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
+        finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
       } else if (standardQuizMode === 'letter-scramble') {
         // Determine difficulty based on challenge context
         const difficultyMap: { [key: string]: 'easy' | 'medium' | 'hard' | 'boss' } = {
@@ -364,7 +364,7 @@ class DeepDiveAdapter implements IChallengeService {
       logger.debug(`🎯 Standard quiz mode: ${result.quizMode} for word "${result.word.term}"`);
     } else {
       standardQuizMode = 'multiple-choice';
-      finalOptions = this.generateModuleScopedOptions(result.word, context.languageCode, allWords);
+      finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
       
       logger.debug(`🎯 Fallback quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`);
     }

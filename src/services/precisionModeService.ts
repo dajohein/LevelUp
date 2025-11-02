@@ -15,6 +15,7 @@ import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { selectQuizMode } from './quizModeSelectionUtils';
+import { PrecisionModeSessionData } from '../types/challengeTypes';
 import { 
   calculateErrorRisk, 
   adjustStrategyForRisk, 
@@ -324,7 +325,7 @@ class PrecisionModeService {
       const failurePoint = this.state.sessionFailed ? this.state.currentWordIndex + 1 : 0;
       const errorTypes = this.state.errorPatterns.map(pattern => pattern.errorType);
 
-      await userLearningProfileStorage.updatePrecisionModeData(userId, {
+      const storageData: PrecisionModeSessionData = {
         completed: sessionData.completed,
         failurePoint,
         accuracy: sessionData.accuracy,
@@ -334,7 +335,9 @@ class PrecisionModeService {
         quizModeUsed: this.state.currentStrategy.quizMode,
         cognitiveLoadStrategy: this.state.currentStrategy.cognitiveLoadLevel,
         mistakeDetails: this.state.errorPatterns.length > 0 ? this.state.errorPatterns[0] : undefined
-      });
+      };
+
+      await userLearningProfileStorage.updatePrecisionModeData(userId, storageData);
       
       logger.info('Precision Mode performance saved', {
         userId,

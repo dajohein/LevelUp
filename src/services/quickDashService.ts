@@ -5,7 +5,7 @@
  * for cognitive load management under time constraints.
  */
 
-import { Word, getWordsForLanguage } from './wordService';
+import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 import { 
   challengeAIIntegrator, 
@@ -13,7 +13,8 @@ import {
 } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
-import { selectWordForChallenge } from './wordSelectionManager';
+import { selectWordForChallenge, generateQuizOptions } from './wordSelectionManager';
+import { QuickDashSessionData } from '../types/challengeTypes';
 import { selectQuizMode } from './quizModeSelectionUtils';
 import { calculateAdaptiveTimeAllocation, generateHints } from './challengeServiceUtils';
 
@@ -244,7 +245,8 @@ class QuickDashService {
       const avgTimePerWord = this.state.wordTimers.length > 0 ? 
         this.state.wordTimers.reduce((sum, time) => sum + time, 0) / this.state.wordTimers.length : 0;
 
-      await userLearningProfileStorage.updateQuickDashData(userId, {
+      // Transform to QuickDashSessionData format expected by storage
+      const storageData: QuickDashSessionData = {
         completed: sessionData.completed,
         score: sessionData.score,
         timePerWord: avgTimePerWord,
@@ -253,7 +255,9 @@ class QuickDashService {
         wasAIEnhanced: sessionData.wasAIEnhanced,
         pressurePoints: this.state.pressurePoints,
         timeOptimizations: this.state.speedOptimizations
-      });
+      };
+
+      await userLearningProfileStorage.updateQuickDashData(userId, storageData);
       
       logger.info('Quick Dash performance saved', {
         userId,
@@ -320,46 +324,17 @@ class QuickDashService {
    * Generate multiple choice options optimized for speed
    */
   private generateMultipleChoiceOptions(word: Word): string[] {
-    // For definition-to-term direction (Dutch question → German answer)
-    // The correct answer should be the German term, not the Dutch definition
-    const correctAnswer = word.term;
+    // Use centralized option generation for consistency
+    const result = generateQuizOptions({
+      correctWord: word,
+      languageCode: this.state?.languageCode || 'de',
+      moduleId: this.state?.moduleId,
+      quizMode: 'multiple-choice',
+      optionCount: 3,
+      difficultyBias: 'easier' // Speed mode prefers clearly different options
+    });
     
-    // Use imported function from top-level import
-    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
-    
-    // Quick generation for speed - prefer shorter, clear distractors
-    // For Dutch→German direction, use other German terms as distractors
-    const wrongAnswers = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => w.term)
-      .filter((term: string) => term !== correctAnswer)
-      .filter((term: string) => term.length < correctAnswer.length + 20) // Similar length for speed
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-
-    // Fallback if not enough words available
-    while (wrongAnswers.length < 3) {
-      const fallbacks = [
-        'das Andere',
-        'die Alternative', 
-        'der Begriff'
-      ];
-      
-      for (const fallback of fallbacks) {
-        if (!wrongAnswers.includes(fallback) && wrongAnswers.length < 3) {
-          wrongAnswers.push(fallback);
-        }
-      }
-      break;
-    }
-
-    console.log(`🔍 Quick Dash Debug: Word "${word.term}", collected ${wrongAnswers.length} wrong answers: [${wrongAnswers.join(', ')}]`);
-
-    const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
-    
-    console.log(`🎯 Quick Dash Generated options for "${word.term}": [${options.join(', ')}] (${options.length} total)`);
-    
-    return options.sort(() => 0.5 - Math.random()); // Quick shuffle
+    return result.options;
   }
 
   /**
@@ -386,34 +361,17 @@ class QuickDashService {
    * Generate fill-in-the-blank options for speed learning
    */
   private generateFillInTheBlankOptions(word: Word): string[] {
-    const correctTerm = word.term;
+    // Use centralized option generation for consistency
+    const result = generateQuizOptions({
+      correctWord: word,
+      languageCode: this.state?.languageCode || 'de',
+      moduleId: this.state?.moduleId,
+      quizMode: 'fill-in-the-blank',
+      optionCount: 3,
+      difficultyBias: 'similar' // Fill-in-the-blank uses similar length words
+    });
     
-    // Import here to avoid circular dependency
-    const { getWordsForLanguage } = require('./wordService');
-    const allWords = getWordsForLanguage(this.state?.languageCode || 'de');
-    
-    // For speed mode, prefer clearly different options
-    const wrongTerms = allWords
-      .filter((w: Word) => w.id !== word.id)
-      .map((w: Word) => w.term)
-      .filter((term: string) => term !== correctTerm)
-      .filter((term: string) => Math.abs(term.length - correctTerm.length) <= 3) // Speed-friendly length
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-    
-    // Speed-optimized fallbacks
-    while (wrongTerms.length < 3) {
-      const fallbacks = ['alternative', 'different', 'other'];
-      for (const fallback of fallbacks) {
-        if (!wrongTerms.includes(fallback) && wrongTerms.length < 3) {
-          wrongTerms.push(fallback);
-        }
-      }
-      break;
-    }
-    
-    const options = [correctTerm, ...wrongTerms.slice(0, 3)];
-    return options.sort(() => 0.5 - Math.random());
+    return result.options;
   }
 
   /**
