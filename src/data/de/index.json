@@ -23,6 +23,13 @@
       "description": "Herhaling Duitse Grammatik - Vervoeging, Volgorde en Zinsbouw",
       "icon": "🔄",
       "difficulty": "intermediate"
+    },
+    {
+      "id": "niederlandisch-deutsch-vokabeln",
+      "name": "Niederländisch-Deutsch Vokabeln",
+      "description": "Umfassende Vokabelliste für den Alltag - Haushalt, Möbel, Farben und mehr",
+      "icon": "🏠",
+      "difficulty": "intermediate"
     }
   ]
 }

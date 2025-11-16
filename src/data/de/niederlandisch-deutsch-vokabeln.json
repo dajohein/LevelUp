@@ -1,0 +1,1386 @@
+{
+  "id": "niederlandisch-deutsch-vokabeln",
+  "name": "Niederländisch-Deutsch Vokabeln",
+  "description": "Umfassende Vokabelliste für den Alltag - Haushalt, Möbel, Farben und mehr",
+  "icon": "🏠",
+  "difficulty": "intermediate",
+  "words": [
+    {
+      "id": "49",
+      "term": "het balkon",
+      "definition": "der Balkon",
+      "direction": "term-to-definition",
+      "category": "Wohnungen und Häuser",
+      "context": {
+        "sentence": "Het balkon heeft een prachtig uitzicht op de stad.",
+        "translation": "Der Balkon hat eine schöne Aussicht auf die Stadt.",
+        "sentenceWithBlank": "{BLANK} heeft een prachtig uitzicht op de stad."
+      },
+      "synonyms": [
+        "die Balkons"
+      ]
+    },
+    {
+      "id": "50",
+      "term": "de boerderij",
+      "definition": "der Bauernhof",
+      "direction": "term-to-definition",
+      "category": "Gebäude",
+      "context": {
+        "sentence": "De boerderij ligt buiten het dorp.",
+        "translation": "Der Bauernhof liegt außerhalb des Dorfes.",
+        "sentenceWithBlank": "{BLANK} ligt buiten het dorp."
+      },
+      "synonyms": [
+        "die Bauernhöfe"
+      ]
+    },
+    {
+      "id": "51",
+      "term": "het bureau",
+      "definition": "der Schreibtisch",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "Het bureau staat naast het raam.",
+        "translation": "Der Schreibtisch steht neben dem Fenster.",
+        "sentenceWithBlank": "{BLANK} staat naast het raam."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "52",
+      "term": "de fauteuil",
+      "definition": "der Sessel",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De fauteuil is heel comfortabel om in te lezen.",
+        "translation": "Der Sessel ist sehr bequem zum Lesen.",
+        "sentenceWithBlank": "{BLANK} is heel comfortabel om in te lezen."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "53",
+      "term": "de eetkamerstoel",
+      "definition": "der Stuhl",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De eetkamerstoel is van hout gemaakt.",
+        "translation": "Der Stuhl ist aus Holz gemacht.",
+        "sentenceWithBlank": "{BLANK} is van hout gemaakt."
+      },
+      "synonyms": [
+        "die Stühle"
+      ]
+    },
+    {
+      "id": "54",
+      "term": "de kast",
+      "definition": "der Schrank",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De kast is vol met kleding.",
+        "translation": "Der Schrank ist voller Kleidung.",
+        "sentenceWithBlank": "{BLANK} is vol met kleding."
+      },
+      "synonyms": [
+        "die Schränke"
+      ]
+    },
+    {
+      "id": "55",
+      "term": "de spiegel",
+      "definition": "der Spiegel",
+      "direction": "term-to-definition",
+      "category": "Haushaltsgeräte",
+      "context": {
+        "sentence": "De spiegel hangt boven de wastafel.",
+        "translation": "Der Spiegel hängt über dem Waschbecken.",
+        "sentenceWithBlank": "{BLANK} hangt boven de wastafel."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "56",
+      "term": "de stoel",
+      "definition": "der Stuhl",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De stoel staat bij de tafel.",
+        "translation": "Der Stuhl steht beim Tisch.",
+        "sentenceWithBlank": "{BLANK} staat bij de tafel."
+      },
+      "synonyms": [
+        "die Stühle"
+      ]
+    },
+    {
+      "id": "57",
+      "term": "de tafel",
+      "definition": "der Tisch",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De tafel is gedekt voor het diner.",
+        "translation": "Der Tisch ist für das Abendessen gedeckt.",
+        "sentenceWithBlank": "{BLANK} is gedekt voor het diner."
+      },
+      "synonyms": [
+        "die Tische"
+      ]
+    },
+    {
+      "id": "58",
+      "term": "de televisie",
+      "definition": "der Fernseher",
+      "direction": "term-to-definition",
+      "category": "Elektronik",
+      "context": {
+        "sentence": "De televisie staat in de woonkamer.",
+        "translation": "Der Fernseher steht im Wohnzimmer.",
+        "sentenceWithBlank": "{BLANK} staat in de woonkamer."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "59",
+      "term": "de tuin",
+      "definition": "der Garten",
+      "direction": "term-to-definition",
+      "category": "Außenbereiche",
+      "context": {
+        "sentence": "De tuin bloeit prachtig in de lente.",
+        "translation": "Der Garten blüht wunderschön im Frühling.",
+        "sentenceWithBlank": "{BLANK} bloeit prachtig in de lente."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "60",
+      "term": "het appartement",
+      "definition": "die Wohnung",
+      "direction": "term-to-definition",
+      "category": "Wohnungen und Häuser",
+      "context": {
+        "sentence": "Het appartement heeft twee slaapkamers.",
+        "translation": "Die Wohnung hat zwei Schlafzimmer.",
+        "sentenceWithBlank": "{BLANK} heeft twee slaapkamers."
+      },
+      "synonyms": [
+        "die Wohnungen"
+      ]
+    },
+    {
+      "id": "61",
+      "term": "de deur",
+      "definition": "die Tür",
+      "direction": "term-to-definition",
+      "category": "Gebäudeteile",
+      "context": {
+        "sentence": "De deur is open.",
+        "translation": "Die Tür ist offen.",
+        "sentenceWithBlank": "{BLANK} is open."
+      },
+      "synonyms": [
+        "die Türen"
+      ]
+    },
+    {
+      "id": "62",
+      "term": "de douche",
+      "definition": "die Dusche",
+      "direction": "term-to-definition",
+      "category": "Badezimmer",
+      "context": {
+        "sentence": "De douche is erg warm vandaag.",
+        "translation": "Die Dusche ist heute sehr warm.",
+        "sentenceWithBlank": "{BLANK} is erg warm vandaag."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "63",
+      "term": "de garage",
+      "definition": "die Garage",
+      "direction": "term-to-definition",
+      "category": "Gebäudeteile",
+      "context": {
+        "sentence": "De garage is groot genoeg voor twee auto's.",
+        "translation": "Die Garage ist groß genug für zwei Autos.",
+        "sentenceWithBlank": "{BLANK} is groot genoeg voor twee auto's."
+      },
+      "synonyms": [
+        "die Garagen"
+      ]
+    },
+    {
+      "id": "64",
+      "term": "de keuken",
+      "definition": "die Küche",
+      "direction": "term-to-definition",
+      "category": "Räume",
+      "context": {
+        "sentence": "De keuken is modern ingericht.",
+        "translation": "Die Küche ist modern eingerichtet.",
+        "sentenceWithBlank": "{BLANK} is modern ingericht."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "65",
+      "term": "de klok",
+      "definition": "die Uhr",
+      "direction": "term-to-definition",
+      "category": "Zeitmessung",
+      "context": {
+        "sentence": "De klok wijst twee uur aan.",
+        "translation": "Die Uhr zeigt zwei Uhr an.",
+        "sentenceWithBlank": "{BLANK} wijst twee uur aan."
+      },
+      "synonyms": [
+        "die Uhren"
+      ]
+    },
+    {
+      "id": "66",
+      "term": "de lamp",
+      "definition": "die Lampe",
+      "direction": "term-to-definition",
+      "category": "Beleuchtung",
+      "context": {
+        "sentence": "De lamp geeft warm licht.",
+        "translation": "Die Lampe gibt warmes Licht.",
+        "sentenceWithBlank": "{BLANK} geeft warm licht."
+      },
+      "synonyms": [
+        "die Lampen"
+      ]
+    },
+    {
+      "id": "67",
+      "term": "de muur",
+      "definition": "die Wand",
+      "direction": "term-to-definition",
+      "category": "Gebäudeteile",
+      "context": {
+        "sentence": "De muur is wit geschilderd.",
+        "translation": "Die Wand ist weiß gestrichen.",
+        "sentenceWithBlank": "{BLANK} is wit geschilderd."
+      },
+      "synonyms": [
+        "die Wände"
+      ]
+    },
+    {
+      "id": "68",
+      "term": "het toilet",
+      "definition": "die Toilette",
+      "direction": "term-to-definition",
+      "category": "Badezimmer",
+      "context": {
+        "sentence": "Het toilet is schoon.",
+        "translation": "Die Toilette ist sauber.",
+        "sentenceWithBlank": "{BLANK} is schoon."
+      },
+      "synonyms": [
+        "die Toiletten"
+      ]
+    },
+    {
+      "id": "69",
+      "term": "de badkamer",
+      "definition": "das Badezimmer",
+      "direction": "term-to-definition",
+      "category": "Räume",
+      "context": {
+        "sentence": "De badkamer heeft een groot raam.",
+        "translation": "Das Badezimmer hat ein großes Fenster.",
+        "sentenceWithBlank": "{BLANK} heeft een groot raam."
+      },
+      "synonyms": [
+        "die Badezimmer"
+      ]
+    },
+    {
+      "id": "70",
+      "term": "de bank",
+      "definition": "das Sofa",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De bank is comfortabel voor een dutje.",
+        "translation": "Das Sofa ist bequem für ein Nickerchen.",
+        "sentenceWithBlank": "{BLANK} is comfortabel voor een dutje."
+      },
+      "synonyms": [
+        "die Sofas"
+      ]
+    },
+    {
+      "id": "71",
+      "term": "het bed",
+      "definition": "das Bett",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "Het bed is opgemaakt.",
+        "translation": "Das Bett ist gemacht.",
+        "sentenceWithBlank": "{BLANK} is opgemaakt."
+      },
+      "synonyms": [
+        "die Betten"
+      ]
+    },
+    {
+      "id": "72",
+      "term": "de eengezinswoning",
+      "definition": "das Einfamilienhaus",
+      "direction": "term-to-definition",
+      "category": "Wohnungen und Häuser",
+      "context": {
+        "sentence": "De eengezinswoning heeft een grote tuin.",
+        "translation": "Das Einfamilienhaus hat einen großen Garten.",
+        "sentenceWithBlank": "{BLANK} heeft een grote tuin."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "73",
+      "term": "het huis",
+      "definition": "das Haus",
+      "direction": "term-to-definition",
+      "category": "Wohnungen und Häuser",
+      "context": {
+        "sentence": "Het huis is geel geverfd.",
+        "translation": "Das Haus ist gelb gestrichen.",
+        "sentenceWithBlank": "{BLANK} is geel geverfd."
+      },
+      "synonyms": [
+        "die Häuser"
+      ]
+    },
+    {
+      "id": "74",
+      "term": "de kamer",
+      "definition": "das Zimmer",
+      "direction": "term-to-definition",
+      "category": "Räume",
+      "context": {
+        "sentence": "De kamer is licht en ruim.",
+        "translation": "Das Zimmer ist hell und geräumig.",
+        "sentenceWithBlank": "{BLANK} is licht en ruim."
+      },
+      "synonyms": [
+        "die Zimmer"
+      ]
+    },
+    {
+      "id": "75",
+      "term": "het raam",
+      "definition": "das Fenster",
+      "direction": "term-to-definition",
+      "category": "Gebäudeteile",
+      "context": {
+        "sentence": "Het raam staat open voor frisse lucht.",
+        "translation": "Das Fenster steht offen für frische Luft.",
+        "sentenceWithBlank": "{BLANK} staat open voor frisse lucht."
+      },
+      "synonyms": [
+        "die Fenster"
+      ]
+    },
+    {
+      "id": "76",
+      "term": "het rek",
+      "definition": "das Regal",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "Het rek is vol met boeken.",
+        "translation": "Das Regal ist voller Bücher.",
+        "sentenceWithBlank": "{BLANK} is vol met boeken."
+      },
+      "synonyms": [
+        "die Regale"
+      ]
+    },
+    {
+      "id": "77",
+      "term": "de plank",
+      "definition": "das Regal",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De plank hangt aan de muur.",
+        "translation": "Das Regal hängt an der Wand.",
+        "sentenceWithBlank": "{BLANK} hangt aan de muur."
+      },
+      "synonyms": [
+        "die Regale"
+      ]
+    },
+    {
+      "id": "78",
+      "term": "de slaapkamer",
+      "definition": "das Schlafzimmer",
+      "direction": "term-to-definition",
+      "category": "Räume",
+      "context": {
+        "sentence": "De slaapkamer is rustig en donker.",
+        "translation": "Das Schlafzimmer ist ruhig und dunkel.",
+        "sentenceWithBlank": "{BLANK} is rustig en donker."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "79",
+      "term": "de wastafel",
+      "definition": "das Waschbecken",
+      "direction": "term-to-definition",
+      "category": "Badezimmer",
+      "context": {
+        "sentence": "De wastafel in de badkamer is wit.",
+        "translation": "Das Waschbecken im Badezimmer ist weiß.",
+        "sentenceWithBlank": "{BLANK} in de badkamer is wit."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "80",
+      "term": "de woonkamer",
+      "definition": "das Wohnzimmer",
+      "direction": "term-to-definition",
+      "category": "Räume",
+      "context": {
+        "sentence": "De woonkamer is gezellig ingericht.",
+        "translation": "Das Wohnzimmer ist gemütlich eingerichtet.",
+        "sentenceWithBlank": "{BLANK} is gezellig ingericht."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "81",
+      "term": "de meubels",
+      "definition": "die Möbel",
+      "direction": "term-to-definition",
+      "category": "Möbel",
+      "context": {
+        "sentence": "De meubels zijn van goede kwaliteit.",
+        "translation": "Die Möbel sind von guter Qualität.",
+        "sentenceWithBlank": "{BLANK} zijn van goede kwaliteit."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "82",
+      "term": "fertig",
+      "definition": "klaar",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Die Arbeit ist fertig.",
+        "translation": "Het werk is klaar.",
+        "sentenceWithBlank": "Die Arbeit ist {BLANK}."
+      },
+      "synonyms": [
+        "bereit",
+        "vollendet"
+      ]
+    },
+    {
+      "id": "83",
+      "term": "damals",
+      "definition": "toen/destijds",
+      "direction": "definition-to-term",
+      "category": "Zeit",
+      "context": {
+        "sentence": "Damals war alles anders.",
+        "translation": "Toen was alles anders.",
+        "sentenceWithBlank": "{BLANK} war alles anders."
+      },
+      "synonyms": [
+        "früher",
+        "einst"
+      ]
+    },
+    {
+      "id": "84",
+      "term": "aufwachsen",
+      "definition": "opgroeien",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Kinder wachsen schnell auf.",
+        "translation": "Kinderen groeien snel op.",
+        "sentenceWithBlank": "Kinder {BLANK} schnell {BLANK}."
+      },
+      "synonyms": [
+        "großwerden"
+      ]
+    },
+    {
+      "id": "85",
+      "term": "ziemlich",
+      "definition": "best wel/tamelijk",
+      "direction": "definition-to-term",
+      "category": "Adverbien",
+      "context": {
+        "sentence": "Das Buch ist ziemlich interessant.",
+        "translation": "Het boek is best wel interessant.",
+        "sentenceWithBlank": "Das Buch ist {BLANK} interessant."
+      },
+      "synonyms": [
+        "recht",
+        "relativ"
+      ]
+    },
+    {
+      "id": "86",
+      "term": "feiern",
+      "definition": "vieren",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Wir feiern heute Geburtstag.",
+        "translation": "We vieren vandaag verjaardag.",
+        "sentenceWithBlank": "Wir {BLANK} heute Geburtstag."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "87",
+      "term": "nie",
+      "definition": "nooit",
+      "direction": "definition-to-term",
+      "category": "Adverbien",
+      "context": {
+        "sentence": "Ich war nie in Paris.",
+        "translation": "Ik ben nooit in Parijs geweest.",
+        "sentenceWithBlank": "Ich war {BLANK} in Paris."
+      },
+      "synonyms": [
+        "niemals"
+      ]
+    },
+    {
+      "id": "88",
+      "term": "riesengroß",
+      "definition": "heel groot/gigantisch",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Das Haus ist riesengroß.",
+        "translation": "Het huis is gigantisch groot.",
+        "sentenceWithBlank": "Das Haus ist {BLANK}."
+      },
+      "synonyms": [
+        "riesig",
+        "gigantisch",
+        "enorm"
+      ]
+    },
+    {
+      "id": "89",
+      "term": "der Dachboden",
+      "definition": "de zolder",
+      "direction": "definition-to-term",
+      "category": "Gebäudeteile",
+      "context": {
+        "sentence": "Auf dem Dachboden sind alte Möbel.",
+        "translation": "Op de zolder staan oude meubels.",
+        "sentenceWithBlank": "Auf {BLANK} sind alte Möbel."
+      },
+      "synonyms": [
+        "der Speicher"
+      ]
+    },
+    {
+      "id": "90",
+      "term": "die Ecke",
+      "definition": "de hoek",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Das Sofa steht in der Ecke.",
+        "translation": "De bank staat in de hoek.",
+        "sentenceWithBlank": "Das Sofa steht in {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "91",
+      "term": "die Nachbarn",
+      "definition": "de buren",
+      "direction": "definition-to-term",
+      "category": "Menschen",
+      "context": {
+        "sentence": "Die Nachbarn sind sehr freundlich.",
+        "translation": "De buren zijn erg vriendelijk.",
+        "sentenceWithBlank": "{BLANK} sind sehr freundlich."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "92",
+      "term": "die Sachen",
+      "definition": "de spullen",
+      "direction": "definition-to-term",
+      "category": "Gegenstände",
+      "context": {
+        "sentence": "Alle Sachen sind im Koffer.",
+        "translation": "Alle spullen zitten in de koffer.",
+        "sentenceWithBlank": "Alle {BLANK} sind im Koffer."
+      },
+      "synonyms": [
+        "die Dinge",
+        "das Zeug"
+      ]
+    },
+    {
+      "id": "93",
+      "term": "der Geschmack",
+      "definition": "de smaak",
+      "direction": "definition-to-term",
+      "category": "Sinne",
+      "context": {
+        "sentence": "Das Essen hat einen guten Geschmack.",
+        "translation": "Het eten heeft een goede smaak.",
+        "sentenceWithBlank": "Das Essen hat einen guten {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "94",
+      "term": "der Platz",
+      "definition": "de ruimte",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Hier ist genug Platz für alle.",
+        "translation": "Hier is genoeg ruimte voor iedereen.",
+        "sentenceWithBlank": "Hier ist genug {BLANK} für alle."
+      },
+      "synonyms": [
+        "der Raum"
+      ]
+    },
+    {
+      "id": "95",
+      "term": "die Sachen",
+      "definition": "de spullen",
+      "direction": "definition-to-term",
+      "category": "Gegenstände",
+      "context": {
+        "sentence": "Räume deine Sachen auf.",
+        "translation": "Ruim je spullen op.",
+        "sentenceWithBlank": "Räume deine {BLANK} auf."
+      },
+      "synonyms": [
+        "die Dinge"
+      ]
+    },
+    {
+      "id": "96",
+      "term": "brauchen",
+      "definition": "nodig hebben",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich brauche Hilfe.",
+        "translation": "Ik heb hulp nodig.",
+        "sentenceWithBlank": "Ich {BLANK} Hilfe."
+      },
+      "synonyms": [
+        "benötigen"
+      ]
+    },
+    {
+      "id": "97",
+      "term": "die Farbe",
+      "definition": "de kleur",
+      "direction": "definition-to-term",
+      "category": "Eigenschaften",
+      "context": {
+        "sentence": "Welche Farbe hat dein Auto?",
+        "translation": "Welke kleur heeft jouw auto?",
+        "sentenceWithBlank": "Welche {BLANK} hat dein Auto?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "98",
+      "term": "sich überlegen",
+      "definition": "overwegen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich überlege mir, was ich kaufen soll.",
+        "translation": "Ik overweeg wat ik moet kopen.",
+        "sentenceWithBlank": "Ich {BLANK} mir, was ich kaufen soll."
+      },
+      "synonyms": [
+        "nachdenken"
+      ]
+    },
+    {
+      "id": "99",
+      "term": "wählen",
+      "definition": "kiezen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Du kannst zwischen rot und blau wählen.",
+        "translation": "Je kunt kiezen tussen rood en blauw.",
+        "sentenceWithBlank": "Du kannst zwischen rot und blau {BLANK}."
+      },
+      "synonyms": [
+        "aussuchen",
+        "auswählen"
+      ]
+    },
+    {
+      "id": "100",
+      "term": "der Gegenstand",
+      "definition": "het onderwerp",
+      "direction": "definition-to-term",
+      "category": "Gegenstände",
+      "context": {
+        "sentence": "Dieser Gegenstand ist sehr wertvoll.",
+        "translation": "Dit onderwerp is erg waardevol.",
+        "sentenceWithBlank": "Dieser {BLANK} ist sehr wertvoll."
+      },
+      "synonyms": [
+        "das Objekt",
+        "die Sache"
+      ]
+    },
+    {
+      "id": "101",
+      "term": "entscheiden",
+      "definition": "beslissen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Du musst schnell entscheiden.",
+        "translation": "Je moet snel beslissen.",
+        "sentenceWithBlank": "Du musst schnell {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "102",
+      "term": "das Holz",
+      "definition": "het hout",
+      "direction": "definition-to-term",
+      "category": "Materialien",
+      "context": {
+        "sentence": "Das Holz ist sehr hart.",
+        "translation": "Het hout is erg hard.",
+        "sentenceWithBlank": "{BLANK} ist sehr hart."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "103",
+      "term": "außen",
+      "definition": "buiten",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Außen ist es kalt.",
+        "translation": "Buiten is het koud.",
+        "sentenceWithBlank": "{BLANK} ist es kalt."
+      },
+      "synonyms": [
+        "draußen"
+      ]
+    },
+    {
+      "id": "104",
+      "term": "verbringen",
+      "definition": "doorbrengen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Wir verbringen den Tag am Strand.",
+        "translation": "We brengen de dag door op het strand.",
+        "sentenceWithBlank": "Wir {BLANK} den Tag am Strand."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "105",
+      "term": "benutzen",
+      "definition": "gebruiken",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Kannst du das Werkzeug benutzen?",
+        "translation": "Kun je het gereedschap gebruiken?",
+        "sentenceWithBlank": "Kannst du das Werkzeug {BLANK}?"
+      },
+      "synonyms": [
+        "verwenden",
+        "gebrauchen"
+      ]
+    },
+    {
+      "id": "106",
+      "term": "die Vergangenheit",
+      "definition": "het verleden",
+      "direction": "definition-to-term",
+      "category": "Zeit",
+      "context": {
+        "sentence": "Die Vergangenheit ist vorbei.",
+        "translation": "Het verleden is voorbij.",
+        "sentenceWithBlank": "{BLANK} ist vorbei."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "107",
+      "term": "das Gebäude",
+      "definition": "het gebouw",
+      "direction": "definition-to-term",
+      "category": "Gebäude",
+      "context": {
+        "sentence": "Das Gebäude ist sehr hoch.",
+        "translation": "Het gebouw is erg hoog.",
+        "sentenceWithBlank": "{BLANK} ist sehr hoch."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "108",
+      "term": "das Geschäft",
+      "definition": "de winkel",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Das Geschäft öffnet um neun Uhr.",
+        "translation": "De winkel opent om negen uur.",
+        "sentenceWithBlank": "{BLANK} öffnet um neun Uhr."
+      },
+      "synonyms": [
+        "der Laden",
+        "der Shop"
+      ]
+    },
+    {
+      "id": "109",
+      "term": "es gibt",
+      "definition": "er is/zijn",
+      "direction": "definition-to-term",
+      "category": "Ausdrücke",
+      "context": {
+        "sentence": "Es gibt viele Menschen im Park.",
+        "translation": "Er zijn veel mensen in het park.",
+        "sentenceWithBlank": "{BLANK} viele Menschen im Park."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "110",
+      "term": "hängen",
+      "definition": "hangen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Das Bild hängt an der Wand.",
+        "translation": "Het schilderij hangt aan de muur.",
+        "sentenceWithBlank": "Das Bild {BLANK} an der Wand."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "111",
+      "term": "liegen",
+      "definition": "liggen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Das Buch liegt auf dem Tisch.",
+        "translation": "Het boek ligt op de tafel.",
+        "sentenceWithBlank": "Das Buch {BLANK} auf dem Tisch."
+      },
+      "synonyms": [
+        "gelegen"
+      ]
+    },
+    {
+      "id": "112",
+      "term": "aufräumen",
+      "definition": "opruimen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Du sollst dein Zimmer aufräumen.",
+        "translation": "Je moet je kamer opruimen.",
+        "sentenceWithBlank": "Du sollst dein Zimmer {BLANK}."
+      },
+      "synonyms": [
+        "sauber machen"
+      ]
+    },
+    {
+      "id": "113",
+      "term": "sauber machen",
+      "definition": "schoonmaken",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich muss das Haus sauber machen.",
+        "translation": "Ik moet het huis schoonmaken.",
+        "sentenceWithBlank": "Ich muss das Haus {BLANK}."
+      },
+      "synonyms": [
+        "putzen",
+        "reinigen"
+      ]
+    },
+    {
+      "id": "114",
+      "term": "stehen",
+      "definition": "staan",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Der Mann steht vor der Tür.",
+        "translation": "De man staat voor de deur.",
+        "sentenceWithBlank": "Der Mann {BLANK} vor der Tür."
+      },
+      "synonyms": [
+        "gestanden"
+      ]
+    },
+    {
+      "id": "115",
+      "term": "ausmachen",
+      "definition": "uitmaken",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Mach bitte das Licht aus.",
+        "translation": "Doe het licht alsjeblieft uit.",
+        "sentenceWithBlank": "{BLANK} bitte das Licht {BLANK}."
+      },
+      "synonyms": [
+        "ausschalten"
+      ]
+    },
+    {
+      "id": "116",
+      "term": "dunkel",
+      "definition": "donker",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Es wird schon dunkel draußen.",
+        "translation": "Het wordt al donker buiten.",
+        "sentenceWithBlank": "Es wird schon {BLANK} draußen."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "117",
+      "term": "gemütlich",
+      "definition": "gezellig",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Das Café ist sehr gemütlich.",
+        "translation": "Het café is erg gezellig.",
+        "sentenceWithBlank": "Das Café ist sehr {BLANK}."
+      },
+      "synonyms": [
+        "behaglich",
+        "heimelig"
+      ]
+    },
+    {
+      "id": "118",
+      "term": "groß",
+      "definition": "groot",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Das Haus ist sehr groß.",
+        "translation": "Het huis is erg groot.",
+        "sentenceWithBlank": "Das Haus ist sehr {BLANK}."
+      },
+      "synonyms": [
+        "riesig",
+        "gewaltig"
+      ]
+    },
+    {
+      "id": "119",
+      "term": "klein",
+      "definition": "klein",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Die Wohnung ist klein aber fein.",
+        "translation": "De woning is klein maar fijn.",
+        "sentenceWithBlank": "Die Wohnung ist {BLANK} aber fein."
+      },
+      "synonyms": [
+        "winzig",
+        "mini"
+      ]
+    },
+    {
+      "id": "120",
+      "term": "hell",
+      "definition": "licht",
+      "direction": "definition-to-term",
+      "category": "Adjektive",
+      "context": {
+        "sentence": "Das Zimmer ist sehr hell.",
+        "translation": "De kamer is erg licht.",
+        "sentenceWithBlank": "Das Zimmer ist sehr {BLANK}."
+      },
+      "synonyms": [
+        "strahlend",
+        "leuchtend"
+      ]
+    },
+    {
+      "id": "121",
+      "term": "unten",
+      "definition": "beneden",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Die Küche ist unten.",
+        "translation": "De keuken is beneden.",
+        "sentenceWithBlank": "Die Küche ist {BLANK}."
+      },
+      "synonyms": [
+        "nach unten"
+      ]
+    },
+    {
+      "id": "122",
+      "term": "oben",
+      "definition": "boven",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Mein Zimmer ist oben.",
+        "translation": "Mijn kamer is boven.",
+        "sentenceWithBlank": "Mein Zimmer ist {BLANK}."
+      },
+      "synonyms": [
+        "nach oben"
+      ]
+    },
+    {
+      "id": "123",
+      "term": "dahinter",
+      "definition": "erachter",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Dahinter ist ein Garten.",
+        "translation": "Erachter is een tuin.",
+        "sentenceWithBlank": "{BLANK} ist ein Garten."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "124",
+      "term": "daneben",
+      "definition": "ernaast",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Daneben steht ein Stuhl.",
+        "translation": "Ernaast staat een stoel.",
+        "sentenceWithBlank": "{BLANK} steht ein Stuhl."
+      },
+      "synonyms": [
+        "nebenan"
+      ]
+    },
+    {
+      "id": "125",
+      "term": "davor",
+      "definition": "ervoor",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Davor steht ein Auto.",
+        "translation": "Ervoor staat een auto.",
+        "sentenceWithBlank": "{BLANK} steht ein Auto."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "126",
+      "term": "ganz",
+      "definition": "helemaal",
+      "direction": "definition-to-term",
+      "category": "Adverbien",
+      "context": {
+        "sentence": "Das ist ganz richtig.",
+        "translation": "Dat is helemaal juist.",
+        "sentenceWithBlank": "Das ist {BLANK} richtig."
+      },
+      "synonyms": [
+        "völlig",
+        "komplett"
+      ]
+    },
+    {
+      "id": "127",
+      "term": "zu Hause",
+      "definition": "thuis",
+      "direction": "definition-to-term",
+      "category": "Orte",
+      "context": {
+        "sentence": "Ich bin zu Hause.",
+        "translation": "Ik ben thuis.",
+        "sentenceWithBlank": "Ich bin {BLANK}."
+      },
+      "synonyms": [
+        "daheim"
+      ]
+    },
+    {
+      "id": "128",
+      "term": "blau",
+      "definition": "blauw",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Der Himmel ist blau.",
+        "translation": "De hemel is blauw.",
+        "sentenceWithBlank": "Der Himmel ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "129",
+      "term": "gelb",
+      "definition": "geel",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Die Sonne ist gelb.",
+        "translation": "De zon is geel.",
+        "sentenceWithBlank": "Die Sonne ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "130",
+      "term": "rot",
+      "definition": "rood",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Die Rose ist rot.",
+        "translation": "De roos is rood.",
+        "sentenceWithBlank": "Die Rose ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "131",
+      "term": "rosa",
+      "definition": "roze",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Das Kleid ist rosa.",
+        "translation": "De jurk is roze.",
+        "sentenceWithBlank": "Das Kleid ist {BLANK}."
+      },
+      "synonyms": [
+        "pink"
+      ]
+    },
+    {
+      "id": "132",
+      "term": "weiß",
+      "definition": "wit",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Der Schnee ist weiß.",
+        "translation": "De sneeuw is wit.",
+        "sentenceWithBlank": "Der Schnee ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "133",
+      "term": "schwarz",
+      "definition": "zwart",
+      "direction": "definition-to-term",
+      "category": "Farben",
+      "context": {
+        "sentence": "Die Nacht ist schwarz.",
+        "translation": "De nacht is zwart.",
+        "sentenceWithBlank": "Die Nacht ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "134",
+      "term": "beschreiben",
+      "definition": "beschrijven",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Kannst du den Weg beschreiben?",
+        "translation": "Kun je de weg beschrijven?",
+        "sentenceWithBlank": "Kannst du den Weg {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "135",
+      "term": "beschrieben",
+      "definition": "beschreven",
+      "direction": "definition-to-term",
+      "category": "Partizipien",
+      "context": {
+        "sentence": "Das Problem wurde gut beschrieben.",
+        "translation": "Het probleem werd goed beschreven.",
+        "sentenceWithBlank": "Das Problem wurde gut {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "136",
+      "term": "finden",
+      "definition": "vinden",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich kann meine Schlüssel nicht finden.",
+        "translation": "Ik kan mijn sleutels niet vinden.",
+        "sentenceWithBlank": "Ich kann meine Schlüssel nicht {BLANK}."
+      },
+      "synonyms": [
+        "entdecken"
+      ]
+    },
+    {
+      "id": "137",
+      "term": "gefunden",
+      "definition": "gevonden",
+      "direction": "definition-to-term",
+      "category": "Partizipien",
+      "context": {
+        "sentence": "Ich habe meine Brille gefunden.",
+        "translation": "Ik heb mijn bril gevonden.",
+        "sentenceWithBlank": "Ich habe meine Brille {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "138",
+      "term": "gefallen",
+      "definition": "bevallen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Das Buch hat mir gut gefallen.",
+        "translation": "Het boek heeft me goed bevallen.",
+        "sentenceWithBlank": "Das Buch hat mir gut {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "139",
+      "term": "hören",
+      "definition": "horen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich kann die Musik hören.",
+        "translation": "Ik kan de muziek horen.",
+        "sentenceWithBlank": "Ich kann die Musik {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "140",
+      "term": "lesen",
+      "definition": "lezen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich lese gerne Bücher.",
+        "translation": "Ik lees graag boeken.",
+        "sentenceWithBlank": "Ich {BLANK} gerne Bücher."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "141",
+      "term": "gelesen",
+      "definition": "gelezen",
+      "direction": "definition-to-term",
+      "category": "Partizipien",
+      "context": {
+        "sentence": "Ich habe das Buch gelesen.",
+        "translation": "Ik heb het boek gelezen.",
+        "sentenceWithBlank": "Ich habe das Buch {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "142",
+      "term": "spielen",
+      "definition": "spelen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Die Kinder spielen im Garten.",
+        "translation": "De kinderen spelen in de tuin.",
+        "sentenceWithBlank": "Die Kinder {BLANK} im Garten."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "143",
+      "term": "machen",
+      "definition": "maken",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Was machst du heute?",
+        "translation": "Wat doe je vandaag?",
+        "sentenceWithBlank": "Was {BLANK} du heute?"
+      },
+      "synonyms": [
+        "tun",
+        "schaffen"
+      ]
+    },
+    {
+      "id": "144",
+      "term": "wohnen",
+      "definition": "wonen",
+      "direction": "definition-to-term",
+      "category": "Verben",
+      "context": {
+        "sentence": "Ich wohne in Berlin.",
+        "translation": "Ik woon in Berlijn.",
+        "sentenceWithBlank": "Ich {BLANK} in Berlin."
+      },
+      "synonyms": [
+        "leben"
+      ]
+    }
+  ]
+}

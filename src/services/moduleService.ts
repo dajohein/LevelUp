@@ -11,6 +11,7 @@ import esLanguageInfo from '../data/es/index.json';
 import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import deGrammatikGrundlagen from '../data/de/grammatik-grundlagen.json';
 import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
+import deNiederlandischDeutschVokabeln from '../data/de/niederlandisch-deutsch-vokabeln.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 import esFrasesClave from '../data/es/frases-clave.json';
 
@@ -26,6 +27,7 @@ const moduleRegistry: Record<string, Record<string, any>> = {
     grundwortschatz: deGrundwortschatz,
     'grammatik-grundlagen': deGrammatikGrundlagen,
     'grammatik-herhaling': deGrammatikHerhaling,
+    'niederlandisch-deutsch-vokabeln': deNiederlandischDeutschVokabeln,
   },
   es: {
     'vocabulario-basico': esVocabularioBasico,
