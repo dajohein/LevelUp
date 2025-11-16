@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { selectWordForRegularSession } from '../services/wordSelectionManager';
+import { selectWordForRegularSession, selectWordForMixedPractice } from '../services/wordSelectionManager';
 import { calculateMasteryGain } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
@@ -75,13 +75,24 @@ export const gameSlice = createSlice({
         // Use centralized word selection - create a unique session ID for game
         const sessionId = `game-session-${state.language}-${state.module || 'all'}`;
         
-        // Get words using centralized selection
-        const result = selectWordForRegularSession(
-          state.language,
-          state.wordProgress,
-          sessionId,
-          state.module || undefined
-        );
+        // Check if we're in mixed practice mode with active modules
+        let result;
+        if (!state.module) {
+          // No specific module means mixed practice - check for active learning modules
+          result = selectWordForMixedPractice(
+            state.language,
+            state.wordProgress,
+            sessionId
+          );
+        } else {
+          // Regular module-specific selection
+          result = selectWordForRegularSession(
+            state.language,
+            state.wordProgress,
+            sessionId,
+            state.module
+          );
+        }
 
         if (result) {
           state.currentWord = result.word;

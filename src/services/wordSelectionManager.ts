@@ -153,10 +153,33 @@ class WordSelectionManager {
     sessionId?: string
   ): WordSelectionResult | null {
     
-    // Get base word pool
-    const allWords = criteria.moduleId 
-      ? getWordsForModule(criteria.languageCode, criteria.moduleId)
-      : getWordsForLanguage(criteria.languageCode);
+    // Get base word pool - check for active learning modules from localStorage
+    let allWords: Word[] = [];
+    
+    if (criteria.moduleId) {
+      // Single module selection
+      allWords = getWordsForModule(criteria.languageCode, criteria.moduleId);
+    } else {
+      // Check if we're in mixed practice mode with active learning modules
+      try {
+        const activeLearningModules = localStorage.getItem('activeLearningModules');
+        if (activeLearningModules) {
+          const moduleIds = JSON.parse(activeLearningModules) as string[];
+          logger.debug(`📚 Using active learning modules: ${moduleIds.join(', ')}`);
+          
+          // Combine words from all active modules
+          allWords = moduleIds.flatMap(moduleId => 
+            getWordsForModule(criteria.languageCode, moduleId)
+          );
+        } else {
+          // Default: all words for the language
+          allWords = getWordsForLanguage(criteria.languageCode);
+        }
+      } catch (error) {
+        logger.warn('Failed to parse active learning modules, using all words', error);
+        allWords = getWordsForLanguage(criteria.languageCode);
+      }
+    }
 
     if (allWords.length === 0) {
       logger.warn(`No words available for selection`, { criteria });
@@ -452,6 +475,26 @@ export const selectWordForRegularSession = (
   return wordSelectionManager.selectWord({
     languageCode,
     moduleId,
+    prioritizeStruggling: true,
+    difficulty: 'adaptive',
+    maxRecentTracking: 8
+  }, wordProgress, sessionId);
+};
+
+export const selectWordForMixedPractice = (
+  languageCode: string,
+  wordProgress: { [key: string]: WordProgress },
+  sessionId: string,
+  activeModules?: string[]
+): WordSelectionResult | null => {
+  // Store active modules in localStorage for the core selection logic to use
+  if (activeModules && activeModules.length > 0) {
+    localStorage.setItem('activeLearningModules', JSON.stringify(activeModules));
+  }
+  
+  return wordSelectionManager.selectWord({
+    languageCode,
+    // No moduleId - let the core logic check localStorage for active modules
     prioritizeStruggling: true,
     difficulty: 'adaptive',
     maxRecentTracking: 8

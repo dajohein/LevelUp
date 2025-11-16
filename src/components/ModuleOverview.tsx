@@ -4,7 +4,7 @@
 // This suppression will be removed once unused variables are cleaned up
 // See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for gradual cleanup strategy
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from '@emotion/styled';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -995,6 +995,29 @@ const ViewDetailsButton = styled.button`
   }
 `;
 
+const LearningToggle = styled.button<{ isActive: boolean }>`
+  background: ${props => props.isActive ? '#4caf50' : '#666'};
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: ${props => props.theme.spacing.sm};
+  
+  &:hover {
+    background: ${props => props.isActive ? '#45a049' : '#777'};
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const MainMixedPracticeButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
@@ -1095,6 +1118,22 @@ export const ModuleOverview: React.FC = () => {
     }
   }, [languageCode, currentLanguage, dispatch]);
 
+  // Simple toggle state for each module
+  const [activeModules, setActiveModules] = useState<Set<string>>(new Set());
+  
+  // Toggle function
+  const handleToggleModule = (moduleId: string) => {
+    setActiveModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
+  };
+
   // Load word progress for the current language
   // Always prefer Redux state when language matches, fallback to storage otherwise
   const wordProgress = useMemo(() => {
@@ -1123,9 +1162,19 @@ export const ModuleOverview: React.FC = () => {
   const handleMixedPractice = () => {
     if (!languageCode) return;
 
+    // Get active modules - if none selected, use all modules as fallback
+    const activeModuleIds = Array.from(activeModules);
+    const modulesToPractice = activeModuleIds.length > 0 ? activeModuleIds : modules.map(m => m.id);
+    
+    // Store active modules in localStorage so the game can access them
+    localStorage.setItem('activeLearningModules', JSON.stringify(modulesToPractice));
+    
     dispatch(setLanguage(languageCode));
     dispatch(setCurrentModule(null)); // No specific module for mixed practice
     dispatch(resetSession());
+    
+    console.log('Starting mixed practice with modules:', modulesToPractice);
+    
     // Start a Deep Dive session for mixed practice (good balance of words and time)
     dispatch(startSession('deep-dive'));
     // Navigate directly to the game for mixed practice
@@ -1135,6 +1184,9 @@ export const ModuleOverview: React.FC = () => {
   const handleModulePractice = (moduleId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent triggering the module click
     if (!languageCode) return;
+
+    // Clear active learning modules since we're doing single module practice
+    localStorage.removeItem('activeLearningModules');
 
     dispatch(setLanguage(languageCode));
     dispatch(setCurrentModule(moduleId));
@@ -1214,6 +1266,11 @@ export const ModuleOverview: React.FC = () => {
           {/* Mixed Practice Button - prominently placed */}
           <MainMixedPracticeButton onClick={handleMixedPractice}>
             🎯 Mixed Practice
+            {activeModules.size > 0 && (
+              <span style={{ fontSize: '0.8em', opacity: 0.8, marginLeft: '8px' }}>
+                ({activeModules.size} modules)
+              </span>
+            )}
           </MainMixedPracticeButton>
 
           {modules.length === 0 ? (
@@ -1268,6 +1325,13 @@ export const ModuleOverview: React.FC = () => {
                       <ViewDetailsButton onClick={e => handleViewModuleDetails(module.id, e)}>
                         📊 View Details
                       </ViewDetailsButton>
+                      
+                      <LearningToggle 
+                        isActive={activeModules.has(module.id)}
+                        onClick={() => handleToggleModule(module.id)}
+                      >
+                        {activeModules.has(module.id) ? '✓' : '○'} Learning
+                      </LearningToggle>
 
                       <QuickPracticeButton onClick={e => handleModulePractice(module.id, e)}>
                         🎯 Practice
