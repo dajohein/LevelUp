@@ -14,6 +14,7 @@ import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
 import deNiederlandischDeutschVokabeln from '../data/de/niederlandisch-deutsch-vokabeln.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 import esFrasesClave from '../data/es/frases-clave.json';
+import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
@@ -32,6 +33,7 @@ const moduleRegistry: Record<string, Record<string, any>> = {
   es: {
     'vocabulario-basico': esVocabularioBasico,
     'frases-clave': esFrasesClave,
+    'comida-y-bebidas': esComidaYBebidas,
   },
 };
 

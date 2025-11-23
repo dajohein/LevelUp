@@ -16,6 +16,13 @@
       "description": "Frases esenciales para conversaciones sobre vacaciones y pasatiempos.",
       "icon": "💬",
       "difficulty": "intermediate"
+    },
+    {
+      "id": "comida-y-bebidas",
+      "name": "Comida y Bebidas",
+      "description": "Vocabulario esencial sobre comida, bebidas y cocina para conversaciones diarias.",
+      "icon": "🍽️",
+      "difficulty": "beginner"
     }
   ]
 }
