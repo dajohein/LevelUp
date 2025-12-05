@@ -1,10 +1,12 @@
 /**
  * Data Migration Service for safely upgrading legacy data formats
  * Provides safe migration from legacy data format to enhanced directional tracking
+ * Also handles word ID migration for collision prevention
  */
 
 import { logger } from './logger';
 import { wordProgressStorage } from './storageService';
+import { WordIdMigrationService } from './wordIdMigrationService';
 import type { WordProgress, LegacyWordProgress } from '../store/types';
 
 export class DataMigrationService {
@@ -93,39 +95,60 @@ export class DataMigrationService {
 
     try {
       const rawData = wordProgressStorage.loadRaw(languageCode);
-      const migratedData: { [key: string]: WordProgress } = {};
+      let migratedData: { [key: string]: WordProgress } = {};
       let migrationCount = 0;
       
-      // Check if any words need migration before starting
-      const needsMigration = Object.values(rawData).some(progress => this.needsMigration(progress));
+      // Step 1: Check if any words need data format migration
+      const needsDataMigration = Object.values(rawData).some(progress => this.needsMigration(progress));
       
-      if (!needsMigration) {
-        // No migration needed, return data as-is
-        return rawData as { [key: string]: WordProgress };
+      if (needsDataMigration) {
+        // Mark migration as in progress
+        this.migrationInProgress.add(languageCode);
+        
+        Object.entries(rawData).forEach(([wordId, progress]) => {
+          if (this.needsMigration(progress)) {
+            // Migrate legacy data format
+            migratedData[wordId] = this.migrateLegacyWordProgress(progress as LegacyWordProgress);
+            migrationCount++;
+          } else {
+            // Already in new format
+            migratedData[wordId] = progress as WordProgress;
+          }
+        });
+        
+        if (migrationCount > 0) {
+          logger.info(`Data format migration completed: ${migrationCount} words updated for ${languageCode}`);
+          
+          // Save the migrated data
+          try {
+            wordProgressStorage.save(languageCode, migratedData);
+          } catch (saveError) {
+            logger.error('Failed to save migrated data:', saveError);
+            // Continue with word ID migration even if save failed
+          }
+        }
+      } else {
+        // No data format migration needed
+        migratedData = rawData as { [key: string]: WordProgress };
       }
       
-      // Mark migration as in progress
-      this.migrationInProgress.add(languageCode);
+      // Step 2: Check if word ID migration is needed (for collision prevention)
+      const idMigrationStats = WordIdMigrationService.getIdMigrationStats(languageCode);
       
-      Object.entries(rawData).forEach(([wordId, progress]) => {
-        if (this.needsMigration(progress)) {
-          // Migrate legacy data
-          migratedData[wordId] = this.migrateLegacyWordProgress(progress as LegacyWordProgress);
-          migrationCount++;
-        } else {
-          // Already in new format
-          migratedData[wordId] = progress as WordProgress;
-        }
-      });
-      
-      if (migrationCount > 0) {
-        logger.info(`Migration completed: ${migrationCount} words updated for ${languageCode}`);
+      if (idMigrationStats.needsMigration) {
+        logger.info(`Starting word ID migration for ${languageCode}: ${idMigrationStats.oldFormatWords} words need robust IDs`);
         
-        // Save the migrated data to prevent re-migration
-        try {
-          wordProgressStorage.save(languageCode, migratedData);
-        } catch (saveError) {
-          logger.error('Failed to save migrated data:', saveError);
+        // Run word ID migration
+        const idMigrationResult = WordIdMigrationService.migrateWordProgressIds(languageCode, migratedData);
+        
+        if (idMigrationResult.success && idMigrationResult.migratedCount > 0) {
+          logger.info(`Word ID migration completed: ${idMigrationResult.migratedCount} IDs updated for ${languageCode}`);
+          
+          // Reload the data after ID migration
+          migratedData = wordProgressStorage.loadRaw(languageCode) as { [key: string]: WordProgress };
+        } else if (!idMigrationResult.success) {
+          logger.error(`Word ID migration failed for ${languageCode}:`, idMigrationResult.errors);
+          // Continue with existing data even if ID migration failed
         }
       }
       

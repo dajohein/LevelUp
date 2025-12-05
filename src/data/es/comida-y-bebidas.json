@@ -6,7 +6,7 @@
   "difficulty": "beginner",
   "words": [
     {
-      "id": "185",
+      "id": "comida-y-bebidas:185",
       "term": "la mesa",
       "definition": "de tafel",
       "direction": "definition-to-term",
@@ -19,7 +19,7 @@
       "synonyms": []
     },
     {
-      "id": "186",
+      "id": "comida-y-bebidas:186",
       "term": "la carta",
       "definition": "de kaart, het menu",
       "direction": "definition-to-term",
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "id": "187",
+      "id": "comida-y-bebidas:187",
       "term": "el plato",
       "definition": "het gerecht",
       "direction": "definition-to-term",
@@ -47,7 +47,7 @@
       "synonyms": []
     },
     {
-      "id": "188",
+      "id": "comida-y-bebidas:188",
       "term": "el camarero",
       "definition": "de ober",
       "direction": "definition-to-term",
@@ -62,7 +62,7 @@
       ]
     },
     {
-      "id": "189",
+      "id": "comida-y-bebidas:189",
       "term": "la camarera",
       "definition": "de ober",
       "direction": "definition-to-term",
@@ -77,7 +77,7 @@
       ]
     },
     {
-      "id": "190",
+      "id": "comida-y-bebidas:190",
       "term": "la receta",
       "definition": "het recept",
       "direction": "definition-to-term",
@@ -90,7 +90,7 @@
       "synonyms": []
     },
     {
-      "id": "191",
+      "id": "comida-y-bebidas:191",
       "term": "el sabor",
       "definition": "de smaak",
       "direction": "definition-to-term",
@@ -105,7 +105,7 @@
       ]
     },
     {
-      "id": "192",
+      "id": "comida-y-bebidas:192",
       "term": "el agua sin gas",
       "definition": "het mineraalwater",
       "direction": "definition-to-term",
@@ -120,7 +120,7 @@
       ]
     },
     {
-      "id": "193",
+      "id": "comida-y-bebidas:193",
       "term": "la sopa",
       "definition": "de soep",
       "direction": "definition-to-term",
@@ -133,7 +133,7 @@
       "synonyms": []
     },
     {
-      "id": "194",
+      "id": "comida-y-bebidas:194",
       "term": "la ensalada",
       "definition": "de salade",
       "direction": "definition-to-term",
@@ -146,7 +146,7 @@
       "synonyms": []
     },
     {
-      "id": "195",
+      "id": "comida-y-bebidas:195",
       "term": "las verduras",
       "definition": "de groente",
       "direction": "definition-to-term",
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "id": "196",
+      "id": "comida-y-bebidas:196",
       "term": "el pollo",
       "definition": "de kip",
       "direction": "definition-to-term",
@@ -174,7 +174,7 @@
       "synonyms": []
     },
     {
-      "id": "197",
+      "id": "comida-y-bebidas:197",
       "term": "el arroz",
       "definition": "de rijst",
       "direction": "definition-to-term",
@@ -187,7 +187,7 @@
       "synonyms": []
     },
     {
-      "id": "198",
+      "id": "comida-y-bebidas:198",
       "term": "la salsa",
       "definition": "de saus",
       "direction": "definition-to-term",
@@ -200,7 +200,7 @@
       "synonyms": []
     },
     {
-      "id": "199",
+      "id": "comida-y-bebidas:199",
       "term": "el queso",
       "definition": "de kaas",
       "direction": "definition-to-term",
@@ -213,7 +213,7 @@
       "synonyms": []
     },
     {
-      "id": "200",
+      "id": "comida-y-bebidas:200",
       "term": "tener (le) sed",
       "definition": "dorst hebben",
       "direction": "definition-to-term",
@@ -226,7 +226,7 @@
       "synonyms": []
     },
     {
-      "id": "201",
+      "id": "comida-y-bebidas:201",
       "term": "tener (le) hambre",
       "definition": "honger hebben",
       "direction": "definition-to-term",
@@ -239,7 +239,7 @@
       "synonyms": []
     },
     {
-      "id": "202",
+      "id": "comida-y-bebidas:202",
       "term": "delicioso/-a",
       "definition": "heerlijk",
       "direction": "definition-to-term",
@@ -255,7 +255,7 @@
       ]
     },
     {
-      "id": "203",
+      "id": "comida-y-bebidas:203",
       "term": "sano/-a",
       "definition": "gezond",
       "direction": "definition-to-term",
@@ -270,7 +270,7 @@
       ]
     },
     {
-      "id": "204",
+      "id": "comida-y-bebidas:204",
       "term": "rico/-a",
       "definition": "lekker, rijk",
       "direction": "definition-to-term",
@@ -286,7 +286,7 @@
       ]
     },
     {
-      "id": "205",
+      "id": "comida-y-bebidas:205",
       "term": "vegetariano/-a",
       "definition": "vegetarisch",
       "direction": "definition-to-term",
@@ -299,7 +299,7 @@
       "synonyms": []
     },
     {
-      "id": "206",
+      "id": "comida-y-bebidas:206",
       "term": "típico/-a",
       "definition": "typisch",
       "direction": "definition-to-term",
@@ -314,7 +314,7 @@
       ]
     },
     {
-      "id": "207",
+      "id": "comida-y-bebidas:207",
       "term": "necesario",
       "definition": "nodig hebben",
       "direction": "definition-to-term",
@@ -330,7 +330,7 @@
       ]
     },
     {
-      "id": "208",
+      "id": "comida-y-bebidas:208",
       "term": "significar",
       "definition": "betekenen",
       "direction": "definition-to-term",
@@ -345,7 +345,7 @@
       ]
     },
     {
-      "id": "209",
+      "id": "comida-y-bebidas:209",
       "term": "olvidar",
       "definition": "vergeten",
       "direction": "definition-to-term",
@@ -358,7 +358,7 @@
       "synonyms": []
     },
     {
-      "id": "210",
+      "id": "comida-y-bebidas:210",
       "term": "entrar",
       "definition": "naar binnen gaan",
       "direction": "definition-to-term",
@@ -371,7 +371,7 @@
       "synonyms": []
     },
     {
-      "id": "211",
+      "id": "comida-y-bebidas:211",
       "term": "echar",
       "definition": "toevoegen",
       "direction": "definition-to-term",
@@ -387,7 +387,7 @@
       ]
     },
     {
-      "id": "212",
+      "id": "comida-y-bebidas:212",
       "term": "saber",
       "definition": "weten",
       "direction": "definition-to-term",
@@ -402,7 +402,7 @@
       ]
     },
     {
-      "id": "213",
+      "id": "comida-y-bebidas:213",
       "term": "cubrir",
       "definition": "bedekken",
       "direction": "definition-to-term",
@@ -417,7 +417,7 @@
       ]
     },
     {
-      "id": "214",
+      "id": "comida-y-bebidas:214",
       "term": "las palomitas",
       "definition": "de popcorn",
       "direction": "definition-to-term",
@@ -430,7 +430,7 @@
       "synonyms": []
     },
     {
-      "id": "215",
+      "id": "comida-y-bebidas:215",
       "term": "lapicera",
       "definition": "het meel",
       "direction": "definition-to-term",
@@ -445,7 +445,7 @@
       ]
     },
     {
-      "id": "216",
+      "id": "comida-y-bebidas:216",
       "term": "el ajo",
       "definition": "de knoflook",
       "direction": "definition-to-term",
@@ -458,7 +458,7 @@
       "synonyms": []
     },
     {
-      "id": "217",
+      "id": "comida-y-bebidas:217",
       "term": "el campeón",
       "definition": "de kampioen",
       "direction": "definition-to-term",
@@ -471,7 +471,7 @@
       "synonyms": []
     },
     {
-      "id": "218",
+      "id": "comida-y-bebidas:218",
       "term": "la piña",
       "definition": "de ananas",
       "direction": "definition-to-term",
@@ -484,7 +484,7 @@
       "synonyms": []
     },
     {
-      "id": "219",
+      "id": "comida-y-bebidas:219",
       "term": "la fresa",
       "definition": "de aardbei",
       "direction": "definition-to-term",
@@ -497,7 +497,7 @@
       "synonyms": []
     },
     {
-      "id": "220",
+      "id": "comida-y-bebidas:220",
       "term": "el café",
       "definition": "de koffie",
       "direction": "definition-to-term",
@@ -510,7 +510,7 @@
       "synonyms": []
     },
     {
-      "id": "221",
+      "id": "comida-y-bebidas:221",
       "term": "salado/-a",
       "definition": "zout",
       "direction": "definition-to-term",
@@ -523,7 +523,7 @@
       "synonyms": []
     },
     {
-      "id": "222",
+      "id": "comida-y-bebidas:222",
       "term": "picante",
       "definition": "pittig",
       "direction": "definition-to-term",
@@ -538,7 +538,7 @@
       ]
     },
     {
-      "id": "223",
+      "id": "comida-y-bebidas:223",
       "term": "dulce",
       "definition": "zoet",
       "direction": "definition-to-term",
@@ -553,7 +553,7 @@
       ]
     },
     {
-      "id": "224",
+      "id": "comida-y-bebidas:224",
       "term": "redondo/-a",
       "definition": "rond",
       "direction": "definition-to-term",
@@ -568,7 +568,7 @@
       ]
     },
     {
-      "id": "225",
+      "id": "comida-y-bebidas:225",
       "term": "plano/-a",
       "definition": "plat",
       "direction": "definition-to-term",
@@ -583,7 +583,7 @@
       ]
     },
     {
-      "id": "226",
+      "id": "comida-y-bebidas:226",
       "term": "famoso/-a",
       "definition": "beroemd",
       "direction": "definition-to-term",
@@ -599,7 +599,7 @@
       ]
     },
     {
-      "id": "227",
+      "id": "comida-y-bebidas:227",
       "term": "¡socorro!",
       "definition": "help!",
       "direction": "definition-to-term",
@@ -615,7 +615,7 @@
       ]
     },
     {
-      "id": "228",
+      "id": "comida-y-bebidas:228",
       "term": "el problema",
       "definition": "het probleem",
       "direction": "definition-to-term",
@@ -631,7 +631,7 @@
       ]
     },
     {
-      "id": "229",
+      "id": "comida-y-bebidas:229",
       "term": "el consejo",
       "definition": "het advies",
       "direction": "definition-to-term",
@@ -646,7 +646,7 @@
       ]
     },
     {
-      "id": "230",
+      "id": "comida-y-bebidas:230",
       "term": "la costumbre",
       "definition": "de gewoonte",
       "direction": "definition-to-term",
@@ -662,7 +662,7 @@
       ]
     },
     {
-      "id": "231",
+      "id": "comida-y-bebidas:231",
       "term": "resistir",
       "definition": "zich verzetten, weerstand bieden aan",
       "direction": "definition-to-term",
@@ -677,7 +677,7 @@
       ]
     },
     {
-      "id": "232",
+      "id": "comida-y-bebidas:232",
       "term": "elegir (i)",
       "definition": "kiezen",
       "direction": "definition-to-term",
@@ -693,7 +693,7 @@
       ]
     },
     {
-      "id": "233",
+      "id": "comida-y-bebidas:233",
       "term": "significar",
       "definition": "betekenen",
       "direction": "definition-to-term",
@@ -708,7 +708,7 @@
       ]
     },
     {
-      "id": "234",
+      "id": "comida-y-bebidas:234",
       "term": "la carne",
       "definition": "het vlees",
       "direction": "definition-to-term",
@@ -721,7 +721,7 @@
       "synonyms": []
     },
     {
-      "id": "235",
+      "id": "comida-y-bebidas:235",
       "term": "el pescado",
       "definition": "de vis",
       "direction": "definition-to-term",
@@ -734,7 +734,7 @@
       "synonyms": []
     },
     {
-      "id": "236",
+      "id": "comida-y-bebidas:236",
       "term": "la lechuga",
       "definition": "de sla",
       "direction": "definition-to-term",
@@ -747,7 +747,7 @@
       "synonyms": []
     },
     {
-      "id": "237",
+      "id": "comida-y-bebidas:237",
       "term": "el jamón",
       "definition": "de ham",
       "direction": "definition-to-term",
@@ -760,7 +760,7 @@
       "synonyms": []
     },
     {
-      "id": "238",
+      "id": "comida-y-bebidas:238",
       "term": "el helado",
       "definition": "het ijs",
       "direction": "definition-to-term",
@@ -773,7 +773,7 @@
       "synonyms": []
     },
     {
-      "id": "239",
+      "id": "comida-y-bebidas:239",
       "term": "la fruta",
       "definition": "het fruit",
       "direction": "definition-to-term",
@@ -786,7 +786,7 @@
       "synonyms": []
     },
     {
-      "id": "240",
+      "id": "comida-y-bebidas:240",
       "term": "el huevo",
       "definition": "het ei",
       "direction": "definition-to-term",
@@ -799,7 +799,7 @@
       "synonyms": []
     },
     {
-      "id": "241",
+      "id": "comida-y-bebidas:241",
       "term": "el menú del día",
       "definition": "het dagmenu",
       "direction": "definition-to-term",
@@ -812,7 +812,7 @@
       "synonyms": []
     },
     {
-      "id": "242",
+      "id": "comida-y-bebidas:242",
       "term": "el primero",
       "definition": "het voorgerecht",
       "direction": "definition-to-term",
@@ -827,7 +827,7 @@
       ]
     },
     {
-      "id": "243",
+      "id": "comida-y-bebidas:243",
       "term": "el segundo",
       "definition": "het hoofdgerecht",
       "direction": "definition-to-term",
@@ -842,7 +842,7 @@
       ]
     },
     {
-      "id": "244",
+      "id": "comida-y-bebidas:244",
       "term": "el postre",
       "definition": "het nagerecht",
       "direction": "definition-to-term",
@@ -857,7 +857,7 @@
       ]
     },
     {
-      "id": "245",
+      "id": "comida-y-bebidas:245",
       "term": "la cuenta",
       "definition": "de rekening",
       "direction": "definition-to-term",
@@ -872,7 +872,7 @@
       ]
     },
     {
-      "id": "246",
+      "id": "comida-y-bebidas:246",
       "term": "el supuesto",
       "definition": "natuurlijk, uiteraard",
       "direction": "definition-to-term",
@@ -888,7 +888,7 @@
       ]
     },
     {
-      "id": "247",
+      "id": "comida-y-bebidas:247",
       "term": "el refresco",
       "definition": "de frisdrank",
       "direction": "definition-to-term",
@@ -903,7 +903,7 @@
       ]
     },
     {
-      "id": "248",
+      "id": "comida-y-bebidas:248",
       "term": "el tema",
       "definition": "het onderwerp",
       "direction": "definition-to-term",
@@ -919,7 +919,7 @@
       ]
     },
     {
-      "id": "249",
+      "id": "comida-y-bebidas:249",
       "term": "el hispanohablante",
       "definition": "de spanstalige",
       "direction": "definition-to-term",
@@ -934,7 +934,7 @@
       ]
     },
     {
-      "id": "250",
+      "id": "comida-y-bebidas:250",
       "term": "la pregunta",
       "definition": "de vraag",
       "direction": "definition-to-term",
@@ -949,7 +949,7 @@
       ]
     },
     {
-      "id": "251",
+      "id": "comida-y-bebidas:251",
       "term": "la respuesta",
       "definition": "het antwoord",
       "direction": "definition-to-term",
@@ -964,7 +964,7 @@
       ]
     },
     {
-      "id": "252",
+      "id": "comida-y-bebidas:252",
       "term": "la explicación",
       "definition": "de uitleg",
       "direction": "definition-to-term",
@@ -979,7 +979,7 @@
       ]
     },
     {
-      "id": "253",
+      "id": "comida-y-bebidas:253",
       "term": "la palabra",
       "definition": "het woord",
       "direction": "definition-to-term",
@@ -995,7 +995,7 @@
       ]
     },
     {
-      "id": "254",
+      "id": "comida-y-bebidas:254",
       "term": "el día festivo",
       "definition": "de feestdag",
       "direction": "definition-to-term",
@@ -1010,7 +1010,7 @@
       ]
     },
     {
-      "id": "255",
+      "id": "comida-y-bebidas:255",
       "term": "el ingrediente",
       "definition": "het ingrediënt",
       "direction": "definition-to-term",
@@ -1025,7 +1025,7 @@
       ]
     },
     {
-      "id": "256",
+      "id": "comida-y-bebidas:256",
       "term": "el limón",
       "definition": "de citroen",
       "direction": "definition-to-term",
@@ -1038,7 +1038,7 @@
       "synonyms": []
     },
     {
-      "id": "257",
+      "id": "comida-y-bebidas:257",
       "term": "la pimienta",
       "definition": "de peper",
       "direction": "definition-to-term",
@@ -1051,7 +1051,7 @@
       "synonyms": []
     },
     {
-      "id": "258",
+      "id": "comida-y-bebidas:258",
       "term": "el pimiento",
       "definition": "de paprika",
       "direction": "definition-to-term",
@@ -1064,7 +1064,7 @@
       "synonyms": []
     },
     {
-      "id": "259",
+      "id": "comida-y-bebidas:259",
       "term": "la sal",
       "definition": "het zout",
       "direction": "definition-to-term",
@@ -1077,7 +1077,7 @@
       "synonyms": []
     },
     {
-      "id": "260",
+      "id": "comida-y-bebidas:260",
       "term": "la copa",
       "definition": "het glas",
       "direction": "definition-to-term",
@@ -1092,7 +1092,7 @@
       ]
     },
     {
-      "id": "261",
+      "id": "comida-y-bebidas:261",
       "term": "la bebida",
       "definition": "het drankje",
       "direction": "definition-to-term",
