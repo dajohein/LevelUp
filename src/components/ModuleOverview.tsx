@@ -321,7 +321,7 @@ const ModuleCard = styled.div`
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     border-color: #4caf50;
-    
+
     @media (max-width: ${props => props.theme.breakpoints.mobile}) {
       transform: none; /* Disable hover effects on mobile for better touch experience */
     }
@@ -412,7 +412,7 @@ const ModuleActions = styled.div`
 
 const ModuleIcon = styled.span`
   font-size: 2rem;
-  
+
   /* Small tablets */
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     font-size: 1.8rem;
@@ -490,7 +490,7 @@ const ModuleDescription = styled.p`
   visibility: visible;
   opacity: 1;
   word-wrap: break-word;
-  
+
   /* Large tablets and small desktops */
   @media (max-width: 1200px) {
     font-size: 0.85rem;
@@ -996,7 +996,7 @@ const ViewDetailsButton = styled.button`
 `;
 
 const LearningToggle = styled.button<{ isActive: boolean }>`
-  background: ${props => props.isActive ? '#4caf50' : '#666'};
+  background: ${props => (props.isActive ? '#4caf50' : '#666')};
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
@@ -1007,12 +1007,12 @@ const LearningToggle = styled.button<{ isActive: boolean }>`
   transition: all 0.2s ease;
   width: 100%;
   margin-bottom: ${props => props.theme.spacing.sm};
-  
+
   &:hover {
-    background: ${props => props.isActive ? '#45a049' : '#777'};
+    background: ${props => (props.isActive ? '#45a049' : '#777')};
     transform: translateY(-1px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -1120,7 +1120,7 @@ export const ModuleOverview: React.FC = () => {
 
   // Simple toggle state for each module
   const [activeModules, setActiveModules] = useState<Set<string>>(new Set());
-  
+
   // Toggle function
   const handleToggleModule = (moduleId: string) => {
     setActiveModules(prev => {
@@ -1165,16 +1165,16 @@ export const ModuleOverview: React.FC = () => {
     // Get active modules - if none selected, use all modules as fallback
     const activeModuleIds = Array.from(activeModules);
     const modulesToPractice = activeModuleIds.length > 0 ? activeModuleIds : modules.map(m => m.id);
-    
+
     // Store active modules in localStorage so the game can access them
     localStorage.setItem('activeLearningModules', JSON.stringify(modulesToPractice));
-    
+
     dispatch(setLanguage(languageCode));
     dispatch(setCurrentModule(null)); // No specific module for mixed practice
     dispatch(resetSession());
-    
+
     console.log('Starting mixed practice with modules:', modulesToPractice);
-    
+
     // Start a Deep Dive session for mixed practice (good balance of words and time)
     dispatch(startSession('deep-dive'));
     // Navigate directly to the game for mixed practice
@@ -1234,18 +1234,33 @@ export const ModuleOverview: React.FC = () => {
           {Object.keys(wordProgress).length > 0 && (
             <QuickStats>
               <QuickStatCard>
-                <QuickStatValue>🧠 {Object.keys(wordProgress).filter(id => wordProgress[id]?.xp > 0).length}</QuickStatValue>
+                <QuickStatValue>
+                  🧠 {Object.keys(wordProgress).filter(id => wordProgress[id]?.xp > 0).length}
+                </QuickStatValue>
                 <QuickStatLabel>Words Learned</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
-                <QuickStatValue>📚 {useMemo(() => modules.filter(m => {
-                  const stats = getModuleStats(languageCode!, m.id, wordProgress);
-                  return stats.completionPercentage > 0;
-                }).length, [modules, languageCode, wordProgress])}</QuickStatValue>
+                <QuickStatValue>
+                  📚{' '}
+                  {useMemo(
+                    () =>
+                      modules.filter(m => {
+                        const stats = getModuleStats(languageCode!, m.id, wordProgress);
+                        return stats.completionPercentage > 0;
+                      }).length,
+                    [modules, languageCode, wordProgress]
+                  )}
+                </QuickStatValue>
                 <QuickStatLabel>Modules Started</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
-                <QuickStatValue>⚡ {Object.values(wordProgress).reduce((sum: number, p: any) => sum + (p?.xp || 0), 0)}</QuickStatValue>
+                <QuickStatValue>
+                  ⚡{' '}
+                  {Object.values(wordProgress).reduce(
+                    (sum: number, p: any) => sum + (p?.xp || 0),
+                    0
+                  )}
+                </QuickStatValue>
                 <QuickStatLabel>Total XP</QuickStatLabel>
               </QuickStatCard>
             </QuickStats>
@@ -1325,8 +1340,8 @@ export const ModuleOverview: React.FC = () => {
                       <ViewDetailsButton onClick={e => handleViewModuleDetails(module.id, e)}>
                         📊 View Details
                       </ViewDetailsButton>
-                      
-                      <LearningToggle 
+
+                      <LearningToggle
                         isActive={activeModules.has(module.id)}
                         onClick={() => handleToggleModule(module.id)}
                       >

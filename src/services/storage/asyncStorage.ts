@@ -1,6 +1,6 @@
 /**
  * Async Storage Service with Optimistic Updates
- * 
+ *
  * Non-blocking storage operations with optimistic UI updates
  * Backend-ready: designed for eventual API integration
  */
@@ -33,19 +33,19 @@ interface OptimisticState {
 }
 
 interface AsyncStorageConfig {
-  maxQueueSize: number;        // Maximum operations in queue
-  batchInterval: number;       // Batch processing interval in ms
-  maxRetries: number;          // Maximum retry attempts
-  optimisticTimeout: number;   // How long to keep optimistic data
-  enableBatching: boolean;     // Enable batch operations
-  enableOptimistic: boolean;   // Enable optimistic updates
+  maxQueueSize: number; // Maximum operations in queue
+  batchInterval: number; // Batch processing interval in ms
+  maxRetries: number; // Maximum retry attempts
+  optimisticTimeout: number; // How long to keep optimistic data
+  enableBatching: boolean; // Enable batch operations
+  enableOptimistic: boolean; // Enable optimistic updates
 }
 
 const DEFAULT_CONFIG: AsyncStorageConfig = {
   maxQueueSize: 1000,
-  batchInterval: 100,          // 100ms batching
+  batchInterval: 100, // 100ms batching
   maxRetries: 3,
-  optimisticTimeout: 10000,    // 10 seconds
+  optimisticTimeout: 10000, // 10 seconds
   enableBatching: true,
   enableOptimistic: true,
 };
@@ -70,7 +70,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     // Check optimistic state first
     if (this.config.enableOptimistic && this.optimisticState[key]) {
       const optimistic = this.optimisticState[key];
-      
+
       // Return optimistic data if still valid
       if (Date.now() - optimistic.timestamp < this.config.optimisticTimeout) {
         logger.debug(`⚡ Returning optimistic data for ${key}`);
@@ -97,7 +97,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
    */
   async set<T>(key: string, data: T, options: StorageOptions = {}): Promise<StorageResult<void>> {
     const operationId = `set_${++this.operationCounter}_${Date.now()}`;
-    
+
     // Optimistic update for immediate UI response
     if (this.config.enableOptimistic && options.priority !== 'low') {
       this.optimisticState[key] = {
@@ -106,10 +106,10 @@ export class AsyncStorageService implements AsyncStorageProvider {
         isPending: true,
         operationId,
       };
-      
+
       // Also update cache immediately
       await smartCache.set(key, data, options.ttl);
-      
+
       logger.debug(`⚡ Optimistic update for ${key}`);
     }
 
@@ -137,12 +137,12 @@ export class AsyncStorageService implements AsyncStorageProvider {
    */
   async delete(key: string, options: StorageOptions = {}): Promise<StorageResult<void>> {
     const operationId = `delete_${++this.operationCounter}_${Date.now()}`;
-    
+
     // Optimistic delete
     if (this.config.enableOptimistic) {
       delete this.optimisticState[key];
       await smartCache.invalidate(key);
-      
+
       logger.debug(`⚡ Optimistic delete for ${key}`);
     }
 
@@ -179,9 +179,12 @@ export class AsyncStorageService implements AsyncStorageProvider {
   /**
    * Batch get operations
    */
-  async getBatch<T>(keys: string[], options: StorageOptions = {}): Promise<StorageResult<Record<string, T>>> {
+  async getBatch<T>(
+    keys: string[],
+    options: StorageOptions = {}
+  ): Promise<StorageResult<Record<string, T>>> {
     const results: Record<string, T> = {};
-    
+
     // Process each key individually (could be optimized further)
     for (const key of keys) {
       const result = await this.get<T>(key, options);
@@ -196,13 +199,16 @@ export class AsyncStorageService implements AsyncStorageProvider {
   /**
    * Batch set operations
    */
-  async setBatch<T>(data: Record<string, T>, options: StorageOptions = {}): Promise<StorageResult<void>> {
+  async setBatch<T>(
+    data: Record<string, T>,
+    options: StorageOptions = {}
+  ): Promise<StorageResult<void>> {
     const operationId = `batch_${++this.operationCounter}_${Date.now()}`;
-    
+
     // Optimistic updates for all keys
     if (this.config.enableOptimistic) {
       const timestamp = Date.now();
-      
+
       for (const [key, value] of Object.entries(data)) {
         this.optimisticState[key] = {
           data: value,
@@ -210,11 +216,11 @@ export class AsyncStorageService implements AsyncStorageProvider {
           isPending: true,
           operationId,
         };
-        
+
         // Update cache
         await smartCache.set(key, value, options.ttl);
       }
-      
+
       logger.debug(`⚡ Optimistic batch update for ${Object.keys(data).length} keys`);
     }
 
@@ -276,13 +282,13 @@ export class AsyncStorageService implements AsyncStorageProvider {
   async healthCheck(): Promise<StorageResult<{ status: 'healthy' | 'degraded' | 'unhealthy' }>> {
     const queueSize = this.operationQueue.length;
     const optimisticCount = Object.keys(this.optimisticState).length;
-    
+
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
+
     if (queueSize > this.config.maxQueueSize * 0.8) {
       status = 'degraded';
     }
-    
+
     if (queueSize >= this.config.maxQueueSize) {
       status = 'unhealthy';
     }
@@ -305,7 +311,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
     }
-    
+
     await this.processBatch();
   }
 
@@ -342,7 +348,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     }
 
     this.operationQueue.push(operation);
-    
+
     // Trigger immediate processing for high priority operations
     if (operation.options?.priority === 'high') {
       setImmediate(() => this.processBatch());
@@ -367,28 +373,27 @@ export class AsyncStorageService implements AsyncStorageProvider {
     }
 
     this.isProcessing = true;
-    
+
     try {
       // Process operations in batches
       const batchSize = Math.min(50, this.operationQueue.length);
       const batch = this.operationQueue.splice(0, batchSize);
-      
+
       logger.debug(`🔄 Processing batch of ${batch.length} storage operations`);
-      
+
       // Group operations by type for efficiency
       const writeOps = batch.filter(op => op.type === 'write');
       const deleteOps = batch.filter(op => op.type === 'delete');
       const batchOps = batch.filter(op => op.type === 'batch');
-      
+
       // Process writes
       await this.processWriteOperations(writeOps);
-      
+
       // Process deletes
       await this.processDeleteOperations(deleteOps);
-      
+
       // Process batch operations
       await this.processBatchOperations(batchOps);
-      
     } catch (error) {
       logger.error('Error processing storage batch:', error);
     } finally {
@@ -400,7 +405,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     for (const op of operations) {
       try {
         const result = await tieredStorage.set(op.key, op.data, op.options);
-        
+
         if (result.success) {
           // Clear optimistic state
           if (this.optimisticState[op.key]?.operationId === op.id) {
@@ -431,7 +436,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     for (const op of operations) {
       try {
         const result = await tieredStorage.setBatch(op.data, op.options);
-        
+
         if (result.success) {
           // Clear optimistic state for all keys in batch
           Object.keys(op.data).forEach(key => {
@@ -440,7 +445,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
             }
           });
         }
-        
+
         op.resolve(result);
       } catch (error) {
         await this.handleOperationError(op, error);
@@ -456,7 +461,7 @@ export class AsyncStorageService implements AsyncStorageProvider {
     } else {
       const error = new Error(`Operation failed after ${operation.maxRetries} retries`);
       operation.reject(error);
-      
+
       // Revert optimistic state
       if (this.optimisticState[operation.key]?.operationId === operation.id) {
         delete this.optimisticState[operation.key];
@@ -477,12 +482,12 @@ export class AsyncStorageService implements AsyncStorageProvider {
       clearTimeout(this.batchTimer);
       this.batchTimer = undefined;
     }
-    
+
     // Reject all pending operations
     this.operationQueue.forEach(op => {
       op.reject(new Error('Storage service is being destroyed'));
     });
-    
+
     this.operationQueue = [];
     this.optimisticState = {};
   }

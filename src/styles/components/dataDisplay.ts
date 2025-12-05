@@ -10,7 +10,7 @@ export const StatRow = styled.div`
   margin-bottom: ${props => props.theme.spacing.xs};
 `;
 
-// Stat Label - matches ModuleOverview.tsx StatLabel  
+// Stat Label - matches ModuleOverview.tsx StatLabel
 export const StatLabel = styled.span`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.8rem;
@@ -39,7 +39,7 @@ export const ProgressStats = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: ${props => props.theme.spacing.md};
   margin-bottom: ${props => props.theme.spacing.md};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing.sm};
@@ -75,17 +75,16 @@ export const ScoreLabel = styled.div`
 // Data Grid for tabular data
 export const DataGrid = styled.div<{ columns?: number; gap?: string }>`
   display: grid;
-  grid-template-columns: ${props => 
-    props.columns ? `repeat(${props.columns}, 1fr)` : 'repeat(auto-fit, minmax(200px, 1fr))'
-  };
+  grid-template-columns: ${props =>
+    props.columns ? `repeat(${props.columns}, 1fr)` : 'repeat(auto-fit, minmax(200px, 1fr))'};
   gap: ${props => props.gap || props.theme.spacing.md};
   margin: ${props => props.theme.spacing.lg} 0;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: ${props => props.theme.spacing.sm};
   }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
@@ -94,11 +93,13 @@ export const DataGrid = styled.div<{ columns?: number; gap?: string }>`
 // Data Cell for grid items
 export const DataCell = styled.div<{ highlight?: boolean }>`
   padding: ${props => props.theme.spacing.md};
-  background: ${props => props.highlight ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.05)'};
-  border: 1px solid ${props => props.highlight ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+  background: ${props =>
+    props.highlight ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.05)'};
+  border: 1px solid
+    ${props => (props.highlight ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
   border-radius: ${props => props.theme.borderRadius.md};
   transition: ${transitions.default};
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
@@ -112,7 +113,7 @@ export const KeyValuePair = styled.div`
   align-items: center;
   padding: ${props => props.theme.spacing.sm} 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -154,7 +155,7 @@ export const MetricItem = styled.div<{ color?: string }>`
   border-radius: ${props => props.theme.borderRadius.md};
   border-left: 4px solid ${props => props.color || props.theme.colors.primary};
   transition: ${transitions.default};
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-1px);
@@ -166,15 +167,21 @@ export const MetricValue = styled.div<{ size?: 'sm' | 'md' | 'lg' }>`
   font-weight: bold;
   color: ${props => props.theme.colors.primary};
   margin-bottom: 4px;
-  
+
   ${props => {
     switch (props.size || 'md') {
       case 'sm':
-        return css`font-size: 1.2rem;`;
+        return css`
+          font-size: 1.2rem;
+        `;
       case 'lg':
-        return css`font-size: 2rem;`;
+        return css`
+          font-size: 2rem;
+        `;
       default:
-        return css`font-size: 1.5rem;`;
+        return css`
+          font-size: 1.5rem;
+        `;
     }
   }}
 `;
@@ -197,11 +204,11 @@ export const WeeklyProgressItem = styled.div`
   background: rgba(255, 255, 255, 0.03);
   border-radius: ${props => props.theme.borderRadius.md};
   transition: ${transitions.default};
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.05);
   }
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -240,15 +247,17 @@ export const DataTableRow = styled.div<{ interactive?: boolean }>`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: ${transitions.default};
-  
-  ${props => props.interactive && css`
-    cursor: pointer;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-  `}
-  
+
+  ${props =>
+    props.interactive &&
+    css`
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    `}
+
   &:last-child {
     border-bottom: none;
   }
@@ -261,11 +270,11 @@ export const QuickStats = styled.div`
   gap: ${props => props.theme.spacing.sm};
   margin-bottom: ${props => props.theme.spacing.xs};
   color: ${props => props.theme.colors.text};
-  
+
   span:first-of-type {
     font-size: 1.2rem;
   }
-  
+
   span:last-child {
     font-weight: 500;
   }
@@ -278,23 +287,29 @@ export const TrendIndicator = styled.span<{ trend: 'up' | 'down' | 'neutral' }>`
   gap: 4px;
   font-size: 0.8rem;
   font-weight: 600;
-  
+
   ${props => {
     switch (props.trend) {
       case 'up':
         return css`
           color: #4caf50;
-          &::before { content: '↗'; }
+          &::before {
+            content: '↗';
+          }
         `;
       case 'down':
         return css`
           color: #f44336;
-          &::before { content: '↘'; }
+          &::before {
+            content: '↘';
+          }
         `;
       default:
         return css`
           color: ${props.theme.colors.textSecondary};
-          &::before { content: '→'; }
+          &::before {
+            content: '→';
+          }
         `;
     }
   }}
@@ -342,7 +357,7 @@ export const AnalyticsProgressBar = styled.div<{ width: number; color: string }>
   width: ${props => Math.max(20, props.width)}%;
   max-width: 80px;
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -350,7 +365,12 @@ export const AnalyticsProgressBar = styled.div<{ width: number; color: string }>
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 100%
+    );
     border-radius: 4px;
   }
 `;

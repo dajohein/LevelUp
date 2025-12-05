@@ -22,7 +22,7 @@ const BottomNavContainer = styled.nav`
   padding: 0 ${props => props.theme.spacing.sm};
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  
+
   /* Safe area support */
   padding-bottom: env(safe-area-inset-bottom);
   height: calc(60px + env(safe-area-inset-bottom));
@@ -48,10 +48,8 @@ const NavItem = styled.button<{ isActive: boolean }>`
   min-height: ${props => props.theme.touchTarget.minimum};
   position: relative;
 
-  color: ${props => props.isActive 
-    ? props.theme.colors.primary 
-    : props.theme.colors.textSecondary
-  };
+  color: ${props =>
+    props.isActive ? props.theme.colors.primary : props.theme.colors.textSecondary};
 
   &:hover {
     background: rgba(76, 175, 80, 0.1);
@@ -62,7 +60,9 @@ const NavItem = styled.button<{ isActive: boolean }>`
     transform: translateY(0);
   }
 
-  ${props => props.isActive && `
+  ${props =>
+    props.isActive &&
+    `
     background: rgba(76, 175, 80, 0.1);
     
     &::before {
@@ -82,15 +82,17 @@ const NavItem = styled.button<{ isActive: boolean }>`
 const NavIcon = styled.span<{ isActive: boolean }>`
   font-size: 1.2rem;
   transition: all 0.2s ease;
-  
-  ${props => props.isActive && `
+
+  ${props =>
+    props.isActive &&
+    `
     transform: scale(1.1);
   `}
 `;
 
 const NavLabel = styled.span<{ isActive: boolean }>`
   font-size: 0.7rem;
-  font-weight: ${props => props.isActive ? '600' : '400'};
+  font-weight: ${props => (props.isActive ? '600' : '400')};
   white-space: nowrap;
   transition: all 0.2s ease;
 `;
@@ -164,12 +166,12 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
 
   const isItemActive = (item: BottomNavItem): boolean => {
     const currentPath = location.pathname;
-    
+
     // Exact match first
     if (currentPath === item.path) {
       return true;
     }
-    
+
     // Check match paths
     if (item.matchPaths) {
       return item.matchPaths.some(matchPath => {
@@ -179,7 +181,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
         return currentPath.startsWith(matchPath);
       });
     }
-    
+
     return false;
   };
 
@@ -214,11 +216,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       {items.map((item, index) => {
         const isActive = isItemActive(item);
         return (
-          <NavItem
-            key={index}
-            isActive={isActive}
-            onClick={() => handleNavigation(item)}
-          >
+          <NavItem key={index} isActive={isActive} onClick={() => handleNavigation(item)}>
             <NavIcon isActive={isActive}>{item.icon}</NavIcon>
             <NavLabel isActive={isActive}>{item.label}</NavLabel>
             {item.badge && <NotificationBadge />}

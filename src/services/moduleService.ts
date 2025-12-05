@@ -104,7 +104,7 @@ export const getModuleStats = (
       totalWords,
       wordsWithProgress: `${words.filter(word => wordProgress[word.id]?.xp > 0).length}/${totalWords}`,
       wordProgressKeys: Object.keys(wordProgress).length,
-      sampleModuleWordIDs: words.slice(0, 3).map(w => w.id)
+      sampleModuleWordIDs: words.slice(0, 3).map(w => w.id),
     });
   }
 
@@ -150,7 +150,7 @@ export const getModuleStats = (
       totalWords,
       practicePercentage,
       completedWords,
-      averageMastery
+      averageMastery,
     });
   }
 

@@ -11,7 +11,7 @@ export const SessionProgressBar = styled.div`
   border-radius: 4px;
   overflow: hidden;
   margin: ${props => props.theme.spacing.md} 0;
-  
+
   &::after {
     content: '';
     display: block;
@@ -22,7 +22,9 @@ export const SessionProgressBar = styled.div`
   }
 `;
 
-export const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
+export const ProgressItem = styled.div<{
+  variant?: 'score' | 'streak' | 'words' | 'time' | 'lives';
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,7 +34,7 @@ export const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' 
   border-radius: ${props => props.theme.borderRadius.md};
   border: 1px solid rgba(255, 255, 255, 0.1);
   min-width: 80px;
-  
+
   ${props => {
     switch (props.variant) {
       case 'score':
@@ -63,22 +65,34 @@ export const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' 
   }}
 `;
 
-export const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
+export const ProgressValue = styled.div<{
+  variant?: 'score' | 'streak' | 'words' | 'time' | 'lives';
+}>`
   font-size: 1.2rem;
   font-weight: bold;
-  
+
   ${props => {
     switch (props.variant) {
       case 'score':
-        return css`color: #4caf50;`;
+        return css`
+          color: #4caf50;
+        `;
       case 'streak':
-        return css`color: #ff9800;`;
+        return css`
+          color: #ff9800;
+        `;
       case 'lives':
-        return css`color: #f44336;`;
+        return css`
+          color: #f44336;
+        `;
       case 'time':
-        return css`color: #3b82f6;`;
+        return css`
+          color: #3b82f6;
+        `;
       default:
-        return css`color: ${props.theme.colors.text};`;
+        return css`
+          color: ${props.theme.colors.text};
+        `;
     }
   }}
 `;
@@ -100,7 +114,7 @@ export const QuickDashContainer = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  
+
   &::before {
     content: '⚡';
     position: absolute;
@@ -116,7 +130,7 @@ export const DeepDiveContainer = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  
+
   &::before {
     content: '🧠';
     position: absolute;
@@ -132,12 +146,14 @@ export const StreakChallengeContainer = styled.div<{ streak: number }>`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  
-  ${props => props.streak > 5 && css`
-    box-shadow: 0 0 20px rgba(255, 152, 0, 0.4);
-    animation: streakGlow 2s infinite alternate;
-  `}
-  
+
+  ${props =>
+    props.streak > 5 &&
+    css`
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.4);
+      animation: streakGlow 2s infinite alternate;
+    `}
+
   &::before {
     content: '🔥';
     position: absolute;
@@ -145,10 +161,14 @@ export const StreakChallengeContainer = styled.div<{ streak: number }>`
     right: 12px;
     font-size: 1.2rem;
   }
-  
+
   @keyframes streakGlow {
-    from { box-shadow: 0 0 20px rgba(255, 152, 0, 0.4); }
-    to { box-shadow: 0 0 30px rgba(255, 152, 0, 0.6); }
+    from {
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.4);
+    }
+    to {
+      box-shadow: 0 0 30px rgba(255, 152, 0, 0.6);
+    }
   }
 `;
 
@@ -158,7 +178,7 @@ export const PrecisionModeContainer = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  
+
   &::before {
     content: '🎯';
     position: absolute;
@@ -174,11 +194,13 @@ export const BossBattleContainer = styled.div<{ damage?: boolean }>`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  
-  ${props => props.damage && css`
-    animation: damageShake 0.5s ease-in-out;
-  `}
-  
+
+  ${props =>
+    props.damage &&
+    css`
+      animation: damageShake 0.5s ease-in-out;
+    `}
+
   &::before {
     content: '👹';
     position: absolute;
@@ -186,11 +208,18 @@ export const BossBattleContainer = styled.div<{ damage?: boolean }>`
     right: 12px;
     font-size: 1.2rem;
   }
-  
+
   @keyframes damageShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
   }
 `;
 
@@ -205,12 +234,12 @@ export const SpeedMeter = styled.div<{ speed: number }>`
   background: rgba(33, 150, 243, 0.1);
   border-radius: ${props => props.theme.borderRadius.md};
   border: 1px solid rgba(33, 150, 243, 0.3);
-  
+
   &::before {
     content: '⚡';
     font-size: 1rem;
   }
-  
+
   &::after {
     content: '${props => props.speed.toFixed(1)}/s';
     font-size: 0.8rem;
@@ -227,26 +256,32 @@ export const StreakMultiplier = styled.div<{ streak: number }>`
   background: rgba(255, 152, 0, 0.1);
   border-radius: ${props => props.theme.borderRadius.md};
   border: 1px solid rgba(255, 152, 0, 0.3);
-  
-  ${props => props.streak > 5 && css`
-    animation: streakPulse 1s infinite alternate;
-  `}
-  
+
+  ${props =>
+    props.streak > 5 &&
+    css`
+      animation: streakPulse 1s infinite alternate;
+    `}
+
   &::before {
     content: '🔥';
     font-size: 1rem;
   }
-  
+
   &::after {
     content: '${props => props.streak}x';
     font-size: 0.8rem;
     color: #ff9800;
     font-weight: 600;
   }
-  
+
   @keyframes streakPulse {
-    from { transform: scale(1); }
-    to { transform: scale(1.05); }
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.05);
+    }
   }
 `;
 
@@ -258,12 +293,12 @@ export const AccuracyMeter = styled.div<{ accuracy: number }>`
   background: rgba(76, 175, 80, 0.1);
   border-radius: ${props => props.theme.borderRadius.md};
   border: 1px solid rgba(76, 175, 80, 0.3);
-  
+
   &::before {
     content: '🎯';
     font-size: 1rem;
   }
-  
+
   &::after {
     content: '${props => props.accuracy.toFixed(0)}%';
     font-size: 0.8rem;
@@ -280,12 +315,12 @@ export const BrainMeter = styled.div<{ knowledge: number }>`
   background: rgba(156, 39, 176, 0.1);
   border-radius: ${props => props.theme.borderRadius.md};
   border: 1px solid rgba(156, 39, 176, 0.3);
-  
+
   &::before {
     content: '🧠';
     font-size: 1rem;
   }
-  
+
   &::after {
     content: '${props => props.knowledge.toFixed(0)}%';
     font-size: 0.8rem;
@@ -308,15 +343,17 @@ export const BossAvatar = styled.div<{ health: number }>`
   font-size: 3rem;
   border: 4px solid rgba(244, 67, 54, 0.5);
   position: relative;
-  
-  ${props => props.health < 30 && css`
-    animation: lowHealthPulse 1s infinite alternate;
-  `}
-  
+
+  ${props =>
+    props.health < 30 &&
+    css`
+      animation: lowHealthPulse 1s infinite alternate;
+    `}
+
   &::before {
     content: '👹';
   }
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -326,13 +363,21 @@ export const BossAvatar = styled.div<{ health: number }>`
     bottom: -4px;
     border-radius: 50%;
     border: 2px solid transparent;
-    background: conic-gradient(#4caf50 0deg, #4caf50 ${props => props.health * 3.6}deg, transparent ${props => props.health * 3.6}deg);
+    background: conic-gradient(
+      #4caf50 0deg,
+      #4caf50 ${props => props.health * 3.6}deg,
+      transparent ${props => props.health * 3.6}deg
+    );
     mask: radial-gradient(circle, transparent 60px, black 62px);
   }
-  
+
   @keyframes lowHealthPulse {
-    from { border-color: rgba(244, 67, 54, 0.5); }
-    to { border-color: rgba(244, 67, 54, 1); }
+    from {
+      border-color: rgba(244, 67, 54, 0.5);
+    }
+    to {
+      border-color: rgba(244, 67, 54, 1);
+    }
   }
 `;
 
@@ -359,21 +404,21 @@ export const SkipButtonContainer = styled.div`
 `;
 
 export const GameActionButton = styled.button<{ disabled?: boolean }>`
-  background: ${props => props.disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.8)'};
-  color: ${props => props.disabled ? props.theme.colors.textSecondary : 'white'};
+  background: ${props => (props.disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.8)')};
+  color: ${props => (props.disabled ? props.theme.colors.textSecondary : 'white')};
   border: none;
   border-radius: ${props => props.theme.borderRadius.md};
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
   font-size: 0.9rem;
   font-weight: 600;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   transition: all 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background: rgba(59, 130, 246, 1);
     transform: translateY(-1px);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
@@ -392,13 +437,17 @@ export const BossIndicator = styled.div`
   box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3);
   border: 2px solid rgba(244, 67, 54, 0.5);
   animation: bossGlow 2s infinite alternate;
-  
+
   &::before {
     content: '👹 ';
   }
-  
+
   @keyframes bossGlow {
-    from { box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3); }
-    to { box-shadow: 0 4px 24px rgba(244, 67, 54, 0.5); }
+    from {
+      box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3);
+    }
+    to {
+      box-shadow: 0 4px 24px rgba(244, 67, 54, 0.5);
+    }
   }
 `;

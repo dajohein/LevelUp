@@ -21,11 +21,13 @@ export class IndexedDBWrapper {
   private storeName: string;
   private db: IDBDatabase | null = null;
 
-  constructor(options: IndexedDBOptions = {
-    dbName: 'LevelUpStorage',
-    version: 1,
-    storeName: 'storage'
-  }) {
+  constructor(
+    options: IndexedDBOptions = {
+      dbName: 'LevelUpStorage',
+      version: 1,
+      storeName: 'storage',
+    }
+  ) {
     this.dbName = options.dbName;
     this.version = options.version;
     this.storeName = options.storeName;
@@ -35,7 +37,7 @@ export class IndexedDBWrapper {
    * Initialize IndexedDB connection
    */
   async init(): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!('indexedDB' in window)) {
         console.warn('IndexedDB not supported');
         resolve(false);
@@ -54,9 +56,9 @@ export class IndexedDBWrapper {
         resolve(true);
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // Create object store if it doesn't exist
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'key' });
@@ -78,7 +80,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -92,7 +94,7 @@ export class IndexedDBWrapper {
         data,
         category,
         timestamp: Date.now(),
-        size: JSON.stringify(data).length
+        size: JSON.stringify(data).length,
       };
 
       const request = store.put(record);
@@ -118,7 +120,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -154,7 +156,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -185,7 +187,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -208,11 +210,13 @@ export class IndexedDBWrapper {
   /**
    * Get storage statistics
    */
-  async getStats(): Promise<IndexedDBResult<{
-    itemCount: number;
-    totalSize: number;
-    categories: Record<string, number>;
-  }>> {
+  async getStats(): Promise<
+    IndexedDBResult<{
+      itemCount: number;
+      totalSize: number;
+      categories: Record<string, number>;
+    }>
+  > {
     if (!this.db) {
       const initialized = await this.init();
       if (!initialized) {
@@ -220,7 +224,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -245,8 +249,8 @@ export class IndexedDBWrapper {
           data: {
             itemCount: records.length,
             totalSize,
-            categories
-          }
+            categories,
+          },
         });
       };
 
@@ -267,7 +271,7 @@ export class IndexedDBWrapper {
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!this.db) {
         resolve({ success: false, error: 'Database not initialized' });
         return;
@@ -277,13 +281,13 @@ export class IndexedDBWrapper {
       const transaction = this.db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const index = store.index('timestamp');
-      
+
       const range = IDBKeyRange.upperBound(cutoffTime);
       const request = index.openCursor(range);
-      
+
       let deletedCount = 0;
 
-      request.onsuccess = (event) => {
+      request.onsuccess = event => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
           cursor.delete();

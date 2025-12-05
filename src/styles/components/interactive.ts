@@ -3,7 +3,10 @@ import { css } from '@emotion/react';
 import { transitions } from './animations';
 
 // Tooltip - matches DirectionalHint.tsx
-export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom' | 'left' | 'right' }>`
+export const Tooltip = styled.div<{
+  visible: boolean;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+}>`
   position: absolute;
   background: rgba(0, 0, 0, 0.9);
   color: white;
@@ -12,12 +15,12 @@ export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom
   font-size: 0.8rem;
   white-space: nowrap;
   z-index: 1000;
-  opacity: ${props => props.visible ? 1 : 0};
-  transform: ${props => props.visible ? 'scale(1)' : 'scale(0.8)'};
+  opacity: ${props => (props.visible ? 1 : 0)};
+  transform: ${props => (props.visible ? 'scale(1)' : 'scale(0.8)')};
   transition: all 0.2s ease;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
+
   /* Position variants */
   ${props => {
     switch (props.position || 'top') {
@@ -25,8 +28,9 @@ export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom
         return css`
           top: 100%;
           left: 50%;
-          transform: translateX(-50%) ${props.visible ? 'translateY(8px) scale(1)' : 'translateY(0) scale(0.8)'};
-          
+          transform: translateX(-50%)
+            ${props.visible ? 'translateY(8px) scale(1)' : 'translateY(0) scale(0.8)'};
+
           &::before {
             content: '';
             position: absolute;
@@ -41,8 +45,9 @@ export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom
         return css`
           right: 100%;
           top: 50%;
-          transform: translateY(-50%) ${props.visible ? 'translateX(-8px) scale(1)' : 'translateX(0) scale(0.8)'};
-          
+          transform: translateY(-50%)
+            ${props.visible ? 'translateX(-8px) scale(1)' : 'translateX(0) scale(0.8)'};
+
           &::before {
             content: '';
             position: absolute;
@@ -57,8 +62,9 @@ export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom
         return css`
           left: 100%;
           top: 50%;
-          transform: translateY(-50%) ${props.visible ? 'translateX(8px) scale(1)' : 'translateX(0) scale(0.8)'};
-          
+          transform: translateY(-50%)
+            ${props.visible ? 'translateX(8px) scale(1)' : 'translateX(0) scale(0.8)'};
+
           &::before {
             content: '';
             position: absolute;
@@ -73,8 +79,9 @@ export const Tooltip = styled.div<{ visible: boolean; position?: 'top' | 'bottom
         return css`
           bottom: 100%;
           left: 50%;
-          transform: translateX(-50%) ${props.visible ? 'translateY(-8px) scale(1)' : 'translateY(0) scale(0.8)'};
-          
+          transform: translateX(-50%)
+            ${props.visible ? 'translateY(-8px) scale(1)' : 'translateY(0) scale(0.8)'};
+
           &::before {
             content: '';
             position: absolute;
@@ -124,7 +131,7 @@ export const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' }>
   &:active {
     transform: translateY(0);
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -135,20 +142,22 @@ export const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' }>
 // Filter Button - matches LanguageOverview.tsx FilterButton
 export const FilterButton = styled.button<{ active: boolean }>`
   padding: 8px 16px;
-  border: 2px solid ${props => props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.3)'};
-  background: ${props => props.active ? props.theme.colors.primary : 'transparent'};
-  color: ${props => props.active ? props.theme.colors.background : props.theme.colors.text};
+  border: 2px solid
+    ${props => (props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.3)')};
+  background: ${props => (props.active ? props.theme.colors.primary : 'transparent')};
+  color: ${props => (props.active ? props.theme.colors.background : props.theme.colors.text)};
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     border-color: ${props => props.theme.colors.primary};
-    background: ${props => props.active ? props.theme.colors.secondary : 'rgba(59, 130, 246, 0.1)'};
+    background: ${props =>
+      props.active ? props.theme.colors.secondary : 'rgba(59, 130, 246, 0.1)'};
   }
-  
+
   &:active {
     transform: scale(0.98);
   }
@@ -183,12 +192,12 @@ export const QuickPracticeButton = styled.button`
     font-weight: 700;
     border-radius: 14px;
     box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
-    
+
     &:hover {
       transform: none;
       background: linear-gradient(45deg, #43a047, #5cb860);
     }
-    
+
     &:active {
       transform: scale(0.98);
     }
@@ -235,33 +244,33 @@ export const DirectionalIcon = styled.button<{ direction: string }>`
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  
+
   /* Direction-specific styling */
   ${props => {
     const directions: Record<string, string> = {
-      'up': '↑',
-      'down': '↓',
-      'left': '←',
-      'right': '→',
-      'north': '↑',
-      'south': '↓',
-      'east': '→',
-      'west': '←'
+      up: '↑',
+      down: '↓',
+      left: '←',
+      right: '→',
+      north: '↑',
+      south: '↓',
+      east: '→',
+      west: '←',
     };
-    
+
     return css`
       &::before {
         content: '${directions[props.direction] || '•'}';
       }
     `;
   }}
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.5);
     transform: scale(1.1);
   }
-  
+
   &:active {
     transform: scale(0.95);
   }
@@ -284,17 +293,17 @@ export const CloseButton = styled.button`
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &::before {
     content: '×';
   }
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     transform: scale(1.1);
   }
-  
+
   &:active {
     transform: scale(0.9);
   }
@@ -312,18 +321,18 @@ export const NavigationHint = styled.div<{ visible: boolean }>`
   border-radius: ${props => props.theme.borderRadius.xl};
   text-align: center;
   z-index: 1000;
-  opacity: ${props => props.visible ? 1 : 0};
-  transform: translate(-50%, -50%) scale(${props => props.visible ? 1 : 0.8});
+  opacity: ${props => (props.visible ? 1 : 0)};
+  transform: translate(-50%, -50%) scale(${props => (props.visible ? 1 : 0.8)});
   transition: all 0.3s ease;
-  pointer-events: ${props => props.visible ? 'auto' : 'none'};
+  pointer-events: ${props => (props.visible ? 'auto' : 'none')};
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
-  
+
   h3 {
     margin: 0 0 ${props => props.theme.spacing.md} 0;
     color: ${props => props.theme.colors.primary};
   }
-  
+
   p {
     margin: 0 0 ${props => props.theme.spacing.lg} 0;
     color: rgba(255, 255, 255, 0.8);
@@ -332,21 +341,23 @@ export const NavigationHint = styled.div<{ visible: boolean }>`
 
 // Toggle Button - matches debug components
 export const ToggleButton = styled.button<{ active?: boolean }>`
-  background: ${props => props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.active ? props.theme.colors.background : props.theme.colors.text};
-  border: 2px solid ${props => props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.3)'};
+  background: ${props => (props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.1)')};
+  color: ${props => (props.active ? props.theme.colors.background : props.theme.colors.text)};
+  border: 2px solid
+    ${props => (props.active ? props.theme.colors.primary : 'rgba(255, 255, 255, 0.3)')};
   border-radius: ${props => props.theme.borderRadius.md};
   padding: 8px 16px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     border-color: ${props => props.theme.colors.primary};
-    background: ${props => props.active ? props.theme.colors.secondary : 'rgba(59, 130, 246, 0.1)'};
+    background: ${props =>
+      props.active ? props.theme.colors.secondary : 'rgba(59, 130, 246, 0.1)'};
   }
-  
+
   &:active {
     transform: scale(0.98);
   }
@@ -366,16 +377,18 @@ export const FloatingActionGroup = styled.div`
 // Interactive Container for hover effects
 export const InteractiveContainer = styled.div<{ disabled?: boolean }>`
   transition: ${transitions.default};
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  opacity: ${props => props.disabled ? 0.5 : 1};
-  
-  ${props => !props.disabled && css`
-    &:hover {
-      transform: translateY(-1px);
-    }
-    
-    &:active {
-      transform: translateY(0) scale(0.98);
-    }
-  `}
+  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${props => (props.disabled ? 0.5 : 1)};
+
+  ${props =>
+    !props.disabled &&
+    css`
+      &:hover {
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0) scale(0.98);
+      }
+    `}
 `;

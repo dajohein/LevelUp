@@ -78,36 +78,42 @@ export const LanguageCard = styled(Card)<{ selected?: boolean; progress?: number
   overflow: hidden;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  
-  ${props => props.selected && css`
-    border-color: ${props.theme.colors.primary};
-    transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-  `}
-  
-  ${props => !props.selected && css`
-    ${hover.scale}
-  `}
+
+  ${props =>
+    props.selected &&
+    css`
+      border-color: ${props.theme.colors.primary};
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    `}
+
+  ${props =>
+    !props.selected &&
+    css`
+      ${hover.scale}
+    `}
   
   /* Progress indicator */
-  ${props => props.progress !== undefined && css`
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 4px;
-      width: ${props.progress}%;
-      background: ${props.progress > 0 ? '#4caf50' : 'rgba(255, 255, 255, 0.3)'};
-      transition: width 0.3s ease;
-    }
-  `}
+  ${props =>
+    props.progress !== undefined &&
+    css`
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        width: ${props.progress}%;
+        background: ${props.progress > 0 ? '#4caf50' : 'rgba(255, 255, 255, 0.3)'};
+        transition: width 0.3s ease;
+      }
+    `}
   
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     min-width: 160px;
     max-width: 200px;
   }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     min-width: 140px;
     max-width: 180px;
@@ -121,7 +127,7 @@ export const AnalyticCard = styled(Card)`
   padding: ${props => props.theme.spacing.lg};
   text-align: center;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     border-color: rgba(59, 130, 246, 0.4);
@@ -136,13 +142,13 @@ export const ActivityCard = styled(Card)`
   padding: ${props => props.theme.spacing.md};
   margin-bottom: ${props => props.theme.spacing.sm};
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
   }
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -155,7 +161,7 @@ export const RecommendationCard = styled(Card)`
   padding: ${props => props.theme.spacing.lg};
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '💡';
     position: absolute;
@@ -164,7 +170,7 @@ export const RecommendationCard = styled(Card)`
     font-size: 1.5rem;
     opacity: 0.7;
   }
-  
+
   &:hover {
     transform: translateY(-2px);
     border-color: rgba(76, 175, 80, 0.5);
@@ -179,7 +185,7 @@ export const SectionCard = styled(Card)`
   border-radius: ${props => props.theme.borderRadius.lg};
   padding: ${props => props.theme.spacing.xl};
   margin-bottom: ${props => props.theme.spacing.lg};
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
@@ -188,20 +194,16 @@ export const SectionCard = styled(Card)`
 
 // Feedback Card - matches feedback components
 export const FeedbackCard = styled(Card)<{ isCorrect: boolean }>`
-  background: ${props => 
-    props.isCorrect 
+  background: ${props =>
+    props.isCorrect
       ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1))'
-      : 'linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))'
-  };
-  border: 2px solid ${props => 
-    props.isCorrect 
-      ? 'rgba(76, 175, 80, 0.5)'
-      : 'rgba(244, 67, 54, 0.5)'
-  };
+      : 'linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))'};
+  border: 2px solid
+    ${props => (props.isCorrect ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)')};
   padding: ${props => props.theme.spacing.lg};
   text-align: center;
   animation: feedbackPulse 0.3s ease-out;
-  
+
   @keyframes feedbackPulse {
     0% {
       transform: scale(0.95);
@@ -229,7 +231,7 @@ export const SkeletonCard = styled(Card)<{ height?: string }>`
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
   height: ${props => props.height || '200px'};
-  
+
   @keyframes shimmer {
     0% {
       background-position: -200% 0;
@@ -246,7 +248,7 @@ export const ModuleGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: ${props => props.theme.spacing.lg};
   margin: ${props => props.theme.spacing.xl} 0;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing.md};
@@ -258,7 +260,7 @@ export const LanguageGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: ${props => props.theme.spacing.lg};
   padding: ${props => props.theme.spacing.lg} 0;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: ${props => props.theme.spacing.md};
@@ -270,7 +272,7 @@ export const AnalyticsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: ${props => props.theme.spacing.md};
   margin-bottom: ${props => props.theme.spacing.lg};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
@@ -327,7 +329,7 @@ export const ModuleActions = styled.div`
   gap: ${props => props.theme.spacing.sm};
   justify-content: space-between;
   align-items: center;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     flex-direction: column;
     gap: ${props => props.theme.spacing.md};
@@ -336,7 +338,7 @@ export const ModuleActions = styled.div`
 `;
 
 // ===== WORD CARD CHILD COMPONENTS =====
-// Matches LanguageOverview.tsx structure  
+// Matches LanguageOverview.tsx structure
 
 export const WordTerm = styled.div`
   font-weight: 600;
@@ -363,7 +365,7 @@ export const MasteryBar = styled.div<{ level: number }>`
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   overflow: hidden;
-  
+
   &::after {
     content: '';
     display: block;

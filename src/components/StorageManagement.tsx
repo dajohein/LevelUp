@@ -187,16 +187,18 @@ interface StorageManagementProps {
 
 export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = false }) => {
   const dispatch = useDispatch();
-  
+
   // Optimize Redux selectors with shallow comparison
-  const gameState = useSelector((state: RootState) => ({
-    wordProgress: state.game.wordProgress,
-    language: state.game.language
-  }), (left, right) => 
-    left.language === right.language &&
-    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  const gameState = useSelector(
+    (state: RootState) => ({
+      wordProgress: state.game.wordProgress,
+      language: state.game.language,
+    }),
+    (left, right) =>
+      left.language === right.language &&
+      Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
   );
-  
+
   const { wordProgress, language } = gameState;
   const { isSessionActive } = useSelector((state: RootState) => state.session);
 

@@ -1,6 +1,6 @@
 /**
  * Storage Interface Abstractions
- * 
+ *
  * Backend-ready storage interfaces that can be implemented for:
  * - localStorage (current)
  * - IndexedDB (browser)
@@ -17,12 +17,12 @@ export interface StorageOperation<T = any> {
 }
 
 export interface StorageOptions {
-  ttl?: number;           // Time to live in milliseconds
-  compress?: boolean;     // Whether to compress data
-  encrypt?: boolean;      // Whether to encrypt data (for backend)
+  ttl?: number; // Time to live in milliseconds
+  compress?: boolean; // Whether to compress data
+  encrypt?: boolean; // Whether to encrypt data (for backend)
   priority?: 'low' | 'normal' | 'high';
-  retries?: number;       // Number of retry attempts
-  timeout?: number;       // Request timeout in ms
+  retries?: number; // Number of retry attempts
+  timeout?: number; // Request timeout in ms
 }
 
 export interface StorageResult<T = any> {
@@ -34,16 +34,16 @@ export interface StorageResult<T = any> {
     compressed?: boolean;
     cached?: boolean;
     timestamp?: number;
-    optimistic?: boolean;       // For optimistic updates
-    operationId?: string;       // For tracking operations
-    tier?: string;              // Which storage tier was used
-    retrievalTime?: number;     // Time taken to retrieve
-    queueSize?: number;         // Current queue size
-    isProcessing?: boolean;     // Whether operations are being processed
+    optimistic?: boolean; // For optimistic updates
+    operationId?: string; // For tracking operations
+    tier?: string; // Which storage tier was used
+    retrievalTime?: number; // Time taken to retrieve
+    queueSize?: number; // Current queue size
+    isProcessing?: boolean; // Whether operations are being processed
     deletedFromTiers?: string[]; // Tiers data was deleted from
-    totalTiers?: number;        // Total number of tiers checked
+    totalTiers?: number; // Total number of tiers checked
     successfulDeletions?: number; // Number of successful deletions
-    [key: string]: any;         // Allow additional metadata
+    [key: string]: any; // Allow additional metadata
   };
 }
 
@@ -54,16 +54,16 @@ export interface AsyncStorageProvider {
   set<T>(key: string, data: T, options?: StorageOptions): Promise<StorageResult<void>>;
   delete(key: string, options?: StorageOptions): Promise<StorageResult<void>>;
   exists(key: string): Promise<boolean>;
-  
+
   // Batch operations for efficiency
   getBatch<T>(keys: string[], options?: StorageOptions): Promise<StorageResult<Record<string, T>>>;
   setBatch<T>(data: Record<string, T>, options?: StorageOptions): Promise<StorageResult<void>>;
-  
+
   // Storage management
   clear(pattern?: string): Promise<StorageResult<void>>;
   getSize(): Promise<StorageResult<number>>;
   getKeys(pattern?: string): Promise<StorageResult<string[]>>;
-  
+
   // Health and monitoring
   healthCheck(): Promise<StorageResult<{ status: 'healthy' | 'degraded' | 'unhealthy' }>>;
 }
@@ -74,11 +74,20 @@ export interface TieredStorageProvider extends AsyncStorageProvider {
   promote(key: string, tier: StorageTier): Promise<StorageResult<void>>;
   demote(key: string, tier: StorageTier): Promise<StorageResult<void>>;
   getTier(key: string): Promise<StorageResult<StorageTier>>;
-  
+
   // Tier-specific operations
-  getFromTier<T>(key: string, tier: StorageTier, options?: StorageOptions): Promise<StorageResult<T>>;
-  setToTier<T>(key: string, data: T, tier: StorageTier, options?: StorageOptions): Promise<StorageResult<void>>;
-  
+  getFromTier<T>(
+    key: string,
+    tier: StorageTier,
+    options?: StorageOptions
+  ): Promise<StorageResult<T>>;
+  setToTier<T>(
+    key: string,
+    data: T,
+    tier: StorageTier,
+    options?: StorageOptions
+  ): Promise<StorageResult<void>>;
+
   // Cache warming and management
   warmCache(keys: string[]): Promise<StorageResult<void>>;
   evictFromTier(tier: StorageTier, count?: number): Promise<StorageResult<string[]>>;
@@ -94,7 +103,7 @@ export interface CacheProvider {
   invalidate(key: string): Promise<void>;
   invalidateByDependency(dependency: string): Promise<void>;
   invalidateByPattern(pattern: string): Promise<void>;
-  
+
   // Cache statistics
   getStats(): Promise<CacheStats>;
   getHitRate(): Promise<number>;
@@ -131,10 +140,10 @@ export interface SyncProvider {
   sync(keys?: string[]): Promise<SyncResult>;
   forcePush(keys: string[]): Promise<SyncResult>;
   forcePull(keys: string[]): Promise<SyncResult>;
-  
+
   // Conflict resolution
   resolveConflicts(conflicts: ConflictData[]): Promise<ConflictResolution[]>;
-  
+
   // Sync status
   getSyncStatus(): Promise<SyncStatus>;
   getLastSyncTime(): Promise<number>;
@@ -197,25 +206,25 @@ export interface AuthProvider {
 export interface StorageConfig {
   // Provider configuration
   provider: 'localStorage' | 'indexedDB' | 'restAPI' | 'graphQL';
-  
+
   // Connection settings (for backend)
   endpoint?: string;
   apiKey?: string;
   timeout?: number;
   retries?: number;
-  
+
   // Feature flags
   enableCompression?: boolean;
   enableEncryption?: boolean;
   enableCaching?: boolean;
   enableSync?: boolean;
-  
+
   // Performance settings
   batchSize?: number;
   cacheSize?: number;
   cacheTtl?: number;
   compressionThreshold?: number;
-  
+
   // Tier configuration
   tiers?: {
     memory?: { maxSize: number; ttl: number };

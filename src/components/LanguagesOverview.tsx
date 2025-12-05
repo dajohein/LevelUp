@@ -179,36 +179,31 @@ const BrainIcon = styled.span<{ filled: boolean; partial?: boolean }>`
   transition: all 0.3s ease;
   position: relative;
   display: inline-block;
-  
+
   /* Visual states based on progress */
-  opacity: ${props => 
-    props.filled 
-      ? '1' 
-      : props.partial 
-      ? '0.7' 
-      : '0.3'};
-      
-  filter: ${props => 
-    props.filled 
-      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' 
-      : props.partial 
-      ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)' 
-      : 'grayscale(0.8) brightness(0.5)'};
-      
-  transform: ${props => 
-    props.filled 
-      ? 'scale(1.15)' 
-      : props.partial 
-      ? 'scale(1.05)' 
-      : 'scale(0.95)'};
+  opacity: ${props => (props.filled ? '1' : props.partial ? '0.7' : '0.3')};
+
+  filter: ${props =>
+    props.filled
+      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)'
+      : props.partial
+        ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)'
+        : 'grayscale(0.8) brightness(0.5)'};
+
+  transform: ${props =>
+    props.filled ? 'scale(1.15)' : props.partial ? 'scale(1.05)' : 'scale(0.95)'};
 
   /* Add a subtle glow for filled brains */
-  ${props => props.filled && `
+  ${props =>
+    props.filled &&
+    `
     text-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
   `}
 
   /* Add a gentle pulse for partial brains */
-  ${props => props.partial && `
+  ${props =>
+    props.partial &&
+    `
     animation: brainPulse 2s ease-in-out infinite;
     text-shadow: 0 0 4px rgba(255, 152, 0, 0.3);
   `}
@@ -218,12 +213,13 @@ const BrainIcon = styled.span<{ filled: boolean; partial?: boolean }>`
   }
 
   @keyframes brainPulse {
-    0%, 100% { 
-      opacity: 0.7; 
+    0%,
+    100% {
+      opacity: 0.7;
       transform: scale(1.05);
     }
-    50% { 
-      opacity: 0.9; 
+    50% {
+      opacity: 0.9;
       transform: scale(1.1);
     }
   }
@@ -272,22 +268,22 @@ const BrainProgress: React.FC<{ progress: number }> = ({ progress }) => {
 
   const getBrainFillStates = (progress: number) => {
     const states = [];
-    
+
     // First brain: 0-33%
     if (progress <= 0) states.push(false);
     else if (progress <= 33) states.push('partial');
     else states.push(true);
-    
+
     // Second brain: 34-66%
     if (progress <= 33) states.push(false);
     else if (progress <= 66) states.push('partial');
     else states.push(true);
-    
+
     // Third brain: 67-100%
     if (progress <= 66) states.push(false);
     else if (progress < 100) states.push('partial');
     else states.push(true);
-    
+
     return states;
   };
 
@@ -297,7 +293,7 @@ const BrainProgress: React.FC<{ progress: number }> = ({ progress }) => {
   return (
     <BrainProgressContainer>
       {brainEmojis.map((emoji, index) => (
-        <BrainIcon 
+        <BrainIcon
           key={index}
           filled={fillStates[index] === true}
           partial={fillStates[index] === 'partial'}
@@ -306,7 +302,15 @@ const BrainProgress: React.FC<{ progress: number }> = ({ progress }) => {
         </BrainIcon>
       ))}
       <ProgressText>
-        {progress > 75 ? 'Expert' : progress > 50 ? 'Learning' : progress > 25 ? 'Started' : progress > 0 ? 'Beginner' : 'Start'}
+        {progress > 75
+          ? 'Expert'
+          : progress > 50
+            ? 'Learning'
+            : progress > 25
+              ? 'Started'
+              : progress > 0
+                ? 'Beginner'
+                : 'Start'}
       </ProgressText>
     </BrainProgressContainer>
   );
@@ -365,7 +369,8 @@ export const LanguagesOverview: React.FC = () => {
               </StatBadge>
               <StatBadge>
                 <span>🌍</span>
-                {overallStats.languagesStarted} Language{overallStats.languagesStarted !== 1 ? 's' : ''}
+                {overallStats.languagesStarted} Language
+                {overallStats.languagesStarted !== 1 ? 's' : ''}
               </StatBadge>
             </StatsOverview>
           )}
@@ -431,9 +436,7 @@ export const LanguagesOverview: React.FC = () => {
                       <QuickStats>
                         <BrainProgress progress={overallProgress} />
                       </QuickStats>
-                      <ModuleCount>
-                        {practicedWords} words learned
-                      </ModuleCount>
+                      <ModuleCount>{practicedWords} words learned</ModuleCount>
                     </ProgressSection>
                   ) : (
                     <ProgressSection>
@@ -442,7 +445,8 @@ export const LanguagesOverview: React.FC = () => {
                         <span>Start learning!</span>
                       </QuickStats>
                       <ModuleCount>
-                        {info.modules?.length || 0} module{(info.modules?.length || 0) !== 1 ? 's' : ''}
+                        {info.modules?.length || 0} module
+                        {(info.modules?.length || 0) !== 1 ? 's' : ''}
                       </ModuleCount>
                     </ProgressSection>
                   )}

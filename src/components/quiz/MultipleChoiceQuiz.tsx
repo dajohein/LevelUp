@@ -18,47 +18,43 @@ const BrainIcon = styled.span<{ filled: boolean; partial?: boolean }>`
   transition: all 0.3s ease;
   position: relative;
   display: inline-block;
-  
+
   /* Visual states based on progress */
-  opacity: ${props => 
-    props.filled 
-      ? '1' 
-      : props.partial 
-      ? '0.7' 
-      : '0.3'};
-      
-  filter: ${props => 
-    props.filled 
-      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' 
-      : props.partial 
-      ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)' 
-      : 'grayscale(0.8) brightness(0.5)'};
-      
-  transform: ${props => 
-    props.filled 
-      ? 'scale(1.15)' 
-      : props.partial 
-      ? 'scale(1.05)' 
-      : 'scale(0.95)'};
+  opacity: ${props => (props.filled ? '1' : props.partial ? '0.7' : '0.3')};
+
+  filter: ${props =>
+    props.filled
+      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)'
+      : props.partial
+        ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)'
+        : 'grayscale(0.8) brightness(0.5)'};
+
+  transform: ${props =>
+    props.filled ? 'scale(1.15)' : props.partial ? 'scale(1.05)' : 'scale(0.95)'};
 
   /* Add a subtle glow for filled brains */
-  ${props => props.filled && `
+  ${props =>
+    props.filled &&
+    `
     text-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
   `}
 
   /* Add a gentle pulse for partial brains */
-  ${props => props.partial && `
+  ${props =>
+    props.partial &&
+    `
     animation: brainPulse 2s ease-in-out infinite;
     text-shadow: 0 0 4px rgba(255, 152, 0, 0.3);
   `}
 
   @keyframes brainPulse {
-    0%, 100% { 
-      opacity: 0.7; 
+    0%,
+    100% {
+      opacity: 0.7;
       transform: scale(1.05);
     }
-    50% { 
-      opacity: 0.9; 
+    50% {
+      opacity: 0.9;
       transform: scale(1.1);
     }
   }
@@ -75,25 +71,25 @@ const ProgressText = styled.span`
 const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
   // Calculate progress within current level (0-100 based on XP within level)
   const progressInLevel = xp % 100; // Assuming 100 XP per level
-  
+
   const getBrainFillStates = (progress: number) => {
     const states = [];
-    
+
     // First brain: 0-33%
     if (progress <= 0) states.push(false);
     else if (progress <= 33) states.push('partial');
     else states.push(true);
-    
+
     // Second brain: 34-66%
     if (progress <= 33) states.push(false);
     else if (progress <= 66) states.push('partial');
     else states.push(true);
-    
+
     // Third brain: 67-100%
     if (progress <= 66) states.push(false);
     else if (progress < 100) states.push('partial');
     else states.push(true);
-    
+
     return states;
   };
 
@@ -109,7 +105,7 @@ const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) =
   return (
     <BrainProgressContainer>
       {['🧠', '🧠', '🧠'].map((emoji, index) => (
-        <BrainIcon 
+        <BrainIcon
           key={index}
           filled={fillStates[index] === true}
           partial={fillStates[index] === 'partial'}
@@ -296,26 +292,25 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
 }) => {
   // Show enhancement indicator when session has progressed (indicating advanced modes are active)
   // Removed unused variables: isEnhanced, enhancementText
-  
+
   // Only show context before answering if the user is still learning the word
   // Consider a word "learned" if it has significant XP (level 2+ or 200+ XP)
   const isWordLearned = (level || 0) >= 2 || (xp || 0) >= 200;
-  
+
   // Check if this is a phrase (contains multiple words) vs a single word
   const isPhrase = word.trim().split(/\s+/).length > 1;
-  
+
   // Show context if:
   // 1. It's NOT a phrase (phrases don't need context as they are self-contextual), AND
   // 2. User has already answered (for learning reinforcement), OR
   // 3. User is still learning this word (low level/XP)
   const shouldShowContext = context && !isPhrase && (selectedOption || !isWordLearned);
-  
+
   // Keep enhancement data for debugging (console.log above shows it)
   // UI enhancement indicator removed for cleaner interface
-  
+
   return (
     <Container>
-      
       <Word>{word}</Word>
       {shouldShowContext && (
         <ContextSection>

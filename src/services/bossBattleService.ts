@@ -1,16 +1,13 @@
 /**
  * Boss Battle Service - AI Enhanced (Cleaned up version)
- * 
+ *
  * Implements challenging word selection for boss battles with intelligent
  * AI adaptations using centralized word selection.
  */
 
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { 
-  challengeAIIntegrator, 
-  ChallengeAIContext 
-} from './challengeAIIntegrator';
+import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { selectQuizMode } from './quizModeSelectionUtils';
@@ -44,7 +41,7 @@ class BossBattleService {
    * Initialize a new boss battle session
    */
   initializeBossBattle(
-    languageCode: string, 
+    languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 25,
     _allWords?: Word[], // Unused - centralized word selection handles this
@@ -67,7 +64,9 @@ class BossBattleService {
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
-    logger.debug(`⚔️ Boss battle initialized with session ID: ${sessionId}, target: ${targetWords} rounds`);
+    logger.debug(
+      `⚔️ Boss battle initialized with session ID: ${sessionId}, target: ${targetWords} rounds`
+    );
   }
 
   /**
@@ -87,12 +86,12 @@ class BossBattleService {
   }> {
     if (!this.state) {
       logger.error('Boss battle not initialized');
-      return { 
-        word: null, 
-        options: [], 
-        quizMode: 'multiple-choice', 
+      return {
+        word: null,
+        options: [],
+        quizMode: 'multiple-choice',
         aiEnhanced: false,
-        bossPhase: 'unknown'
+        bossPhase: 'unknown',
       };
     }
 
@@ -106,7 +105,7 @@ class BossBattleService {
     // Determine current difficulty level based on boss battle progression
     const progressPercentage = wordsCompleted / this.state.targetWords;
     let difficulty: 'easy' | 'medium' | 'hard';
-    
+
     // Boss battles get progressively harder
     if (progressPercentage < 0.3) {
       difficulty = 'medium'; // Start with medium difficulty
@@ -115,12 +114,14 @@ class BossBattleService {
     } else {
       difficulty = 'hard'; // Final phase - maximum difficulty
     }
-    
+
     // Special handling for final boss word
     const isFinalBoss = wordsCompleted >= this.state.targetWords - 1;
     const bossPhase = this.getBossPhase(progressPercentage, isFinalBoss);
-    
-    logger.debug(`⚔️ Boss battle word ${wordsCompleted + 1}/${this.state.targetWords}, difficulty: ${difficulty}${isFinalBoss ? ' (FINAL BOSS!)' : ''}`);
+
+    logger.debug(
+      `⚔️ Boss battle word ${wordsCompleted + 1}/${this.state.targetWords}, difficulty: ${difficulty}${isFinalBoss ? ' (FINAL BOSS!)' : ''}`
+    );
 
     // Use centralized word selection
     const selectionResult = selectWordForChallenge(
@@ -133,19 +134,24 @@ class BossBattleService {
 
     if (!selectionResult) {
       logger.error('No words available for boss battle at this difficulty');
-      return { 
-        word: null, 
-        options: [], 
-        quizMode: 'multiple-choice', 
+      return {
+        word: null,
+        options: [],
+        quizMode: 'multiple-choice',
         aiEnhanced: false,
-        bossPhase
+        bossPhase,
       };
     }
 
     const selectedWord = selectionResult.word;
     const currentDifficultyLevel = progressPercentage * 100; // Convert to 0-100 scale
 
-    return this.generateAIEnhancedBossQuiz(selectedWord, currentDifficultyLevel, bossPhase, wordProgress);
+    return this.generateAIEnhancedBossQuiz(
+      selectedWord,
+      currentDifficultyLevel,
+      bossPhase,
+      wordProgress
+    );
   }
 
   /**
@@ -178,14 +184,17 @@ class BossBattleService {
 
     // Add to performance history
     const progressPercentage = wordsCompleted / this.state.targetWords;
-    const bossPhase = this.getBossPhase(progressPercentage, wordsCompleted >= this.state.targetWords - 1);
-    
+    const bossPhase = this.getBossPhase(
+      progressPercentage,
+      wordsCompleted >= this.state.targetWords - 1
+    );
+
     this.state.performanceHistory.push({
       isCorrect: result.isCorrect,
       timeSpent: result.timeSpent,
       quizMode: result.quizMode,
       difficulty: progressPercentage * 100,
-      bossPhase
+      bossPhase,
     });
 
     // Keep only recent history (last 8 words for AI analysis)
@@ -216,7 +225,7 @@ class BossBattleService {
         options: [],
         quizMode: 'multiple-choice',
         aiEnhanced: false,
-        bossPhase
+        bossPhase,
       };
     }
 
@@ -228,7 +237,7 @@ class BossBattleService {
       word,
       wordProgress,
       context: 'boss-battle',
-      allowOpenAnswer: true
+      allowOpenAnswer: true,
     });
 
     // If AI is disabled, use baseline approach
@@ -239,7 +248,7 @@ class BossBattleService {
         options,
         quizMode: baselineQuizMode,
         aiEnhanced: false,
-        bossPhase
+        bossPhase,
       };
     }
 
@@ -254,17 +263,17 @@ class BossBattleService {
           consecutiveCorrect: this.state.consecutiveCorrect,
           consecutiveIncorrect: this.state.consecutiveIncorrect,
           recentAccuracy: this.calculateCurrentAccuracy(),
-          sessionDuration: Date.now() - this.state.sessionStartTime
+          sessionDuration: Date.now() - this.state.sessionStartTime,
         },
         userState: {
-          recentPerformance: this.state.performanceHistory
+          recentPerformance: this.state.performanceHistory,
         },
         challengeContext: {
           currentDifficulty: difficultyLevel,
           phaseProgress: progressPercentage,
           isEarlyPhase: bossPhase === 'early-boss',
-          isFinalPhase: bossPhase === 'final-boss'
-        }
+          isFinalPhase: bossPhase === 'final-boss',
+        },
       };
 
       // Get AI enhancement
@@ -276,7 +285,8 @@ class BossBattleService {
       );
 
       // Generate options for the AI-selected mode
-      const finalQuizMode = aiEnhancement.aiRecommendedMode as typeof baselineQuizMode || baselineQuizMode;
+      const finalQuizMode =
+        (aiEnhancement.aiRecommendedMode as typeof baselineQuizMode) || baselineQuizMode;
       const options = this.generateBossOptions(word, finalQuizMode);
 
       logger.debug(`🤖 AI-enhanced boss word: ${word.term}`, {
@@ -284,7 +294,7 @@ class BossBattleService {
         aiMode: aiEnhancement.aiRecommendedMode,
         reasoning: aiEnhancement.reasoning,
         phase: bossPhase,
-        difficulty: difficultyLevel
+        difficulty: difficultyLevel,
       });
 
       return {
@@ -293,19 +303,18 @@ class BossBattleService {
         quizMode: finalQuizMode,
         aiEnhanced: true,
         reasoning: aiEnhancement.reasoning,
-        bossPhase
+        bossPhase,
       };
-
     } catch (error) {
       logger.error('❌ AI enhancement failed for boss battle, using baseline:', error);
-      
+
       const options = this.generateBossOptions(word, baselineQuizMode);
       return {
         word,
         options,
         quizMode: baselineQuizMode,
         aiEnhanced: false,
-        bossPhase
+        bossPhase,
       };
     }
   }
@@ -325,7 +334,7 @@ class BossBattleService {
     if (!this.state || this.state.performanceHistory.length === 0) {
       return 0.8; // Default assumption
     }
-    
+
     const recentHistory = this.state.performanceHistory.slice(-5);
     const correct = recentHistory.filter(h => h.isCorrect).length;
     return correct / recentHistory.length;
@@ -348,7 +357,7 @@ class BossBattleService {
    */
   getBossBattleStats() {
     if (!this.state) return null;
-    
+
     return {
       wordsCompleted: this.state.wordsCompleted,
       targetWords: this.state.targetWords,
@@ -387,11 +396,11 @@ class BossBattleService {
           [bossPhase]: {
             accuracy: isCorrect ? 1.0 : 0.0,
             avgTime: timeSpent,
-            adaptations: wasAIEnhanced ? 1 : 0
-          }
+            adaptations: wasAIEnhanced ? 1 : 0,
+          },
         },
         quizMode: 'boss-battle',
-        cognitiveLoad: difficultyLevel > 70 ? 'high' : difficultyLevel > 40 ? 'moderate' : 'low'
+        cognitiveLoad: difficultyLevel > 70 ? 'high' : difficultyLevel > 40 ? 'moderate' : 'low',
       });
 
       // Update internal state
@@ -409,10 +418,12 @@ class BossBattleService {
         timeSpent,
         quizMode: 'boss-battle',
         difficulty: difficultyLevel,
-        bossPhase
+        bossPhase,
       });
 
-      logger.debug(`⚔️ Boss battle completion recorded: ${wordId}, correct: ${isCorrect}, phase: ${bossPhase}`);
+      logger.debug(
+        `⚔️ Boss battle completion recorded: ${wordId}, correct: ${isCorrect}, phase: ${bossPhase}`
+      );
     } catch (error) {
       logger.error('❌ Failed to record boss battle completion:', error);
     }

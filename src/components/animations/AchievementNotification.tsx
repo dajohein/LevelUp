@@ -40,10 +40,9 @@ const Container = styled.div<{ isExiting: boolean }>`
   gap: ${props => props.theme.spacing.md};
   min-width: 300px;
   z-index: 1000;
-  ${props =>
-    css`
-      animation: ${props.isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards;
-    `}
+  ${props => css`
+    animation: ${props.isExiting ? slideOut : slideIn} 0.5s ease-in-out forwards;
+  `}
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     bottom: 70px;

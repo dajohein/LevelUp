@@ -1,6 +1,6 @@
 /**
  * Streak Challenge Service - AI Enhanced
- * 
+ *
  * Implements progressive difficulty word selection for streak challenges with
  * intelligent AI adaptations. Words get progressively harder as the streak increases,
  * while AI monitors cognitive load and adjusts difficulty and quiz modes dynamically.
@@ -8,10 +8,7 @@
 
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { 
-  challengeAIIntegrator, 
-  ChallengeAIContext
-} from './challengeAIIntegrator';
+import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
@@ -44,7 +41,7 @@ class StreakChallengeService {
    * Initialize a new streak challenge session
    */
   initializeStreak(
-    languageCode: string, 
+    languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     _allWords?: Word[], // Unused - centralized word selection handles this
     moduleId?: string // Module for scoped challenges
@@ -65,7 +62,9 @@ class StreakChallengeService {
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
     };
 
-    logger.debug(`🔥 Streak challenge initialized with session ID: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ' (all words)'}`);
+    logger.debug(
+      `🔥 Streak challenge initialized with session ID: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ' (all words)'}`
+    );
   }
 
   /**
@@ -100,7 +99,7 @@ class StreakChallengeService {
     if (currentStreak < 5) {
       difficulty = 'easy';
     } else if (currentStreak < 15) {
-      difficulty = 'medium'; 
+      difficulty = 'medium';
     } else {
       difficulty = 'hard';
     }
@@ -147,7 +146,7 @@ class StreakChallengeService {
    */
   getStreakStats() {
     if (!this.state) return null;
-    
+
     return {
       currentStreak: this.state.currentStreak,
       sessionId: this.state.sessionId,
@@ -183,7 +182,7 @@ class StreakChallengeService {
       timeSpent: result.timeSpent,
       quizMode: result.quizMode,
       difficulty: difficulty,
-      streak: streak
+      streak: streak,
     });
 
     // Keep only recent history (last 10 words for AI analysis)
@@ -211,20 +210,21 @@ class StreakChallengeService {
         word,
         options: [],
         quizMode: 'multiple-choice',
-        aiEnhanced: false
+        aiEnhanced: false,
       };
     }
 
     // Calculate recent accuracy
     const recentPerformance = this.state.performanceHistory.slice(-5); // Last 5 words
-    const recentAccuracy = recentPerformance.length > 0 
-      ? recentPerformance.filter(p => p.isCorrect).length / recentPerformance.length 
-      : 0.8; // Default assumption
+    const recentAccuracy =
+      recentPerformance.length > 0
+        ? recentPerformance.filter(p => p.isCorrect).length / recentPerformance.length
+        : 0.8; // Default assumption
 
     // Get word's experience level for quiz mode selection
     const wordXP = wordProgress[word.id]?.xp || 0;
     const wordMasteryLevel = getWordMasteryTier(wordXP);
-    
+
     // Generate baseline quiz mode based on WORD EXPERIENCE, not streak
     const baselineQuizMode = generateQuizModeForMastery(wordMasteryLevel);
 
@@ -235,7 +235,7 @@ class StreakChallengeService {
         word,
         options,
         quizMode: baselineQuizMode,
-        aiEnhanced: false
+        aiEnhanced: false,
       };
     }
 
@@ -250,17 +250,17 @@ class StreakChallengeService {
           consecutiveCorrect: this.state.consecutiveCorrect,
           consecutiveIncorrect: this.state.consecutiveIncorrect,
           recentAccuracy: recentAccuracy,
-          sessionDuration: Date.now() - this.state.sessionStartTime
+          sessionDuration: Date.now() - this.state.sessionStartTime,
         },
         userState: {
-          recentPerformance: this.state.performanceHistory
+          recentPerformance: this.state.performanceHistory,
         },
         challengeContext: {
           currentDifficulty: wordXP < 20 ? 20 : wordXP < 100 ? 50 : 80,
           tierLevel: wordMasteryLevel,
           isEarlyPhase: wordXP === 0, // New word is early phase
-          isFinalPhase: false // Streak challenges don't have final phase
-        }
+          isFinalPhase: false, // Streak challenges don't have final phase
+        },
       };
 
       // Get AI enhancement
@@ -272,34 +272,36 @@ class StreakChallengeService {
       );
 
       // Generate options for the AI-selected mode
-      const options = this.generateOptions(word, aiEnhancement.aiRecommendedMode || baselineQuizMode);
+      const options = this.generateOptions(
+        word,
+        aiEnhancement.aiRecommendedMode || baselineQuizMode
+      );
 
       logger.debug(`🤖 AI-enhanced streak word: ${word.term}`, {
         baseline: baselineQuizMode,
         aiMode: aiEnhancement.aiRecommendedMode,
         reasoning: aiEnhancement.reasoning,
         streak: currentStreak,
-        tier: currentStreak < 5 ? 1 : currentStreak < 15 ? 3 : 5
+        tier: currentStreak < 5 ? 1 : currentStreak < 15 ? 3 : 5,
       });
 
       return {
         word,
         options,
-        quizMode: aiEnhancement.aiRecommendedMode as any || baselineQuizMode,
+        quizMode: (aiEnhancement.aiRecommendedMode as any) || baselineQuizMode,
         aiEnhanced: true,
-        reasoning: aiEnhancement.reasoning
+        reasoning: aiEnhancement.reasoning,
       };
-
     } catch (error) {
       logger.error('❌ AI enhancement failed for streak challenge, using baseline:', error);
-      
+
       const options = this.generateOptions(word, baselineQuizMode);
       return {
         word,
         options,
         quizMode: baselineQuizMode,
         aiEnhanced: false,
-        reasoning: ['AI enhancement failed - using baseline selection']
+        reasoning: ['AI enhancement failed - using baseline selection'],
       };
     }
   }
@@ -313,12 +315,12 @@ class StreakChallengeService {
   ): Promise<void> {
     try {
       await userLearningProfileStorage.updateStreakChallengeData(userId, sessionData);
-      
+
       logger.info('Streak challenge performance saved', {
         userId,
         streak: sessionData.streak,
         tier: sessionData.tier,
-        wasAIEnhanced: sessionData.wasAIEnhanced
+        wasAIEnhanced: sessionData.wasAIEnhanced,
       });
     } catch (error) {
       logger.error('Failed to save streak challenge performance', { userId, error });

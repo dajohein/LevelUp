@@ -1,9 +1,9 @@
 /**
  * Fill in the Blank Challenge Service
- * 
+ *
  * AI-enhanced sentence completion challenge focusing on contextual understanding,
  * natural language comprehension, and word usage in realistic scenarios.
- * 
+ *
  * Features:
  * - Contextual sentence completion
  * - AI-powered difficulty adaptation
@@ -18,12 +18,12 @@ import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { logger } from './logger';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { FillInTheBlankSessionData } from '../types/challengeTypes';
-import { 
+import {
   calculateWordDifficulty,
   calculateTimeAllocation,
   getComplexityMultiplier,
   generateHints,
-  generateSupport
+  generateSupport,
 } from './challengeServiceUtils';
 
 export interface FillInTheBlankResult {
@@ -81,7 +81,7 @@ export class FillInTheBlankService {
     sentencePatterns: [],
     contextualStrategies: [],
     languagePatterns: [],
-    analyticsBuffer: []
+    analyticsBuffer: [],
   };
 
   /**
@@ -111,20 +111,22 @@ export class FillInTheBlankService {
         sentencePatterns: this.initializeSentencePatterns(),
         contextualStrategies: [],
         languagePatterns: [],
-        analyticsBuffer: []
+        analyticsBuffer: [],
       };
       const complexityMultiplier = getComplexityMultiplier(initialComplexity);
       const estimatedDuration = targetWords * (25 * complexityMultiplier);
 
       const complexityLevels = ['Simple sentences', 'Moderate complexity', 'Complex structures'];
 
-      logger.debug(`📝 Fill in the Blank initialized: ${targetWords} words, complexity ${initialComplexity}, ~${estimatedDuration}s`);
+      logger.debug(
+        `📝 Fill in the Blank initialized: ${targetWords} words, complexity ${initialComplexity}, ~${estimatedDuration}s`
+      );
 
       return {
         success: true,
         sessionId,
         estimatedDuration,
-        complexityLevels
+        complexityLevels,
       };
     } catch (error) {
       logger.error('❌ Failed to initialize Fill in the Blank:', error);
@@ -132,7 +134,7 @@ export class FillInTheBlankService {
         success: false,
         sessionId: '',
         estimatedDuration: 0,
-        complexityLevels: []
+        complexityLevels: [],
       };
     }
   }
@@ -153,10 +155,10 @@ export class FillInTheBlankService {
     // Calculate contextual parameters
     const sessionProgress = currentProgress / targetWords;
     const sentenceComplexity = this.calculateSentenceComplexity(sessionProgress);
-    
+
     // Determine difficulty based on sentence complexity and session progress
     let difficulty: 'easy' | 'medium' | 'hard';
-    
+
     if (sentenceComplexity === 'complex' || sessionProgress > 0.7) {
       difficulty = 'hard'; // Complex sentences or advanced session
     } else if (sentenceComplexity === 'moderate' || sessionProgress > 0.3) {
@@ -165,7 +167,9 @@ export class FillInTheBlankService {
       difficulty = 'easy'; // Simple sentences or early session
     }
 
-    logger.debug(`📝 Fill in the Blank parameters: currentProgress=${currentProgress}, targetWords=${targetWords}, sessionProgress=${sessionProgress}, sentenceComplexity=${sentenceComplexity}, difficulty=${difficulty}`);
+    logger.debug(
+      `📝 Fill in the Blank parameters: currentProgress=${currentProgress}, targetWords=${targetWords}, sessionProgress=${sessionProgress}, sentenceComplexity=${sentenceComplexity}, difficulty=${difficulty}`
+    );
 
     // Use centralized word selection
     const selectionResult = selectWordForChallenge(
@@ -181,7 +185,9 @@ export class FillInTheBlankService {
     }
 
     const selectedWord = selectionResult.word;
-    const contextualDifficulty = sessionProgress * 80 + (sentenceComplexity === 'complex' ? 30 : sentenceComplexity === 'moderate' ? 15 : 0);
+    const contextualDifficulty =
+      sessionProgress * 80 +
+      (sentenceComplexity === 'complex' ? 30 : sentenceComplexity === 'moderate' ? 15 : 0);
 
     let aiEnhanced = false;
     let languageHints: string[] = [];
@@ -199,18 +205,18 @@ export class FillInTheBlankService {
           consecutiveCorrect: 0,
           consecutiveIncorrect: 0,
           recentAccuracy: this.calculateCurrentAccuracy(wordProgress),
-          sessionDuration: (Date.now() - this.state.startTime) / 1000
+          sessionDuration: (Date.now() - this.state.startTime) / 1000,
         },
         userState: {
-          recentPerformance: []
+          recentPerformance: [],
         },
         challengeContext: {
           currentDifficulty: contextualDifficulty,
           contextualLearning: true,
           sentenceComplexity: sentenceComplexity,
           isEarlyPhase: currentProgress < 3,
-          isFinalPhase: currentProgress >= targetWords - 3
-        }
+          isFinalPhase: currentProgress >= targetWords - 3,
+        },
       };
 
       try {
@@ -227,14 +233,19 @@ export class FillInTheBlankService {
           languageHints = generateHints({
             word: selectedWord,
             quizMode: 'fill-in-the-blank',
-            context: 'normal'
+            context: 'normal',
           });
           contextualSupport = generateSupport({
             context: 'normal',
-            challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+            challengePhase:
+              currentProgress < 3
+                ? 'early'
+                : currentProgress >= targetWords - 3
+                  ? 'late'
+                  : 'middle',
           });
           reasoning = aiResult.reasoning || [];
-          
+
           // Record contextual strategy
           this.state.contextualStrategies.push(`contextual-complexity-${sentenceComplexity}`);
         } else {
@@ -242,11 +253,16 @@ export class FillInTheBlankService {
           languageHints = generateHints({
             word: selectedWord,
             quizMode: 'fill-in-the-blank',
-            context: 'normal'
+            context: 'normal',
           });
           contextualSupport = generateSupport({
             context: 'normal',
-            challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+            challengePhase:
+              currentProgress < 3
+                ? 'early'
+                : currentProgress >= targetWords - 3
+                  ? 'late'
+                  : 'middle',
           });
         }
       } catch (error) {
@@ -254,11 +270,12 @@ export class FillInTheBlankService {
         languageHints = generateHints({
           word: selectedWord,
           quizMode: 'fill-in-the-blank',
-          context: 'normal'
+          context: 'normal',
         });
         contextualSupport = generateSupport({
           context: 'normal',
-          challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+          challengePhase:
+            currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle',
         });
       }
     } else {
@@ -266,11 +283,12 @@ export class FillInTheBlankService {
       languageHints = generateHints({
         word: selectedWord,
         quizMode: 'fill-in-the-blank',
-        context: 'normal'
+        context: 'normal',
       });
       contextualSupport = generateSupport({
         context: 'normal',
-        challengePhase: currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle'
+        challengePhase:
+          currentProgress < 3 ? 'early' : currentProgress >= targetWords - 3 ? 'late' : 'middle',
       });
     }
 
@@ -279,14 +297,21 @@ export class FillInTheBlankService {
     const blankPosition = this.calculateBlankPosition(sentence);
     const options = this.generateOptions(selectedWord, sentenceComplexity);
     const contextualClues = this.extractContextualClues(sentence);
-    
+
     const difficultyLevel = calculateWordDifficulty(selectedWord, wordProgress[selectedWord.id]);
-    timeAllocated = calculateTimeAllocation(selectedWord, 'fill-in-blank', difficultyLevel, 'fill-in-the-blank');
+    timeAllocated = calculateTimeAllocation(
+      selectedWord,
+      'fill-in-blank',
+      difficultyLevel,
+      'fill-in-the-blank'
+    );
 
     // Update complexity based on progress
     this.updateSentenceComplexity(sessionProgress, contextualDifficulty);
 
-    logger.debug(`📝 Fill in the Blank word selected: ${selectedWord.term} (${sentenceComplexity}, AI: ${aiEnhanced}, Time: ${timeAllocated}s)`);
+    logger.debug(
+      `📝 Fill in the Blank word selected: ${selectedWord.term} (${sentenceComplexity}, AI: ${aiEnhanced}, Time: ${timeAllocated}s)`
+    );
 
     // Store analytics data
     this.state.analyticsBuffer.push({
@@ -295,7 +320,7 @@ export class FillInTheBlankService {
       completionTime: timeAllocated,
       contextualAccuracy: contextualDifficulty,
       naturalLanguageScore: this.calculateNaturalnessScore(sentence),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return {
@@ -310,7 +335,7 @@ export class FillInTheBlankService {
       aiEnhanced,
       languageHints,
       contextualSupport,
-      reasoning
+      reasoning,
     };
   }
 
@@ -339,15 +364,20 @@ export class FillInTheBlankService {
         grammarRecognition: isCorrect ? 1.0 : 0.0,
         semanticAccuracy: contextualAccuracy,
         syntacticAccuracy: isCorrect ? 1.0 : 0.0,
-        pragmaticAccuracy: contextualAccuracy
+        pragmaticAccuracy: contextualAccuracy,
       };
 
-      await userLearningProfileStorage.updateFillInTheBlankData(userId || 'default_user', sessionData);
+      await userLearningProfileStorage.updateFillInTheBlankData(
+        userId || 'default_user',
+        sessionData
+      );
 
       // Track language pattern understanding
       this.updateLanguagePatterns(wordId, sentenceComplexity, contextualAccuracy);
 
-      logger.debug(`📝 Fill in the Blank completion recorded: ${wordId}, correct: ${isCorrect}, complexity: ${sentenceComplexity}`);
+      logger.debug(
+        `📝 Fill in the Blank completion recorded: ${wordId}, correct: ${isCorrect}, complexity: ${sentenceComplexity}`
+      );
     } catch (error) {
       logger.error('❌ Failed to record Fill in the Blank completion:', error);
     }
@@ -381,7 +411,7 @@ export class FillInTheBlankService {
     // Generate sentence based on complexity
     const templates = this.getSentenceTemplates(complexity);
     const template = templates[Math.floor(Math.random() * templates.length)];
-    
+
     return template.replace('[WORD]', '______').replace('[DEFINITION]', word.definition);
   }
 
@@ -395,21 +425,21 @@ export class FillInTheBlankService {
           'The [WORD] is very important.',
           'I learned about [WORD] today.',
           'This [WORD] helps us understand.',
-          'The concept of [WORD] means [DEFINITION].'
+          'The concept of [WORD] means [DEFINITION].',
         ];
       case 'moderate':
         return [
           'Understanding [WORD] requires careful consideration of [DEFINITION].',
           'The significance of [WORD] becomes clear when we examine [DEFINITION].',
           'In many contexts, [WORD] refers to [DEFINITION].',
-          'Students often struggle with [WORD] until they grasp that it means [DEFINITION].'
+          'Students often struggle with [WORD] until they grasp that it means [DEFINITION].',
         ];
       case 'complex':
         return [
           'The multifaceted nature of [WORD] encompasses not only [DEFINITION], but also broader implications.',
           'While [WORD] traditionally denotes [DEFINITION], contemporary usage has evolved significantly.',
           'The epistemological framework surrounding [WORD] suggests that [DEFINITION] represents merely one facet.',
-          'Scholars debate whether [WORD], defined as [DEFINITION], adequately captures the phenomenon.'
+          'Scholars debate whether [WORD], defined as [DEFINITION], adequately captures the phenomenon.',
         ];
       default:
         return ['The [WORD] is important.'];
@@ -419,7 +449,8 @@ export class FillInTheBlankService {
   /**
    * Calculate blank position in sentence
    */
-  private calculateBlankPosition(sentence: string /* wordTerm: string */): number { // Removed unused parameter
+  private calculateBlankPosition(sentence: string /* wordTerm: string */): number {
+    // Removed unused parameter
     const blankIndex = sentence.indexOf('______');
     return blankIndex !== -1 ? blankIndex : 0;
   }
@@ -430,123 +461,172 @@ export class FillInTheBlankService {
   private generateOptions(word: Word, complexity: 'simple' | 'moderate' | 'complex'): string[] {
     // Generate 4 options including the correct answer
     const options = [word.term];
-    
+
     // We need to generate word distractors that could plausibly fit in the sentence
     // but are incorrect. This is more sophisticated than definition distractors.
-    
+
     const correctWordLength = word.term.length;
     const correctWordLevel = word.level || 3;
-    
+
     // Generate distractors based on word characteristics and complexity
     const potentialDistractors: string[] = [];
-    
+
     switch (complexity) {
       case 'simple':
         // Simple words that might fit grammatically but are semantically wrong
         if (correctWordLength <= 6) {
-          potentialDistractors.push('thing', 'place', 'time', 'way', 'part', 'work', 'life', 'world');
+          potentialDistractors.push(
+            'thing',
+            'place',
+            'time',
+            'way',
+            'part',
+            'work',
+            'life',
+            'world'
+          );
         } else {
           potentialDistractors.push('example', 'problem', 'question', 'answer', 'moment', 'person');
         }
         break;
-        
+
       case 'moderate':
         // More sophisticated vocabulary appropriate for moderate complexity
         if (correctWordLevel <= 2) {
-          potentialDistractors.push('concept', 'approach', 'method', 'process', 'system', 'structure');
+          potentialDistractors.push(
+            'concept',
+            'approach',
+            'method',
+            'process',
+            'system',
+            'structure'
+          );
         } else {
-          potentialDistractors.push('framework', 'perspective', 'analysis', 'evaluation', 'assessment', 'interpretation');
+          potentialDistractors.push(
+            'framework',
+            'perspective',
+            'analysis',
+            'evaluation',
+            'assessment',
+            'interpretation'
+          );
         }
         break;
-        
+
       case 'complex':
         // Advanced academic vocabulary for complex sentences
         potentialDistractors.push(
-          'paradigm', 'methodology', 'epistemology', 'phenomenon', 'manifestation',
-          'conceptualization', 'interpretation', 'implementation', 'consideration', 'implication'
+          'paradigm',
+          'methodology',
+          'epistemology',
+          'phenomenon',
+          'manifestation',
+          'conceptualization',
+          'interpretation',
+          'implementation',
+          'consideration',
+          'implication'
         );
         break;
     }
-    
+
     // Filter distractors to be similar length and different from correct answer
     const suitableDistractors = potentialDistractors
       .filter(distractor => distractor !== word.term.toLowerCase())
       .filter(distractor => Math.abs(distractor.length - correctWordLength) <= 3)
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
-    
+
     // If we need more distractors, add some generic ones based on word type
     while (suitableDistractors.length < 3) {
       const wordTypeDistractors = this.generateWordTypeDistractors(word, complexity);
       for (const distractor of wordTypeDistractors) {
-        if (!suitableDistractors.includes(distractor) && 
-            !options.includes(distractor) && 
-            suitableDistractors.length < 3) {
+        if (
+          !suitableDistractors.includes(distractor) &&
+          !options.includes(distractor) &&
+          suitableDistractors.length < 3
+        ) {
           suitableDistractors.push(distractor);
         }
       }
       break; // Prevent infinite loop
     }
-    
+
     options.push(...suitableDistractors);
     return options.sort(() => Math.random() - 0.5);
   }
-  
+
   /**
    * Generate distractors based on word type/part of speech
    */
-  private generateWordTypeDistractors(word: Word, complexity: 'simple' | 'moderate' | 'complex'): string[] {
+  private generateWordTypeDistractors(
+    word: Word,
+    complexity: 'simple' | 'moderate' | 'complex'
+  ): string[] {
     // This is a simplified approach - ideally we'd have POS tagging
     // const term = word.term.toLowerCase(); // Removed unused variable
     const definition = word.definition.toLowerCase();
-    
+
     // Heuristic detection of word type based on definition patterns
-    if (definition.includes('to ') || definition.includes('ing ') || definition.includes('the act of')) {
+    if (
+      definition.includes('to ') ||
+      definition.includes('ing ') ||
+      definition.includes('the act of')
+    ) {
       // Likely a verb or gerund
-      return complexity === 'simple' ? ['doing', 'making', 'taking'] : 
-             complexity === 'moderate' ? ['creating', 'developing', 'establishing'] :
-             ['implementing', 'formulating', 'conceptualizing'];
+      return complexity === 'simple'
+        ? ['doing', 'making', 'taking']
+        : complexity === 'moderate'
+          ? ['creating', 'developing', 'establishing']
+          : ['implementing', 'formulating', 'conceptualizing'];
     } else if (definition.includes('person who') || definition.includes('one who')) {
       // Likely a noun (person)
-      return complexity === 'simple' ? ['person', 'worker', 'helper'] :
-             complexity === 'moderate' ? ['individual', 'specialist', 'expert'] :
-             ['practitioner', 'professional', 'theorist'];
+      return complexity === 'simple'
+        ? ['person', 'worker', 'helper']
+        : complexity === 'moderate'
+          ? ['individual', 'specialist', 'expert']
+          : ['practitioner', 'professional', 'theorist'];
     } else if (definition.includes('state of') || definition.includes('quality of')) {
       // Likely an abstract noun
-      return complexity === 'simple' ? ['feeling', 'state', 'thing'] :
-             complexity === 'moderate' ? ['condition', 'situation', 'quality'] :
-             ['phenomenon', 'characteristic', 'attribute'];
+      return complexity === 'simple'
+        ? ['feeling', 'state', 'thing']
+        : complexity === 'moderate'
+          ? ['condition', 'situation', 'quality']
+          : ['phenomenon', 'characteristic', 'attribute'];
     } else {
       // Default noun distractors
-      return complexity === 'simple' ? ['object', 'item', 'element'] :
-             complexity === 'moderate' ? ['component', 'factor', 'aspect'] :
-             ['constituent', 'parameter', 'variable'];
+      return complexity === 'simple'
+        ? ['object', 'item', 'element']
+        : complexity === 'moderate'
+          ? ['component', 'factor', 'aspect']
+          : ['constituent', 'parameter', 'variable'];
     }
   }
 
   /**
    * Extract contextual clues from sentence
    */
-  private extractContextualClues(sentence: string /* wordTerm: string */): string[] { // Removed unused parameter
+  private extractContextualClues(sentence: string /* wordTerm: string */): string[] {
+    // Removed unused parameter
     const clues: string[] = [];
-    
+
     // Look for defining words/phrases
     if (sentence.includes('means') || sentence.includes('refers to')) {
       clues.push('Look for definition clues in the sentence');
     }
-    
+
     if (sentence.includes('important') || sentence.includes('significant')) {
       clues.push('The sentence indicates importance or significance');
     }
-    
+
     if (sentence.includes('understanding') || sentence.includes('concept')) {
       clues.push('Focus on conceptual understanding');
     }
-    
+
     // Add general contextual guidance
     clues.push('Read the entire sentence for context');
     clues.push('Consider what word would make the most sense');
-    
+
     return clues;
   }
 
@@ -556,23 +636,26 @@ export class FillInTheBlankService {
   private calculateNaturalnessScore(sentence: string): number {
     // Simple heuristics for sentence naturalness
     let score = 50;
-    
+
     // Prefer reasonable sentence length
     if (sentence.length > 20 && sentence.length < 150) {
       score += 20;
     }
-    
+
     // Check for natural language patterns
     if (sentence.includes(' the ') || sentence.includes(' a ') || sentence.includes(' an ')) {
       score += 10;
     }
-    
+
     // Avoid overly complex structures in simple mode
     const complexWords = ['epistemological', 'paradigmatic', 'multifaceted'];
-    if (this.state.currentComplexity === 'simple' && complexWords.some(word => sentence.includes(word))) {
+    if (
+      this.state.currentComplexity === 'simple' &&
+      complexWords.some(word => sentence.includes(word))
+    ) {
       score -= 15;
     }
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
@@ -588,9 +671,21 @@ export class FillInTheBlankService {
       { pattern: 'The [WORD] is [ADJECTIVE]', complexity: 'simple', usage: 0 },
       { pattern: '[WORD] helps us understand [CONCEPT]', complexity: 'simple', usage: 0 },
       { pattern: 'Understanding [WORD] requires [ACTION]', complexity: 'moderate', usage: 0 },
-      { pattern: 'The significance of [WORD] becomes clear when [CONDITION]', complexity: 'moderate', usage: 0 },
-      { pattern: 'While [WORD] traditionally denotes [DEFINITION], [CONTRAST]', complexity: 'complex', usage: 0 },
-      { pattern: 'The multifaceted nature of [WORD] encompasses [EXPLANATION]', complexity: 'complex', usage: 0 }
+      {
+        pattern: 'The significance of [WORD] becomes clear when [CONDITION]',
+        complexity: 'moderate',
+        usage: 0,
+      },
+      {
+        pattern: 'While [WORD] traditionally denotes [DEFINITION], [CONTRAST]',
+        complexity: 'complex',
+        usage: 0,
+      },
+      {
+        pattern: 'The multifaceted nature of [WORD] encompasses [EXPLANATION]',
+        complexity: 'complex',
+        usage: 0,
+      },
     ];
   }
 
@@ -612,13 +707,17 @@ export class FillInTheBlankService {
   /**
    * Update language pattern understanding
    */
-  private updateLanguagePatterns(wordId: string, sentenceComplexity: 'simple' | 'moderate' | 'complex', contextualAccuracy: number): void {
+  private updateLanguagePatterns(
+    wordId: string,
+    sentenceComplexity: 'simple' | 'moderate' | 'complex',
+    contextualAccuracy: number
+  ): void {
     this.state.languagePatterns.push({
       wordId,
       sentenceType: sentenceComplexity,
       comprehensionScore: contextualAccuracy,
       naturalness: this.calculateNaturalnessScore(''), // Would use actual sentence
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Keep only recent patterns (last 50)
@@ -634,7 +733,10 @@ export class FillInTheBlankService {
     const progressEntries = Object.values(wordProgress);
     if (progressEntries.length === 0) return 1.0;
 
-    const totalAttempts = progressEntries.reduce((sum, p) => sum + (p.timesCorrect || 0) + (p.timesIncorrect || 0), 0);
+    const totalAttempts = progressEntries.reduce(
+      (sum, p) => sum + (p.timesCorrect || 0) + (p.timesIncorrect || 0),
+      0
+    );
     const totalCorrect = progressEntries.reduce((sum, p) => sum + (p.timesCorrect || 0), 0);
 
     return totalAttempts > 0 ? totalCorrect / totalAttempts : 1.0;
@@ -654,7 +756,7 @@ export class FillInTheBlankService {
       sentencePatterns: [],
       contextualStrategies: [],
       languagePatterns: [],
-      analyticsBuffer: []
+      analyticsBuffer: [],
     };
     logger.debug('📝 Fill in the Blank service reset');
   }

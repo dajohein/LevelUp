@@ -1,6 +1,6 @@
 /**
  * AI Challenge Configuration
- * 
+ *
  * Centralized configuration for AI enhancements in challenge modes
  */
 
@@ -19,7 +19,7 @@ const DEFAULT_CONFIG: AIChallengConfig = {
   adaptationSensitivity: 0.6, // Moderate adaptation speed
   fallbackBehavior: 'graceful', // Always fall back to baseline
   performanceTracking: true, // Track performance metrics
-  debugLogging: false // Disable debug logging in production
+  debugLogging: false, // Disable debug logging in production
 };
 
 class AIConfigManager {
@@ -37,7 +37,7 @@ class AIConfigManager {
    */
   updateConfig(updates: Partial<AIChallengConfig>): void {
     this.config = { ...this.config, ...updates };
-    
+
     // Update the challenge AI integrator
     import('./challengeAIIntegrator').then(({ challengeAIIntegrator }) => {
       challengeAIIntegrator.setAIEnabled(this.config.enabled);
@@ -58,7 +58,7 @@ class AIConfigManager {
    */
   resetToDefaults(): void {
     this.config = { ...DEFAULT_CONFIG };
-    
+
     import('./challengeAIIntegrator').then(({ challengeAIIntegrator }) => {
       challengeAIIntegrator.setAIEnabled(this.config.enabled);
     });
@@ -79,7 +79,7 @@ class AIConfigManager {
     return {
       aiEnhanced: { sessions: 0, avgAccuracy: 0, avgTime: 0 },
       baseline: { sessions: 0, avgAccuracy: 0, avgTime: 0 },
-      improvement: { accuracy: 0, time: 0 }
+      improvement: { accuracy: 0, time: 0 },
     };
   }
 

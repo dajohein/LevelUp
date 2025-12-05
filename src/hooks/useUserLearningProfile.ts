@@ -5,7 +5,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { UserLearningProfileStorage, type UserLearningProfile } from '../services/storage/userLearningProfile';
+import {
+  UserLearningProfileStorage,
+  type UserLearningProfile,
+} from '../services/storage/userLearningProfile';
 import { logger } from '../services/logger';
 
 interface UseUserLearningProfileReturn {
@@ -38,31 +41,34 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
     try {
       setIsLoading(true);
       setError(null);
-      
+
       logger.debug('Starting profile load with timeout...', { userId });
-      
+
       // Add timeout to prevent hanging
       const loadWithTimeout = Promise.race([
         storage.loadProfile(userId),
-        new Promise<null>((_, reject) => 
+        new Promise<null>((_, reject) =>
           setTimeout(() => reject(new Error('Profile loading timed out after 10 seconds')), 10000)
-        )
+        ),
       ]);
-      
+
       let profileData = await loadWithTimeout;
       logger.debug('Profile load completed', { userId, hasData: !!profileData });
-      
+
       // If no profile exists, create an initial one
       if (!profileData) {
         logger.info('No learning profile found, creating initial profile', { userId });
         try {
           const createWithTimeout = Promise.race([
             storage.createInitialProfile(userId),
-            new Promise<never>((_, reject) => 
-              setTimeout(() => reject(new Error('Profile creation timed out after 10 seconds')), 10000)
-            )
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () => reject(new Error('Profile creation timed out after 10 seconds')),
+                10000
+              )
+            ),
           ]);
-          
+
           profileData = await createWithTimeout;
           logger.info('Initial profile created successfully', { userId, profileData });
         } catch (createError) {
@@ -70,7 +76,7 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
           throw createError;
         }
       }
-      
+
       setProfile(profileData);
       logger.debug('Profile set in state', { userId, hasProfile: !!profileData });
     } catch (err) {
@@ -81,29 +87,32 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
     }
   }, [userId, storage]);
 
-  const updateProfile = useCallback(async (updates: Partial<UserLearningProfile>): Promise<boolean> => {
-    if (!userId || !profile) return false;
+  const updateProfile = useCallback(
+    async (updates: Partial<UserLearningProfile>): Promise<boolean> => {
+      if (!userId || !profile) return false;
 
-    try {
-      setError(null);
-      const updated = { 
-        ...profile, 
-        ...updates, 
-        metadata: {
-          ...profile.metadata,
-          ...updates.metadata,
-          lastUpdated: new Date()
-        }
-      };
-      await storage.saveProfile(userId, updated);
-      setProfile(updated);
-      return true;
-    } catch (err) {
-      logger.error('Failed to update learning profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
-      return false;
-    }
-  }, [userId, profile, storage]);
+      try {
+        setError(null);
+        const updated = {
+          ...profile,
+          ...updates,
+          metadata: {
+            ...profile.metadata,
+            ...updates.metadata,
+            lastUpdated: new Date(),
+          },
+        };
+        await storage.saveProfile(userId, updated);
+        setProfile(updated);
+        return true;
+      } catch (err) {
+        logger.error('Failed to update learning profile:', err);
+        setError(err instanceof Error ? err.message : 'Failed to update profile');
+        return false;
+      }
+    },
+    [userId, profile, storage]
+  );
 
   const refreshProfile = useCallback(async () => {
     if (!userId) return;
@@ -111,7 +120,7 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
     try {
       setIsRefreshing(true);
       setError(null);
-      
+
       // Use the new refresh method from storage
       const refreshedProfile = await storage.refreshProfile(userId);
       if (refreshedProfile) {
@@ -135,7 +144,7 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
     try {
       setIsResetting(true);
       setError(null);
-      
+
       // Use the new reset method from storage
       const newProfile = await storage.resetProfile(userId);
       setProfile(newProfile);
@@ -174,6 +183,6 @@ export const useUserLearningProfile = (userId: string): UseUserLearningProfileRe
     resetProfile,
     clearProfile,
     isRefreshing,
-    isResetting
+    isResetting,
   };
 };

@@ -17,26 +17,26 @@ export const testSimplifiedBatching = async () => {
     issues: [] as string[],
     recommendation: '',
     batchingActive: false,
-    backgroundAutoSaveActive: false
+    backgroundAutoSaveActive: false,
   };
 
   try {
     // Get initial analytics
     results.beforeStats = await storageCoordinator.getAnalytics();
     const initialStatus = storageCoordinator.getStatus();
-    
+
     logger.info('📊 Initial state:', {
       backgroundAutoSave: initialStatus.enabled,
-      pendingChanges: initialStatus.pendingChanges
+      pendingChanges: initialStatus.pendingChanges,
     });
 
     // Test intelligent action batching by dispatching related actions
     logger.info('🔄 Testing intelligent action batching...');
-    
+
     // Monitor for batch messages
     let batchCount = 0;
     const originalDebug = console.debug;
-    console.debug = function(...args) {
+    console.debug = function (...args) {
       if (args[0]?.includes('Batched') && args[0]?.includes('related actions')) {
         batchCount++;
       }
@@ -49,7 +49,7 @@ export const testSimplifiedBatching = async () => {
       store.dispatch({ type: 'game/checkAnswer', payload: 'correct' });
       store.dispatch({ type: 'session/incrementWordsCompleted' });
       store.dispatch({ type: 'session/addCorrectAnswer', payload: {} });
-      
+
       // Small delay between sets
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -66,12 +66,12 @@ export const testSimplifiedBatching = async () => {
     logger.info('📊 After actions:', {
       batchMessagesDetected: batchCount,
       pendingChanges: afterActionsStatus.pendingChanges,
-      lastActionTime: new Date(afterActionsStatus.lastActionTime).toLocaleTimeString()
+      lastActionTime: new Date(afterActionsStatus.lastActionTime).toLocaleTimeString(),
     });
 
     // Test background auto-save
     logger.info('🤖 Testing background auto-save...');
-    
+
     // Add more actions to test queue buildup
     for (let i = 0; i < 5; i++) {
       store.dispatch({ type: 'session/addCorrectAnswer', payload: {} });
@@ -81,17 +81,17 @@ export const testSimplifiedBatching = async () => {
     const afterQueueStatus = storageCoordinator.getStatus();
     logger.info('📊 After queue test:', {
       pendingChanges: afterQueueStatus.pendingChanges,
-      isProcessing: afterQueueStatus.isProcessing
+      isProcessing: afterQueueStatus.isProcessing,
     });
 
     // Force save to test immediate functionality
     logger.info('🚀 Testing force save...');
     await storageCoordinator.forceSave();
-    
+
     const afterForceSaveStatus = storageCoordinator.getStatus();
     logger.info('📊 After force save:', {
       pendingChanges: afterForceSaveStatus.pendingChanges,
-      isProcessing: afterForceSaveStatus.isProcessing
+      isProcessing: afterForceSaveStatus.isProcessing,
     });
 
     // Get final analytics
@@ -118,15 +118,15 @@ export const testSimplifiedBatching = async () => {
 
     // Check for improvements
     results.success = results.issues.length === 0;
-    
+
     if (results.success) {
-      results.recommendation = 'Simplified storage system working perfectly! Background auto-save and intelligent batching both active.';
+      results.recommendation =
+        'Simplified storage system working perfectly! Background auto-save and intelligent batching both active.';
       logger.info('🎉 All tests passed - simplified storage system working correctly');
     } else {
       results.recommendation = `Issues detected: ${results.issues.join(', ')}. Check console for batch messages and background auto-save status.`;
       logger.warn('⚠️ Some issues detected:', results.issues);
     }
-
   } catch (error) {
     logger.error('❌ Test failed:', error);
     results.issues.push(`Test execution failed: ${error}`);
@@ -142,23 +142,26 @@ export const testBatchingOptimization = testSimplifiedBatching;
 // Simple status check function
 export const checkStorageSystemStatus = () => {
   const status = storageCoordinator.getStatus();
-  const backgroundAutoSave = (typeof window !== 'undefined') ? (window as any).__BACKGROUND_AUTOSAVE__ : null;
-  
+  const backgroundAutoSave =
+    typeof window !== 'undefined' ? (window as any).__BACKGROUND_AUTOSAVE__ : null;
+
   console.log('🔍 Storage System Status:');
   console.table({
     'Background Auto-Save Enabled': status.enabled,
     'Pending Changes': status.pendingChanges,
     'Is Processing': status.isProcessing,
-    'Last Action': status.lastActionTime ? new Date(status.lastActionTime).toLocaleTimeString() : 'None',
-    'Auto-Save Instance Available': !!backgroundAutoSave
+    'Last Action': status.lastActionTime
+      ? new Date(status.lastActionTime).toLocaleTimeString()
+      : 'None',
+    'Auto-Save Instance Available': !!backgroundAutoSave,
   });
 
   if (backgroundAutoSave) {
     console.log('🤖 Background Auto-Save Config:');
     console.table({
-      'Interval': status.config?.interval + 'ms',
+      Interval: status.config?.interval + 'ms',
       'Max Pending Actions': status.config?.maxPendingActions,
-      'Idle Threshold': status.config?.idleThreshold + 'ms'
+      'Idle Threshold': status.config?.idleThreshold + 'ms',
     });
   }
 

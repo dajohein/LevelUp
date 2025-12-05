@@ -1,6 +1,6 @@
 /**
  * AI-Enhanced Word Service
- * 
+ *
  * Extends the enhanced word service with AI-driven adaptive learning capabilities:
  * - Real-time difficulty adjustment based on cognitive load
  * - Dynamic quiz mode switching based on performance patterns
@@ -18,12 +18,12 @@ import {
   AIQuizModeOverride,
   createLearningSession,
   selectWordsForReview,
-  createWordGroups
+  createWordGroups,
 } from './spacedRepetitionService';
-import { 
-  adaptiveLearningEngine, 
+import {
+  adaptiveLearningEngine,
   AdaptiveLearningDecision,
-  LearningEngineConfig
+  LearningEngineConfig,
 } from './adaptiveLearningEngine';
 import { AILearningCoach } from './ai/learningCoach';
 import { PatternRecognizer } from './analytics/patternRecognizer';
@@ -81,9 +81,9 @@ export class AIEnhancedWordService {
       accuracy: 0,
       responseTime: 0,
       consecutiveErrors: 0,
-      consecutiveSuccess: 0
+      consecutiveSuccess: 0,
     },
-    isAIEnabled: false
+    isAIEnabled: false,
   };
 
   constructor() {
@@ -98,23 +98,23 @@ export class AIEnhancedWordService {
       const patternRecognizer = new PatternRecognizer(enhancedStorage);
       const predictiveAnalytics = new PredictiveAnalytics(enhancedStorage);
       const aiCoach = new AILearningCoach(enhancedStorage, patternRecognizer, predictiveAnalytics);
-      
+
       const aiConfig: Partial<LearningEngineConfig> = {
         enableAIControl: true,
         interventionThreshold: 0.6,
         difficultyAdjustmentRate: 0.2,
-        adaptationSensitivity: 0.8
+        adaptationSensitivity: 0.8,
       };
 
       // Store AI coach and config for potential future use
-      logger.debug('AI components initialized:', { 
-        coach: !!aiCoach, 
-        config: aiConfig.enableAIControl 
+      logger.debug('AI components initialized:', {
+        coach: !!aiCoach,
+        config: aiConfig.enableAIControl,
       });
 
       this.state.aiEngine = adaptiveLearningEngine;
       this.state.isAIEnabled = true;
-      
+
       logger.debug('✅ AI learning engine initialized');
     } catch (error) {
       logger.error('Failed to initialize AI learning engine:', error);
@@ -133,7 +133,7 @@ export class AIEnhancedWordService {
   ): Promise<boolean> {
     try {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      
+
       logger.debug(
         `🚀 Initializing AI-enhanced learning session for ${languageCode}${moduleId ? `/${moduleId}` : ''}`
       );
@@ -151,17 +151,17 @@ export class AIEnhancedWordService {
       // Create base learning session
       const wordGroups = createWordGroups(words, wordProgress);
       const targetGroup = wordGroups.find(group => group.words.length > 0);
-      
+
       if (!targetGroup) {
         logger.warn('No suitable word group found');
         return false;
       }
 
       const reviewWords = selectWordsForReview(words, wordProgress, 3);
-      
+
       // Generate AI overrides if AI is enabled
       let aiOverrides: Map<string, AIQuizModeOverride> | undefined;
-      
+
       if (this.state.isAIEnabled && this.state.aiEngine) {
         aiOverrides = await this.generateAIOverrides(
           [...targetGroup.words, ...reviewWords],
@@ -181,7 +181,7 @@ export class AIEnhancedWordService {
       // Enhance words with AI decisions
       const enhancedWords = interleavedWords.map(wordData => ({
         ...wordData,
-        aiDecision: undefined // Will be populated as we progress
+        aiDecision: undefined, // Will be populated as we progress
       }));
 
       this.state = {
@@ -199,8 +199,8 @@ export class AIEnhancedWordService {
           accuracy: 0,
           responseTime: 0,
           consecutiveErrors: 0,
-          consecutiveSuccess: 0
-        }
+          consecutiveSuccess: 0,
+        },
       };
 
       // Track session start
@@ -208,7 +208,7 @@ export class AIEnhancedWordService {
         sessionType: session.sessionType,
         totalWords: interleavedWords.length,
         groupWords: session.words.length,
-        reviewWords: session.reviewWords.length
+        reviewWords: session.reviewWords.length,
       });
 
       logger.debug(`✅ AI-enhanced learning session initialized:`, {
@@ -216,7 +216,7 @@ export class AIEnhancedWordService {
         totalWords: interleavedWords.length,
         groupWords: session.words.length,
         reviewWords: session.reviewWords.length,
-        aiEnabled: this.state.isAIEnabled
+        aiEnabled: this.state.isAIEnabled,
       });
 
       return true;
@@ -261,7 +261,7 @@ export class AIEnhancedWordService {
       try {
         const context = this.buildAIContext(word);
         const mastery = this.getCurrentMastery(word.id);
-        
+
         // Use the full selectOptimalQuizMode method that returns AdaptiveLearningDecision
         aiDecision = await this.state.aiEngine.selectOptimalQuizMode(
           context,
@@ -275,7 +275,7 @@ export class AIEnhancedWordService {
           quizMode = aiDecision.quizMode;
           logger.debug(`🤖 AI overrode quiz mode: ${quizMode}`, {
             reasoning: aiDecision.reasoning,
-            confidence: aiDecision.confidence
+            confidence: aiDecision.confidence,
           });
         }
 
@@ -288,7 +288,6 @@ export class AIEnhancedWordService {
         // Update word data with AI decision
         currentWordData.aiDecision = aiDecision;
         currentWordData.quizMode = quizMode;
-
       } catch (error) {
         logger.error('AI decision failed, using default:', error);
       }
@@ -309,7 +308,7 @@ export class AIEnhancedWordService {
       wordType: type,
       aiDecision,
       shouldShowIntervention,
-      interventionMessage
+      interventionMessage,
     };
   }
 
@@ -335,16 +334,16 @@ export class AIEnhancedWordService {
     aiRecommendations?: any[];
   }> {
     if (!this.state.currentSession || !this.state.sessionWords.length) {
-      return { 
+      return {
         correct: false,
         nextQuizMode: 'multiple-choice' as const,
         aiDecision: {
           quizMode: 'multiple-choice' as const,
           difficultyAdjustment: 0,
           reasoning: ['Session not active'],
-          confidence: 1.0
+          confidence: 1.0,
         },
-        isSessionComplete: true
+        isSessionComplete: true,
       };
     }
 
@@ -359,7 +358,7 @@ export class AIEnhancedWordService {
         timeSpent,
         quizMode: currentWordData.quizMode,
         responseTime,
-        hintsUsed
+        hintsUsed,
       });
 
       // Update performance metrics
@@ -374,7 +373,7 @@ export class AIEnhancedWordService {
           timeSpent,
           hintsUsed,
           difficulty: currentWordData.difficulty,
-          isReviewWord: currentWordData.type === 'review'
+          isReviewWord: currentWordData.type === 'review',
         }
       );
 
@@ -383,7 +382,7 @@ export class AIEnhancedWordService {
         correct: isCorrect,
         time: timeSpent,
         mode: currentWordData.quizMode,
-        aiDecision: !!currentWordData.aiDecision
+        aiDecision: !!currentWordData.aiDecision,
       });
     }
 
@@ -395,16 +394,16 @@ export class AIEnhancedWordService {
 
     if (isSessionComplete) {
       await this.completeAISession();
-      return { 
+      return {
         correct: isCorrect,
         nextQuizMode: 'multiple-choice' as const,
         aiDecision: {
           quizMode: 'multiple-choice' as const,
           difficultyAdjustment: 0,
           reasoning: ['Session complete'],
-          confidence: 1.0
+          confidence: 1.0,
         },
-        isSessionComplete: true
+        isSessionComplete: true,
       };
     }
 
@@ -417,7 +416,7 @@ export class AIEnhancedWordService {
       try {
         const context = this.buildAIContext();
         const interventionCheck = await this.state.aiEngine.shouldIntervene(context);
-        
+
         if (interventionCheck.shouldIntervene) {
           shouldIntervene = true;
           intervention = interventionCheck.intervention;
@@ -425,14 +424,13 @@ export class AIEnhancedWordService {
 
         // Get personalized recommendations
         aiRecommendations = await this.state.aiEngine.getPersonalizedRecommendations(context);
-
       } catch (error) {
         logger.error('AI intervention check failed:', error);
       }
     }
 
     const nextWord = await this.getCurrentWord();
-    const nextQuizMode = nextWord?.quizMode || 'multiple-choice' as const;
+    const nextQuizMode = nextWord?.quizMode || ('multiple-choice' as const);
 
     return {
       correct: isCorrect,
@@ -441,12 +439,12 @@ export class AIEnhancedWordService {
         quizMode: nextQuizMode,
         difficultyAdjustment: 0,
         reasoning: aiRecommendations.map(r => r.message || r.type || 'AI recommendation'),
-        confidence: 0.8
+        confidence: 0.8,
       },
       isSessionComplete,
       shouldIntervene,
       intervention,
-      aiRecommendations
+      aiRecommendations,
     };
   }
 
@@ -466,33 +464,34 @@ export class AIEnhancedWordService {
 
     // For now, generate basic overrides based on performance patterns
     // In a full implementation, this would use historical data and ML models
-    
+
     for (const word of words) {
       const progress = wordProgress[word.id];
       const mastery = progress?.xp || 0;
-      
+
       // Calculate derived metrics from existing WordProgress data
       const totalAttempts = (progress?.timesCorrect || 0) + (progress?.timesIncorrect || 0);
-      const calculatedAccuracy = totalAttempts > 0 ? (progress?.timesCorrect || 0) / totalAttempts : 0;
+      const calculatedAccuracy =
+        totalAttempts > 0 ? (progress?.timesCorrect || 0) / totalAttempts : 0;
       const recentErrors = progress?.timesIncorrect || 0;
-      
+
       // Example: Force multiple choice for words with recent failures
       if (recentErrors > 2 && calculatedAccuracy < 0.5) {
         overrides.set(word.id, {
           quizMode: 'multiple-choice',
           reasoning: ['Recent failures detected - using supportive mode'],
           confidence: 0.8,
-          source: 'ai-support'
+          source: 'ai-support',
         });
       }
-      
+
       // Example: Challenge high-mastery words
       else if (mastery > 80 && calculatedAccuracy > 0.9 && totalAttempts > 3) {
         overrides.set(word.id, {
           quizMode: 'open-answer',
           reasoning: ['High mastery with excellent accuracy - providing challenge'],
           confidence: 0.75,
-          source: 'ai-optimization'
+          source: 'ai-optimization',
         });
       }
     }
@@ -510,7 +509,7 @@ export class AIEnhancedWordService {
       languageCode: this.state.currentLanguageCode || 'unknown',
       sessionId: this.state.sessionId,
       sessionEvents: this.state.sessionEvents,
-      currentPerformance: this.state.performanceMetrics
+      currentPerformance: this.state.performanceMetrics,
     };
   }
 
@@ -520,16 +519,18 @@ export class AIEnhancedWordService {
   private updatePerformanceMetrics(isCorrect: boolean, responseTime: number): void {
     const results = this.state.sessionResults;
     const recentResults = results.slice(-10); // Last 10 answers
-    
+
     // Update accuracy
-    this.state.performanceMetrics.accuracy = recentResults.length > 0 
-      ? recentResults.filter(r => r.isCorrect).length / recentResults.length 
-      : 0;
+    this.state.performanceMetrics.accuracy =
+      recentResults.length > 0
+        ? recentResults.filter(r => r.isCorrect).length / recentResults.length
+        : 0;
 
     // Update average response time
-    this.state.performanceMetrics.responseTime = recentResults.length > 0
-      ? recentResults.reduce((sum, r) => sum + r.responseTime, 0) / recentResults.length
-      : responseTime;
+    this.state.performanceMetrics.responseTime =
+      recentResults.length > 0
+        ? recentResults.reduce((sum, r) => sum + r.responseTime, 0) / recentResults.length
+        : responseTime;
 
     // Update streak counters
     if (isCorrect) {
@@ -553,8 +554,8 @@ export class AIEnhancedWordService {
       sessionId: this.state.sessionId,
       data: {
         languageCode: this.state.currentLanguageCode,
-        ...data
-      }
+        ...data,
+      },
     };
 
     this.state.sessionEvents.push(event);
@@ -566,25 +567,26 @@ export class AIEnhancedWordService {
   private getCurrentMastery(wordId: string): number {
     // Calculate mastery based on existing data in session results
     const wordResults = this.state.sessionResults.filter(r => r.wordId === wordId);
-    
+
     if (wordResults.length === 0) {
       return 0.5; // Default moderate mastery for new words
     }
-    
+
     const correctCount = wordResults.filter(r => r.isCorrect).length;
     const accuracy = correctCount / wordResults.length;
-    const avgResponseTime = wordResults.reduce((sum, r) => sum + r.responseTime, 0) / wordResults.length;
-    
+    const avgResponseTime =
+      wordResults.reduce((sum, r) => sum + r.responseTime, 0) / wordResults.length;
+
     // Combine accuracy and speed for mastery score (0-1)
     let mastery = accuracy * 0.7; // 70% weight on accuracy
-    
+
     // Bonus for quick responses (under 3 seconds)
     if (avgResponseTime < 3000) {
       mastery += 0.2;
     } else if (avgResponseTime > 8000) {
       mastery -= 0.1; // Penalty for very slow responses
     }
-    
+
     return Math.max(0, Math.min(1, mastery));
     return 50;
   }
@@ -633,7 +635,7 @@ export class AIEnhancedWordService {
         sessionDuration: Date.now() - this.state.sessionStartTime,
         totalWords: this.state.sessionWords.length,
         accuracy: this.state.performanceMetrics.accuracy,
-        averageResponseTime: this.state.performanceMetrics.responseTime
+        averageResponseTime: this.state.performanceMetrics.responseTime,
       });
 
       // Analyze session performance
@@ -646,11 +648,11 @@ export class AIEnhancedWordService {
       if (this.state.isAIEnabled && this.state.aiEngine) {
         const context = this.buildAIContext();
         const recommendations = await this.state.aiEngine.getPersonalizedRecommendations(context);
-        
+
         logger.debug('🤖 AI session analysis completed', {
           recommendations: recommendations.length,
           accuracy: this.state.performanceMetrics.accuracy,
-          aiInterventions: this.state.sessionWords.filter(w => w.aiDecision).length
+          aiInterventions: this.state.sessionWords.filter(w => w.aiDecision).length,
         });
       }
 
@@ -658,9 +660,8 @@ export class AIEnhancedWordService {
         accuracy: analysis.averageAccuracy,
         wordsLearned: analysis.wordsLearned,
         fastestMode: analysis.fastestModeCompletion,
-        aiDecisions: this.state.sessionWords.filter(w => w.aiDecision).length
+        aiDecisions: this.state.sessionWords.filter(w => w.aiDecision).length,
       });
-
     } catch (error) {
       logger.error('Failed to complete AI session analysis:', error);
     }
@@ -683,7 +684,7 @@ export class AIEnhancedWordService {
       accuracy: this.state.performanceMetrics.accuracy,
       isComplete: this.state.currentWordIndex >= this.state.sessionWords.length,
       aiDecisions: this.state.sessionWords.filter(w => w.aiDecision).length,
-      sessionDuration: Date.now() - this.state.sessionStartTime
+      sessionDuration: Date.now() - this.state.sessionStartTime,
     };
   }
 

@@ -1,5 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { selectWordForRegularSession, selectWordForMixedPractice } from '../services/wordSelectionManager';
+import {
+  selectWordForRegularSession,
+  selectWordForMixedPractice,
+} from '../services/wordSelectionManager';
 import { calculateMasteryGain } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
@@ -44,7 +47,7 @@ const persistedState = loadPersistedState();
 /**
  * Game state persistence is handled by the persistence middleware.
  * This ensures centralized, coordinated saves with proper debouncing.
- * 
+ *
  * Architecture: Redux State → Persistence Middleware → Storage Orchestrator → Storage Services
  */
 
@@ -74,16 +77,12 @@ export const gameSlice = createSlice({
       if (state.language) {
         // Use centralized word selection - create a unique session ID for game
         const sessionId = `game-session-${state.language}-${state.module || 'all'}`;
-        
+
         // Check if we're in mixed practice mode with active modules
         let result;
         if (!state.module) {
           // No specific module means mixed practice - check for active learning modules
-          result = selectWordForMixedPractice(
-            state.language,
-            state.wordProgress,
-            sessionId
-          );
+          result = selectWordForMixedPractice(state.language, state.wordProgress, sessionId);
         } else {
           // Regular module-specific selection
           result = selectWordForRegularSession(
@@ -102,25 +101,31 @@ export const gameSlice = createSlice({
           state.lastAnswer = undefined;
           state.capitalizationFeedback = undefined;
           state.lastWordId = result.word.id;
-          
+
           // Update recently used words list
           if (result.word.id) {
             const recentlyUsed = state.recentlyUsedWords || [];
             const maxRecentWords = 8; // Track last 8 words to prevent repetition
-            
+
             // Add current word to the beginning and limit the array size
-            const updatedRecent = [result.word.id, ...recentlyUsed.filter(id => id !== result.word.id)].slice(0, maxRecentWords);
+            const updatedRecent = [
+              result.word.id,
+              ...recentlyUsed.filter(id => id !== result.word.id),
+            ].slice(0, maxRecentWords);
             state.recentlyUsedWords = updatedRecent;
           }
         }
       }
     },
 
-    setCurrentWord: (state, action: PayloadAction<{
-      word: any;
-      options: string[];
-      quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-    }>) => {
+    setCurrentWord: (
+      state,
+      action: PayloadAction<{
+        word: any;
+        options: string[];
+        quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+      }>
+    ) => {
       const { word, options, quizMode } = action.payload;
       state.currentWord = word;
       state.currentOptions = options;
@@ -129,14 +134,17 @@ export const gameSlice = createSlice({
       state.lastAnswer = undefined;
       state.capitalizationFeedback = undefined;
       state.lastWordId = word?.id;
-      
+
       // Update recently used words list
       if (word?.id) {
         const recentlyUsed = state.recentlyUsedWords || [];
         const maxRecentWords = 8; // Track last 8 words to prevent repetition
-        
+
         // Add current word to the beginning and limit the array size
-        const updatedRecent = [word.id, ...recentlyUsed.filter(id => id !== word.id)].slice(0, maxRecentWords);
+        const updatedRecent = [word.id, ...recentlyUsed.filter(id => id !== word.id)].slice(
+          0,
+          maxRecentWords
+        );
         state.recentlyUsedWords = updatedRecent;
       }
     },
@@ -190,10 +198,10 @@ export const gameSlice = createSlice({
             lastPracticed: new Date().toISOString(),
             consecutiveCorrect: 0,
             longestStreak: 0,
-          }
+          },
         },
         learningPhase: 'introduction',
-        tags: []
+        tags: [],
       };
 
       // Calculate new mastery
@@ -232,10 +240,15 @@ export const gameSlice = createSlice({
             lastPracticed: new Date().toISOString(),
             timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
             timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            consecutiveCorrect: validation.isCorrect ? (directionData.consecutiveCorrect || 0) + 1 : 0,
-            longestStreak: validation.isCorrect 
-              ? Math.max((directionData.longestStreak || 0), (directionData.consecutiveCorrect || 0) + 1)
-              : (directionData.longestStreak || 0)
+            consecutiveCorrect: validation.isCorrect
+              ? (directionData.consecutiveCorrect || 0) + 1
+              : 0,
+            longestStreak: validation.isCorrect
+              ? Math.max(
+                  directionData.longestStreak || 0,
+                  (directionData.consecutiveCorrect || 0) + 1
+                )
+              : directionData.longestStreak || 0,
           };
         }
 
@@ -254,9 +267,13 @@ export const gameSlice = createSlice({
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
         const modeMultiplier =
-          state.quizMode === 'open-answer' ? 2 : 
-          state.quizMode === 'letter-scramble' ? 1.5 : 
-          state.quizMode === 'fill-in-the-blank' ? 1.7 : 1;
+          state.quizMode === 'open-answer'
+            ? 2
+            : state.quizMode === 'letter-scramble'
+              ? 1.5
+              : state.quizMode === 'fill-in-the-blank'
+                ? 1.7
+                : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
         const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
 
@@ -278,9 +295,12 @@ export const gameSlice = createSlice({
      * Session updates should be handled by dispatching handleAnswerSubmission separately
      * This reduces the number of actions but keeps concerns separated
      */
-    submitAnswer: (state, action: PayloadAction<{
-      answer: string;
-    }>) => {
+    submitAnswer: (
+      state,
+      action: PayloadAction<{
+        answer: string;
+      }>
+    ) => {
       if (!state.currentWord) return;
 
       const { answer } = action.payload;
@@ -320,15 +340,15 @@ export const gameSlice = createSlice({
             timesCorrect: 0,
             timesIncorrect: 0,
             xp: 0,
-            lastPracticed: new Date().toISOString()
+            lastPracticed: new Date().toISOString(),
           },
           'definition-to-term': {
             timesCorrect: 0,
             timesIncorrect: 0,
             xp: 0,
-            lastPracticed: new Date().toISOString()
-          }
-        }
+            lastPracticed: new Date().toISOString(),
+          },
+        },
       };
 
       // Calculate mastery gain using the enhanced system
@@ -378,9 +398,13 @@ export const gameSlice = createSlice({
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
         const modeMultiplier =
-          state.quizMode === 'open-answer' ? 2 : 
-          state.quizMode === 'letter-scramble' ? 1.5 : 
-          state.quizMode === 'fill-in-the-blank' ? 1.7 : 1;
+          state.quizMode === 'open-answer'
+            ? 2
+            : state.quizMode === 'letter-scramble'
+              ? 1.5
+              : state.quizMode === 'fill-in-the-blank'
+                ? 1.7
+                : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
         const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
 
@@ -413,12 +437,12 @@ export const gameSlice = createSlice({
       // Initialize first word
       const sessionId = `game-session-${languageCode}-all`;
       const result = selectWordForRegularSession(languageCode, state.wordProgress, sessionId);
-      
+
       if (result) {
         state.currentWord = result.word;
         state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term);
         state.lastWordId = result.word.id;
-        
+
         // Initialize recently used words with first word
         if (result.word.id) {
           state.recentlyUsedWords = [result.word.id];
@@ -447,13 +471,18 @@ export const gameSlice = createSlice({
       // Get new word if language is set
       if (preservedLanguage) {
         const sessionId = `game-session-${preservedLanguage}-${preservedModule || 'all'}`;
-        const result = selectWordForRegularSession(preservedLanguage, preservedProgress, sessionId, preservedModule || undefined);
-        
+        const result = selectWordForRegularSession(
+          preservedLanguage,
+          preservedProgress,
+          sessionId,
+          preservedModule || undefined
+        );
+
         if (result) {
           state.currentWord = result.word;
           state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term);
           state.lastWordId = result.word.id;
-          
+
           // Initialize recently used words with first word
           if (result.word.id) {
             state.recentlyUsedWords = [result.word.id];
@@ -469,16 +498,20 @@ export const gameSlice = createSlice({
         // Single word update: merge into existing progress
         state.wordProgress = {
           ...state.wordProgress,
-          [action.payload.wordId]: action.payload.progress
+          [action.payload.wordId]: action.payload.progress,
         };
         if (process.env.NODE_ENV === 'development') {
-          logger.debug(`Redux word progress updated: ${action.payload.wordId} -> total entries: ${Object.keys(state.wordProgress).length}`);
+          logger.debug(
+            `Redux word progress updated: ${action.payload.wordId} -> total entries: ${Object.keys(state.wordProgress).length}`
+          );
         }
       } else {
         // Full progress object: replace entirely
         state.wordProgress = action.payload;
         if (process.env.NODE_ENV === 'development') {
-          logger.debug(`Redux word progress replaced with ${Object.keys(action.payload).length} entries`);
+          logger.debug(
+            `Redux word progress replaced with ${Object.keys(action.payload).length} entries`
+          );
         }
       }
       // Don't call saveGameState here - let persistence middleware handle it
@@ -486,7 +519,15 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { nextWord, setCurrentWord, checkAnswer, submitAnswer, setLanguage, setCurrentModule, resetGame, updateWordProgress } =
-  gameSlice.actions;
+export const {
+  nextWord,
+  setCurrentWord,
+  checkAnswer,
+  submitAnswer,
+  setLanguage,
+  setCurrentModule,
+  resetGame,
+  updateWordProgress,
+} = gameSlice.actions;
 
 export default gameSlice.reducer;

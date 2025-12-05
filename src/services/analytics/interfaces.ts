@@ -28,23 +28,23 @@ export enum AnalyticsEventType {
   SESSION_END = 'session_end',
   LEVEL_UP = 'level_up',
   ACHIEVEMENT_UNLOCKED = 'achievement_unlocked',
-  
+
   // Behavioral Events
   PAUSE_SESSION = 'pause_session',
   RESUME_SESSION = 'resume_session',
   SKIP_WORD = 'skip_word',
   HINT_USED = 'hint_used',
   RETRY_WORD = 'retry_word',
-  
+
   // Performance Events
   RESPONSE_TIME = 'response_time',
   ACCURACY_MEASUREMENT = 'accuracy_measurement',
   STREAK_ACHIEVEMENT = 'streak_achievement',
-  
+
   // Navigation Events
   MODULE_SWITCH = 'module_switch',
   LANGUAGE_SWITCH = 'language_switch',
-  SETTINGS_CHANGE = 'settings_change'
+  SETTINGS_CHANGE = 'settings_change',
 }
 
 // Real-time Metrics
@@ -95,14 +95,14 @@ export enum LearningStyle {
   AUDITORY = 'auditory',
   KINESTHETIC = 'kinesthetic',
   READING_WRITING = 'reading_writing',
-  MIXED = 'mixed'
+  MIXED = 'mixed',
 }
 
 export enum SessionPattern {
   SHORT_FREQUENT = 'short_frequent',
   LONG_INTENSIVE = 'long_intensive',
   MIXED = 'mixed',
-  IRREGULAR = 'irregular'
+  IRREGULAR = 'irregular',
 }
 
 // Pattern Recognition
@@ -126,7 +126,7 @@ export enum PatternType {
   CONSISTENCY_DROP = 'consistency_drop',
   TIME_PREFERENCE = 'time_preference',
   TOPIC_AFFINITY = 'topic_affinity',
-  FORGETTING_CURVE = 'forgetting_curve'
+  FORGETTING_CURVE = 'forgetting_curve',
 }
 
 // Predictive Analytics
@@ -157,9 +157,9 @@ export interface PredictionFactor {
 
 export enum ConfidenceLevel {
   LOW = 'low',
-  MEDIUM = 'medium', 
+  MEDIUM = 'medium',
   HIGH = 'high',
-  VERY_HIGH = 'very_high'
+  VERY_HIGH = 'very_high',
 }
 
 export enum PredictionType {
@@ -170,7 +170,7 @@ export enum PredictionType {
   OPTIMAL_TIME = 'optimal_time',
   WORD_MASTERY_TIME = 'word_mastery_time',
   SESSION_SUCCESS_RATE = 'session_success_rate',
-  RETENTION_LIKELIHOOD = 'retention_likelihood'
+  RETENTION_LIKELIHOOD = 'retention_likelihood',
 }
 
 // Analytics Services Interfaces
@@ -195,7 +195,10 @@ export interface IPatternRecognizer {
 export interface IPredictiveAnalytics {
   generatePredictions(userId: string, context: PredictionContext): Promise<Prediction[]>;
   trainModel(type: PredictionType, trainingData: AnalyticsEvent[]): Promise<void>;
-  optimizeLearningPath(userId: string, currentProgress: LearningMetrics): Promise<LearningRecommendation[]>;
+  optimizeLearningPath(
+    userId: string,
+    currentProgress: LearningMetrics
+  ): Promise<LearningRecommendation[]>;
 }
 
 export interface PredictionContext {
@@ -226,7 +229,7 @@ export enum RecommendationType {
   REVIEW_WORDS = 'review_words',
   FOCUS_AREA = 'focus_area',
   SESSION_LENGTH = 'session_length',
-  PRACTICE_TIME = 'practice_time'
+  PRACTICE_TIME = 'practice_time',
 }
 
 // Analytics Configuration
@@ -298,7 +301,7 @@ export enum InsightType {
   LEARNING_EFFICIENCY = 'learning_efficiency',
   ENGAGEMENT_PATTERN = 'engagement_pattern',
   DIFFICULTY_OPTIMIZATION = 'difficulty_optimization',
-  TIME_OPTIMIZATION = 'time_optimization'
+  TIME_OPTIMIZATION = 'time_optimization',
 }
 
 export enum ReportType {
@@ -306,7 +309,7 @@ export enum ReportType {
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
   CUSTOM = 'custom',
-  REAL_TIME = 'real_time'
+  REAL_TIME = 'real_time',
 }
 
 // Error Handling
@@ -322,5 +325,5 @@ export enum AnalyticsErrorType {
   PATTERN_DETECTION_FAILED = 'pattern_detection_failed',
   PREDICTION_ERROR = 'prediction_error',
   STORAGE_ERROR = 'storage_error',
-  INVALID_DATA = 'invalid_data'
+  INVALID_DATA = 'invalid_data',
 }

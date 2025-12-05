@@ -1,6 +1,6 @@
 /**
  * Enhanced Storage System - Main Exports
- * 
+ *
  * Backend-ready storage architecture with:
  * - Tiered storage (memory -> localStorage -> future remote)
  * - Smart caching with dependency invalidation
@@ -52,22 +52,25 @@ export const storageUtils = {
   async migrateFromOldStorage(): Promise<void> {
     try {
       console.log('🔄 Starting migration from old storage system...');
-      
+
       // Check if we need to migrate from localStorage directly
       const oldKeys = [
-        'de_progress', 'es_progress', 
-        'de_session', 'es_session',
-        'user_preferences', 'achievements'
+        'de_progress',
+        'es_progress',
+        'de_session',
+        'es_session',
+        'user_preferences',
+        'achievements',
       ];
-      
+
       let migratedCount = 0;
-      
+
       for (const oldKey of oldKeys) {
         const oldData = localStorage.getItem(oldKey);
         if (oldData) {
           try {
             const parsedData = JSON.parse(oldData);
-            
+
             // Determine new key format
             let newKey: string;
             if (oldKey.includes('progress')) {
@@ -77,17 +80,14 @@ export const storageUtils = {
             } else {
               newKey = oldKey; // Keep same key for preferences and achievements
             }
-            
+
             // Save to enhanced storage
-            const result = await enhancedStorage.saveWordProgress(
-              oldKey.split('_')[0], 
-              parsedData
-            );
-            
+            const result = await enhancedStorage.saveWordProgress(oldKey.split('_')[0], parsedData);
+
             if (result.success) {
               migratedCount++;
               console.log(`✅ Migrated ${oldKey} -> ${newKey}`);
-              
+
               // Remove old data after successful migration
               localStorage.removeItem(oldKey);
             }
@@ -96,12 +96,11 @@ export const storageUtils = {
           }
         }
       }
-      
+
       console.log(`🎉 Migration completed! Migrated ${migratedCount} items`);
-      
+
       // Save migration marker
       localStorage.setItem('storage_migration_completed', Date.now().toString());
-      
     } catch (error) {
       console.error('💥 Migration failed:', error);
       throw error;
@@ -131,10 +130,13 @@ export const storageUtils = {
 
     // Test write performance
     const writeStart = performance.now();
-    await enhancedStorage.saveWordProgress('test', testData.testValue.words.reduce((acc, word) => {
-      acc[word.id] = word;
-      return acc;
-    }, {} as any));
+    await enhancedStorage.saveWordProgress(
+      'test',
+      testData.testValue.words.reduce((acc, word) => {
+        acc[word.id] = word;
+        return acc;
+      }, {} as any)
+    );
     const writeTime = performance.now() - writeStart;
 
     // Test read performance
@@ -165,11 +167,11 @@ export const storageUtils = {
   }> {
     try {
       const analytics = await enhancedStorage.getStorageAnalytics();
-      
+
       if (!analytics.success) {
         throw new Error(analytics.error);
       }
-      
+
       const breakdown = {
         totalSize: analytics.data.performance.totalSize || 0,
         byLanguage: {} as Record<string, number>,
@@ -179,41 +181,41 @@ export const storageUtils = {
           'Session Data': 0,
           'Cache Data': 0,
           'ML Models': 0,
-          'Other': 0
-        }
+          Other: 0,
+        },
       };
-      
+
       // Extract language breakdown from usage stats
       const usage = analytics.data.usage;
       if (usage) {
         // Estimate size distribution
         const totalKeys = usage.totalKeys || 1;
         const avgSize = breakdown.totalSize / totalKeys;
-        
+
         breakdown.byType['Word Progress'] = (usage.progressKeys || 0) * avgSize;
         breakdown.byType['Analytics Data'] = (usage.analyticsKeys || 0) * avgSize;
         breakdown.byType['Session Data'] = (usage.sessionKeys || 0) * avgSize;
         breakdown.byType['Cache Data'] = (usage.cacheKeys || 0) * avgSize;
         breakdown.byType['ML Models'] = (usage.modelKeys || 0) * avgSize;
-        breakdown.byType['Other'] = breakdown.totalSize - 
-          breakdown.byType['Word Progress'] - 
-          breakdown.byType['Analytics Data'] - 
-          breakdown.byType['Session Data'] - 
-          breakdown.byType['Cache Data'] - 
+        breakdown.byType['Other'] =
+          breakdown.totalSize -
+          breakdown.byType['Word Progress'] -
+          breakdown.byType['Analytics Data'] -
+          breakdown.byType['Session Data'] -
+          breakdown.byType['Cache Data'] -
           breakdown.byType['ML Models'];
-        
+
         // Language breakdown estimation
         const languages = ['de', 'es']; // Known languages
         const avgPerLanguage = breakdown.byType['Word Progress'] / languages.length;
-        
+
         for (const lang of languages) {
           breakdown.byLanguage[lang] = avgPerLanguage;
         }
       }
-      
+
       console.log('📊 Storage breakdown:', breakdown);
       return breakdown;
-      
     } catch (error) {
       console.error('Failed to get storage breakdown:', error);
       return {

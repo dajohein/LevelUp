@@ -73,25 +73,29 @@ const BlankSpace = styled.span<{ isCorrect?: boolean; isError?: boolean }>`
   min-width: 120px;
   padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
   margin: 0 ${props => props.theme.spacing.xs};
-  border-bottom: 3px solid ${props => 
-    props.isCorrect ? props.theme.colors.success :
-    props.isError ? props.theme.colors.error :
-    props.theme.colors.primary
-  };
-  background-color: ${props => 
-    props.isCorrect ? `${props.theme.colors.success}15` :
-    props.isError ? `${props.theme.colors.error}15` :
-    'transparent'
-  };
+  border-bottom: 3px solid
+    ${props =>
+      props.isCorrect
+        ? props.theme.colors.success
+        : props.isError
+          ? props.theme.colors.error
+          : props.theme.colors.primary};
+  background-color: ${props =>
+    props.isCorrect
+      ? `${props.theme.colors.success}15`
+      : props.isError
+        ? `${props.theme.colors.error}15`
+        : 'transparent'};
   border-radius: ${props => props.theme.borderRadius.sm};
   transition: all 0.3s ease;
   text-align: center;
   font-weight: 600;
-  color: ${props => 
-    props.isCorrect ? props.theme.colors.success :
-    props.isError ? props.theme.colors.error :
-    props.theme.colors.text
-  };
+  color: ${props =>
+    props.isCorrect
+      ? props.theme.colors.success
+      : props.isError
+        ? props.theme.colors.error
+        : props.theme.colors.text};
 `;
 
 const QuestionPrompt = styled.div`
@@ -141,14 +145,13 @@ const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
     left: 0;
     width: 100%;
     height: 100%;
-    filter: ${props => 
-      props.filled 
-        ? 'none' 
-        : props.partial 
+    filter: ${props =>
+      props.filled
+        ? 'none'
+        : props.partial
           ? 'brightness(0.7) saturate(0.8)'
-          : 'grayscale(1) brightness(0.4)'
-    };
-    transform: ${props => props.filled || props.partial ? 'scale(1.1)' : 'scale(1)'};
+          : 'grayscale(1) brightness(0.4)'};
+    transform: ${props => (props.filled || props.partial ? 'scale(1.1)' : 'scale(1)')};
   }
 `;
 
@@ -161,12 +164,12 @@ const BrainContainer = styled.div`
 const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
   // Calculate progress within current level (0-100%)
   const progressInLevel = xp % 100;
-  
+
   // Calculate how many brains should be filled
   const brain1Filled = progressInLevel >= 33;
   const brain2Filled = progressInLevel >= 66;
   const brain3Filled = progressInLevel >= 99;
-  
+
   const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
   const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
   const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;
@@ -222,8 +225,8 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     if (!context?.sentence) {
       // If no context, just show the word as a simple translation request
       return {
-        beforeBlank: "",
-        afterBlank: ""
+        beforeBlank: '',
+        afterBlank: '',
       };
     }
 
@@ -233,7 +236,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       if (parts.length === 2) {
         return {
           beforeBlank: parts[0].trim(),
-          afterBlank: parts[1].trim()
+          afterBlank: parts[1].trim(),
         };
       }
     }
@@ -244,7 +247,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     let wordToReplace = word.toLowerCase().trim();
     let wordIndex = sentenceLower.indexOf(wordToReplace);
     let actualWordLength = word.length;
-    
+
     // If not found, try without articles
     if (wordIndex === -1 && /^(der|die|das|ein|eine)\s+/.test(word)) {
       const wordWithoutArticle = word.replace(/^(der|die|das|ein|eine)\s+/i, '').trim();
@@ -254,22 +257,22 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
         actualWordLength = wordWithoutArticle.length;
       }
     }
-    
+
     if (wordIndex !== -1) {
       // Found the word in the sentence, create the blank
       const before = String(sentence.substring(0, wordIndex)).trim();
       const after = String(sentence.substring(wordIndex + actualWordLength)).trim();
-      
-      return { 
+
+      return {
         beforeBlank: before,
-        afterBlank: after
+        afterBlank: after,
       };
     }
-    
+
     // Final fallback: show instruction without revealing answer
     return {
-      beforeBlank: "Complete the German sentence:",
-      afterBlank: ""
+      beforeBlank: 'Complete the German sentence:',
+      afterBlank: '',
     };
   };
 
@@ -281,11 +284,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     <Container>
       <ModeIndicator>Fill in the Blank</ModeIndicator>
 
-      {questionWord && (
-        <QuestionPrompt>
-          {questionWord}
-        </QuestionPrompt>
-      )}
+      {questionWord && <QuestionPrompt>{questionWord}</QuestionPrompt>}
 
       {context?.sentence && beforeBlank && afterBlank && (
         <ContextSection>
@@ -293,7 +292,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
           <SentenceContainer>
             <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
             <BlankSpace isCorrect={isCorrect} isError={isError}>
-              {showAnswer ? word : "_____"}
+              {showAnswer ? word : '_____'}
             </BlankSpace>
             <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
           </SentenceContainer>

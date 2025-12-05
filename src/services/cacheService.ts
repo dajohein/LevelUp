@@ -409,7 +409,7 @@ class LearningCacheService {
    */
   reloadAnalytics(): void {
     const now = Date.now();
-    
+
     // Prevent excessive reloads - only reload if cache is older than 30 seconds
     if (now - this.lastAnalyticsReload < this.ANALYTICS_CACHE_DURATION) {
       return;

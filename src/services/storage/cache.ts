@@ -1,6 +1,6 @@
 /**
  * Smart Cache Manager
- * 
+ *
  * Intelligent caching with dependency-based invalidation and predictive warming
  * Backend-ready: can be extended to work with distributed caches
  */
@@ -19,17 +19,17 @@ interface CacheEntry<T = any> {
 }
 
 interface CacheConfig {
-  maxSize: number;           // Maximum cache size in bytes
-  maxEntries: number;        // Maximum number of entries
-  defaultTtl: number;        // Default TTL in milliseconds
-  cleanupInterval: number;   // Cleanup interval in milliseconds
-  enableLRU: boolean;        // Enable LRU eviction
+  maxSize: number; // Maximum cache size in bytes
+  maxEntries: number; // Maximum number of entries
+  defaultTtl: number; // Default TTL in milliseconds
+  cleanupInterval: number; // Cleanup interval in milliseconds
+  enableLRU: boolean; // Enable LRU eviction
   enablePrediction: boolean; // Enable predictive cache warming
 }
 
 const DEFAULT_CACHE_CONFIG: CacheConfig = {
-  maxSize: 50 * 1024 * 1024,  // 50MB
-  maxEntries: 10000,           // 10k entries
+  maxSize: 50 * 1024 * 1024, // 50MB
+  maxEntries: 10000, // 10k entries
   defaultTtl: 60 * 60 * 1000, // 1 hour
   cleanupInterval: 5 * 60 * 1000, // 5 minutes
   enableLRU: true,
@@ -63,7 +63,7 @@ class SmartCacheManager implements CacheProvider {
    */
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.misses++;
       this.emitEvent('onCacheMiss', key);
@@ -127,7 +127,9 @@ class SmartCacheManager implements CacheProvider {
       this.stats.oldestEntry = now;
     }
 
-    logger.debug(`💾 Cached data for key: ${key} (size: ${size} bytes, deps: ${dependencies.join(', ')})`);
+    logger.debug(
+      `💾 Cached data for key: ${key} (size: ${size} bytes, deps: ${dependencies.join(', ')})`
+    );
   }
 
   /**
@@ -151,7 +153,7 @@ class SmartCacheManager implements CacheProvider {
     if (!dependentKeys) return;
 
     const keysToInvalidate = Array.from(dependentKeys);
-    
+
     for (const key of keysToInvalidate) {
       await this.invalidate(key);
     }
@@ -204,7 +206,7 @@ class SmartCacheManager implements CacheProvider {
     for (const key of keys) {
       // Use custom predictor or default pattern-based prediction
       const relatedKeys = predictor ? predictor(key) : this.predictRelatedKeys(key);
-      
+
       // Pre-load related keys that aren't already cached
       for (const relatedKey of relatedKeys) {
         if (!this.cache.has(relatedKey)) {
@@ -306,8 +308,10 @@ class SmartCacheManager implements CacheProvider {
    * Update memory usage statistics
    */
   private updateMemoryUsage(): void {
-    this.stats.memoryUsage = Array.from(this.cache.values())
-      .reduce((total, entry) => total + entry.size, 0);
+    this.stats.memoryUsage = Array.from(this.cache.values()).reduce(
+      (total, entry) => total + entry.size,
+      0
+    );
   }
 
   /**
@@ -321,7 +325,7 @@ class SmartCacheManager implements CacheProvider {
     if (languageMatch) {
       const [, prefix, lang] = languageMatch;
       const relatedPrefixes = ['progress', 'analytics', 'cache', 'session'];
-      
+
       for (const relatedPrefix of relatedPrefixes) {
         if (relatedPrefix !== prefix) {
           related.push(`${relatedPrefix}_${lang}`);
@@ -334,7 +338,7 @@ class SmartCacheManager implements CacheProvider {
     if (moduleMatch) {
       const [, prefix, lang, module] = moduleMatch;
       const relatedPrefixes = ['module', 'words', 'progress'];
-      
+
       for (const relatedPrefix of relatedPrefixes) {
         if (relatedPrefix !== prefix) {
           related.push(`${relatedPrefix}_${lang}_${module}`);
@@ -344,7 +348,12 @@ class SmartCacheManager implements CacheProvider {
 
     // Pattern 3: User-specific keys (e.g., "user_profile" -> "user_settings", "user_achievements")
     if (key.startsWith('user_')) {
-      const userRelated = ['user_profile', 'user_settings', 'user_achievements', 'user_preferences'];
+      const userRelated = [
+        'user_profile',
+        'user_settings',
+        'user_achievements',
+        'user_preferences',
+      ];
       related.push(...userRelated.filter(k => k !== key));
     }
 
@@ -421,7 +430,7 @@ class SmartCacheManager implements CacheProvider {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = undefined;
     }
-    
+
     this.cache.clear();
     this.dependencies.clear();
     this.eventListeners.clear();
@@ -431,5 +440,5 @@ class SmartCacheManager implements CacheProvider {
 // Export singleton instance with default configuration
 export const smartCache = new SmartCacheManager();
 
-// Export the class for custom instances  
+// Export the class for custom instances
 export { SmartCacheManager };

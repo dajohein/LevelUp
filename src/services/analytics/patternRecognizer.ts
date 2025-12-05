@@ -9,7 +9,7 @@ import {
   AnalyticsEventType,
   LearningPattern,
   PatternType,
-  RealTimeMetrics
+  RealTimeMetrics,
 } from './interfaces';
 import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { logger } from '../logger';
@@ -31,7 +31,10 @@ export class PatternRecognizer implements IPatternRecognizer {
     this.loadPatternHistory();
   }
 
-  async analyzePatterns(events: AnalyticsEvent[], timeframe = 24 * 60 * 60 * 1000): Promise<LearningPattern[]> {
+  async analyzePatterns(
+    events: AnalyticsEvent[],
+    timeframe = 24 * 60 * 60 * 1000
+  ): Promise<LearningPattern[]> {
     try {
       const recentEvents = events.filter(e => Date.now() - e.timestamp <= timeframe);
       const patterns: LearningPattern[] = [];
@@ -67,7 +70,7 @@ export class PatternRecognizer implements IPatternRecognizer {
     try {
       // Load historical metrics for comparison
       const historicalMetrics = await this.getHistoricalMetrics();
-      
+
       // Detect performance anomalies
       const performanceAnomaly = this.detectPerformanceAnomaly(metrics, historicalMetrics);
       if (performanceAnomaly) anomalies.push(performanceAnomaly);
@@ -91,10 +94,10 @@ export class PatternRecognizer implements IPatternRecognizer {
     try {
       // Update pattern detector weights based on recent accuracy
       await this.adjustDetectorWeights(newData);
-      
+
       // Train adaptive patterns based on user behavior
       await this.trainAdaptivePatterns(newData);
-      
+
       // Clean up old pattern data
       await this.cleanupOldPatterns();
 
@@ -111,44 +114,44 @@ export class PatternRecognizer implements IPatternRecognizer {
         type: PatternType.DIFFICULTY_SPIKE,
         detect: this.detectDifficultySpike.bind(this),
         confidence: 0.8,
-        minDataPoints: 10
+        minDataPoints: 10,
       },
       {
         type: PatternType.LEARNING_PLATEAU,
         detect: this.detectLearningPlateau.bind(this),
         confidence: 0.7,
-        minDataPoints: 15
+        minDataPoints: 15,
       },
       {
         type: PatternType.RAPID_IMPROVEMENT,
         detect: this.detectRapidImprovement.bind(this),
         confidence: 0.75,
-        minDataPoints: 8
+        minDataPoints: 8,
       },
       {
         type: PatternType.CONSISTENCY_DROP,
         detect: this.detectConsistencyDrop.bind(this),
         confidence: 0.8,
-        minDataPoints: 12
+        minDataPoints: 12,
       },
       {
         type: PatternType.TIME_PREFERENCE,
         detect: this.detectTimePreference.bind(this),
         confidence: 0.6,
-        minDataPoints: 20
+        minDataPoints: 20,
       },
       {
         type: PatternType.TOPIC_AFFINITY,
         detect: this.detectTopicAffinity.bind(this),
         confidence: 0.7,
-        minDataPoints: 15
+        minDataPoints: 15,
       },
       {
         type: PatternType.FORGETTING_CURVE,
         detect: this.detectForgettingCurve.bind(this),
         confidence: 0.8,
-        minDataPoints: 10
-      }
+        minDataPoints: 10,
+      },
     ];
   }
 
@@ -168,13 +171,15 @@ export class PatternRecognizer implements IPatternRecognizer {
 
     const difficultyIncrease = recentAvg - earlierAvg;
 
-    if (difficultyIncrease > 1.5) { // Significant difficulty spike
-      const failures = events.filter(e => 
-        e.type === AnalyticsEventType.WORD_FAILURE && 
-        e.timestamp >= difficultyEvents[difficultyEvents.length - 5].timestamp
+    if (difficultyIncrease > 1.5) {
+      // Significant difficulty spike
+      const failures = events.filter(
+        e =>
+          e.type === AnalyticsEventType.WORD_FAILURE &&
+          e.timestamp >= difficultyEvents[difficultyEvents.length - 5].timestamp
       );
 
-      const confidence = Math.min(0.9, 0.6 + (difficultyIncrease / 3) + (failures.length / 10));
+      const confidence = Math.min(0.9, 0.6 + difficultyIncrease / 3 + failures.length / 10);
 
       return {
         id: `difficulty_spike_${Date.now()}`,
@@ -184,12 +189,12 @@ export class PatternRecognizer implements IPatternRecognizer {
         recommendations: [
           'Consider reducing difficulty temporarily',
           'Review fundamental concepts',
-          'Increase practice frequency for challenging words'
+          'Increase practice frequency for challenging words',
         ],
         timeframe: {
           start: difficultyEvents[difficultyEvents.length - 5].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -197,7 +202,7 @@ export class PatternRecognizer implements IPatternRecognizer {
   }
 
   private detectLearningPlateau(events: AnalyticsEvent[]): LearningPattern | null {
-    const wordEvents = events.filter(e => 
+    const wordEvents = events.filter(e =>
       [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type)
     );
 
@@ -216,25 +221,27 @@ export class PatternRecognizer implements IPatternRecognizer {
 
     // Check if accuracy is flat (standard deviation < 0.1)
     const mean = accuracyPoints.reduce((a, b) => a + b, 0) / accuracyPoints.length;
-    const variance = accuracyPoints.reduce((sum, acc) => sum + Math.pow(acc - mean, 2), 0) / accuracyPoints.length;
+    const variance =
+      accuracyPoints.reduce((sum, acc) => sum + Math.pow(acc - mean, 2), 0) / accuracyPoints.length;
     const stdDev = Math.sqrt(variance);
 
-    if (stdDev < 0.1 && mean > 0.4 && mean < 0.8) { // Plateau detected
+    if (stdDev < 0.1 && mean > 0.4 && mean < 0.8) {
+      // Plateau detected
       return {
         id: `learning_plateau_${Date.now()}`,
         type: PatternType.LEARNING_PLATEAU,
-        confidence: 0.7 + (0.2 * (1 - stdDev * 10)), // Higher confidence for flatter plateau
+        confidence: 0.7 + 0.2 * (1 - stdDev * 10), // Higher confidence for flatter plateau
         description: `Learning plateau detected with ${(mean * 100).toFixed(1)}% accuracy over ${accuracyPoints.length} windows`,
         recommendations: [
           'Introduce new challenge types',
           'Mix in easier content to build confidence',
           'Try different learning approaches',
-          'Take a short break and return refreshed'
+          'Take a short break and return refreshed',
         ],
         timeframe: {
           start: recentEvents[0].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -242,7 +249,7 @@ export class PatternRecognizer implements IPatternRecognizer {
   }
 
   private detectRapidImprovement(events: AnalyticsEvent[]): LearningPattern | null {
-    const wordEvents = events.filter(e => 
+    const wordEvents = events.filter(e =>
       [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type)
     );
 
@@ -252,12 +259,17 @@ export class PatternRecognizer implements IPatternRecognizer {
     const recentEvents = wordEvents.slice(-4);
     const earlierEvents = wordEvents.slice(-8, -4);
 
-    const recentAccuracy = recentEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length / recentEvents.length;
-    const earlierAccuracy = earlierEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length / earlierEvents.length;
+    const recentAccuracy =
+      recentEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length /
+      recentEvents.length;
+    const earlierAccuracy =
+      earlierEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length /
+      earlierEvents.length;
 
     const improvement = recentAccuracy - earlierAccuracy;
 
-    if (improvement > 0.3) { // Significant improvement
+    if (improvement > 0.3) {
+      // Significant improvement
       return {
         id: `rapid_improvement_${Date.now()}`,
         type: PatternType.RAPID_IMPROVEMENT,
@@ -267,12 +279,12 @@ export class PatternRecognizer implements IPatternRecognizer {
           'Excellent progress! Consider increasing difficulty',
           'Maintain current learning approach',
           'Introduce new challenging topics',
-          'Set higher learning goals'
+          'Set higher learning goals',
         ],
         timeframe: {
           start: earlierEvents[0].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -292,7 +304,8 @@ export class PatternRecognizer implements IPatternRecognizer {
 
     const consistencyDrop = recentVariance / earlierVariance;
 
-    if (consistencyDrop > 2.0) { // Significant consistency drop
+    if (consistencyDrop > 2.0) {
+      // Significant consistency drop
       return {
         id: `consistency_drop_${Date.now()}`,
         type: PatternType.CONSISTENCY_DROP,
@@ -302,12 +315,12 @@ export class PatternRecognizer implements IPatternRecognizer {
           'Take a break to refocus',
           'Review study environment for distractions',
           'Consider shorter study sessions',
-          'Check if difficulty is appropriate'
+          'Check if difficulty is appropriate',
         ],
         timeframe: {
           start: responseTimeEvents[responseTimeEvents.length - 6].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -342,7 +355,8 @@ export class PatternRecognizer implements IPatternRecognizer {
     let significantData = false;
 
     hourlyPerformance.forEach((performance, hour) => {
-      if (performance.total >= 5) { // Sufficient data
+      if (performance.total >= 5) {
+        // Sufficient data
         significantData = true;
         const accuracy = performance.correct / performance.total;
         if (accuracy > bestAccuracy) {
@@ -356,17 +370,17 @@ export class PatternRecognizer implements IPatternRecognizer {
       return {
         id: `time_preference_${Date.now()}`,
         type: PatternType.TIME_PREFERENCE,
-        confidence: 0.6 + (bestAccuracy - 0.7) / 0.3 * 0.3,
+        confidence: 0.6 + ((bestAccuracy - 0.7) / 0.3) * 0.3,
         description: `Peak performance at ${bestHour}:00 with ${(bestAccuracy * 100).toFixed(1)}% accuracy`,
         recommendations: [
           `Schedule intensive learning sessions around ${bestHour}:00`,
           'Use peak performance times for challenging content',
-          'Consider lighter review during off-peak hours'
+          'Consider lighter review during off-peak hours',
         ],
         timeframe: {
           start: events[0].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -417,12 +431,12 @@ export class PatternRecognizer implements IPatternRecognizer {
         recommendations: [
           `Use ${bestTopic} topics to build confidence`,
           'Apply learning strategies from strong topics to weaker areas',
-          'Consider advanced content in favored topics'
+          'Consider advanced content in favored topics',
         ],
         timeframe: {
           start: events[0].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -451,14 +465,16 @@ export class PatternRecognizer implements IPatternRecognizer {
     wordMap.forEach((timestamps, word) => {
       if (timestamps.length >= 2) {
         totalWordsAnalyzed++;
-        const timeBetweenSuccess = timestamps[timestamps.length - 1] - timestamps[timestamps.length - 2];
+        const timeBetweenSuccess =
+          timestamps[timestamps.length - 1] - timestamps[timestamps.length - 2];
         const daysBetween = timeBetweenSuccess / (24 * 60 * 60 * 1000);
 
         // Check if word was forgotten (failed after previous success)
-        const recentFailures = events.filter(e => 
-          e.type === AnalyticsEventType.WORD_FAILURE &&
-          e.data.word === word &&
-          e.timestamp > timestamps[timestamps.length - 1]
+        const recentFailures = events.filter(
+          e =>
+            e.type === AnalyticsEventType.WORD_FAILURE &&
+            e.data.word === word &&
+            e.timestamp > timestamps[timestamps.length - 1]
         );
 
         if (recentFailures.length > 0 && daysBetween > 1) {
@@ -479,13 +495,13 @@ export class PatternRecognizer implements IPatternRecognizer {
           'Implement spaced repetition for learned words',
           'Schedule regular review sessions',
           'Focus on strengthening word retention',
-          'Use memory techniques for difficult words'
+          'Use memory techniques for difficult words',
         ],
         affectedWords: Array.from(wordMap.keys()).slice(0, 10), // Top 10 words
         timeframe: {
           start: events[0].timestamp,
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -494,10 +510,14 @@ export class PatternRecognizer implements IPatternRecognizer {
 
   // Anomaly Detection Methods
 
-  private detectPerformanceAnomaly(current: RealTimeMetrics, historical: RealTimeMetrics[]): LearningPattern | null {
+  private detectPerformanceAnomaly(
+    current: RealTimeMetrics,
+    historical: RealTimeMetrics[]
+  ): LearningPattern | null {
     if (historical.length < 5) return null;
 
-    const avgAccuracy = historical.reduce((sum, m) => sum + m.sessionMetrics.accuracy, 0) / historical.length;
+    const avgAccuracy =
+      historical.reduce((sum, m) => sum + m.sessionMetrics.accuracy, 0) / historical.length;
     const currentAccuracy = current.sessionMetrics.accuracy;
 
     const accuracyDrop = avgAccuracy - currentAccuracy;
@@ -511,22 +531,27 @@ export class PatternRecognizer implements IPatternRecognizer {
         recommendations: [
           'Check if you need a break',
           'Review recent difficult words',
-          'Consider environmental factors affecting focus'
+          'Consider environmental factors affecting focus',
         ],
         timeframe: {
           start: Date.now() - 60000, // Last minute
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
     return null;
   }
 
-  private detectEngagementAnomaly(current: RealTimeMetrics, historical: RealTimeMetrics[]): LearningPattern | null {
+  private detectEngagementAnomaly(
+    current: RealTimeMetrics,
+    historical: RealTimeMetrics[]
+  ): LearningPattern | null {
     if (historical.length < 3) return null;
 
-    const avgEngagement = historical.reduce((sum, m) => sum + m.behavioralMetrics.engagementScore, 0) / historical.length;
+    const avgEngagement =
+      historical.reduce((sum, m) => sum + m.behavioralMetrics.engagementScore, 0) /
+      historical.length;
     const currentEngagement = current.behavioralMetrics.engagementScore;
 
     const engagementDrop = avgEngagement - currentEngagement;
@@ -540,22 +565,27 @@ export class PatternRecognizer implements IPatternRecognizer {
         recommendations: [
           'Try a different learning activity',
           'Take a short break',
-          'Switch to easier content temporarily'
+          'Switch to easier content temporarily',
         ],
         timeframe: {
           start: Date.now() - 300000, // Last 5 minutes
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
     return null;
   }
 
-  private detectLearningRateAnomaly(current: RealTimeMetrics, historical: RealTimeMetrics[]): LearningPattern | null {
+  private detectLearningRateAnomaly(
+    current: RealTimeMetrics,
+    historical: RealTimeMetrics[]
+  ): LearningPattern | null {
     if (historical.length < 3) return null;
 
-    const avgResponseTime = historical.reduce((sum, m) => sum + m.learningMetrics.averageResponseTime, 0) / historical.length;
+    const avgResponseTime =
+      historical.reduce((sum, m) => sum + m.learningMetrics.averageResponseTime, 0) /
+      historical.length;
     const currentResponseTime = current.learningMetrics.averageResponseTime;
 
     const responseTimeIncrease = currentResponseTime - avgResponseTime;
@@ -569,12 +599,12 @@ export class PatternRecognizer implements IPatternRecognizer {
         recommendations: [
           'Content may be too difficult',
           'Take time to process information',
-          'Review prerequisite concepts'
+          'Review prerequisite concepts',
         ],
         timeframe: {
           start: Date.now() - 180000, // Last 3 minutes
-          end: Date.now()
-        }
+          end: Date.now(),
+        },
       };
     }
 
@@ -592,16 +622,18 @@ export class PatternRecognizer implements IPatternRecognizer {
   private async updatePatternHistory(patterns: LearningPattern[]): Promise<void> {
     const today = new Date().toDateString();
     const existing = this.patternHistory.get(today) || [];
-    
+
     this.patternHistory.set(today, [...existing, ...patterns]);
-    
+
     // Save to storage
-    await this.storage.saveAnalyticsEvents([{
-      type: 'pattern_history_update' as any,
-      sessionId: 'system',
-      data: Object.fromEntries(this.patternHistory),
-      timestamp: Date.now()
-    }]);
+    await this.storage.saveAnalyticsEvents([
+      {
+        type: 'pattern_history_update' as any,
+        sessionId: 'system',
+        data: Object.fromEntries(this.patternHistory),
+        timestamp: Date.now(),
+      },
+    ]);
   }
 
   private async loadPatternHistory(): Promise<void> {
@@ -616,7 +648,8 @@ export class PatternRecognizer implements IPatternRecognizer {
 
   private async getHistoricalMetrics(): Promise<RealTimeMetrics[]> {
     try {
-      const metrics = await this.storage.loadAnalyticsEvents({ type: 'historical_metrics' }) || [];
+      const metrics =
+        (await this.storage.loadAnalyticsEvents({ type: 'historical_metrics' })) || [];
       return Array.isArray(metrics) ? metrics : [];
     } catch (error) {
       return [];
@@ -640,21 +673,23 @@ export class PatternRecognizer implements IPatternRecognizer {
   }
 
   private async cleanupOldPatterns(): Promise<void> {
-    const cutoff = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
     const cutoffDate = new Date(cutoff).toDateString();
-    
+
     // Remove old pattern history
     for (const [date, _patterns] of this.patternHistory.entries()) {
       if (date < cutoffDate) {
         this.patternHistory.delete(date);
       }
     }
-    
-    await this.storage.saveAnalyticsEvents([{
-      type: 'pattern_history_cleanup' as any,
-      sessionId: 'system', 
-      data: Object.fromEntries(this.patternHistory),
-      timestamp: Date.now()
-    }]);
+
+    await this.storage.saveAnalyticsEvents([
+      {
+        type: 'pattern_history_cleanup' as any,
+        sessionId: 'system',
+        data: Object.fromEntries(this.patternHistory),
+        timestamp: Date.now(),
+      },
+    ]);
   }
 }

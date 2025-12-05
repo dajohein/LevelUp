@@ -14,7 +14,7 @@ const UpdateBanner = styled.div<{ visible: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transform: translateY(${props => props.visible ? '0' : '-100%'});
+  transform: translateY(${props => (props.visible ? '0' : '-100%')});
   transition: transform 0.3s ease-in-out;
   z-index: 10000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -45,13 +45,11 @@ const UpdateActions = styled.div`
 `;
 
 const UpdateButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  background: ${props => props.variant === 'secondary' 
-    ? 'rgba(255, 255, 255, 0.1)' 
-    : 'rgba(255, 255, 255, 0.9)'};
-  color: ${props => props.variant === 'secondary' ? 'white' : '#1d4ed8'};
-  border: 1px solid ${props => props.variant === 'secondary' 
-    ? 'rgba(255, 255, 255, 0.3)' 
-    : 'transparent'};
+  background: ${props =>
+    props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.9)'};
+  color: ${props => (props.variant === 'secondary' ? 'white' : '#1d4ed8')};
+  border: 1px solid
+    ${props => (props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.3)' : 'transparent')};
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -60,9 +58,7 @@ const UpdateButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${props => props.variant === 'secondary' 
-      ? 'rgba(255, 255, 255, 0.2)' 
-      : 'white'};
+    background: ${props => (props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.2)' : 'white')};
     transform: translateY(-1px);
   }
 
@@ -82,8 +78,13 @@ const UpdateIcon = styled.span`
   animation: pulse 2s infinite;
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 `;
 
@@ -103,12 +104,12 @@ export const PWAUpdateNotification: React.FC = () => {
 
   useEffect(() => {
     // Listen for update notifications
-    pwaUpdateManager.onUpdateAvailable((info) => {
+    pwaUpdateManager.onUpdateAvailable(info => {
       console.log('🔔 Update notification received:', info);
-      
+
       // If user is in a learning session, delay the notification longer
       const delayTime = isInLearningSession() ? 30000 : 2000; // 30s vs 2s delay
-      
+
       setTimeout(() => {
         setUpdateInfo(info);
         setIsVisible(true);
@@ -123,7 +124,7 @@ export const PWAUpdateNotification: React.FC = () => {
     if (!isVisible || !showTimer) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft(prev => {
         if (prev <= 1) {
           // Auto-dismiss after 15 seconds
           setIsVisible(false);
@@ -170,12 +171,12 @@ export const PWAUpdateNotification: React.FC = () => {
     console.log('👋 User dismissed update notification');
     setIsVisible(false);
     setShowTimer(false);
-    
+
     // Store update info for later access
     if (updateInfo) {
       localStorage.setItem('pending-update', JSON.stringify(updateInfo));
     }
-    
+
     setTimeout(() => setUpdateInfo(null), 300);
   };
 
@@ -192,34 +193,22 @@ export const PWAUpdateNotification: React.FC = () => {
       <UpdateMessage>
         <UpdateIcon>🚀</UpdateIcon>
         <span>New version available!</span>
-        {updateInfo.version && (
-          <span className="version">v{updateInfo.version}</span>
-        )}
+        {updateInfo.version && <span className="version">v{updateInfo.version}</span>}
         <span>
-          {isInLearningSession() 
+          {isInLearningSession()
             ? 'Update when you finish this session, or continue later'
-            : 'Boss battles & streak challenges now have progressive difficulty!'
-          }
+            : 'Boss battles & streak challenges now have progressive difficulty!'}
         </span>
         {showTimer && timeLeft > 0 && (
-          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-            Auto-dismiss in {timeLeft}s
-          </span>
+          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Auto-dismiss in {timeLeft}s</span>
         )}
       </UpdateMessage>
-      
+
       <UpdateActions>
-        <UpdateButton 
-          variant="secondary"
-          onClick={handleDismiss}
-          disabled={isUpdating}
-        >
+        <UpdateButton variant="secondary" onClick={handleDismiss} disabled={isUpdating}>
           {isInLearningSession() ? 'Continue Learning' : 'Later'}
         </UpdateButton>
-        <UpdateButton 
-          onClick={handleUpdate}
-          disabled={isUpdating}
-        >
+        <UpdateButton onClick={handleUpdate} disabled={isUpdating}>
           {isUpdating ? '🔄 Updating...' : '✨ Update Now'}
         </UpdateButton>
       </UpdateActions>

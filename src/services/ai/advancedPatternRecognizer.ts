@@ -3,11 +3,7 @@
  * Extends the existing PatternRecognizer with sophisticated behavioral analysis
  */
 
-import {
-  AnalyticsEvent,
-  AnalyticsEventType,
-  LearningPattern
-} from '../analytics/interfaces';
+import { AnalyticsEvent, AnalyticsEventType, LearningPattern } from '../analytics/interfaces';
 // import { PatternRecognizer } from '../analytics/patternRecognizer';
 import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { logger } from '../logger';
@@ -25,7 +21,7 @@ export enum AdvancedPatternType {
   SOCIAL_INFLUENCE = 'social_influence',
   PERFECTIONISM = 'perfectionism',
   CRAMMING_BEHAVIOR = 'cramming_behavior',
-  PROCRASTINATION = 'procrastination'
+  PROCRASTINATION = 'procrastination',
 }
 
 interface AdvancedLearningPattern extends LearningPattern {
@@ -53,7 +49,7 @@ export class AdvancedPatternRecognizer {
   }
 
   async analyzeAdvancedPatterns(
-    events: AnalyticsEvent[], 
+    events: AnalyticsEvent[],
     userId: string,
     timeframe = 7 * 24 * 60 * 60 * 1000 // 7 days
   ): Promise<AdvancedLearningPattern[]> {
@@ -102,7 +98,10 @@ export class AdvancedPatternRecognizer {
   /**
    * Detect learning momentum patterns - acceleration, deceleration, consistency
    */
-  private async detectLearningMomentumPattern(events: AnalyticsEvent[], userId: string): Promise<AdvancedLearningPattern | null> {
+  private async detectLearningMomentumPattern(
+    events: AnalyticsEvent[],
+    userId: string
+  ): Promise<AdvancedLearningPattern | null> {
     const successEvents = events.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS);
     if (successEvents.length < 10) return null;
 
@@ -129,13 +128,16 @@ export class AdvancedPatternRecognizer {
         {
           signal: 'Increasing learning velocity',
           strength: Math.min(1, acceleration / 5),
-          evidence: [`Velocity increased by ${acceleration.toFixed(1)} words/hour`, `Trend: ${(velocityTrend * 100).toFixed(1)}%`]
+          evidence: [
+            `Velocity increased by ${acceleration.toFixed(1)} words/hour`,
+            `Trend: ${(velocityTrend * 100).toFixed(1)}%`,
+          ],
         },
         {
           signal: 'Consistent progress',
           strength: consistency,
-          evidence: [`Consistency score: ${(consistency * 100).toFixed(1)}%`]
-        }
+          evidence: [`Consistency score: ${(consistency * 100).toFixed(1)}%`],
+        },
       ];
     } else if (acceleration < -2 && velocityTrend < -0.1) {
       patternType = AdvancedPatternType.LEARNING_MOMENTUM;
@@ -145,8 +147,11 @@ export class AdvancedPatternRecognizer {
         {
           signal: 'Decreasing learning velocity',
           strength: Math.min(1, Math.abs(acceleration) / 5),
-          evidence: [`Velocity decreased by ${Math.abs(acceleration).toFixed(1)} words/hour`, `Trend: ${(velocityTrend * 100).toFixed(1)}%`]
-        }
+          evidence: [
+            `Velocity decreased by ${Math.abs(acceleration).toFixed(1)} words/hour`,
+            `Trend: ${(velocityTrend * 100).toFixed(1)}%`,
+          ],
+        },
       ];
     } else {
       return null;
@@ -160,12 +165,12 @@ export class AdvancedPatternRecognizer {
       recommendations: this.generateMomentumRecommendations(acceleration, consistency),
       timeframe: {
         start: events[0].timestamp,
-        end: Date.now()
+        end: Date.now(),
       },
       behavioralSignals,
       interventions: this.generateMomentumInterventions(acceleration, riskLevel),
       riskLevel,
-      personalityFactors: this.inferPersonalityFromMomentum(acceleration, consistency)
+      personalityFactors: this.inferPersonalityFromMomentum(acceleration, consistency),
     };
   }
 
@@ -193,12 +198,9 @@ export class AdvancedPatternRecognizer {
     const highErrorRate = errorRate > 0.5;
     const excessiveHints = hintsUsed > recentEvents.length * 0.4;
 
-    const overloadSignals = [
-      highResponseTime,
-      highVariance,
-      highErrorRate,
-      excessiveHints
-    ].filter(Boolean).length;
+    const overloadSignals = [highResponseTime, highVariance, highErrorRate, excessiveHints].filter(
+      Boolean
+    ).length;
 
     if (overloadSignals < 2) return null;
 
@@ -207,69 +209,71 @@ export class AdvancedPatternRecognizer {
     return {
       id: `cognitive_overload_${Date.now()}`,
       type: AdvancedPatternType.COGNITIVE_OVERLOAD as any,
-      confidence: 0.8 + (overloadSignals * 0.05),
+      confidence: 0.8 + overloadSignals * 0.05,
       description: `Cognitive overload detected: ${overloadSignals}/4 stress indicators present`,
       recommendations: [
         'Take an immediate 5-10 minute break',
         'Switch to easier content or review mode',
         'Reduce session length for today',
-        'Practice deep breathing or relaxation techniques'
+        'Practice deep breathing or relaxation techniques',
       ],
       timeframe: {
         start: recentEvents[0].timestamp,
-        end: Date.now()
+        end: Date.now(),
       },
       behavioralSignals: [
         {
           signal: 'Elevated response times',
           strength: highResponseTime ? Math.min(1, avgResponseTime / 10000) : 0,
-          evidence: [`Average response time: ${(avgResponseTime / 1000).toFixed(1)}s`]
+          evidence: [`Average response time: ${(avgResponseTime / 1000).toFixed(1)}s`],
         },
         {
           signal: 'Response time inconsistency',
           strength: highVariance ? Math.min(1, responseTimeVariance / avgResponseTime) : 0,
-          evidence: [`Response time variance: ${(responseTimeVariance / 1000).toFixed(1)}s`]
+          evidence: [`Response time variance: ${(responseTimeVariance / 1000).toFixed(1)}s`],
         },
         {
           signal: 'Increased error rate',
           strength: errorRate,
-          evidence: [`Error rate: ${(errorRate * 100).toFixed(1)}%`]
+          evidence: [`Error rate: ${(errorRate * 100).toFixed(1)}%`],
         },
         {
           signal: 'Excessive hint usage',
           strength: excessiveHints ? hintsUsed / recentEvents.length : 0,
-          evidence: [`Hints used: ${hintsUsed}/${recentEvents.length} attempts`]
-        }
+          evidence: [`Hints used: ${hintsUsed}/${recentEvents.length} attempts`],
+        },
       ],
       interventions: {
         immediate: [
           'Stop current session immediately',
           'Take a 10-minute break away from screen',
-          'Do light physical movement or stretching'
+          'Do light physical movement or stretching',
         ],
         shortTerm: [
           'Return with easier content',
           'Limit session to 10-15 minutes',
-          'Focus on review rather than new material'
+          'Focus on review rather than new material',
         ],
         longTerm: [
           'Evaluate optimal session length',
           'Consider learning schedule adjustments',
-          'Monitor stress levels and triggers'
-        ]
+          'Monitor stress levels and triggers',
+        ],
       },
       riskLevel: severity as AdvancedLearningPattern['riskLevel'],
-      personalityFactors: ['high-stress-sensitivity', 'perfectionist-tendencies']
+      personalityFactors: ['high-stress-sensitivity', 'perfectionist-tendencies'],
     };
   }
 
   /**
    * Detect motivation decline patterns
    */
-  private async detectMotivationDeclinePattern(events: AnalyticsEvent[], userId: string): Promise<AdvancedLearningPattern | null> {
-    const sessionEvents = events.filter(e => 
-      e.type === AnalyticsEventType.SESSION_START || 
-      e.type === AnalyticsEventType.SESSION_END
+  private async detectMotivationDeclinePattern(
+    events: AnalyticsEvent[],
+    userId: string
+  ): Promise<AdvancedLearningPattern | null> {
+    const sessionEvents = events.filter(
+      e => e.type === AnalyticsEventType.SESSION_START || e.type === AnalyticsEventType.SESSION_END
     );
 
     if (sessionEvents.length < 6) return null; // Need at least 3 sessions
@@ -295,7 +299,7 @@ export class AdvancedPatternRecognizer {
       decliningSessionLength,
       increasingGaps,
       shortSessions,
-      irregularSchedule
+      irregularSchedule,
     ].filter(Boolean).length;
 
     if (motivationSignals < 2) return null;
@@ -311,54 +315,54 @@ export class AdvancedPatternRecognizer {
     return {
       id: `motivation_decline_${userId}_${Date.now()}`,
       type: AdvancedPatternType.MOTIVATION_DECLINE as any,
-      confidence: 0.7 + (motivationSignals * 0.05),
+      confidence: 0.7 + motivationSignals * 0.05,
       description: `Motivation decline detected: ${(Math.abs(motivationChange) * 100).toFixed(1)}% decrease`,
       recommendations: [
         'Try a different learning activity or quiz mode',
         'Set smaller, achievable goals',
         'Focus on previously mastered content for confidence',
-        'Consider learning with others or social features'
+        'Consider learning with others or social features',
       ],
       timeframe: {
         start: sessions[0].startTime,
-        end: Date.now()
+        end: Date.now(),
       },
       behavioralSignals: [
         {
           signal: 'Declining session duration',
           strength: decliningSessionLength ? Math.abs(sessionLengthTrend) : 0,
-          evidence: [`Session length trend: ${(sessionLengthTrend * 100).toFixed(1)}%`]
+          evidence: [`Session length trend: ${(sessionLengthTrend * 100).toFixed(1)}%`],
         },
         {
           signal: 'Increasing gaps between sessions',
           strength: increasingGaps ? sessionGapTrend : 0,
-          evidence: [`Session gap trend: ${(sessionGapTrend * 100).toFixed(1)}%`]
+          evidence: [`Session gap trend: ${(sessionGapTrend * 100).toFixed(1)}%`],
         },
         {
           signal: 'Short session duration',
-          strength: shortSessions ? 1 - (avgSessionLength / 900000) : 0,
-          evidence: [`Average session: ${(avgSessionLength / 60000).toFixed(1)} minutes`]
-        }
+          strength: shortSessions ? 1 - avgSessionLength / 900000 : 0,
+          evidence: [`Average session: ${(avgSessionLength / 60000).toFixed(1)} minutes`],
+        },
       ],
       interventions: {
         immediate: [
           'Switch to gamified content or achievements',
           'Try easier content to build confidence',
-          'Set a small, achievable goal for today'
+          'Set a small, achievable goal for today',
         ],
         shortTerm: [
           'Vary learning activities and quiz modes',
           'Connect with other learners or join challenges',
-          'Celebrate small wins and progress milestones'
+          'Celebrate small wins and progress milestones',
         ],
         longTerm: [
           'Reassess learning goals and motivations',
           'Consider learning style preferences',
-          'Implement reward systems and habit tracking'
-        ]
+          'Implement reward systems and habit tracking',
+        ],
       },
       riskLevel: motivationSignals >= 3 ? 'high' : 'medium',
-      personalityFactors: this.inferPersonalityFromMotivation(motivationSignals, sessions)
+      personalityFactors: this.inferPersonalityFromMotivation(motivationSignals, sessions),
     };
   }
 
@@ -379,14 +383,16 @@ export class AdvancedPatternRecognizer {
       .map(e => e.data.responseTime);
 
     const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-    const longDeliberationRate = responseTimes.filter(t => t > avgResponseTime * 2).length / responseTimes.length;
+    const longDeliberationRate =
+      responseTimes.filter(t => t > avgResponseTime * 2).length / responseTimes.length;
 
     // Analyze session abandonment after mistakes
     const sessionEnds = events.filter(e => e.type === AnalyticsEventType.SESSION_END);
     const abruptEnds = sessionEnds.filter(e => {
-      const recentMistakes = events.filter(mistake => 
-        mistake.type === AnalyticsEventType.WORD_MISTAKE && 
-        Math.abs(mistake.timestamp - e.timestamp) < 60000 // Within 1 minute
+      const recentMistakes = events.filter(
+        mistake =>
+          mistake.type === AnalyticsEventType.WORD_MISTAKE &&
+          Math.abs(mistake.timestamp - e.timestamp) < 60000 // Within 1 minute
       );
       return recentMistakes.length > 0;
     });
@@ -395,7 +401,7 @@ export class AdvancedPatternRecognizer {
       retryRate > 0.3, // High retry rate
       longDeliberationRate > 0.4, // Long deliberation times
       abruptEnds.length > sessionEnds.length * 0.3, // Quitting after mistakes
-      avgResponseTime > 5000 // Generally slow responses (overthinking)
+      avgResponseTime > 5000, // Generally slow responses (overthinking)
     ].filter(Boolean).length;
 
     if (perfectionismIndicators < 2) return null;
@@ -403,123 +409,130 @@ export class AdvancedPatternRecognizer {
     return {
       id: `perfectionism_${Date.now()}`,
       type: AdvancedPatternType.PERFECTIONISM as any,
-      confidence: 0.6 + (perfectionismIndicators * 0.1),
+      confidence: 0.6 + perfectionismIndicators * 0.1,
       description: `Perfectionist learning pattern detected: ${perfectionismIndicators}/4 indicators present`,
       recommendations: [
         'Embrace mistakes as part of learning',
         'Set time limits for responses to reduce overthinking',
         'Focus on progress over perfection',
-        'Practice "good enough" responses for flow'
+        'Practice "good enough" responses for flow',
       ],
       timeframe: {
         start: events[0].timestamp,
-        end: Date.now()
+        end: Date.now(),
       },
       behavioralSignals: [
         {
           signal: 'High retry rate',
           strength: retryRate,
-          evidence: [`Retry rate: ${(retryRate * 100).toFixed(1)}%`]
+          evidence: [`Retry rate: ${(retryRate * 100).toFixed(1)}%`],
         },
         {
           signal: 'Long deliberation times',
           strength: longDeliberationRate,
-          evidence: [`Deliberation rate: ${(longDeliberationRate * 100).toFixed(1)}%`]
+          evidence: [`Deliberation rate: ${(longDeliberationRate * 100).toFixed(1)}%`],
         },
         {
           signal: 'Session abandonment after mistakes',
           strength: abruptEnds.length / Math.max(1, sessionEnds.length),
-          evidence: [`Abrupt endings: ${abruptEnds.length}/${sessionEnds.length} sessions`]
-        }
+          evidence: [`Abrupt endings: ${abruptEnds.length}/${sessionEnds.length} sessions`],
+        },
       ],
       interventions: {
         immediate: [
           'Set response time limits',
           'Practice "first instinct" responses',
-          'Celebrate partial credit and near-misses'
+          'Celebrate partial credit and near-misses',
         ],
         shortTerm: [
           'Focus on fluency over accuracy',
           'Track mistakes as learning opportunities',
-          'Use timer-based practice sessions'
+          'Use timer-based practice sessions',
         ],
         longTerm: [
           'Work on growth mindset development',
           'Practice deliberate error-making exercises',
-          'Build tolerance for imperfection'
-        ]
+          'Build tolerance for imperfection',
+        ],
       },
       riskLevel: perfectionismIndicators >= 3 ? 'medium' : 'low',
-      personalityFactors: ['perfectionist', 'high-self-standards', 'overthinking-tendency']
+      personalityFactors: ['perfectionist', 'high-self-standards', 'overthinking-tendency'],
     };
   }
 
   private detectSkillTransferPattern(events: AnalyticsEvent[]): AdvancedLearningPattern | null {
     // Analyze if user is applying knowledge from one area to another
     const wordAttempts = events.filter(e => e.type === AnalyticsEventType.WORD_ATTEMPT);
-    
+
     if (wordAttempts.length < 10) return null;
-    
+
     // Group by word difficulty/topic and look for cross-application
     const successByType = new Map<string, number>();
     const totalByType = new Map<string, number>();
-    
+
     wordAttempts.forEach(event => {
       const wordType = event.data?.wordType || 'general';
       const isSuccess = event.data?.isCorrect || false;
-      
+
       totalByType.set(wordType, (totalByType.get(wordType) || 0) + 1);
       if (isSuccess) {
         successByType.set(wordType, (successByType.get(wordType) || 0) + 1);
       }
     });
-    
+
     // Detect if success in one area correlates with improvement in another
     const improvements = Array.from(successByType.entries())
       .map(([type, successes]) => ({
         type,
-        rate: successes / (totalByType.get(type) || 1)
+        rate: successes / (totalByType.get(type) || 1),
       }))
       .filter(item => item.rate > 0.7);
-    
+
     if (improvements.length >= 2) {
       return {
         id: `skill_transfer_${Date.now()}`,
         type: 'topic_affinity' as any, // Using compatible type for skill transfer
         confidence: 0.8,
         timeframe: {
-          start: Date.now() - (7 * 24 * 60 * 60 * 1000), // Last week
-          end: Date.now()
+          start: Date.now() - 7 * 24 * 60 * 60 * 1000, // Last week
+          end: Date.now(),
         },
         description: `User is successfully transferring skills between ${improvements.map(i => i.type).join(', ')}`,
         recommendations: [
           'Continue practicing across different word types',
-          'Try more challenging vocabulary that combines these skills'
+          'Try more challenging vocabulary that combines these skills',
         ],
-        behavioralSignals: [{
-          signal: 'cross_domain_success',
-          strength: 0.8,
-          evidence: improvements.map(i => `${i.rate * 100}% success in ${i.type}`)
-        }],
+        behavioralSignals: [
+          {
+            signal: 'cross_domain_success',
+            strength: 0.8,
+            evidence: improvements.map(i => `${i.rate * 100}% success in ${i.type}`),
+          },
+        ],
         interventions: {
           immediate: ['Acknowledge skill transfer success'],
           shortTerm: ['Introduce vocabulary that combines learned skills'],
-          longTerm: ['Build advanced skill integration exercises']
+          longTerm: ['Build advanced skill integration exercises'],
         },
         riskLevel: 'low',
-        personalityFactors: ['adaptive_learner', 'pattern_recognition', 'knowledge_integration']
+        personalityFactors: ['adaptive_learner', 'pattern_recognition', 'knowledge_integration'],
       };
     }
-    
+
     return null;
   }
 
-  private async detectRetentionDecayPattern(_events: AnalyticsEvent[]): Promise<AdvancedLearningPattern | null> {
+  private async detectRetentionDecayPattern(
+    _events: AnalyticsEvent[]
+  ): Promise<AdvancedLearningPattern | null> {
     // Implementation for retention decay detection
     return null;
   }
 
-  private async detectLearningRhythmPattern(_events: AnalyticsEvent[], _userId: string): Promise<AdvancedLearningPattern | null> {
+  private async detectLearningRhythmPattern(
+    _events: AnalyticsEvent[],
+    _userId: string
+  ): Promise<AdvancedLearningPattern | null> {
     // Implementation for learning rhythm detection
     return null;
   }
@@ -543,28 +556,28 @@ export class AdvancedPatternRecognizer {
     const windows: AnalyticsEvent[][] = [];
     const startTime = events[0]?.timestamp || Date.now();
     const endTime = events[events.length - 1]?.timestamp || Date.now();
-    
+
     for (let time = startTime; time <= endTime; time += windowSize) {
-      const windowEvents = events.filter(e => 
-        e.timestamp >= time && e.timestamp < time + windowSize
+      const windowEvents = events.filter(
+        e => e.timestamp >= time && e.timestamp < time + windowSize
       );
       if (windowEvents.length > 0) {
         windows.push(windowEvents);
       }
     }
-    
+
     return windows;
   }
 
   private calculateTrend(values: number[]): number {
     if (values.length < 2) return 0;
-    
+
     const n = values.length;
     const sumX = (n * (n - 1)) / 2;
     const sumY = values.reduce((a, b) => a + b, 0);
     const sumXY = values.reduce((sum, y, x) => sum + x * y, 0);
     const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
-    
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
     return slope / (sumY / n); // Normalized slope
   }
@@ -584,24 +597,25 @@ export class AdvancedPatternRecognizer {
   private groupEventsIntoSessions(events: AnalyticsEvent[]): any[] {
     const sessions: any[] = [];
     const SESSION_GAP_THRESHOLD = 30 * 60 * 1000; // 30 minutes
-    
+
     let currentSession: AnalyticsEvent[] = [];
-    
+
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
-      
+
       if (currentSession.length === 0) {
         currentSession.push(event);
       } else {
         const lastEvent = currentSession[currentSession.length - 1];
         const timeDiff = event.timestamp - lastEvent.timestamp;
-        
+
         if (timeDiff > SESSION_GAP_THRESHOLD) {
           // New session detected
           sessions.push({
             events: [...currentSession],
-            duration: currentSession[currentSession.length - 1].timestamp - currentSession[0].timestamp,
-            eventCount: currentSession.length
+            duration:
+              currentSession[currentSession.length - 1].timestamp - currentSession[0].timestamp,
+            eventCount: currentSession.length,
           });
           currentSession = [event];
         } else {
@@ -609,76 +623,79 @@ export class AdvancedPatternRecognizer {
         }
       }
     }
-    
+
     // Add final session
     if (currentSession.length > 0) {
       sessions.push({
         events: [...currentSession],
         duration: currentSession[currentSession.length - 1].timestamp - currentSession[0].timestamp,
-        eventCount: currentSession.length
+        eventCount: currentSession.length,
       });
     }
-    
+
     return sessions;
   }
 
   private calculateSessionGaps(sessions: any[]): number[] {
     const gaps: number[] = [];
-    
+
     for (let i = 1; i < sessions.length; i++) {
       const prevSession = sessions[i - 1];
       const currentSession = sessions[i];
-      
+
       // Calculate gap between end of previous session and start of current session
       const prevEnd = prevSession.events[prevSession.events.length - 1].timestamp;
       const currentStart = currentSession.events[0].timestamp;
       const gap = currentStart - prevEnd;
-      
+
       gaps.push(gap);
     }
-    
+
     return gaps;
   }
 
   private calculateMotivationScore(sessions: any[]): number {
     if (sessions.length === 0) return 0.5;
-    
+
     // Score based on multiple factors
     let score = 0;
-    
+
     // Factor 1: Session frequency (more frequent = higher motivation)
-    const avgGap = sessions.length > 1 ? 
-      sessions.slice(1).reduce((sum, session, i) => {
-        const prevEnd = sessions[i].events[sessions[i].events.length - 1].timestamp;
-        const currentStart = session.events[0].timestamp;
-        return sum + (currentStart - prevEnd);
-      }, 0) / (sessions.length - 1) : 
-      24 * 60 * 60 * 1000; // Default to 1 day
-    
+    const avgGap =
+      sessions.length > 1
+        ? sessions.slice(1).reduce((sum, session, i) => {
+            const prevEnd = sessions[i].events[sessions[i].events.length - 1].timestamp;
+            const currentStart = session.events[0].timestamp;
+            return sum + (currentStart - prevEnd);
+          }, 0) /
+          (sessions.length - 1)
+        : 24 * 60 * 60 * 1000; // Default to 1 day
+
     const frequencyScore = Math.min(1, (24 * 60 * 60 * 1000) / avgGap); // Normalize to daily sessions = 1.0
     score += frequencyScore * 0.4;
-    
+
     // Factor 2: Session duration (longer sessions show engagement)
-    const avgDuration = sessions.reduce((sum, session) => sum + session.duration, 0) / sessions.length;
+    const avgDuration =
+      sessions.reduce((sum, session) => sum + session.duration, 0) / sessions.length;
     const durationScore = Math.min(1, avgDuration / (15 * 60 * 1000)); // 15 minutes = max score
     score += durationScore * 0.3;
-    
+
     // Factor 3: Session consistency (regular timing shows commitment)
     const sessionTimes = sessions.map(s => new Date(s.events[0].timestamp).getHours());
     const timeVariance = this.calculateVariance(sessionTimes);
-    const consistencyScore = Math.max(0, 1 - (timeVariance / 12)); // Lower variance = higher score
+    const consistencyScore = Math.max(0, 1 - timeVariance / 12); // Lower variance = higher score
     score += consistencyScore * 0.3;
-    
+
     return Math.min(1, Math.max(0, score));
   }
 
   private generateMomentumRecommendations(acceleration: number, consistency: number): string[] {
     const recommendations: string[] = [];
-    
+
     if (acceleration > 0.2) {
       recommendations.push('Excellent momentum! Consider increasing difficulty slightly');
       recommendations.push('Maintain current learning schedule');
-      
+
       if (consistency > 0.8) {
         recommendations.push('Your consistent practice is paying off - keep it up!');
       } else {
@@ -686,7 +703,7 @@ export class AdvancedPatternRecognizer {
       }
     } else if (acceleration > 0) {
       recommendations.push('Good progress, but momentum could be improved');
-      
+
       if (consistency < 0.5) {
         recommendations.push('Try to establish a more regular practice schedule');
       } else {
@@ -701,60 +718,66 @@ export class AdvancedPatternRecognizer {
         recommendations.push('Consider adjusting learning schedule or environment');
       }
     }
-    
+
     return recommendations;
   }
 
-  private generateMomentumInterventions(acceleration: number, riskLevel: string): AdvancedLearningPattern['interventions'] {
+  private generateMomentumInterventions(
+    acceleration: number,
+    riskLevel: string
+  ): AdvancedLearningPattern['interventions'] {
     const isPositiveMomentum = acceleration > 0;
     const isHighRisk = riskLevel === 'high';
-    
+
     return {
-      immediate: isPositiveMomentum 
-        ? ['Continue current approach', 'Acknowledge progress'] 
-        : isHighRisk 
+      immediate: isPositiveMomentum
+        ? ['Continue current approach', 'Acknowledge progress']
+        : isHighRisk
           ? ['Immediate motivational intervention needed', 'Reduce difficulty temporarily']
           : ['Take a motivational break', 'Review recent successes'],
-      
-      shortTerm: isPositiveMomentum 
-        ? ['Gradually increase challenge', 'Introduce new learning strategies'] 
-        : isHighRisk 
+
+      shortTerm: isPositiveMomentum
+        ? ['Gradually increase challenge', 'Introduce new learning strategies']
+        : isHighRisk
           ? ['Focus on confidence building', 'Implement regular check-ins']
           : ['Focus on review and confidence building', 'Adjust learning schedule'],
-      
-      longTerm: isPositiveMomentum 
-        ? ['Set ambitious learning goals', 'Maintain momentum tracking'] 
-        : isHighRisk 
+
+      longTerm: isPositiveMomentum
+        ? ['Set ambitious learning goals', 'Maintain momentum tracking']
+        : isHighRisk
           ? ['Comprehensive strategy reassessment', 'Consider external support']
-          : ['Reassess learning strategy and goals', 'Build sustainable habits']
+          : ['Reassess learning strategy and goals', 'Build sustainable habits'],
     };
   }
 
   private inferPersonalityFromMomentum(acceleration: number, consistency: number): string[] {
     const factors: string[] = [];
-    
+
     if (acceleration > 2) factors.push('fast-learner', 'goal-oriented');
     if (acceleration < -2) factors.push('easily-discouraged', 'motivation-sensitive');
     if (consistency > 0.8) factors.push('disciplined', 'consistent');
     if (consistency < 0.4) factors.push('irregular', 'mood-dependent');
-    
+
     return factors;
   }
 
   private inferPersonalityFromMotivation(signals: number, sessions: any[]): string[] {
     const factors: string[] = [];
-    
+
     if (signals >= 3) factors.push('motivation-sensitive', 'external-validation-seeking');
     if (sessions.length > 0) {
-      const avgLength = sessions.reduce((sum: number, s: any) => sum + s.duration, 0) / sessions.length;
+      const avgLength =
+        sessions.reduce((sum: number, s: any) => sum + s.duration, 0) / sessions.length;
       if (avgLength < 300000) factors.push('short-attention-span');
       if (avgLength > 1800000) factors.push('deep-focus-capable');
     }
-    
+
     return factors;
   }
 
-  private prioritizeAdvancedPatterns(patterns: AdvancedLearningPattern[]): AdvancedLearningPattern[] {
+  private prioritizeAdvancedPatterns(
+    patterns: AdvancedLearningPattern[]
+  ): AdvancedLearningPattern[] {
     return patterns.sort((a, b) => {
       const riskOrder = { critical: 4, high: 3, medium: 2, low: 1 };
       const aScore = riskOrder[a.riskLevel] * a.confidence;
@@ -763,7 +786,10 @@ export class AdvancedPatternRecognizer {
     });
   }
 
-  private async persistPatternInsights(userId: string, patterns: AdvancedLearningPattern[]): Promise<void> {
+  private async persistPatternInsights(
+    userId: string,
+    patterns: AdvancedLearningPattern[]
+  ): Promise<void> {
     if (this._enhancedStorage && patterns.length > 0) {
       try {
         const insights = {
@@ -772,8 +798,8 @@ export class AdvancedPatternRecognizer {
           patterns: patterns.map(p => ({
             type: p.type,
             confidence: p.confidence,
-            riskLevel: p.riskLevel
-          }))
+            riskLevel: p.riskLevel,
+          })),
         };
         await this._enhancedStorage.saveAnalyticsData(`pattern_insights_${userId}`, insights);
       } catch (error) {

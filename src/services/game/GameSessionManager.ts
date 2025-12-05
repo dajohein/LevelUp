@@ -1,14 +1,11 @@
 import { store } from '../../store/store';
-import { 
-  incrementWordsCompleted, 
-  addCorrectAnswer, 
-  addIncorrectAnswer,
-  completeSession
-} from '../../store/sessionSlice';
 import {
-  setCurrentWord,
-  nextWord
-} from '../../store/gameSlice';
+  incrementWordsCompleted,
+  addCorrectAnswer,
+  addIncorrectAnswer,
+  completeSession,
+} from '../../store/sessionSlice';
+import { setCurrentWord, nextWord } from '../../store/gameSlice';
 import { challengeServiceManager } from '../challengeServiceManager';
 
 export interface SessionContext {
@@ -50,7 +47,7 @@ export class GameSessionManager {
     currentSession: any,
     isSessionActive: boolean,
     sessionTimer: number,
-    sessionProgress: any,
+    sessionProgress: any
     // wordProgress: any, // Removed unused parameter
     // languageCode: string, // Removed unused parameter
     // isUsingSpacedRepetition: boolean, // Removed unused parameter
@@ -59,15 +56,15 @@ export class GameSessionManager {
     // Update session counter if answer was correct and we're in a session
     if (isCorrect && isSessionActive && currentSession) {
       this.dispatch(incrementWordsCompleted());
-      
+
       // Calculate session-specific bonuses
       const bonuses = this.calculateSessionBonuses(currentSession, sessionTimer, sessionProgress);
-      
+
       this.dispatch(addCorrectAnswer(bonuses));
-      
-      return { 
-        isComplete: false, 
-        bonuses 
+
+      return {
+        isComplete: false,
+        bonuses,
       };
     }
 
@@ -97,7 +94,7 @@ export class GameSessionManager {
     // Session-specific bonus calculations (preserved original complexity)
     if (currentSession.id === 'quick-dash') {
       // Speed bonus up to 50 points per word (based on time remaining)
-      const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
+      const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
       bonuses.timeBonus = Math.min(50, Math.floor(timeRemaining / 6)); // Up to 50 points
     } else if (currentSession.id === 'deep-dive') {
       // Context bonus +30 points for deep learning
@@ -134,14 +131,14 @@ export class GameSessionManager {
     if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
       // Session completed - show recommendations and analytics
       const actualLanguageCode = gameLanguage || languageCode;
-      
+
       // Complete the session in Redux store
       this.dispatch(completeSession());
-      
+
       return {
         isComplete: true,
         shouldNavigate: true,
-        navigationPath: `/completed/${actualLanguageCode}`
+        navigationPath: `/completed/${actualLanguageCode}`,
       };
     }
 
@@ -161,28 +158,34 @@ export class GameSessionManager {
   ): Promise<void> {
     try {
       // Use unified challenge service manager for all special modes
-      if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id) && !isUsingSpacedRepetition) {
-        const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-        
+      if (
+        currentSession?.id &&
+        challengeServiceManager.isSessionTypeSupported(currentSession.id) &&
+        !isUsingSpacedRepetition
+      ) {
+        const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+
         const context: SessionContext = {
           wordsCompleted: sessionProgress.wordsCompleted,
           currentStreak: sessionProgress.currentStreak,
           timeRemaining,
           targetWords: currentSession.targetWords || 15,
           wordProgress,
-          languageCode
+          languageCode,
         };
 
         // Non-blocking async call
         const result = await challengeServiceManager.getNextWord(currentSession.id, context);
-        
+
         // Only update if component is still mounted and session hasn't changed
         if (result.word) {
-          this.dispatch(setCurrentWord({
-            word: result.word,
-            options: result.options,
-            quizMode: result.quizMode,
-          }));
+          this.dispatch(
+            setCurrentWord({
+              word: result.word,
+              options: result.options,
+              quizMode: result.quizMode,
+            })
+          );
         }
       } else {
         this.dispatch(nextWord());
@@ -213,7 +216,13 @@ export class GameSessionManager {
           targetWords: currentSession.targetWords || 15,
         };
 
-        await challengeServiceManager.initializeSession(currentSession.id, languageCode, wordProgress, config, moduleId);
+        await challengeServiceManager.initializeSession(
+          currentSession.id,
+          languageCode,
+          wordProgress,
+          config,
+          moduleId
+        );
 
         // Get first word using unified service manager
         const context: SessionContext = {
@@ -223,21 +232,23 @@ export class GameSessionManager {
           targetWords: currentSession.targetWords || 15,
           wordProgress,
           languageCode,
-          moduleId // Add module for module-specific practice
+          moduleId, // Add module for module-specific practice
         };
 
         const result = await challengeServiceManager.getNextWord(currentSession.id, context);
-        
+
         if (result.word) {
-          this.dispatch(setCurrentWord({
-            word: result.word,
-            options: result.options,
-            quizMode: result.quizMode,
-          }));
+          this.dispatch(
+            setCurrentWord({
+              word: result.word,
+              options: result.options,
+              quizMode: result.quizMode,
+            })
+          );
           return true;
         }
       }
-      
+
       return false;
     } catch (error) {
       console.error(`Failed to initialize ${currentSession?.id} service:`, error);

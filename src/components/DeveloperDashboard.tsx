@@ -137,7 +137,7 @@ export const DeveloperDashboard: React.FC = () => {
         environment: process.env.NODE_ENV || 'unknown',
         buildTime: new Date().toLocaleDateString(),
         toolsVersion: '1.0.0',
-        reactVersion: React.version
+        reactVersion: React.version,
       };
       setSystemStats(stats);
     }
@@ -194,30 +194,21 @@ export const DeveloperDashboard: React.FC = () => {
           <Section>
             <SectionTitle>🎨 UI Components & Demos</SectionTitle>
             <ButtonGrid>
-              <FeatureButton
-                color="#6c5ce7"
-                onClick={() => navigate('/components-demo')}
-              >
+              <FeatureButton color="#6c5ce7" onClick={() => navigate('/components-demo')}>
                 <FeatureTitle>🎨 Component Library</FeatureTitle>
                 <FeatureDescription>
                   Complete showcase of all UI components, buttons, forms, and layouts
                 </FeatureDescription>
               </FeatureButton>
 
-              <FeatureButton
-                color="#fd79a8"
-                onClick={() => navigate('/loading-demo')}
-              >
+              <FeatureButton color="#fd79a8" onClick={() => navigate('/loading-demo')}>
                 <FeatureTitle>📱 Loading States Demo</FeatureTitle>
                 <FeatureDescription>
                   Interactive demo of all loading states, skeletons, and transitions
                 </FeatureDescription>
               </FeatureButton>
 
-              <FeatureButton
-                color="#4a90e2"
-                onClick={() => navigate('/simple-ai-demo')}
-              >
+              <FeatureButton color="#4a90e2" onClick={() => navigate('/simple-ai-demo')}>
                 <FeatureTitle>🤖 Simple AI Demo</FeatureTitle>
                 <FeatureDescription>
                   AI learning coach demonstration with analytics and insights
@@ -232,7 +223,14 @@ export const DeveloperDashboard: React.FC = () => {
             <ButtonGrid>
               <FeatureButton
                 color="#00b894"
-                onClick={() => runTest('All Tests', () => (window as any).LevelUpDev?.testing?.runAllTests?.() || Promise.resolve('Tools not loaded'))}
+                onClick={() =>
+                  runTest(
+                    'All Tests',
+                    () =>
+                      (window as any).LevelUpDev?.testing?.runAllTests?.() ||
+                      Promise.resolve('Tools not loaded')
+                  )
+                }
               >
                 <FeatureTitle>🚀 Run All Tests</FeatureTitle>
                 <FeatureDescription>
@@ -242,7 +240,14 @@ export const DeveloperDashboard: React.FC = () => {
 
               <FeatureButton
                 color="#e17055"
-                onClick={() => runTest('Storage Optimization', () => (window as any).LevelUpDev?.testing?.saveOptimization?.() || Promise.resolve('Tools not loaded'))}
+                onClick={() =>
+                  runTest(
+                    'Storage Optimization',
+                    () =>
+                      (window as any).LevelUpDev?.testing?.saveOptimization?.() ||
+                      Promise.resolve('Tools not loaded')
+                  )
+                }
               >
                 <FeatureTitle>💾 Storage Tests</FeatureTitle>
                 <FeatureDescription>
@@ -252,7 +257,14 @@ export const DeveloperDashboard: React.FC = () => {
 
               <FeatureButton
                 color="#a29bfe"
-                onClick={() => runTest('Performance Analysis', () => (window as any).LevelUpDev?.testing?.gameServicesPerformance?.() || Promise.resolve('Tools not loaded'))}
+                onClick={() =>
+                  runTest(
+                    'Performance Analysis',
+                    () =>
+                      (window as any).LevelUpDev?.testing?.gameServicesPerformance?.() ||
+                      Promise.resolve('Tools not loaded')
+                  )
+                }
               >
                 <FeatureTitle>⚡ Performance Tests</FeatureTitle>
                 <FeatureDescription>
@@ -262,7 +274,14 @@ export const DeveloperDashboard: React.FC = () => {
 
               <FeatureButton
                 color="#fdcb6e"
-                onClick={() => runTest('Migration Tests', () => (window as any).LevelUpDev?.testing?.migration?.runAllTests?.() || Promise.resolve('Tools not loaded'))}
+                onClick={() =>
+                  runTest(
+                    'Migration Tests',
+                    () =>
+                      (window as any).LevelUpDev?.testing?.migration?.runAllTests?.() ||
+                      Promise.resolve('Tools not loaded')
+                  )
+                }
               >
                 <FeatureTitle>🔄 Migration Tests</FeatureTitle>
                 <FeatureDescription>
@@ -281,7 +300,9 @@ export const DeveloperDashboard: React.FC = () => {
                 onClick={() => {
                   if ((window as any).LevelUpDev?.performance?.enable) {
                     (window as any).LevelUpDev.performance.enable();
-                    alert('✅ Performance monitoring enabled! Use the app and check console for reports.');
+                    alert(
+                      '✅ Performance monitoring enabled! Use the app and check console for reports.'
+                    );
                   } else {
                     alert('❌ Developer tools not loaded');
                   }
@@ -338,23 +359,23 @@ export const DeveloperDashboard: React.FC = () => {
             <p style={{ color: '#b0b0b0', marginBottom: '1rem' }}>
               Open browser console (F12) and try these commands:
             </p>
-            
+
             <div style={{ display: 'grid', gap: '1rem' }}>
               <div>
                 <strong style={{ color: '#4CAF50' }}>Quick Start:</strong>
                 <CodeBlock>LevelUpDev.help.quickStart()</CodeBlock>
               </div>
-              
+
               <div>
                 <strong style={{ color: '#4CAF50' }}>List All Functions:</strong>
                 <CodeBlock>LevelUpDev.help.list()</CodeBlock>
               </div>
-              
+
               <div>
                 <strong style={{ color: '#4CAF50' }}>Run Complete Test Suite:</strong>
                 <CodeBlock>await LevelUpDev.testing.runAllTests()</CodeBlock>
               </div>
-              
+
               <div>
                 <strong style={{ color: '#4CAF50' }}>Export User Data:</strong>
                 <CodeBlock>await LevelUpDev.storage.exportUserData('de')</CodeBlock>
@@ -366,20 +387,16 @@ export const DeveloperDashboard: React.FC = () => {
           <Section>
             <SectionTitle>⚡ Quick Actions</SectionTitle>
             <ButtonGrid>
-              <FeatureButton
-                color="#2d3436"
-                onClick={() => navigate('/')}
-              >
+              <FeatureButton color="#2d3436" onClick={() => navigate('/')}>
                 <FeatureTitle>🏠 Back to Main App</FeatureTitle>
                 <FeatureDescription>Return to the language learning interface</FeatureDescription>
               </FeatureButton>
 
-              <FeatureButton
-                color="#636e72"
-                onClick={() => navigate('/profile')}
-              >
+              <FeatureButton color="#636e72" onClick={() => navigate('/profile')}>
                 <FeatureTitle>👤 User Profile</FeatureTitle>
-                <FeatureDescription>View user profile with additional debug tools</FeatureDescription>
+                <FeatureDescription>
+                  View user profile with additional debug tools
+                </FeatureDescription>
               </FeatureButton>
 
               <FeatureButton

@@ -4,27 +4,27 @@ import { lazy } from 'react';
 // These components are loaded only when needed
 
 // Heavy components that can be code-split
-export const GameLazy = lazy(() => 
+export const GameLazy = lazy(() =>
   import('../components/Game').then(module => ({ default: module.Game }))
 );
 
-export const UserProfilePageLazy = lazy(() => 
+export const UserProfilePageLazy = lazy(() =>
   import('../components/UserProfilePage').then(module => ({ default: module.UserProfilePage }))
 );
 
-export const ModuleOverviewLazy = lazy(() => 
+export const ModuleOverviewLazy = lazy(() =>
   import('../components/ModuleOverview').then(module => ({ default: module.ModuleOverview }))
 );
 
-export const SessionSelectLazy = lazy(() => 
+export const SessionSelectLazy = lazy(() =>
   import('../components/SessionSelect').then(module => ({ default: module.SessionSelect }))
 );
 
-export const SessionCompletionLazy = lazy(() => 
+export const SessionCompletionLazy = lazy(() =>
   import('../components/SessionCompletion').then(module => ({ default: module.SessionCompletion }))
 );
 
-export const LearningStatsPageLazy = lazy(() => 
+export const LearningStatsPageLazy = lazy(() =>
   import('../components/LearningStatsPage').then(module => ({ default: module.LearningStatsPage }))
 );
 

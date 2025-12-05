@@ -263,7 +263,7 @@ export {
 } from '../../styles/components/dataDisplay';
 
 export {
-  // Module card child components  
+  // Module card child components
   ModuleHeader,
   ModuleIcon,
   ModuleInfo,

@@ -18,12 +18,12 @@ interface TestResult {
 function testRecentlyUsedWordsExclusion(): TestResult {
   const languageCode = 'es'; // Spanish
   const words = getWordsForLanguage(languageCode);
-  
+
   if (words.length < 10) {
     return {
       success: false,
       message: 'Not enough words to test repetition prevention',
-      details: { wordCount: words.length }
+      details: { wordCount: words.length },
     };
   }
 
@@ -35,18 +35,18 @@ function testRecentlyUsedWordsExclusion(): TestResult {
   // Simulate selecting words and tracking recently used
   for (let i = 0; i < maxIterations; i++) {
     const result = selectWordForRegularSession(languageCode, wordProgress, sessionId);
-    
+
     if (!result || !result.word) {
       return {
         success: false,
         message: `No word returned on iteration ${i}`,
-        details: { iteration: i, selectedWords }
+        details: { iteration: i, selectedWords },
       };
     }
 
     const wordId = result.word.id;
     selectedWords.push(wordId);
-    
+
     // The centralized system automatically prevents recently used words
     // We just need to track selections to verify no immediate repetitions occur
   }
@@ -57,7 +57,7 @@ function testRecentlyUsedWordsExclusion(): TestResult {
       return {
         success: false,
         message: `Immediate repetition detected: word ${selectedWords[i]} appeared consecutively`,
-        details: { sequence: selectedWords, position: i }
+        details: { sequence: selectedWords, position: i },
       };
     }
   }
@@ -70,11 +70,11 @@ function testRecentlyUsedWordsExclusion(): TestResult {
       return {
         success: false,
         message: `Word ${selectedWords[i]} appeared again within ${recentWindow} recent selections`,
-        details: { 
-          sequence: selectedWords, 
+        details: {
+          sequence: selectedWords,
           position: i,
-          recentWindow: recentSelections
-        }
+          recentWindow: recentSelections,
+        },
       };
     }
   }
@@ -86,7 +86,7 @@ function testRecentlyUsedWordsExclusion(): TestResult {
       return {
         success: false,
         message: `Short-term repetition detected: word ${selectedWords[i]} appeared within last 5 words`,
-        details: { sequence: selectedWords, position: i, recent: recentWords }
+        details: { sequence: selectedWords, position: i, recent: recentWords },
       };
     }
   }
@@ -97,8 +97,8 @@ function testRecentlyUsedWordsExclusion(): TestResult {
     details: {
       totalSelections: selectedWords.length,
       uniqueWords: new Set(selectedWords).size,
-      sequence: selectedWords
-    }
+      sequence: selectedWords,
+    },
   };
 }
 
@@ -108,7 +108,7 @@ function testRecentlyUsedWordsExclusion(): TestResult {
 function testModuleWordRepetitionPrevention(): TestResult {
   const languageCode = 'es';
   const moduleId = 'vocabulario-basico'; // Use a module that was showing repetition in logs
-  
+
   const wordProgress = {};
   const selectedWords: string[] = [];
   const maxIterations = 10;
@@ -116,18 +116,18 @@ function testModuleWordRepetitionPrevention(): TestResult {
 
   for (let i = 0; i < maxIterations; i++) {
     const result = selectWordForRegularSession(languageCode, wordProgress, sessionId, moduleId);
-    
+
     if (!result || !result.word) {
       return {
         success: false,
         message: `No word returned from module ${moduleId} on iteration ${i}`,
-        details: { iteration: i, module: moduleId }
+        details: { iteration: i, module: moduleId },
       };
     }
 
     const wordId = result.word.id;
     selectedWords.push(wordId);
-    
+
     // The centralized system automatically prevents recently used words
   }
 
@@ -137,11 +137,11 @@ function testModuleWordRepetitionPrevention(): TestResult {
       return {
         success: false,
         message: `Module immediate repetition detected: word ${selectedWords[i]} appeared consecutively`,
-        details: { 
+        details: {
           module: moduleId,
-          sequence: selectedWords, 
-          position: i 
-        }
+          sequence: selectedWords,
+          position: i,
+        },
       };
     }
   }
@@ -153,8 +153,8 @@ function testModuleWordRepetitionPrevention(): TestResult {
       module: moduleId,
       totalSelections: selectedWords.length,
       uniqueWords: new Set(selectedWords).size,
-      sequence: selectedWords
-    }
+      sequence: selectedWords,
+    },
   };
 }
 
@@ -164,27 +164,27 @@ function testModuleWordRepetitionPrevention(): TestResult {
 function testSmallWordPoolHandling(): TestResult {
   const languageCode = 'es';
   const wordProgress = {};
-  
+
   // Simulate a scenario where we exclude most available words
   const words = getWordsForLanguage(languageCode);
   const wordIds = words.map((w: any) => w.id);
   const sessionId = 'test-edge-case-session';
-  
+
   // Simulate using most words by making multiple selections
   // This will populate the internal recently used tracking
   const selectedWords: string[] = [];
   const maxSelectionsToMake = Math.max(0, wordIds.length - 3);
-  
+
   for (let i = 0; i < maxSelectionsToMake; i++) {
     const result = selectWordForRegularSession(languageCode, wordProgress, sessionId);
     if (result && result.word) {
       selectedWords.push(result.word.id);
     }
   }
-  
+
   // Now try to get one more word
   const finalResult = selectWordForRegularSession(languageCode, wordProgress, sessionId);
-  
+
   if (!finalResult || !finalResult.word) {
     return {
       success: false,
@@ -192,8 +192,8 @@ function testSmallWordPoolHandling(): TestResult {
       details: {
         totalWords: words.length,
         selectedCount: selectedWords.length,
-        availableWords: wordIds.length - selectedWords.length
-      }
+        availableWords: wordIds.length - selectedWords.length,
+      },
     };
   }
 
@@ -205,21 +205,21 @@ function testSmallWordPoolHandling(): TestResult {
       totalWords: words.length,
       selectedInSession: selectedWords.length,
       finalWord: finalResult.word.term,
-      allSelected: [...selectedWords, finalResult.word.id]
-    }
+      allSelected: [...selectedWords, finalResult.word.id],
+    },
   };
 }
 
 /**
  * Run all word repetition tests
  */
-export function runWordRepetitionTests(): { 
-  overall: boolean; 
+export function runWordRepetitionTests(): {
+  overall: boolean;
   results: { [testName: string]: TestResult };
   summary: string;
 } {
   console.log('🧪 Running word repetition fix tests...');
-  
+
   const tests = {
     'Recently Used Words Exclusion': testRecentlyUsedWordsExclusion,
     'Module Word Repetition Prevention': testModuleWordRepetitionPrevention,
@@ -235,24 +235,24 @@ export function runWordRepetitionTests(): {
       console.log(`  🔍 Running: ${testName}`);
       const result = testFn();
       results[testName] = result;
-      
+
       if (result.success) {
         console.log(`  ✅ ${testName}: ${result.message}`);
         passCount++;
       } else {
         console.error(`  ❌ ${testName}: ${result.message}`, result.details);
       }
-      
+
       totalCount++;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : String(error);
-      
+
       console.error(`  💥 ${testName}: Test failed with exception`, error);
       results[testName] = {
         success: false,
         message: `Test threw exception: ${errorMessage}`,
-        details: { error: errorStack }
+        details: { error: errorStack },
       };
       totalCount++;
     }
@@ -260,7 +260,7 @@ export function runWordRepetitionTests(): {
 
   const overall = passCount === totalCount;
   const summary = `${passCount}/${totalCount} tests passed`;
-  
+
   console.log(`\n📊 Word Repetition Tests Summary: ${summary}`);
   if (overall) {
     console.log('🎉 All tests passed! Word repetition issue should be fixed.');

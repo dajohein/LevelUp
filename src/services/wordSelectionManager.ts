@@ -1,6 +1,6 @@
 /**
  * Centralized Word Selection Manager
- * 
+ *
  * Consolidates all word selection logic that was previously scattered across
  * multiple services. Provides a unified, consistent interface for intelligent
  * word selection with proper repetition prevention.
@@ -18,27 +18,27 @@ export interface WordSelectionCriteria {
   excludeWordIds?: string[];
   recentlyUsedWords?: string[];
   maxRecentTracking?: number; // How many recent words to track (default: 8)
-  
+
   // Content filtering
   languageCode: string;
   moduleId?: string;
   minMastery?: number;
   maxMastery?: number;
-  
+
   // Learning context
   difficulty?: 'easy' | 'medium' | 'hard' | 'adaptive';
   learningPhase?: 'introduction' | 'practice' | 'review' | 'mastery';
   sessionProgress?: number; // 0-1, how far through current session
-  
+
   // AI/adaptive parameters
   cognitiveLoad?: 'low' | 'medium' | 'high';
   recentPerformance?: Array<{ isCorrect: boolean; timeSpent: number }>;
-  
+
   // Service-specific preferences
   prioritizeStruggling?: boolean;
   allowMasteredWords?: boolean;
   preferComplexWords?: boolean;
-  
+
   // Pool size control
   candidatePoolSize?: number;
   topCandidatesCount?: number;
@@ -88,9 +88,9 @@ class WordSelectionManager {
       usedWordIds: new Set(),
       recentlyUsedWords: [],
       sessionStartTime: Date.now(),
-      maxRecentTracking
+      maxRecentTracking,
     };
-    
+
     this.sessionTrackers.set(sessionId, tracker);
     logger.debug(`📝 Created word selection session: ${sessionId}`);
     return tracker;
@@ -128,11 +128,11 @@ class WordSelectionManager {
 
     // Add to used words set
     tracker.usedWordIds.add(wordId);
-    
+
     // Add to recently used (sliding window)
     tracker.recentlyUsedWords = [
       wordId,
-      ...tracker.recentlyUsedWords.filter(id => id !== wordId)
+      ...tracker.recentlyUsedWords.filter(id => id !== wordId),
     ].slice(0, tracker.maxRecentTracking);
 
     // Clean up used words if set gets too large
@@ -141,7 +141,9 @@ class WordSelectionManager {
       oldestWords.forEach(id => tracker.usedWordIds.delete(id));
     }
 
-    logger.debug(`📌 Marked word ${wordId} as used in session ${sessionId} (recent: ${tracker.recentlyUsedWords.length})`);
+    logger.debug(
+      `📌 Marked word ${wordId} as used in session ${sessionId} (recent: ${tracker.recentlyUsedWords.length})`
+    );
   }
 
   /**
@@ -152,10 +154,9 @@ class WordSelectionManager {
     wordProgress: { [key: string]: WordProgress },
     sessionId?: string
   ): WordSelectionResult | null {
-    
     // Get base word pool - check for active learning modules from localStorage
     let allWords: Word[] = [];
-    
+
     if (criteria.moduleId) {
       // Single module selection
       allWords = getWordsForModule(criteria.languageCode, criteria.moduleId);
@@ -166,9 +167,9 @@ class WordSelectionManager {
         if (activeLearningModules) {
           const moduleIds = JSON.parse(activeLearningModules) as string[];
           logger.debug(`📚 Using active learning modules: ${moduleIds.join(', ')}`);
-          
+
           // Combine words from all active modules
-          allWords = moduleIds.flatMap(moduleId => 
+          allWords = moduleIds.flatMap(moduleId =>
             getWordsForModule(criteria.languageCode, moduleId)
           );
         } else {
@@ -200,26 +201,26 @@ class WordSelectionManager {
       ...(criteria.excludeWordIds || []),
       ...(criteria.recentlyUsedWords || []),
       ...(sessionTracker?.recentlyUsedWords || []),
-      ...(sessionTracker ? Array.from(sessionTracker.usedWordIds) : [])
+      ...(sessionTracker ? Array.from(sessionTracker.usedWordIds) : []),
     ]);
 
     // Calculate mastery for all words
     const wordsWithMastery = allWords.map(word => {
       const progress = wordProgress[word.id];
-      const currentMastery = progress 
+      const currentMastery = progress
         ? calculateMasteryDecay(progress.lastPracticed, progress.xp || 0)
         : 0;
-      
+
       return {
         ...word,
         currentMastery,
-        progress
+        progress,
       };
     });
 
     // Apply filtering
     let candidates = this.applyFiltering(wordsWithMastery, criteria, allExcluded);
-    
+
     if (candidates.length === 0) {
       // Fallback: loosen restrictions
       logger.warn(`No candidates after filtering, loosening restrictions`);
@@ -235,7 +236,7 @@ class WordSelectionManager {
 
     // Apply intelligent selection algorithm
     const result = this.applySelectionAlgorithm(candidates, criteria, wordProgress);
-    
+
     // Mark as used if session tracking is enabled
     if (sessionId && result) {
       this.markWordAsUsed(sessionId, result.word.id);
@@ -244,7 +245,7 @@ class WordSelectionManager {
     logger.debug(`🎯 Selected word: ${result?.word.term}`, {
       reason: result?.selectionReason,
       poolSize: candidates.length,
-      mastery: result?.metadata.masteryScore
+      mastery: result?.metadata.masteryScore,
     });
 
     return result;
@@ -258,19 +259,20 @@ class WordSelectionManager {
     criteria: WordSelectionCriteria,
     excludedIds: Set<string>
   ): Array<Word & { currentMastery: number; progress?: WordProgress }> {
-    
     return words.filter(word => {
       // Basic exclusions
       if (excludedIds.has(word.id)) return false;
-      
+
       // Mastery range filtering
-      if (criteria.minMastery !== undefined && word.currentMastery < criteria.minMastery) return false;
-      if (criteria.maxMastery !== undefined && word.currentMastery > criteria.maxMastery) return false;
-      
+      if (criteria.minMastery !== undefined && word.currentMastery < criteria.minMastery)
+        return false;
+      if (criteria.maxMastery !== undefined && word.currentMastery > criteria.maxMastery)
+        return false;
+
       // Learning phase filtering
       if (criteria.learningPhase === 'introduction' && word.currentMastery > 20) return false;
       if (criteria.learningPhase === 'mastery' && word.currentMastery < 80) return false;
-      
+
       return true;
     });
   }
@@ -283,13 +285,12 @@ class WordSelectionManager {
     criteria: WordSelectionCriteria,
     wordProgress: { [key: string]: WordProgress }
   ): WordSelectionResult | null {
-    
     if (candidates.length === 0) return null;
 
     // Calculate priority scores for each candidate
     const scoredCandidates = candidates.map(word => ({
       word,
-      score: this.calculateWordScore(word, criteria, wordProgress)
+      score: this.calculateWordScore(word, criteria, wordProgress),
     }));
 
     // Sort by score (lower = higher priority)
@@ -300,7 +301,7 @@ class WordSelectionManager {
       criteria.topCandidatesCount || 3,
       Math.max(1, Math.floor(scoredCandidates.length * 0.2))
     );
-    
+
     const topCandidates = scoredCandidates.slice(0, topCount);
     const selectedIndex = this.getSelectionIndex(topCandidates, criteria);
     const selected = topCandidates[selectedIndex];
@@ -313,8 +314,8 @@ class WordSelectionManager {
         poolSize: candidates.length,
         masteryScore: selected.word.currentMastery,
         selectionAlgorithm: this.getAlgorithmName(criteria),
-        exclusionCount: candidates.length - scoredCandidates.length
-      }
+        exclusionCount: candidates.length - scoredCandidates.length,
+      },
     };
   }
 
@@ -337,14 +338,16 @@ class WordSelectionManager {
 
     // Factor in recent performance
     if (progress) {
-      const errorRate = progress.timesIncorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect);
+      const errorRate =
+        progress.timesIncorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect);
       if (errorRate > 0.5) {
         score *= 0.2; // Very high priority for error-prone words
       }
 
       // Time-based priority (words not practiced recently)
       if (progress.lastPracticed) {
-        const hoursSince = (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60);
+        const hoursSince =
+          (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60);
         if (hoursSince > 24) score *= 0.5; // Higher priority for old words
       }
     }
@@ -379,18 +382,18 @@ class WordSelectionManager {
     if (topCandidates.length === 1) return 0;
 
     // Weighted random selection favoring better scores
-    const weights = topCandidates.map((_, index) => 
-      Math.pow(0.5, index) // Exponential decay in probability
+    const weights = topCandidates.map(
+      (_, index) => Math.pow(0.5, index) // Exponential decay in probability
     );
-    
+
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
     let random = Math.random() * totalWeight;
-    
+
     for (let i = 0; i < weights.length; i++) {
       random -= weights[i];
       if (random <= 0) return i;
     }
-    
+
     return 0; // Fallback
   }
 
@@ -399,7 +402,7 @@ class WordSelectionManager {
    */
   private getSelectionReason(word: Word, _criteria: WordSelectionCriteria): string {
     const mastery = (word as any).currentMastery || 0;
-    
+
     if (mastery < 30) return 'Struggling word - needs attention';
     if (mastery < 50) return 'Learning word - building familiarity';
     if (mastery < 80) return 'Practicing word - reinforcing knowledge';
@@ -422,13 +425,13 @@ class WordSelectionManager {
   public cleanupOldSessions(maxAge: number = 24 * 60 * 60 * 1000): void {
     const now = Date.now();
     const toDelete: string[] = [];
-    
+
     for (const [sessionId, tracker] of this.sessionTrackers) {
       if (now - tracker.sessionStartTime > maxAge) {
         toDelete.push(sessionId);
       }
     }
-    
+
     toDelete.forEach(sessionId => {
       this.sessionTrackers.delete(sessionId);
       logger.debug(`🗑️ Cleaned up old word selection session: ${sessionId}`);
@@ -447,7 +450,7 @@ class WordSelectionManager {
       usedWordsCount: tracker.usedWordIds.size,
       recentWordsCount: tracker.recentlyUsedWords.length,
       sessionAgeMinutes: (Date.now() - tracker.sessionStartTime) / (1000 * 60),
-      maxRecentTracking: tracker.maxRecentTracking
+      maxRecentTracking: tracker.maxRecentTracking,
     };
   }
 
@@ -456,9 +459,7 @@ class WordSelectionManager {
    * Uses the same logic as word selection to ensure consistency
    */
   public getAvailableWords(languageCode: string, moduleId?: string): Word[] {
-    return moduleId 
-      ? getWordsForModule(languageCode, moduleId)
-      : getWordsForLanguage(languageCode);
+    return moduleId ? getWordsForModule(languageCode, moduleId) : getWordsForLanguage(languageCode);
   }
 }
 
@@ -472,13 +473,17 @@ export const selectWordForRegularSession = (
   sessionId: string,
   moduleId?: string
 ): WordSelectionResult | null => {
-  return wordSelectionManager.selectWord({
-    languageCode,
-    moduleId,
-    prioritizeStruggling: true,
-    difficulty: 'adaptive',
-    maxRecentTracking: 8
-  }, wordProgress, sessionId);
+  return wordSelectionManager.selectWord(
+    {
+      languageCode,
+      moduleId,
+      prioritizeStruggling: true,
+      difficulty: 'adaptive',
+      maxRecentTracking: 8,
+    },
+    wordProgress,
+    sessionId
+  );
 };
 
 export const selectWordForMixedPractice = (
@@ -491,14 +496,18 @@ export const selectWordForMixedPractice = (
   if (activeModules && activeModules.length > 0) {
     localStorage.setItem('activeLearningModules', JSON.stringify(activeModules));
   }
-  
-  return wordSelectionManager.selectWord({
-    languageCode,
-    // No moduleId - let the core logic check localStorage for active modules
-    prioritizeStruggling: true,
-    difficulty: 'adaptive',
-    maxRecentTracking: 8
-  }, wordProgress, sessionId);
+
+  return wordSelectionManager.selectWord(
+    {
+      languageCode,
+      // No moduleId - let the core logic check localStorage for active modules
+      prioritizeStruggling: true,
+      difficulty: 'adaptive',
+      maxRecentTracking: 8,
+    },
+    wordProgress,
+    sessionId
+  );
 };
 
 export const selectWordForChallenge = (
@@ -508,14 +517,18 @@ export const selectWordForChallenge = (
   difficulty: 'easy' | 'medium' | 'hard',
   moduleId?: string
 ): WordSelectionResult | null => {
-  return wordSelectionManager.selectWord({
-    languageCode,
-    moduleId,
-    difficulty,
-    prioritizeStruggling: difficulty === 'easy',
-    allowMasteredWords: difficulty === 'hard',
-    maxRecentTracking: 12
-  }, wordProgress, sessionId);
+  return wordSelectionManager.selectWord(
+    {
+      languageCode,
+      moduleId,
+      difficulty,
+      prioritizeStruggling: difficulty === 'easy',
+      allowMasteredWords: difficulty === 'hard',
+      maxRecentTracking: 12,
+    },
+    wordProgress,
+    sessionId
+  );
 };
 
 export const selectWordForReview = (
@@ -524,14 +537,18 @@ export const selectWordForReview = (
   sessionId: string,
   moduleId?: string
 ): WordSelectionResult | null => {
-  return wordSelectionManager.selectWord({
-    languageCode,
-    moduleId,
-    learningPhase: 'review',
-    minMastery: 30,
-    prioritizeStruggling: true,
-    maxRecentTracking: 15
-  }, wordProgress, sessionId);
+  return wordSelectionManager.selectWord(
+    {
+      languageCode,
+      moduleId,
+      learningPhase: 'review',
+      minMastery: 30,
+      prioritizeStruggling: true,
+      maxRecentTracking: 15,
+    },
+    wordProgress,
+    sessionId
+  );
 };
 
 // Option generation interface for centralized quiz mode support
@@ -552,14 +569,19 @@ export interface OptionGenerationResult {
 /**
  * Generate quiz options using centralized word selection logic
  */
-export const generateQuizOptions = (
-  params: OptionGenerationParams
-): OptionGenerationResult => {
-  const { correctWord, languageCode, moduleId, quizMode, optionCount = 3, difficultyBias = 'similar' } = params;
-  
+export const generateQuizOptions = (params: OptionGenerationParams): OptionGenerationResult => {
+  const {
+    correctWord,
+    languageCode,
+    moduleId,
+    quizMode,
+    optionCount = 3,
+    difficultyBias = 'similar',
+  } = params;
+
   // Get word pool using centralized logic
   const wordPool = wordSelectionManager.getAvailableWords(languageCode, moduleId);
-  
+
   switch (quizMode) {
     case 'multiple-choice':
       return generateMultipleChoiceOptions(correctWord, wordPool, optionCount, difficultyBias);
@@ -583,10 +605,10 @@ function generateMultipleChoiceOptions(
 ): OptionGenerationResult {
   const correctAnswer = correctWord.term;
   const reasoning: string[] = [];
-  
+
   // Filter out the correct word
   const candidates = wordPool.filter(w => w.id !== correctWord.id);
-  
+
   // Apply difficulty bias for distractor selection
   let weightedCandidates = candidates;
   if (difficultyBias === 'similar') {
@@ -602,11 +624,11 @@ function generateMultipleChoiceOptions(
       .concat(candidates);
     reasoning.push('Selected clearly different distractors for easier difficulty');
   }
-  
+
   // Select distractors avoiding duplicates
   const wrongAnswers: string[] = [];
   const usedTerms = new Set([correctAnswer]);
-  
+
   for (const candidate of weightedCandidates) {
     if (wrongAnswers.length >= optionCount) break;
     if (!usedTerms.has(candidate.term)) {
@@ -614,7 +636,7 @@ function generateMultipleChoiceOptions(
       usedTerms.add(candidate.term);
     }
   }
-  
+
   // Fill with fallbacks if needed
   const fallbacks = ['das Andere', 'die Alternative', 'der Begriff'];
   for (const fallback of fallbacks) {
@@ -624,16 +646,16 @@ function generateMultipleChoiceOptions(
       usedTerms.add(fallback);
     }
   }
-  
+
   // Shuffle and combine with correct answer
   const allOptions = [correctAnswer, ...wrongAnswers.slice(0, optionCount)];
-  
+
   // Fisher-Yates shuffle
   for (let i = allOptions.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
   }
-  
+
   return { options: allOptions, reasoning };
 }
 
@@ -642,24 +664,24 @@ function generateMultipleChoiceOptions(
  */
 function generateLetterScrambleOptions(correctWord: Word): OptionGenerationResult {
   const letters = correctWord.term.split('');
-  
+
   // Fisher-Yates shuffle for letter scrambling
   for (let i = letters.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [letters[i], letters[j]] = [letters[j], letters[i]];
   }
-  
+
   const scrambledWord = letters.join('');
-  
+
   // Ensure it's actually scrambled (not same as original)
   if (scrambledWord === correctWord.term && letters.length > 1) {
     // Swap first two letters if identical to original
     [letters[0], letters[1]] = [letters[1], letters[0]];
   }
-  
-  return { 
+
+  return {
     options: [letters.join('')],
-    reasoning: ['Generated scrambled version of the target word']
+    reasoning: ['Generated scrambled version of the target word'],
   };
 }
 
@@ -674,16 +696,16 @@ function generateFillInTheBlankOptions(
   // For fill-in-the-blank, we typically just return the correct word
   // The "options" are potential fills, with the correct one being the target
   const reasoning = ['Fill-in-the-blank uses the target word as the correct option'];
-  
+
   // Could generate alternative words as distractors for multiple-choice fill-in-the-blank
   const alternatives = wordPool
     .filter(w => w.id !== correctWord.id)
     .filter(w => w.term.length <= correctWord.term.length + 3) // Similar length
     .slice(0, optionCount - 1)
     .map(w => w.term);
-  
-  return { 
+
+  return {
     options: [correctWord.term, ...alternatives],
-    reasoning 
+    reasoning,
   };
 }

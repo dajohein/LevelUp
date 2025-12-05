@@ -1,6 +1,6 @@
 /**
  * Game Styled Components Library
- * 
+ *
  * Comprehensive collection of all styled components used in the Game component.
  * Extracted to improve maintainability and reduce component file size.
  */
@@ -168,7 +168,9 @@ export const SessionProgressBar = styled.div`
   }
 `;
 
-export const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
+export const ProgressItem = styled.div<{
+  variant?: 'score' | 'streak' | 'words' | 'time' | 'lives';
+}>`
   text-align: center;
   color: ${props => props.theme.colors.text};
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
@@ -205,7 +207,9 @@ export const ProgressItem = styled.div<{ variant?: 'score' | 'streak' | 'words' 
   }
 `;
 
-export const ProgressValue = styled.div<{ variant?: 'score' | 'streak' | 'words' | 'time' | 'lives' }>`
+export const ProgressValue = styled.div<{
+  variant?: 'score' | 'streak' | 'words' | 'time' | 'lives';
+}>`
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 4px;
@@ -359,7 +363,9 @@ export const BossBattleContainer = styled.div<{ damage?: boolean }>`
   border-radius: 20px;
   padding: ${props => props.theme.spacing.lg};
   position: relative;
-  box-shadow: 0 0 30px rgba(139, 0, 0, 0.4), inset 0 0 50px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 0 30px rgba(139, 0, 0, 0.4),
+    inset 0 0 50px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
@@ -443,7 +449,9 @@ export const BossAvatar = styled.div<{ health?: number }>`
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.6),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
   z-index: 2;
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
@@ -521,7 +529,7 @@ export const HealthText = styled.div<{ health?: number }>`
   transform: translate(-50%, -50%);
   font-weight: bold;
   font-size: 0.9rem;
-  color: ${props => (props.health && props.health > 30) ? '#FFFFFF' : '#FFD700'};
+  color: ${props => (props.health && props.health > 30 ? '#FFFFFF' : '#FFD700')};
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   z-index: 1;
@@ -535,5 +543,7 @@ export const BossHealthBar = styled.div<{ health?: number }>`
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(139, 0, 0, 0.6));
   border-radius: 20px;
   border: 3px solid #8b0000;
-  box-shadow: 0 0 20px rgba(139, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 20px rgba(139, 0, 0, 0.5),
+    inset 0 0 20px rgba(0, 0, 0, 0.5);
 `;

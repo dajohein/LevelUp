@@ -18,7 +18,7 @@ import {
   AnalyticsReport,
   ReportType,
   PredictionContext,
-  LearningRecommendation
+  LearningRecommendation,
 } from './interfaces';
 import { AnalyticsCollector } from './collector';
 import { MetricsCalculator } from './metricsCalculator';
@@ -57,12 +57,16 @@ export class EnhancedAnalyticsService {
 
   // Public API Methods
 
-  async trackEvent(type: AnalyticsEventType, data: Record<string, any>, userId?: string): Promise<void> {
+  async trackEvent(
+    type: AnalyticsEventType,
+    data: Record<string, any>,
+    userId?: string
+  ): Promise<void> {
     await this.collector.trackEvent({
       type,
       sessionId: this.getCurrentSessionId(),
       data,
-      userId
+      userId,
     });
 
     // Trigger real-time analysis for critical events
@@ -71,14 +75,25 @@ export class EnhancedAnalyticsService {
     }
   }
 
-  async trackWordAttempt(word: string, success: boolean, responseTime: number, difficulty: number, topic?: string, userId?: string): Promise<void> {
+  async trackWordAttempt(
+    word: string,
+    success: boolean,
+    responseTime: number,
+    difficulty: number,
+    topic?: string,
+    userId?: string
+  ): Promise<void> {
     // Track the attempt
-    await this.trackEvent(AnalyticsEventType.WORD_ATTEMPT, {
-      word,
-      responseTime,
-      difficulty,
-      topic
-    }, userId);
+    await this.trackEvent(
+      AnalyticsEventType.WORD_ATTEMPT,
+      {
+        word,
+        responseTime,
+        difficulty,
+        topic,
+      },
+      userId
+    );
 
     // Track the result
     await this.trackEvent(
@@ -87,22 +102,30 @@ export class EnhancedAnalyticsService {
         word,
         responseTime,
         difficulty,
-        topic
+        topic,
       },
       userId
     );
   }
 
   async trackSessionStart(userId?: string): Promise<void> {
-    await this.trackEvent(AnalyticsEventType.SESSION_START, {
-      startTime: Date.now()
-    }, userId);
+    await this.trackEvent(
+      AnalyticsEventType.SESSION_START,
+      {
+        startTime: Date.now(),
+      },
+      userId
+    );
   }
 
   async trackSessionEnd(userId?: string): Promise<void> {
-    await this.trackEvent(AnalyticsEventType.SESSION_END, {
-      endTime: Date.now()
-    }, userId);
+    await this.trackEvent(
+      AnalyticsEventType.SESSION_END,
+      {
+        endTime: Date.now(),
+      },
+      userId
+    );
 
     // Generate session summary
     await this.generateSessionSummary(userId);
@@ -119,7 +142,10 @@ export class EnhancedAnalyticsService {
     return this.currentPatterns;
   }
 
-  async getPredictions(userId: string, context?: Partial<PredictionContext>): Promise<Prediction[]> {
+  async getPredictions(
+    userId: string,
+    context?: Partial<PredictionContext>
+  ): Promise<Prediction[]> {
     const fullContext = await this.buildPredictionContext(userId, context);
     return this.predictiveAnalytics.generatePredictions(userId, fullContext);
   }
@@ -131,7 +157,10 @@ export class EnhancedAnalyticsService {
     return this.predictiveAnalytics.optimizeLearningPath(userId, currentMetrics.learningMetrics);
   }
 
-  async generateReport(type: ReportType, period?: { start: number; end: number }): Promise<AnalyticsReport> {
+  async generateReport(
+    type: ReportType,
+    period?: { start: number; end: number }
+  ): Promise<AnalyticsReport> {
     const reportPeriod = period || this.getDefaultPeriod(type);
     const events = await this.getEventsForPeriod(reportPeriod);
 
@@ -148,9 +177,9 @@ export class EnhancedAnalyticsService {
         summary,
         trends,
         insights,
-        recommendations
+        recommendations,
       },
-      generatedAt: Date.now()
+      generatedAt: Date.now(),
     };
   }
 
@@ -171,10 +200,10 @@ export class EnhancedAnalyticsService {
     const recentEvents = await this.getRecentEvents();
     if (recentEvents.length > 0) {
       this.realTimeMetrics = this.metricsCalculator.calculateRealTimeMetrics(recentEvents);
-      
+
       // Store for historical comparison
       await this.storage.saveRealtimeMetrics(`snapshot_${Date.now()}`, this.realTimeMetrics);
-      
+
       // Emit metrics update event
       this.emitMetricsUpdate(this.realTimeMetrics);
     }
@@ -183,7 +212,7 @@ export class EnhancedAnalyticsService {
   private async updatePatterns(): Promise<void> {
     const recentEvents = await this.getRecentEvents(24 * 60 * 60 * 1000); // Last 24 hours
     this.currentPatterns = await this.patternRecognizer.analyzePatterns(recentEvents);
-    
+
     // Update pattern models with new data
     await this.patternRecognizer.updatePatternModels(recentEvents);
   }
@@ -192,19 +221,21 @@ export class EnhancedAnalyticsService {
     if (!this.realTimeMetrics) return;
 
     const anomalies = await this.patternRecognizer.detectAnomalies(this.realTimeMetrics);
-    
+
     if (anomalies.length > 0) {
       // Log anomalies
       logger.warn('Learning anomalies detected', { count: anomalies.length });
-      
+
       // Store anomalies for review
-      await this.storage.saveAnalyticsEvents(anomalies.map(a => ({
-        type: 'anomaly_detected' as any,
-        sessionId: this.getCurrentSessionId(),
-        data: a,
-        timestamp: Date.now()
-      })));
-      
+      await this.storage.saveAnalyticsEvents(
+        anomalies.map(a => ({
+          type: 'anomaly_detected' as any,
+          sessionId: this.getCurrentSessionId(),
+          data: a,
+          timestamp: Date.now(),
+        }))
+      );
+
       // Emit anomaly alert
       this.emitAnomalyAlert(anomalies);
     }
@@ -213,7 +244,7 @@ export class EnhancedAnalyticsService {
   private async updatePredictions(): Promise<void> {
     // Update prediction models with latest data
     const recentEvents = await this.getRecentEvents();
-    
+
     if (recentEvents.length >= 10) {
       // Train models with sufficient data
       await this.predictiveAnalytics.trainModel(PredictionType.SESSION_SUCCESS_RATE, recentEvents);
@@ -234,16 +265,18 @@ export class EnhancedAnalyticsService {
       accuracy: sessionMetrics.sessionMetrics.accuracy,
       patterns: await this.patternRecognizer.analyzePatterns(sessionEvents),
       improvements: this.calculateSessionImprovements(sessionMetrics),
-      nextSessionRecommendations: await this.generateNextSessionRecommendations(sessionMetrics)
+      nextSessionRecommendations: await this.generateNextSessionRecommendations(sessionMetrics),
     };
 
-    await this.storage.saveAnalyticsEvents([{
-      type: 'session_summary' as any,
-      sessionId: summary.sessionId,
-      data: summary,
-      timestamp: Date.now()
-    }]);
-    
+    await this.storage.saveAnalyticsEvents([
+      {
+        type: 'session_summary' as any,
+        sessionId: summary.sessionId,
+        data: summary,
+        timestamp: Date.now(),
+      },
+    ]);
+
     // Emit session completed event
     this.emitSessionCompleted(summary);
   }
@@ -254,11 +287,13 @@ export class EnhancedAnalyticsService {
       accuracyImprovement: 0, // Would calculate from historical data
       speedImprovement: 0,
       consistencyImprovement: 0,
-      difficultyProgression: metrics.learningMetrics.difficultyProgression
+      difficultyProgression: metrics.learningMetrics.difficultyProgression,
     };
   }
 
-  private async generateNextSessionRecommendations(metrics: RealTimeMetrics): Promise<LearningRecommendation[]> {
+  private async generateNextSessionRecommendations(
+    metrics: RealTimeMetrics
+  ): Promise<LearningRecommendation[]> {
     const recommendations: LearningRecommendation[] = [];
 
     // Based on current performance
@@ -270,7 +305,7 @@ export class EnhancedAnalyticsService {
         value: 1,
         reasoning: ['Excellent accuracy! Consider increasing difficulty level'],
         confidence: 0.85,
-        expectedImprovement: 0.15
+        expectedImprovement: 0.15,
       });
     } else if (metrics.sessionMetrics.accuracy < 0.6) {
       recommendations.push({
@@ -280,7 +315,7 @@ export class EnhancedAnalyticsService {
         value: -1,
         reasoning: ['Low accuracy detected', 'Consider reviewing easier content'],
         confidence: 0.8,
-        expectedImprovement: 0.2
+        expectedImprovement: 0.2,
       });
     }
 
@@ -293,7 +328,7 @@ export class EnhancedAnalyticsService {
         value: 300000, // 5 minutes
         reasoning: ['Low engagement detected', 'Break recommended for optimal learning'],
         confidence: 0.7,
-        expectedImprovement: 0.1
+        expectedImprovement: 0.1,
       });
     }
 
@@ -306,26 +341,32 @@ export class EnhancedAnalyticsService {
     const cutoff = Date.now() - timeframe;
     // In a real implementation, this would query the storage system
     // For now, we'll use a simplified approach
-    const allEvents = await this.storage.loadAnalyticsEvents({ timeRange: { start: Date.now() - 86400000, end: Date.now() }}) || [];
+    const allEvents =
+      (await this.storage.loadAnalyticsEvents({
+        timeRange: { start: Date.now() - 86400000, end: Date.now() },
+      })) || [];
     return allEvents.filter((event: AnalyticsEvent) => event.timestamp >= cutoff);
   }
 
   private async getCurrentSessionEvents(): Promise<AnalyticsEvent[]> {
     const allEvents = await this.getRecentEvents(24 * 60 * 60 * 1000); // Last 24 hours
-    
+
     // Find the most recent session start
     const sessionStarts = allEvents.filter(e => e.type === AnalyticsEventType.SESSION_START);
     if (sessionStarts.length === 0) return [];
-    
+
     const latestSessionStart = sessionStarts[sessionStarts.length - 1];
     return allEvents.filter(e => e.sessionId === latestSessionStart.sessionId);
   }
 
-  private async getEventsForPeriod(period: { start: number; end: number }): Promise<AnalyticsEvent[]> {
+  private async getEventsForPeriod(period: {
+    start: number;
+    end: number;
+  }): Promise<AnalyticsEvent[]> {
     // This would typically query a database with proper indexing
-    const allEvents = await this.storage.loadAnalyticsEvents() || [];
-    return allEvents.filter((event: AnalyticsEvent) => 
-      event.timestamp >= period.start && event.timestamp <= period.end
+    const allEvents = (await this.storage.loadAnalyticsEvents()) || [];
+    return allEvents.filter(
+      (event: AnalyticsEvent) => event.timestamp >= period.start && event.timestamp <= period.end
     );
   }
 
@@ -336,10 +377,12 @@ export class EnhancedAnalyticsService {
     const words = new Set(events.filter(e => e.data.word).map(e => e.data.word)).size;
     const attempts = events.filter(e => e.type === AnalyticsEventType.WORD_ATTEMPT).length;
     const successes = events.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length;
-    const achievements = events.filter(e => e.type === AnalyticsEventType.ACHIEVEMENT_UNLOCKED).length;
-    
-    const totalTime = events.length > 0 ? 
-      events[events.length - 1].timestamp - events[0].timestamp : 0;
+    const achievements = events.filter(
+      e => e.type === AnalyticsEventType.ACHIEVEMENT_UNLOCKED
+    ).length;
+
+    const totalTime =
+      events.length > 0 ? events[events.length - 1].timestamp - events[0].timestamp : 0;
 
     return {
       totalSessions: sessions,
@@ -347,7 +390,7 @@ export class EnhancedAnalyticsService {
       averageAccuracy: attempts > 0 ? successes / attempts : 0,
       totalStudyTime: totalTime,
       improvementRate: 0, // Would calculate from historical comparison
-      achievementsUnlocked: achievements
+      achievementsUnlocked: achievements,
     };
   }
 
@@ -359,14 +402,14 @@ export class EnhancedAnalyticsService {
         direction: 'increasing',
         magnitude: 0.05,
         significance: 0.8,
-        timeframe: 7 * 24 * 60 * 60 * 1000
-      }
+        timeframe: 7 * 24 * 60 * 60 * 1000,
+      },
     ];
   }
 
   private async generateInsights(events: AnalyticsEvent[]): Promise<any[]> {
     const insights = [];
-    
+
     // Performance insights
     const accuracy = this.calculateAccuracy(events);
     if (accuracy > 0.8) {
@@ -376,14 +419,16 @@ export class EnhancedAnalyticsService {
         description: `Your accuracy of ${(accuracy * 100).toFixed(1)}% shows strong learning progress`,
         confidence: 0.9,
         actionable: true,
-        relatedMetrics: ['accuracy', 'consistency']
+        relatedMetrics: ['accuracy', 'consistency'],
       });
     }
 
     return insights;
   }
 
-  private async generateRecommendations(_events: AnalyticsEvent[]): Promise<LearningRecommendation[]> {
+  private async generateRecommendations(
+    _events: AnalyticsEvent[]
+  ): Promise<LearningRecommendation[]> {
     // Generate recommendations based on analysis
     return await this.getLearningRecommendations('current_user');
   }
@@ -394,7 +439,7 @@ export class EnhancedAnalyticsService {
     return [
       AnalyticsEventType.LEVEL_UP,
       AnalyticsEventType.ACHIEVEMENT_UNLOCKED,
-      AnalyticsEventType.SESSION_END
+      AnalyticsEventType.SESSION_END,
     ].includes(type);
   }
 
@@ -411,16 +456,19 @@ export class EnhancedAnalyticsService {
       [ReportType.WEEKLY]: 7 * 24 * 60 * 60 * 1000,
       [ReportType.MONTHLY]: 30 * 24 * 60 * 60 * 1000,
       [ReportType.CUSTOM]: 24 * 60 * 60 * 1000,
-      [ReportType.REAL_TIME]: 60 * 60 * 1000
+      [ReportType.REAL_TIME]: 60 * 60 * 1000,
     };
 
     return {
       start: now - periods[type],
-      end: now
+      end: now,
     };
   }
 
-  private async buildPredictionContext(userId: string, partial?: Partial<PredictionContext>): Promise<PredictionContext> {
+  private async buildPredictionContext(
+    userId: string,
+    partial?: Partial<PredictionContext>
+  ): Promise<PredictionContext> {
     const currentMetrics = await this.getCurrentMetrics();
     const now = new Date();
 
@@ -437,7 +485,7 @@ export class EnhancedAnalyticsService {
         accuracy: 0,
         streakCount: 0,
         pauseCount: 0,
-        hintsUsed: 0
+        hintsUsed: 0,
       },
       learningHistory: currentMetrics?.learningMetrics || {
         averageResponseTime: 0,
@@ -445,10 +493,10 @@ export class EnhancedAnalyticsService {
         retentionRate: 0,
         masteryLevel: 0,
         weakAreas: [],
-        strongAreas: []
+        strongAreas: [],
       },
       timeOfDay: partial?.timeOfDay || now.getHours(),
-      dayOfWeek: partial?.dayOfWeek || now.getDay()
+      dayOfWeek: partial?.dayOfWeek || now.getDay(),
     };
   }
 
@@ -456,21 +504,21 @@ export class EnhancedAnalyticsService {
 
   private emitMetricsUpdate(metrics: RealTimeMetrics): void {
     const event = new CustomEvent('analytics:metricsUpdate', {
-      detail: { metrics }
+      detail: { metrics },
     });
     window.dispatchEvent(event);
   }
 
   private emitAnomalyAlert(anomalies: LearningPattern[]): void {
     const event = new CustomEvent('analytics:anomalyDetected', {
-      detail: { anomalies }
+      detail: { anomalies },
     });
     window.dispatchEvent(event);
   }
 
   private emitSessionCompleted(summary: any): void {
     const event = new CustomEvent('analytics:sessionCompleted', {
-      detail: { summary }
+      detail: { summary },
     });
     window.dispatchEvent(event);
   }

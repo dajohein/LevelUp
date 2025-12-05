@@ -36,7 +36,7 @@ class BackgroundAutoSave {
       maxPendingActions: 50, // Force save after 50 pending changes
       idleThreshold: 5000, // 5 seconds of inactivity
       enabled: true,
-      ...config
+      ...config,
     };
 
     if (this.config.enabled) {
@@ -63,7 +63,7 @@ class BackgroundAutoSave {
       data,
       languageCode,
       timestamp: Date.now(),
-      priority
+      priority,
     };
 
     // Replace existing pending change for same key (only keep latest)
@@ -72,7 +72,7 @@ class BackgroundAutoSave {
 
     this.logger?.debug(`📝 Queued background save: ${key} (${this.pendingChanges.size} pending)`, {
       priority,
-      pendingCount: this.pendingChanges.size
+      pendingCount: this.pendingChanges.size,
     });
 
     // Force save if too many pending changes
@@ -136,7 +136,7 @@ class BackgroundAutoSave {
 
       // Group changes by type for batch processing
       const changesByType = this.groupChangesByType(changesToSave);
-      
+
       // Process each type of change
       const savePromises: Promise<any>[] = [];
 
@@ -155,25 +155,19 @@ class BackgroundAutoSave {
           case 'gameState':
             // Take the latest game state change
             const latestGameState = changes[changes.length - 1];
-            savePromises.push(
-              this.enhancedStorage.saveGameState(latestGameState.data)
-            );
+            savePromises.push(this.enhancedStorage.saveGameState(latestGameState.data));
             break;
 
           case 'sessionState':
             // Take the latest session state change
             const latestSessionState = changes[changes.length - 1];
-            savePromises.push(
-              this.enhancedStorage.saveSessionState(latestSessionState.data)
-            );
+            savePromises.push(this.enhancedStorage.saveSessionState(latestSessionState.data));
             break;
 
           case 'achievements':
             // Take the latest achievements change
             const latestAchievements = changes[changes.length - 1];
-            savePromises.push(
-              this.enhancedStorage.saveAchievements(latestAchievements.data)
-            );
+            savePromises.push(this.enhancedStorage.saveAchievements(latestAchievements.data));
             break;
         }
       }
@@ -187,15 +181,14 @@ class BackgroundAutoSave {
       this.logger?.debug(`✅ Background save completed (${trigger})`, {
         changeCount: changesToSave.size,
         duration: `${saveDuration.toFixed(2)}ms`,
-        operations: savePromises.length
+        operations: savePromises.length,
       });
 
       // Update analytics
       this.updateSaveAnalytics(trigger, changesToSave.size, saveDuration);
-
     } catch (error) {
       this.logger?.error('❌ Background save failed:', error);
-      
+
       // Re-queue failed changes with lower priority
       for (const [key, change] of changesToSave) {
         change.priority = 'low';
@@ -242,7 +235,7 @@ class BackgroundAutoSave {
         trigger,
         changeCount,
         duration,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   }
@@ -269,7 +262,7 @@ class BackgroundAutoSave {
       pendingChanges: this.pendingChanges.size,
       isProcessing: this.isProcessing,
       lastActionTime: this.lastActionTime,
-      config: { ...this.config }
+      config: { ...this.config },
     };
   }
 
@@ -278,7 +271,7 @@ class BackgroundAutoSave {
    */
   updateConfig(newConfig: Partial<AutoSaveConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     if (this.config.enabled) {
       this.startAutoSave();
     } else {

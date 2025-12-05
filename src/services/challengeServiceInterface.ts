@@ -1,6 +1,6 @@
 /**
  * Generic Challenge Service Interface
- * 
+ *
  * Defines the standard interface that ALL challenge services must implement
  * to enable unified service management and eliminate code duplication.
  */
@@ -9,7 +9,11 @@ import { Word } from './wordService';
 import { WordProgress } from '../store/types';
 
 // Standard quiz modes supported by Redux store
-export type StandardQuizMode = 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+export type StandardQuizMode =
+  | 'multiple-choice'
+  | 'letter-scramble'
+  | 'open-answer'
+  | 'fill-in-the-blank';
 
 // Generic configuration for challenge initialization
 export interface ChallengeConfig {
@@ -61,7 +65,7 @@ export interface CompletionResult {
 
 /**
  * Generic Challenge Service Interface
- * 
+ *
  * ALL challenge services must implement this interface to be used
  * by the unified ChallengeServiceManager.
  */

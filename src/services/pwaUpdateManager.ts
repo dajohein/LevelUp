@@ -1,6 +1,6 @@
 /**
  * PWA Update Manager
- * 
+ *
  * Handles service worker updates and cache versioning
  * Notifies users when new versions are available
  */
@@ -29,7 +29,7 @@ class PWAUpdateManager {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js', {
             scope: '/',
-            updateViaCache: 'none' // Always check for updates
+            updateViaCache: 'none', // Always check for updates
           });
 
           console.log('🔧 ServiceWorker registered:', registration.scope);
@@ -37,7 +37,7 @@ class PWAUpdateManager {
           // Check for updates immediately
           registration.addEventListener('updatefound', () => {
             console.log('🔄 New service worker found, preparing update...');
-            
+
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
@@ -50,14 +50,16 @@ class PWAUpdateManager {
           });
 
           // Check for updates periodically (every 5 minutes)
-          setInterval(() => {
-            console.log('🔍 Checking for updates...');
-            registration.update();
-          }, 5 * 60 * 1000);
+          setInterval(
+            () => {
+              console.log('🔍 Checking for updates...');
+              registration.update();
+            },
+            5 * 60 * 1000
+          );
 
           // Initial update check
           registration.update();
-
         } catch (error) {
           console.error('❌ ServiceWorker registration failed:', error);
         }
@@ -72,14 +74,14 @@ class PWAUpdateManager {
    */
   private listenForUpdates() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
+      navigator.serviceWorker.addEventListener('message', event => {
         if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
           console.log('📢 Received update availability notification:', event.data);
-          
+
           const updateInfo: UpdateInfo = {
             version: event.data.version,
             cacheIdentifier: event.data.cacheIdentifier,
-            available: true
+            available: true,
           };
 
           this.currentVersion = event.data.version;
@@ -99,7 +101,7 @@ class PWAUpdateManager {
     const updateInfo: UpdateInfo = {
       version: this.currentVersion || 'unknown',
       cacheIdentifier: 'updated',
-      available: true
+      available: true,
     };
 
     this.triggerUpdateCallbacks(updateInfo);
@@ -119,25 +121,29 @@ class PWAUpdateManager {
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
-        
+
         if (registration && registration.waiting) {
           console.log('🔄 Applying update...');
-          
+
           // Tell the waiting service worker to become active
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          
+
           // Wait for the new service worker to take control
-          await new Promise<void>((resolve) => {
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-              console.log('✅ New service worker is now controlling the page');
-              resolve();
-            }, { once: true });
+          await new Promise<void>(resolve => {
+            navigator.serviceWorker.addEventListener(
+              'controllerchange',
+              () => {
+                console.log('✅ New service worker is now controlling the page');
+                resolve();
+              },
+              { once: true }
+            );
           });
 
           // Reload the page to get the fresh content
           console.log('🔄 Reloading page with new version...');
           window.location.reload();
-          
+
           return true;
         } else {
           console.log('🔄 No waiting service worker, forcing page reload...');
@@ -145,7 +151,7 @@ class PWAUpdateManager {
           return true;
         }
       }
-      
+
       return false;
     } catch (error) {
       console.error('❌ Failed to apply update:', error);
@@ -222,11 +228,9 @@ class PWAUpdateManager {
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         console.log('🗑️ Clearing all caches:', cacheNames);
-        
-        await Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-        
+
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+
         console.log('✅ All caches cleared');
         return true;
       }

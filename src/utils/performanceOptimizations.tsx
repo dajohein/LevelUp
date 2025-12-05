@@ -8,7 +8,7 @@ export function createLazyComponent<T = any>(
   factory: () => Promise<{ default: React.ComponentType<T> }>
 ) {
   const LazyComponent = lazy(factory);
-  
+
   const Component = memo((props: T) => (
     <Suspense fallback={<LoadingFallback />}>
       <LazyComponent {...(props as any)} />

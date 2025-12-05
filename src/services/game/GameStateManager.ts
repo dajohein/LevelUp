@@ -68,7 +68,7 @@ export class GameStateManager {
       isTransitioning,
       lastAnswerCorrect,
       sessionCompleted,
-      inputValue
+      inputValue,
     };
   }
 
@@ -93,11 +93,13 @@ export class GameStateManager {
     }
 
     // Check for potential issues
-    if (state.sessionTimer > 3600) { // 1 hour
+    if (state.sessionTimer > 3600) {
+      // 1 hour
       warnings.push('Session running for over 1 hour');
     }
 
-    if (state.wordTimer > 300) { // 5 minutes
+    if (state.wordTimer > 300) {
+      // 5 minutes
       warnings.push('Word timer exceeds 5 minutes - user may be stuck');
     }
 
@@ -108,7 +110,7 @@ export class GameStateManager {
     return {
       isValid: errors.length === 0,
       warnings,
-      errors
+      errors,
     };
   }
 
@@ -119,16 +121,16 @@ export class GameStateManager {
     // Could implement pause logic here
     // For now, just return current state for preservation
     const state = store.getState();
-    
+
     return {
       currentWord: state.game.currentWord,
       quizMode: state.game.quizMode,
       sessionTimer: 0, // Would need to calculate from session start
-      wordTimer: 0,    // Would need to calculate from word start
+      wordTimer: 0, // Would need to calculate from word start
       isTransitioning: false,
       lastAnswerCorrect: null,
       sessionCompleted: false,
-      inputValue: ''
+      inputValue: '',
     };
   }
 
@@ -152,13 +154,13 @@ export class GameStateManager {
     quizMode: string;
   } {
     const state = store.getState();
-    
+
     return {
       languageCode: state.game.language,
       moduleId: state.game.module,
       sessionActive: state.session.isSessionActive,
       currentWord: state.game.currentWord,
-      quizMode: state.game.quizMode
+      quizMode: state.game.quizMode,
     };
   }
 
@@ -169,7 +171,7 @@ export class GameStateManager {
     // Reset transient state that shouldn't persist
     // Keep progress and session data intact
     const state = store.getState();
-    
+
     if (state.session.isSessionActive) {
       // If session is active, preserve it
       console.log('Game component unmounting but session is active - preserving state');
@@ -195,13 +197,14 @@ export class GameStateManager {
       return {
         shouldSaveState: true,
         shouldWarnUser: true,
-        warningMessage: 'You have an active session. Your progress will be saved, but you may lose your current streak.'
+        warningMessage:
+          'You have an active session. Your progress will be saved, but you may lose your current streak.',
       };
     }
 
     return {
       shouldSaveState: false,
-      shouldWarnUser: false
+      shouldWarnUser: false,
     };
   }
 
@@ -219,7 +222,7 @@ export class GameStateManager {
    */
   isGameStable(): boolean {
     const state = store.getState();
-    
+
     // Game is stable if:
     // - Has current word
     // - Not transitioning

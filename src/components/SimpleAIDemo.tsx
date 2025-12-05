@@ -1,6 +1,6 @@
 /**
  * Simple AI Learning Demo
- * 
+ *
  * A basic demo component to test the re-enabled AI features
  * This demonstrates the simple AI learning service in action
  */
@@ -49,7 +49,7 @@ const ReasoningList = styled.ul`
   text-align: left;
   margin: 0.5rem 0;
   padding-left: 1.5rem;
-  
+
   li {
     margin: 0.25rem 0;
     color: ${theme.colors.textSecondary};
@@ -63,14 +63,14 @@ interface SimpleAIDemoProps {
 export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
   const [aiEnabled, setAiEnabled] = useState(true);
   const [sessionStarted, setSessionStarted] = useState(false);
-  
+
   const {
     enhancedState,
     aiEnhancedState,
     initializeEnhancedSession,
     trackWordAttempt,
     getAIInsights,
-    toggleAI
+    toggleAI,
   } = useAIEnhancedGame(languageCode, undefined, aiEnabled);
 
   const aiInsights = getAIInsights();
@@ -101,11 +101,19 @@ export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
 
       <AIStatusCard>
         <h3>AI Status</h3>
-        <p><strong>AI Enhancement:</strong> {aiEnabled ? '✅ Enabled' : '❌ Disabled'}</p>
-        <p><strong>Session Active:</strong> {sessionStarted ? '✅ Yes' : '❌ No'}</p>
-        <p><strong>Language:</strong> {languageCode}</p>
-        <p><strong>Events Tracked:</strong> {aiEnhancedState.sessionEvents.length}</p>
-        
+        <p>
+          <strong>AI Enhancement:</strong> {aiEnabled ? '✅ Enabled' : '❌ Disabled'}
+        </p>
+        <p>
+          <strong>Session Active:</strong> {sessionStarted ? '✅ Yes' : '❌ No'}
+        </p>
+        <p>
+          <strong>Language:</strong> {languageCode}
+        </p>
+        <p>
+          <strong>Events Tracked:</strong> {aiEnhancedState.sessionEvents.length}
+        </p>
+
         <ButtonGroup>
           <BaseButton variant="outline" onClick={handleToggleAI}>
             {aiEnabled ? 'Disable AI' : 'Enable AI'}
@@ -121,8 +129,10 @@ export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
           <WordCard>
             <h2>{enhancedState.currentWordInfo.word.term}</h2>
             <p>{enhancedState.currentWordInfo.word.definition}</p>
-            <p><strong>Quiz Mode:</strong> {enhancedState.currentWordInfo.quizMode}</p>
-            
+            <p>
+              <strong>Quiz Mode:</strong> {enhancedState.currentWordInfo.quizMode}
+            </p>
+
             <ButtonGroup>
               <BaseButton variant="primary" onClick={() => handleAnswer(true)}>
                 ✅ Correct
@@ -136,18 +146,30 @@ export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
           {aiEnabled && aiInsights && aiEnhancedState.currentWordInfo?.aiReasoning && (
             <AIInsightsCard>
               <h4>🤖 AI Decision Reasoning</h4>
-              <p><strong>Confidence:</strong> {((aiEnhancedState.currentWordInfo.aiConfidence || 0) * 100).toFixed(0)}%</p>
+              <p>
+                <strong>Confidence:</strong>{' '}
+                {((aiEnhancedState.currentWordInfo.aiConfidence || 0) * 100).toFixed(0)}%
+              </p>
               <ReasoningList>
                 {aiEnhancedState.currentWordInfo.aiReasoning.map((reason, index) => (
                   <li key={index}>{reason}</li>
                 ))}
               </ReasoningList>
-              
+
               <h4>📊 Current Performance</h4>
-              <p><strong>Accuracy:</strong> {(aiInsights.performance.accuracy * 100).toFixed(1)}%</p>
-              <p><strong>Avg Response Time:</strong> {Math.round(aiInsights.performance.averageResponseTime)}ms</p>
-              <p><strong>Consecutive Errors:</strong> {aiInsights.performance.consecutiveErrors}</p>
-              <p><strong>Consecutive Success:</strong> {aiInsights.performance.consecutiveSuccess}</p>
+              <p>
+                <strong>Accuracy:</strong> {(aiInsights.performance.accuracy * 100).toFixed(1)}%
+              </p>
+              <p>
+                <strong>Avg Response Time:</strong>{' '}
+                {Math.round(aiInsights.performance.averageResponseTime)}ms
+              </p>
+              <p>
+                <strong>Consecutive Errors:</strong> {aiInsights.performance.consecutiveErrors}
+              </p>
+              <p>
+                <strong>Consecutive Success:</strong> {aiInsights.performance.consecutiveSuccess}
+              </p>
             </AIInsightsCard>
           )}
         </>
@@ -156,9 +178,15 @@ export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
       {enhancedState.sessionProgress && (
         <Card style={{ marginTop: '1rem', padding: '1rem' }}>
           <h4>Session Progress</h4>
-          <p><strong>Words Completed:</strong> {enhancedState.sessionProgress.currentIndex}</p>
-          <p><strong>Accuracy:</strong> {(enhancedState.sessionProgress.accuracy * 100).toFixed(1)}%</p>
-          <p><strong>Correct Answers:</strong> {enhancedState.sessionProgress.correctAnswers}</p>
+          <p>
+            <strong>Words Completed:</strong> {enhancedState.sessionProgress.currentIndex}
+          </p>
+          <p>
+            <strong>Accuracy:</strong> {(enhancedState.sessionProgress.accuracy * 100).toFixed(1)}%
+          </p>
+          <p>
+            <strong>Correct Answers:</strong> {enhancedState.sessionProgress.correctAnswers}
+          </p>
         </Card>
       )}
     </DemoContainer>

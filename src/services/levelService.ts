@@ -29,16 +29,16 @@ export const calculateLanguageXP = (
 ): number => {
   const modules = getModulesForLanguage(languageCode);
   const languageWords = modules.flatMap(module => module.words);
-  
+
   return languageWords.reduce((total, word) => {
     // Try multiple strategies to find the progress for this word
     let progress: WordProgress | undefined = wordProgress[word.id]; // Strategy 1: Direct match
-    
+
     if (!progress) {
       // Strategy 2: Find by wordId property
       progress = Object.values(wordProgress).find(p => p.wordId === word.id);
     }
-    
+
     if (!progress) {
       // Strategy 3: Handle language-prefixed IDs (e.g., "de-0" -> "1")
       progress = Object.values(wordProgress).find(p => {
@@ -49,7 +49,7 @@ export const calculateLanguageXP = (
         return false;
       });
     }
-    
+
     return total + (progress ? progress.xp : 0);
   }, 0);
 };
@@ -167,8 +167,6 @@ export const calculateLanguageAchievementStats = (
   const languageWords = modules.flatMap(module => module.words);
   const languageWordIds = languageWords.map(w => w.id);
 
-
-
   // Filter progress to only include words from this language
   const languageProgress: Record<string, WordProgress> = {};
   for (const [key, progress] of Object.entries(wordProgress)) {
@@ -181,7 +179,7 @@ export const calculateLanguageAchievementStats = (
   const studiedWords = Object.keys(languageProgress).length;
   const masteredWords = Object.values(languageProgress).filter(p => p.xp >= 80).length;
   const perfectWords = Object.values(languageProgress).filter(p => p.xp >= 100).length;
-  
+
   const languageXP = calculateLanguageXP(wordProgress, languageCode);
   const currentLevel = calculateCurrentLevel(languageXP);
   const learningStreak = calculateLearningStreak(languageProgress);

@@ -38,9 +38,9 @@ interface LoadingFallbackProps {
   minHeight?: string;
 }
 
-export const LoadingFallback: React.FC<LoadingFallbackProps> = ({ 
-  text = 'Loading...', 
-  minHeight = '200px' 
+export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
+  text = 'Loading...',
+  minHeight = '200px',
 }) => (
   <LoadingContainer style={{ minHeight }}>
     <Spinner />
@@ -55,7 +55,12 @@ const SkeletonAnimation = keyframes`
 `;
 
 const SkeletonBase = styled.div`
-  background: linear-gradient(90deg, ${props => props.theme.colors.surface} 25%, rgba(255,255,255,0.1) 50%, ${props => props.theme.colors.surface} 75%);
+  background: linear-gradient(
+    90deg,
+    ${props => props.theme.colors.surface} 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    ${props => props.theme.colors.surface} 75%
+  );
   background-size: 200px 100%;
   animation: ${SkeletonAnimation} 1.2s ease-in-out infinite;
   border-radius: 4px;
@@ -102,12 +107,8 @@ interface LazyWrapperProps {
   loadingText?: string;
 }
 
-export const LazyWrapper: React.FC<LazyWrapperProps> = ({ 
-  children, 
+export const LazyWrapper: React.FC<LazyWrapperProps> = ({
+  children,
   fallback: Fallback = LoadingFallback,
-  loadingText = 'Loading component...'
-}) => (
-  <Suspense fallback={<Fallback text={loadingText} />}>
-    {children}
-  </Suspense>
-);
+  loadingText = 'Loading component...',
+}) => <Suspense fallback={<Fallback text={loadingText} />}>{children}</Suspense>;

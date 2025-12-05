@@ -1,6 +1,6 @@
 /**
  * Development Cache Manager
- * 
+ *
  * Manages cache busting and cache clearing for development mode
  * Provides utilities to clear all caches and prevent stale data issues
  */
@@ -89,17 +89,16 @@ class DevelopmentCacheManager {
 
     try {
       await Promise.all(operations);
-      
+
       if (this.config.logCacheOperations) {
         logger.info('🧹 App caches cleared successfully (user data preserved)');
       }
 
       // Update busting timestamp
       this.bustingTimestamp = Date.now();
-      
+
       // Notify user
       this.showCacheClearedNotification();
-
     } catch (error) {
       logger.error('Failed to clear some caches:', error);
       throw error;
@@ -112,13 +111,11 @@ class DevelopmentCacheManager {
   private async clearServiceWorkerCaches(): Promise<void> {
     try {
       await clearAppCache();
-      
+
       // Also clear service worker registration if needed
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(
-          registrations.map(registration => registration.unregister())
-        );
+        await Promise.all(registrations.map(registration => registration.unregister()));
       }
 
       if (this.config.logCacheOperations) {
@@ -136,7 +133,7 @@ class DevelopmentCacheManager {
     try {
       // Clear smart cache
       smartCache.destroy();
-      
+
       // Clear learning cache
       learningCacheService.clearCache();
 
@@ -156,7 +153,7 @@ class DevelopmentCacheManager {
       // Clear only application-level caches, not user data
       // This clears internal cache systems but preserves user progress
       await enhancedStorage.invalidateLanguageCache('*');
-      
+
       if (this.config.logCacheOperations) {
         logger.debug('🧹 Application storage caches cleared (user data preserved)');
       }
@@ -172,7 +169,7 @@ class DevelopmentCacheManager {
     if (this.originalFetch) return; // Already set up
 
     this.originalFetch = window.fetch.bind(window); // ✅ FIX: Bind to window context
-    
+
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const url = this.addCacheBustingToUrl(input);
       return this.originalFetch!(url, init);
@@ -189,7 +186,7 @@ class DevelopmentCacheManager {
   private addCacheBustingToUrl(input: RequestInfo | URL): RequestInfo | URL {
     try {
       const url = new URL(input.toString(), window.location.origin);
-      
+
       // Only add cache busting to same-origin requests
       if (url.origin === window.location.origin) {
         url.searchParams.set('_cacheBust', this.bustingTimestamp.toString());
@@ -240,7 +237,7 @@ class DevelopmentCacheManager {
     // Simple console notification for now
     console.log('%c🧹 App Caches Cleared', 'color: #00ff00; font-weight: bold; font-size: 14px;');
     console.log('%c📊 User data and progress preserved', 'color: #0088ff; font-size: 12px;');
-    
+
     // Optional: Show toast notification if UI library available
     try {
       // This would integrate with your notification system
@@ -295,7 +292,7 @@ class DevelopmentCacheManager {
    */
   updateConfig(newConfig: Partial<CacheBustingConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     if (this.config.enabled && !this.originalFetch && this.config.addTimestampToRequests) {
       this.setupFetchInterception();
     } else if (!this.config.enabled && this.originalFetch) {

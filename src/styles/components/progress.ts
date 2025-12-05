@@ -3,8 +3,8 @@ import { css } from '@emotion/react';
 import { progressGrow } from './animations';
 
 // Progress bar
-export const ProgressBar = styled.div<{ 
-  value: number; 
+export const ProgressBar = styled.div<{
+  value: number;
   color?: string;
   height?: string;
   animated?: boolean;
@@ -15,7 +15,7 @@ export const ProgressBar = styled.div<{
   border-radius: ${props => props.theme.borderRadius.sm};
   overflow: hidden;
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -26,11 +26,13 @@ export const ProgressBar = styled.div<{
     background-color: ${props => props.color || props.theme.colors.primary};
     border-radius: ${props => props.theme.borderRadius.sm};
     transition: width 0.3s ease;
-    
-    ${props => props.animated && css`
-      animation: ${progressGrow} 1s ease-out;
-      --target-width: ${props.value}%;
-    `}
+
+    ${props =>
+      props.animated &&
+      css`
+        animation: ${progressGrow} 1s ease-out;
+        --target-width: ${props.value}%;
+      `}
   }
 `;
 
@@ -44,29 +46,29 @@ export const CircularProgress = styled.div<{
   width: ${props => props.size || '40px'};
   height: ${props => props.size || '40px'};
   position: relative;
-  
+
   svg {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
-    
+
     circle {
       fill: none;
       stroke-width: ${props => props.strokeWidth || '4'};
-      
+
       &.background {
         stroke: ${props => props.theme.colors.surface};
       }
-      
+
       &.progress {
         stroke: ${props => props.color || props.theme.colors.primary};
         stroke-dasharray: ${props => {
-          const radius = 50 - (parseInt(props.strokeWidth || '4') / 2);
+          const radius = 50 - parseInt(props.strokeWidth || '4') / 2;
           const circumference = 2 * Math.PI * radius;
           return circumference;
         }};
         stroke-dashoffset: ${props => {
-          const radius = 50 - (parseInt(props.strokeWidth || '4') / 2);
+          const radius = 50 - parseInt(props.strokeWidth || '4') / 2;
           const circumference = 2 * Math.PI * radius;
           const progress = props.value || 0;
           return circumference - (progress / 100) * circumference;
@@ -87,13 +89,18 @@ export const LoadingSpinner = styled.div<{
   width: ${props => props.size || '24px'};
   height: ${props => props.size || '24px'};
   border: ${props => props.thickness || '2px'} solid ${props => props.theme.colors.surface};
-  border-top: ${props => props.thickness || '2px'} solid ${props => props.color || props.theme.colors.primary};
+  border-top: ${props => props.thickness || '2px'} solid
+    ${props => props.color || props.theme.colors.primary};
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -114,22 +121,28 @@ export const Skeleton = styled.div<{
   );
   background-size: 200% 100%;
   border-radius: ${props => props.borderRadius || props.theme.borderRadius.sm};
-  
-  ${props => props.animated !== false && css`
-    animation: shimmer 1.5s infinite ease-in-out;
-    
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-  `}
+
+  ${props =>
+    props.animated !== false &&
+    css`
+      animation: shimmer 1.5s infinite ease-in-out;
+
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+    `}
 `;
 
 // Loading dots
 export const LoadingDots = styled.div<{ size?: string; color?: string }>`
   display: inline-flex;
   gap: ${props => props.theme.spacing.xs};
-  
+
   &::before,
   &::after,
   & {
@@ -140,17 +153,19 @@ export const LoadingDots = styled.div<{ size?: string; color?: string }>`
     background: ${props => props.color || props.theme.colors.primary};
     animation: loading-dots 1.4s infinite ease-in-out both;
   }
-  
+
   &::before {
     animation-delay: -0.32s;
   }
-  
+
   &::after {
     animation-delay: -0.16s;
   }
-  
+
   @keyframes loading-dots {
-    0%, 80%, 100% {
+    0%,
+    80%,
+    100% {
       transform: scale(0.8);
       opacity: 0.5;
     }
@@ -162,8 +177,8 @@ export const LoadingDots = styled.div<{ size?: string; color?: string }>`
 `;
 
 // Step indicator
-export const StepIndicator = styled.div<{ 
-  steps: number; 
+export const StepIndicator = styled.div<{
+  steps: number;
   currentStep: number;
   variant?: 'dots' | 'numbers';
 }>`
@@ -173,8 +188,8 @@ export const StepIndicator = styled.div<{
   gap: ${props => props.theme.spacing.sm};
 `;
 
-export const Step = styled.div<{ 
-  active?: boolean; 
+export const Step = styled.div<{
+  active?: boolean;
   completed?: boolean;
   variant?: 'dots' | 'numbers';
   index?: number;
@@ -182,11 +197,11 @@ export const Step = styled.div<{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: ${props => props.variant === 'numbers' ? '32px' : '12px'};
-  height: ${props => props.variant === 'numbers' ? '32px' : '12px'};
+  width: ${props => (props.variant === 'numbers' ? '32px' : '12px')};
+  height: ${props => (props.variant === 'numbers' ? '32px' : '12px')};
   border-radius: 50%;
   transition: all 0.3s ease;
-  
+
   ${props => {
     if (props.completed) {
       return css`
@@ -202,7 +217,8 @@ export const Step = styled.div<{
       return css`
         background: ${props.theme.colors.primary};
         color: white;
-        ${props.variant === 'numbers' && css`
+        ${props.variant === 'numbers' &&
+        css`
           &::after {
             content: '${props.index || 1}';
             font-size: 14px;
@@ -214,7 +230,8 @@ export const Step = styled.div<{
       return css`
         background: ${props.theme.colors.surface};
         color: ${props.theme.colors.textSecondary};
-        ${props.variant === 'numbers' && css`
+        ${props.variant === 'numbers' &&
+        css`
           &::after {
             content: '${props.index || 1}';
             font-size: 14px;
@@ -235,20 +252,20 @@ export const ProgressRing = styled.div<{
   width: ${props => props.size || 60}px;
   height: ${props => props.size || 60}px;
   position: relative;
-  
+
   svg {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
-    
+
     circle {
       fill: none;
       stroke-width: ${props => props.strokeWidth || 4};
-      
+
       &.background {
         stroke: rgba(255, 255, 255, 0.1);
       }
-      
+
       &.progress {
         stroke: ${props => props.color || props.theme.colors.primary};
         stroke-linecap: round;
@@ -267,17 +284,19 @@ export const MasteryGauge = styled.div<{
   position: relative;
   width: ${props => props.size || '80px'};
   height: ${props => props.size || '80px'};
-  
-  ${props => props.showValue && css`
-    &::after {
-      content: '${Math.round(props.value)}%';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 12px;
-      font-weight: bold;
-      color: ${props.theme.colors.text};
-    }
-  `}
+
+  ${props =>
+    props.showValue &&
+    css`
+      &::after {
+        content: '${Math.round(props.value)}%';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: ${props.theme.colors.text};
+      }
+    `}
 `;

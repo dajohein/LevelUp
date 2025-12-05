@@ -306,22 +306,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   showLearningProfile = true,
 }) => {
   // Optimize Redux selector to only update when relevant data changes
-  const gameData = useSelector((state: RootState) => ({
-    wordProgress: state.game.wordProgress,
-    language: state.game.language
-  }), (left, right) => 
-    left.language === right.language &&
-    Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+  const gameData = useSelector(
+    (state: RootState) => ({
+      wordProgress: state.game.wordProgress,
+      language: state.game.language,
+    }),
+    (left, right) =>
+      left.language === right.language &&
+      Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
   );
-  
+
   const [animateProgress, setAnimateProgress] = useState(false);
 
   // Load user learning profile
-  const { 
-    profile: learningProfile, 
-    isLoading: profileLoading, 
+  const {
+    profile: learningProfile,
+    isLoading: profileLoading,
     error: profileError,
-    refreshProfile 
+    refreshProfile,
   } = useUserLearningProfile(userId);
 
   // Debug logging
@@ -330,13 +332,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       userId,
       hasProfile: !!learningProfile,
       isLoading: profileLoading,
-      error: profileError
+      error: profileError,
     });
   }, [userId, learningProfile, profileLoading, profileError]);
 
   // Use provided languageCode, current language from store, or default to first available language
   const availableLanguages = getAvailableLanguages();
-  const currentLanguage = languageCode || gameData.language || (availableLanguages.length > 0 ? availableLanguages[0].code : null);
+  const currentLanguage =
+    languageCode ||
+    gameData.language ||
+    (availableLanguages.length > 0 ? availableLanguages[0].code : null);
 
   if (!currentLanguage) {
     return null; // Don't render if no languages are available
@@ -348,7 +353,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     // The Redux store might contain data for a different language than what we're displaying
     try {
       const localData = wordProgressStorage.load(currentLanguage);
-      
+
       // If localStorage has data, use it (it's language-specific and reliable)
       if (Object.keys(localData).length > 0) {
         return localData;
@@ -356,13 +361,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     } catch (error) {
       logger.warn('Failed to load word progress from localStorage:', error);
     }
-    
+
     // Only fall back to Redux if localStorage is empty
     const hasReduxData = Object.keys(gameData.wordProgress).length > 0;
     if (hasReduxData) {
       return gameData.wordProgress;
     }
-    
+
     return {};
   }, [currentLanguage]); // Remove reduxWordProgress dependency to prevent frequent updates
 
@@ -373,13 +378,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
     const xpProgress = calculateXPForNextLevel(languageXP);
     const levelInfo = getLevelInfo(currentLevel);
-    
+
     return { languageXP, currentLevel, stats, xpProgress, levelInfo };
   }, [wordProgress, currentLanguage]);
 
   const { languageXP, currentLevel, stats, xpProgress, levelInfo } = profileData;
-
-
 
   useEffect(() => {
     // Trigger progress animation on mount or language change
@@ -525,66 +528,76 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       {showLearningProfile && (
         <>
           {profileLoading && (
-            <div style={{ 
-              padding: '16px', 
-              marginTop: '16px', 
-              background: 'rgba(147, 51, 234, 0.1)', 
-              borderRadius: '12px',
-              textAlign: 'center',
-              color: '#9333ea'
-            }}>
+            <div
+              style={{
+                padding: '16px',
+                marginTop: '16px',
+                background: 'rgba(147, 51, 234, 0.1)',
+                borderRadius: '12px',
+                textAlign: 'center',
+                color: '#9333ea',
+              }}
+            >
               🧠 Loading learning profile...
             </div>
           )}
-          
+
           {profileError && (
-            <div style={{ 
-              padding: '16px', 
-              marginTop: '16px', 
-              background: 'rgba(239, 68, 68, 0.1)', 
-              borderRadius: '12px',
-              textAlign: 'center',
-              color: '#ef4444'
-            }}>
+            <div
+              style={{
+                padding: '16px',
+                marginTop: '16px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                borderRadius: '12px',
+                textAlign: 'center',
+                color: '#ef4444',
+              }}
+            >
               ⚠️ Error loading profile: {profileError}
             </div>
           )}
-          
+
           {learningProfile && !profileLoading && (
             <LearningProfileDisplay profile={learningProfile} compact={compact} />
           )}
-          
+
           {!learningProfile && !profileLoading && !profileError && (
-            <div style={{ 
-              padding: '16px', 
-              marginTop: '16px', 
-              background: 'rgba(147, 51, 234, 0.1)', 
-              borderRadius: '12px',
-              textAlign: 'center',
-              color: '#9333ea'
-            }}>
+            <div
+              style={{
+                padding: '16px',
+                marginTop: '16px',
+                background: 'rgba(147, 51, 234, 0.1)',
+                borderRadius: '12px',
+                textAlign: 'center',
+                color: '#9333ea',
+              }}
+            >
               🤖 AI Learning Coach will create your profile after a few learning sessions
               <br />
               <small style={{ opacity: 0.7 }}>
                 Debug: userId="{userId}", profileLoading={String(profileLoading)}
               </small>
               <br />
-              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button 
-                  style={{ 
-                    marginTop: '8px', 
-                    padding: '6px 12px', 
-                    background: '#9333ea', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px', 
+              <div
+                style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}
+              >
+                <button
+                  style={{
+                    marginTop: '8px',
+                    padding: '6px 12px',
+                    background: '#9333ea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '0.8rem'
+                    fontSize: '0.8rem',
                   }}
                   onClick={async () => {
                     console.log('Manually creating fresh profile...');
                     // Clear any existing incomplete profile first
-                    const storage = new (await import('../services/storage/userLearningProfile')).UserLearningProfileStorage();
+                    const storage = new (
+                      await import('../services/storage/userLearningProfile')
+                    ).UserLearningProfileStorage();
                     try {
                       await storage.deleteProfile(userId);
                       console.log('Old profile cleared');
@@ -597,16 +610,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 >
                   🔄 Create New
                 </button>
-                <button 
-                  style={{ 
-                    marginTop: '8px', 
-                    padding: '6px 12px', 
-                    background: '#ef4444', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px', 
+                <button
+                  style={{
+                    marginTop: '8px',
+                    padding: '6px 12px',
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '0.8rem'
+                    fontSize: '0.8rem',
                   }}
                   onClick={() => {
                     console.log('Running storage test...');
@@ -615,16 +628,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 >
                   🧪 Test
                 </button>
-                <button 
-                  style={{ 
-                    marginTop: '8px', 
-                    padding: '6px 12px', 
-                    background: '#3b82f6', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px', 
+                <button
+                  style={{
+                    marginTop: '8px',
+                    padding: '6px 12px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '0.8rem'
+                    fontSize: '0.8rem',
                   }}
                   onClick={() => {
                     console.log('Inspecting stored profile...');

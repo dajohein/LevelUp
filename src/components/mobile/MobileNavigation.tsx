@@ -88,16 +88,16 @@ const HamburgerButton = styled.button<{ isOpen: boolean }>`
     transform-origin: center;
 
     &:nth-of-type(1) {
-      transform: ${props => props.isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none'};
+      transform: ${props => (props.isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none')};
     }
 
     &:nth-of-type(2) {
-      opacity: ${props => props.isOpen ? '0' : '1'};
-      transform: ${props => props.isOpen ? 'translateX(20px)' : 'none'};
+      opacity: ${props => (props.isOpen ? '0' : '1')};
+      transform: ${props => (props.isOpen ? 'translateX(20px)' : 'none')};
     }
 
     &:nth-of-type(3) {
-      transform: ${props => props.isOpen ? 'rotate(-45deg) translate(7px, -6px)' : 'none'};
+      transform: ${props => (props.isOpen ? 'rotate(-45deg) translate(7px, -6px)' : 'none')};
     }
   }
 
@@ -105,8 +105,6 @@ const HamburgerButton = styled.button<{ isOpen: boolean }>`
     display: none;
   }
 `;
-
-
 
 // Center Section
 const CenterSection = styled.div`
@@ -259,8 +257,8 @@ const MobileMenuOverlay = styled.div<{ isOpen: boolean }>`
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: 999;
-  opacity: ${props => props.isOpen ? 1 : 0};
-  visibility: ${props => props.isOpen ? 'visible' : 'hidden'};
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   transition: all 0.3s ease;
 
   @media (min-width: ${props => props.theme.breakpoints.tablet}) {
@@ -277,7 +275,7 @@ const MobileMenuPanel = styled.div<{ isOpen: boolean }>`
   height: 100vh;
   background: ${props => props.theme.colors.surface};
   border-left: 1px solid rgba(76, 175, 80, 0.2);
-  transform: ${props => props.isOpen ? 'translateX(0)' : 'translateX(100%)'};
+  transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(100%)')};
   transition: transform 0.3s ease;
   z-index: 1001;
   overflow-y: auto;
@@ -340,9 +338,7 @@ interface MobileNavigationProps {
   showUserProfile?: boolean;
 }
 
-export const MobileNavigation: React.FC<MobileNavigationProps> = ({
-  showUserProfile = true,
-}) => {
+export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProfile = true }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -354,19 +350,17 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     de: { name: 'German', flag: '🇩🇪' },
   };
 
-  const currentLanguage = languageCode ? languageConfig[languageCode as keyof typeof languageConfig] : null;
+  const currentLanguage = languageCode
+    ? languageConfig[languageCode as keyof typeof languageConfig]
+    : null;
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-
-
   // Menu items
-  const menuItems = [
-    { icon: '🏠', label: 'Home', onClick: () => navigate('/') },
-  ];
+  const menuItems = [{ icon: '🏠', label: 'Home', onClick: () => navigate('/') }];
 
   return (
     <>
@@ -401,9 +395,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
         <RightSection>
           {showUserProfile && (
             <UserProfileButton onClick={() => navigate('/profile')}>
-              <UserAvatar levelColor="#4CAF50">
-                🎯
-              </UserAvatar>
+              <UserAvatar levelColor="#4CAF50">🎯</UserAvatar>
               <UserStats>
                 <UserLevel>Profile</UserLevel>
                 <UserXP>View Progress</UserXP>
@@ -414,11 +406,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
       </MobileNavigationBar>
 
       {/* Mobile Menu */}
-      <MobileMenuOverlay
-        isOpen={isMobileMenuOpen}
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-      
+      <MobileMenuOverlay isOpen={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen(false)} />
+
       <MobileMenuPanel isOpen={isMobileMenuOpen}>
         <MenuSection>
           <MenuSectionTitle>Navigation</MenuSectionTitle>

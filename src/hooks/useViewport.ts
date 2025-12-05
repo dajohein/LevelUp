@@ -31,7 +31,7 @@ export const useViewport = (): ViewportInfo => {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    
+
     return {
       width,
       height,
@@ -47,7 +47,7 @@ export const useViewport = (): ViewportInfo => {
     const updateViewport = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       setViewportInfo({
         width,
         height,
@@ -77,7 +77,7 @@ function getSafeAreaInsets() {
   }
 
   const style = getComputedStyle(document.documentElement);
-  
+
   return {
     top: parseInt(style.getPropertyValue('env(safe-area-inset-top)') || '0'),
     bottom: parseInt(style.getPropertyValue('env(safe-area-inset-bottom)') || '0'),

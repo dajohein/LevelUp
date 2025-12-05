@@ -1,9 +1,9 @@
 /**
  * Storage Coordinator
- * 
+ *
  * PURPOSE: Lightweight coordination layer for background auto-save system
  * REPLACES: Complex storage orchestrator with simplified, efficient approach
- * 
+ *
  * ARCHITECTURE:
  * - Background auto-save handles all complex coordination
  * - This provides simple direct access when needed
@@ -54,7 +54,11 @@ class StorageCoordinator {
   }
 
   // Background queue operations (preferred method)
-  queueWordProgress(languageCode: string, data: any, priority: 'high' | 'medium' | 'low' = 'medium') {
+  queueWordProgress(
+    languageCode: string,
+    data: any,
+    priority: 'high' | 'medium' | 'low' = 'medium'
+  ) {
     if (this.backgroundAutoSave) {
       this.backgroundAutoSave.queueChange('wordProgress', data, languageCode, priority);
     } else {
@@ -101,7 +105,7 @@ class StorageCoordinator {
       pendingChanges: 0,
       isProcessing: false,
       lastActionTime: 0,
-      config: null
+      config: null,
     };
   }
 
@@ -110,11 +114,11 @@ class StorageCoordinator {
     try {
       const storageAnalytics = await enhancedStorage.getStorageAnalytics();
       const backgroundStatus = this.getStatus();
-      
+
       return {
         storage: storageAnalytics,
         backgroundAutoSave: backgroundStatus,
-        simplified: true
+        simplified: true,
       };
     } catch (error) {
       logger.error('Failed to get analytics:', error);
@@ -163,6 +167,6 @@ export const storageOrchestrator = {
   },
 
   getStatistics: () => storageCoordinator.getAnalytics(),
-  
-  cleanup: () => storageCoordinator.cleanup()
+
+  cleanup: () => storageCoordinator.cleanup(),
 };

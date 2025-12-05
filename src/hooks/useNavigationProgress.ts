@@ -60,7 +60,7 @@ export const useNavigationProgress = (
       currentLevel,
       levelInfo,
       userProgress,
-      totalXP
+      totalXP,
     };
   }, [location.pathname, language, currentLanguageCode]);
 

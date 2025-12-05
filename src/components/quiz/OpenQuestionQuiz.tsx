@@ -20,44 +20,40 @@ const BrainIcon = styled.span<{ filled: boolean; partial?: boolean }>`
   transition: all 0.3s ease;
   position: relative;
   display: inline-block;
-  
-  opacity: ${props => 
-    props.filled 
-      ? '1' 
-      : props.partial 
-      ? '0.7' 
-      : '0.3'};
-      
-  filter: ${props => 
-    props.filled 
-      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' 
-      : props.partial 
-      ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)' 
-      : 'grayscale(0.8) brightness(0.5)'};
-      
-  transform: ${props => 
-    props.filled 
-      ? 'scale(1.15)' 
-      : props.partial 
-      ? 'scale(1.05)' 
-      : 'scale(0.95)'};
 
-  ${props => props.filled && `
+  opacity: ${props => (props.filled ? '1' : props.partial ? '0.7' : '0.3')};
+
+  filter: ${props =>
+    props.filled
+      ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)'
+      : props.partial
+        ? 'hue-rotate(30deg) saturate(0.8) brightness(0.9)'
+        : 'grayscale(0.8) brightness(0.5)'};
+
+  transform: ${props =>
+    props.filled ? 'scale(1.15)' : props.partial ? 'scale(1.05)' : 'scale(0.95)'};
+
+  ${props =>
+    props.filled &&
+    `
     text-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
   `}
 
-  ${props => props.partial && `
+  ${props =>
+    props.partial &&
+    `
     animation: brainPulse 2s ease-in-out infinite;
     text-shadow: 0 0 4px rgba(255, 152, 0, 0.3);
   `}
 
   @keyframes brainPulse {
-    0%, 100% { 
-      opacity: 0.7; 
+    0%,
+    100% {
+      opacity: 0.7;
       transform: scale(1.05);
     }
-    50% { 
-      opacity: 0.9; 
+    50% {
+      opacity: 0.9;
       transform: scale(1.1);
     }
   }
@@ -73,22 +69,22 @@ const ProgressText = styled.span`
 // Brain progress component
 const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
   const progressInLevel = xp % 100;
-  
+
   const getBrainFillStates = (progress: number) => {
     const states = [];
-    
+
     if (progress <= 0) states.push(false);
     else if (progress <= 33) states.push('partial');
     else states.push(true);
-    
+
     if (progress <= 33) states.push(false);
     else if (progress <= 66) states.push('partial');
     else states.push(true);
-    
+
     if (progress <= 66) states.push(false);
     else if (progress < 100) states.push('partial');
     else states.push(true);
-    
+
     return states;
   };
 
@@ -104,7 +100,7 @@ const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) =
   return (
     <BrainProgressContainer>
       {['🧠', '🧠', '🧠'].map((emoji, index) => (
-        <BrainIcon 
+        <BrainIcon
           key={index}
           filled={fillStates[index] === true}
           partial={fillStates[index] === 'partial'}
@@ -227,7 +223,7 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
       <ModeIndicator>Open Answer Mode</ModeIndicator>
 
       <Word>{word}</Word>
-      
+
       {context && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
@@ -241,7 +237,7 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
           )}
         </ContextSection>
       )}
-      
+
       <AnimatedInput
         value={userAnswer}
         onChange={onAnswerChange}

@@ -55,10 +55,10 @@ const getLanguageData = (languageCode: string): LanguageData | null => {
       words: allWords,
     };
   } catch (error) {
-    const dataError = new DataIntegrityError(
-      `Could not load language data for ${languageCode}`,
-      { languageCode, error }
-    );
+    const dataError = new DataIntegrityError(`Could not load language data for ${languageCode}`, {
+      languageCode,
+      error,
+    });
     console.warn(dataError.userMessage, dataError.context);
     return null;
   }
@@ -88,9 +88,5 @@ export const getWordsForLanguage = (languageCode: string): Word[] => {
 // Get n random items from an array, excluding the one with excludeId
 // Legacy word selection functions have been removed.
 
-
-
 // Legacy word selection functions have been removed.
 // All word selection now uses the centralized WordSelectionManager system.
-
-

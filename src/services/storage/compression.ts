@@ -1,6 +1,6 @@
 /**
  * Data Compression Utilities
- * 
+ *
  * Provides compression for storage optimization
  * Backend-ready: works with both local and remote storage
  */
@@ -10,9 +10,9 @@ import { logger } from '../logger';
 
 // Compression thresholds and settings
 const COMPRESSION_CONFIG = {
-  MIN_SIZE_BYTES: 1024,        // Only compress data larger than 1KB
-  TARGET_RATIO: 0.7,           // Target 30% compression minimum
-  MAX_COMPRESSION_TIME: 100,    // Max 100ms for compression
+  MIN_SIZE_BYTES: 1024, // Only compress data larger than 1KB
+  TARGET_RATIO: 0.7, // Target 30% compression minimum
+  MAX_COMPRESSION_TIME: 100, // Max 100ms for compression
   ALGORITHMS: ['gzip', 'lz4'] as const,
 } as const;
 
@@ -42,12 +42,14 @@ export class CompressionService implements CompressionProvider {
     try {
       // Try compression with available algorithms
       const compressionResult = await this.compressWithBestAlgorithm(serialized, originalSize);
-      
+
       const compressionTime = performance.now() - startTime;
-      
+
       // If compression took too long or didn't save enough space, return uncompressed
-      if (compressionTime > COMPRESSION_CONFIG.MAX_COMPRESSION_TIME ||
-          compressionResult.compressedSize / originalSize > COMPRESSION_CONFIG.TARGET_RATIO) {
+      if (
+        compressionTime > COMPRESSION_CONFIG.MAX_COMPRESSION_TIME ||
+        compressionResult.compressedSize / originalSize > COMPRESSION_CONFIG.TARGET_RATIO
+      ) {
         return {
           data: serialized,
           algorithm: 'none',
@@ -56,8 +58,10 @@ export class CompressionService implements CompressionProvider {
         };
       }
 
-      logger.debug(`🗜️ Compressed data: ${originalSize} → ${compressionResult.compressedSize} bytes (${Math.round(compressionResult.compressedSize / originalSize * 100)}%)`);
-      
+      logger.debug(
+        `🗜️ Compressed data: ${originalSize} → ${compressionResult.compressedSize} bytes (${Math.round((compressionResult.compressedSize / originalSize) * 100)}%)`
+      );
+
       return compressionResult;
     } catch (error) {
       logger.warn('Compression failed, storing uncompressed:', error);
@@ -81,15 +85,15 @@ export class CompressionService implements CompressionProvider {
         case 'none':
           decompressed = compressed.data as string;
           break;
-        
+
         case 'gzip':
           decompressed = await this.decompressGzip(compressed.data);
           break;
-        
+
         case 'lz4':
           decompressed = await this.decompressLZ4(compressed.data);
           break;
-        
+
         default:
           throw new Error(`Unsupported compression algorithm: ${compressed.algorithm}`);
       }
@@ -116,7 +120,7 @@ export class CompressionService implements CompressionProvider {
   async isCompressionWorthwhile(data: any): Promise<boolean> {
     const serialized = JSON.stringify(data);
     const size = this.textEncoder.encode(serialized).length;
-    
+
     // Don't compress small data
     if (size < COMPRESSION_CONFIG.MIN_SIZE_BYTES) {
       return false;
@@ -130,7 +134,10 @@ export class CompressionService implements CompressionProvider {
   /**
    * Compress with the best available algorithm
    */
-  private async compressWithBestAlgorithm(data: string, originalSize: number): Promise<CompressedData> {
+  private async compressWithBestAlgorithm(
+    data: string,
+    originalSize: number
+  ): Promise<CompressedData> {
     // Try gzip first (widely supported)
     if (typeof CompressionStream !== 'undefined') {
       try {
@@ -162,7 +169,7 @@ export class CompressionService implements CompressionProvider {
   private async compressGzip(data: string): Promise<Uint8Array> {
     // For now, use a simpler approach that works reliably
     const encoded = this.textEncoder.encode(data);
-    
+
     // If CompressionStream is not available or causes issues, return the encoded data
     if (typeof CompressionStream === 'undefined') {
       return encoded;
@@ -175,10 +182,10 @@ export class CompressionService implements CompressionProvider {
           start(controller) {
             controller.enqueue(encoded);
             controller.close();
-          }
+          },
         }).pipeThrough(stream)
       );
-      
+
       const buffer = await compressed.arrayBuffer();
       return new Uint8Array(buffer);
     } catch (error) {
@@ -220,10 +227,10 @@ export class CompressionService implements CompressionProvider {
           start(controller) {
             controller.enqueue(uint8Data);
             controller.close();
-          }
+          },
         }).pipeThrough(stream)
       );
-      
+
       const text = await decompressed.text();
       return text;
     } catch (error) {
@@ -239,13 +246,13 @@ export class CompressionService implements CompressionProvider {
     // Simple dictionary-based compression
     const dictionary = this.buildDictionary(data);
     const compressed = this.compressWithDictionary(data, dictionary);
-    
+
     // Serialize dictionary + compressed data
     const result = {
       dict: dictionary,
       data: compressed,
     };
-    
+
     return this.textEncoder.encode(JSON.stringify(result));
   }
 
@@ -272,7 +279,7 @@ export class CompressionService implements CompressionProvider {
 
     const decoded = this.textDecoder.decode(uint8Data);
     const { dict, data: compressed } = JSON.parse(decoded);
-    
+
     return this.decompressWithDictionary(compressed, dict);
   }
 
@@ -281,7 +288,7 @@ export class CompressionService implements CompressionProvider {
    */
   private buildDictionary(data: string): Record<string, string> {
     const patterns = new Map<string, number>();
-    
+
     // Find frequent substrings (simple approach)
     for (let length = 3; length <= 10; length++) {
       for (let i = 0; i <= data.length - length; i++) {
@@ -289,11 +296,11 @@ export class CompressionService implements CompressionProvider {
         patterns.set(substr, (patterns.get(substr) || 0) + 1);
       }
     }
-    
+
     // Build dictionary from most frequent patterns
     const dictionary: Record<string, string> = {};
     let dictKey = 0;
-    
+
     Array.from(patterns.entries())
       .filter(([pattern, count]) => count > 2 && pattern.length > 2)
       .sort((a, b) => b[1] - a[1])
@@ -301,7 +308,7 @@ export class CompressionService implements CompressionProvider {
       .forEach(([pattern]) => {
         dictionary[pattern] = `§${dictKey++}§`;
       });
-    
+
     return dictionary;
   }
 
@@ -310,12 +317,12 @@ export class CompressionService implements CompressionProvider {
    */
   private compressWithDictionary(data: string, dictionary: Record<string, string>): string {
     let compressed = data;
-    
+
     // Replace patterns with dictionary keys
     Object.entries(dictionary).forEach(([pattern, key]) => {
       compressed = compressed.replace(new RegExp(this.escapeRegex(pattern), 'g'), key);
     });
-    
+
     return compressed;
   }
 
@@ -324,12 +331,12 @@ export class CompressionService implements CompressionProvider {
    */
   private decompressWithDictionary(compressed: string, dictionary: Record<string, string>): string {
     let decompressed = compressed;
-    
+
     // Replace dictionary keys back with original patterns
     Object.entries(dictionary).forEach(([pattern, key]) => {
       decompressed = decompressed.replace(new RegExp(this.escapeRegex(key), 'g'), pattern);
     });
-    
+
     return decompressed;
   }
 
@@ -339,11 +346,11 @@ export class CompressionService implements CompressionProvider {
   private async estimateCompressionRatio(data: string): Promise<number> {
     // Simple heuristic: count repeated characters and patterns
     const charFreq = new Map<string, number>();
-    
+
     for (const char of data) {
       charFreq.set(char, (charFreq.get(char) || 0) + 1);
     }
-    
+
     // Calculate entropy-based estimate
     const entropy = Array.from(charFreq.values())
       .map(freq => {
@@ -351,11 +358,11 @@ export class CompressionService implements CompressionProvider {
         return -prob * Math.log2(prob);
       })
       .reduce((sum, val) => sum + val, 0);
-    
+
     // Estimate compression ratio from entropy
     const theoreticalRatio = entropy / 8; // 8 bits per byte
     const practicalRatio = Math.max(0.3, theoreticalRatio * 1.2); // Add overhead
-    
+
     return practicalRatio;
   }
 

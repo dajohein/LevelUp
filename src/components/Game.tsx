@@ -47,7 +47,7 @@ import {
   HealthBarBackground,
   HealthBarFill,
   HealthText,
-  BossHealthBar
+  BossHealthBar,
 } from './Game/GameStyledComponents';
 import { useAudio } from '../features/audio/AudioContext';
 import { words, getWordsForLanguage } from '../services/wordService';
@@ -125,25 +125,19 @@ export const Game: React.FC = () => {
   } = sessionState;
 
   // Enhanced game state management hook
-  const {
-    gameState,
-    gameHandlers,
-    gameHelpers,
-    enhancedGame,
-    levelUp,
-    audio
-  } = useEnhancedGameState({
-    languageCode: languageCode!,
-    moduleId,
-    currentWord,
-    quizMode,
-    wordProgress,
-    currentSession,
-    sessionProgress,
-    isSessionActive,
-    sessionStartTime,
-    gameLanguage
-  });
+  const { gameState, gameHandlers, gameHelpers, enhancedGame, levelUp, audio } =
+    useEnhancedGameState({
+      languageCode: languageCode!,
+      moduleId,
+      currentWord,
+      quizMode,
+      wordProgress,
+      currentSession,
+      sessionProgress,
+      isSessionActive,
+      sessionStartTime,
+      gameLanguage,
+    });
 
   // Destructure for easy access
   const {
@@ -265,46 +259,54 @@ export const Game: React.FC = () => {
           formatTime={formatTime}
         />
 
-        <GameContent>
-          {renderThemedQuiz()}
-        </GameContent>
+        <GameContent>{renderThemedQuiz()}</GameContent>
         <SkipButtonContainer>
           <Button
             onClick={() => {
               // Use unified challenge service manager for all special modes
-              if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id) && !isUsingSpacedRepetition) {
+              if (
+                currentSession?.id &&
+                challengeServiceManager.isSessionTypeSupported(currentSession.id) &&
+                !isUsingSpacedRepetition
+              ) {
                 // For streak challenges, reset the service first
                 if (currentSession.id === 'streak-challenge') {
                   challengeServiceManager.resetSession(currentSession.id);
                 }
-                
-                const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-                
+
+                const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+
                 const context = {
                   wordsCompleted: sessionProgress.wordsCompleted,
                   currentStreak: 0, // Reset streak on skip
                   timeRemaining,
                   targetWords: currentSession.targetWords || 15,
                   wordProgress,
-                  languageCode: languageCode!
+                  languageCode: languageCode!,
                 };
 
-                challengeServiceManager.getNextWord(currentSession.id, context)
-                  .then((result) => {
-                    dispatch(setCurrentWord({
-                      word: result.word!,
-                      options: result.options,
-                      quizMode: result.quizMode,
-                    }));
+                challengeServiceManager
+                  .getNextWord(currentSession.id, context)
+                  .then(result => {
+                    dispatch(
+                      setCurrentWord({
+                        word: result.word!,
+                        options: result.options,
+                        quizMode: result.quizMode,
+                      })
+                    );
                   })
-                  .catch((error) => {
-                    console.error(`Failed to get next word from ${currentSession.id} service on skip:`, error);
+                  .catch(error => {
+                    console.error(
+                      `Failed to get next word from ${currentSession.id} service on skip:`,
+                      error
+                    );
                     dispatch(nextWord()); // Fallback
                   });
               } else {
                 dispatch(nextWord());
               }
-              
+
               // Increment words completed in session if session is active
               if (isSessionActive && currentSession) {
                 dispatch(incrementWordsCompleted());

@@ -11,7 +11,7 @@ import type { WordProgress, LegacyWordProgress } from '../store/types';
 
 export class DataMigrationService {
   private static migrationInProgress = new Set<string>();
-  
+
   /**
    * Migrate legacy WordProgress to enhanced format
    * Preserves all original data while adding directional tracking capabilities
@@ -23,12 +23,12 @@ export class DataMigrationService {
       lastPracticed: legacy.lastPracticed,
       timesCorrect: legacy.timesCorrect,
       timesIncorrect: legacy.timesIncorrect,
-      
+
       // Enhanced tracking fields
       totalXp: legacy.xp,
       firstLearned: legacy.lastPracticed,
       version: 2,
-      
+
       // Split existing progress between directions
       directions: {
         'term-to-definition': {
@@ -46,42 +46,47 @@ export class DataMigrationService {
           lastPracticed: legacy.lastPracticed,
           consecutiveCorrect: 0,
           longestStreak: 0,
-        }
+        },
       },
-      
+
       // Infer learning phase from existing data
       learningPhase: this.inferLearningPhase(legacy),
-      tags: []
+      tags: [],
     };
-    
+
     // Verify data integrity: totals should match original
-    const totalCorrect = enhanced.directions!['term-to-definition']!.timesCorrect + 
-                        enhanced.directions!['definition-to-term']!.timesCorrect;
-    const totalIncorrect = enhanced.directions!['term-to-definition']!.timesIncorrect + 
-                          enhanced.directions!['definition-to-term']!.timesIncorrect;
-    const totalXp = enhanced.directions!['term-to-definition']!.xp + 
-                   enhanced.directions!['definition-to-term']!.xp;
-    
+    const totalCorrect =
+      enhanced.directions!['term-to-definition']!.timesCorrect +
+      enhanced.directions!['definition-to-term']!.timesCorrect;
+    const totalIncorrect =
+      enhanced.directions!['term-to-definition']!.timesIncorrect +
+      enhanced.directions!['definition-to-term']!.timesIncorrect;
+    const totalXp =
+      enhanced.directions!['term-to-definition']!.xp +
+      enhanced.directions!['definition-to-term']!.xp;
+
     // Safety check: ensure no data loss during migration
-    if (totalCorrect !== legacy.timesCorrect || 
-        totalIncorrect !== legacy.timesIncorrect || 
-        totalXp !== legacy.xp) {
+    if (
+      totalCorrect !== legacy.timesCorrect ||
+      totalIncorrect !== legacy.timesIncorrect ||
+      totalXp !== legacy.xp
+    ) {
       logger.warn(`Data integrity check failed for word ${legacy.wordId || 'unknown'}:`, {
         original: { correct: legacy.timesCorrect, incorrect: legacy.timesIncorrect, xp: legacy.xp },
-        migrated: { correct: totalCorrect, incorrect: totalIncorrect, xp: totalXp }
+        migrated: { correct: totalCorrect, incorrect: totalIncorrect, xp: totalXp },
       });
     }
-    
+
     return enhanced;
   }
-  
+
   /**
    * Check if data needs migration
    */
   static needsMigration(progress: any): boolean {
     return !progress.version || progress.version < 2;
   }
-  
+
   /**
    * Safely load word progress with automatic migration
    * This is the main entry point for transparent data migration
@@ -97,14 +102,16 @@ export class DataMigrationService {
       const rawData = wordProgressStorage.loadRaw(languageCode);
       let migratedData: { [key: string]: WordProgress } = {};
       let migrationCount = 0;
-      
+
       // Step 1: Check if any words need data format migration
-      const needsDataMigration = Object.values(rawData).some(progress => this.needsMigration(progress));
-      
+      const needsDataMigration = Object.values(rawData).some(progress =>
+        this.needsMigration(progress)
+      );
+
       if (needsDataMigration) {
         // Mark migration as in progress
         this.migrationInProgress.add(languageCode);
-        
+
         Object.entries(rawData).forEach(([wordId, progress]) => {
           if (this.needsMigration(progress)) {
             // Migrate legacy data format
@@ -115,10 +122,12 @@ export class DataMigrationService {
             migratedData[wordId] = progress as WordProgress;
           }
         });
-        
+
         if (migrationCount > 0) {
-          logger.info(`Data format migration completed: ${migrationCount} words updated for ${languageCode}`);
-          
+          logger.info(
+            `Data format migration completed: ${migrationCount} words updated for ${languageCode}`
+          );
+
           // Save the migrated data
           try {
             wordProgressStorage.save(languageCode, migratedData);
@@ -131,53 +140,64 @@ export class DataMigrationService {
         // No data format migration needed
         migratedData = rawData as { [key: string]: WordProgress };
       }
-      
+
       // Step 2: Check if word ID migration is needed (for collision prevention)
       const idMigrationStats = WordIdMigrationService.getIdMigrationStats(languageCode);
-      
+
       if (idMigrationStats.needsMigration) {
-        logger.info(`Starting word ID migration for ${languageCode}: ${idMigrationStats.oldFormatWords} words need robust IDs`);
-        
+        logger.info(
+          `Starting word ID migration for ${languageCode}: ${idMigrationStats.oldFormatWords} words need robust IDs`
+        );
+
         // Run word ID migration
-        const idMigrationResult = WordIdMigrationService.migrateWordProgressIds(languageCode, migratedData);
-        
+        const idMigrationResult = WordIdMigrationService.migrateWordProgressIds(
+          languageCode,
+          migratedData
+        );
+
         if (idMigrationResult.success && idMigrationResult.migratedCount > 0) {
-          logger.info(`Word ID migration completed: ${idMigrationResult.migratedCount} IDs updated for ${languageCode}`);
-          
+          logger.info(
+            `Word ID migration completed: ${idMigrationResult.migratedCount} IDs updated for ${languageCode}`
+          );
+
           // Reload the data after ID migration
-          migratedData = wordProgressStorage.loadRaw(languageCode) as { [key: string]: WordProgress };
+          migratedData = wordProgressStorage.loadRaw(languageCode) as {
+            [key: string]: WordProgress;
+          };
         } else if (!idMigrationResult.success) {
           logger.error(`Word ID migration failed for ${languageCode}:`, idMigrationResult.errors);
           // Continue with existing data even if ID migration failed
         }
       }
-      
+
       // Clear migration flag
       this.migrationInProgress.delete(languageCode);
-      
+
       return migratedData;
     } catch (error) {
       // Clear migration flag on error
       this.migrationInProgress.delete(languageCode);
-      
+
       logger.error('Error during migration:', error);
       // Fallback to original data if migration fails
       return wordProgressStorage.loadRaw(languageCode) as { [key: string]: WordProgress };
     }
   }
-  
+
   /**
    * Infer learning phase from existing progress data
    */
-  private static inferLearningPhase(legacy: LegacyWordProgress): 'introduction' | 'practice' | 'mastery' | 'maintenance' {
+  private static inferLearningPhase(
+    legacy: LegacyWordProgress
+  ): 'introduction' | 'practice' | 'mastery' | 'maintenance' {
     const totalAttempts = legacy.timesCorrect + legacy.timesIncorrect;
-    
+
     if (totalAttempts === 0) return 'introduction';
     if (legacy.xp < 30) return 'practice';
     if (legacy.xp < 80) return 'mastery';
     return 'maintenance';
   }
-  
+
   /**
    * Get migration statistics for a language
    */
@@ -192,12 +212,12 @@ export class DataMigrationService {
       const totalWords = Object.keys(rawData).length;
       const legacyWords = Object.values(rawData).filter(p => this.needsMigration(p)).length;
       const migratedWords = totalWords - legacyWords;
-      
+
       return {
         totalWords,
         legacyWords,
         migratedWords,
-        migrationComplete: legacyWords === 0
+        migrationComplete: legacyWords === 0,
       };
     } catch (error) {
       logger.error('Error getting migration stats:', error);
@@ -205,29 +225,28 @@ export class DataMigrationService {
         totalWords: 0,
         legacyWords: 0,
         migratedWords: 0,
-        migrationComplete: true
+        migrationComplete: true,
       };
     }
   }
 }
 
 export class DataBackupService {
-  
   /**
    * Create backup before migration
    */
   static createBackup(languageCode: string): string {
     const backupKey = `levelup_backup_${languageCode}_${Date.now()}`;
     const currentData = wordProgressStorage.loadRaw(languageCode);
-    
+
     const backup = {
       version: 1,
       languageCode,
       timestamp: new Date().toISOString(),
       dataCount: Object.keys(currentData).length,
-      data: currentData
+      data: currentData,
     };
-    
+
     try {
       localStorage.setItem(backupKey, JSON.stringify(backup));
       logger.info(`🛡️ Created backup ${backupKey} for ${languageCode} (${backup.dataCount} words)`);
@@ -237,7 +256,7 @@ export class DataBackupService {
       throw new Error('Backup creation failed - migration aborted for safety');
     }
   }
-  
+
   /**
    * Restore from backup if needed
    */
@@ -248,7 +267,7 @@ export class DataBackupService {
         logger.error('Backup not found:', backupKey);
         return false;
       }
-      
+
       const backup = JSON.parse(backupData);
       wordProgressStorage.saveRaw(backup.languageCode, backup.data);
       logger.info(`🔄 Restored backup ${backupKey} for ${backup.languageCode}`);
@@ -258,7 +277,7 @@ export class DataBackupService {
       return false;
     }
   }
-  
+
   /**
    * List available backups
    */
@@ -269,7 +288,7 @@ export class DataBackupService {
     dataCount: number;
   }> {
     const backups = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith('levelup_backup_')) {
@@ -279,7 +298,7 @@ export class DataBackupService {
             key,
             languageCode: backup.languageCode,
             timestamp: backup.timestamp,
-            dataCount: backup.dataCount || 0
+            dataCount: backup.dataCount || 0,
           });
         } catch (error) {
           // Skip corrupted backups
@@ -287,21 +306,26 @@ export class DataBackupService {
         }
       }
     }
-    
-    return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return backups.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
   }
-  
+
   /**
    * Clean up old backups (keep only the 5 most recent per language)
    */
   static cleanupOldBackups(): void {
     const backups = this.listBackups();
-    const backupsByLanguage = backups.reduce((acc, backup) => {
-      if (!acc[backup.languageCode]) acc[backup.languageCode] = [];
-      acc[backup.languageCode].push(backup);
-      return acc;
-    }, {} as { [lang: string]: typeof backups });
-    
+    const backupsByLanguage = backups.reduce(
+      (acc, backup) => {
+        if (!acc[backup.languageCode]) acc[backup.languageCode] = [];
+        acc[backup.languageCode].push(backup);
+        return acc;
+      },
+      {} as { [lang: string]: typeof backups }
+    );
+
     let deletedCount = 0;
     Object.values(backupsByLanguage).forEach(languageBackups => {
       // Keep only the 5 most recent backups per language
@@ -310,7 +334,7 @@ export class DataBackupService {
         deletedCount++;
       });
     });
-    
+
     if (deletedCount > 0) {
       logger.info(`🧹 Cleaned up ${deletedCount} old backups`);
     }
@@ -328,7 +352,6 @@ export interface DirectionalAnalytics {
 }
 
 export class DirectionalAnalyticsService {
-  
   /**
    * Calculate directional analytics for a word
    */
@@ -336,21 +359,23 @@ export class DirectionalAnalyticsService {
     if (!progress.directions || progress.version !== 2) {
       return null; // Not migrated yet or no directional data
     }
-    
+
     const termToDef = progress.directions['term-to-definition'];
     const defToTerm = progress.directions['definition-to-term'];
-    
+
     if (!termToDef || !defToTerm) {
       return null;
     }
-    
+
     // Calculate mastery for each direction (0-100)
     const termToDefMastery = Math.min(100, termToDef.xp);
     const defToTermMastery = Math.min(100, defToTerm.xp);
-    
+
     // Calculate balance (-100 = heavily term-to-def, +100 = heavily def-to-term, 0 = balanced)
-    const balance = ((defToTermMastery - termToDefMastery) / Math.max(1, termToDefMastery + defToTermMastery)) * 100;
-    
+    const balance =
+      ((defToTermMastery - termToDefMastery) / Math.max(1, termToDefMastery + defToTermMastery)) *
+      100;
+
     // Determine preferred direction
     let preferredDirection: 'term-to-definition' | 'definition-to-term' | 'balanced';
     if (Math.abs(balance) < 20) {
@@ -360,22 +385,28 @@ export class DirectionalAnalyticsService {
     } else {
       preferredDirection = 'definition-to-term';
     }
-    
+
     // Identify weak direction
-    const weakDirection = termToDefMastery < defToTermMastery ? 'term-to-definition' : 
-                         defToTermMastery < termToDefMastery ? 'definition-to-term' : null;
-    
+    const weakDirection =
+      termToDefMastery < defToTermMastery
+        ? 'term-to-definition'
+        : defToTermMastery < termToDefMastery
+          ? 'definition-to-term'
+          : null;
+
     return {
       termToDefinitionMastery: termToDefMastery,
       definitionToTermMastery: defToTermMastery,
       bidirectionalBalance: Math.round(balance),
       preferredDirection,
       weakDirection,
-      totalDirectionalSessions: (termToDef.timesCorrect + termToDef.timesIncorrect) + 
-                               (defToTerm.timesCorrect + defToTerm.timesIncorrect)
+      totalDirectionalSessions:
+        termToDef.timesCorrect +
+        termToDef.timesIncorrect +
+        (defToTerm.timesCorrect + defToTerm.timesIncorrect),
     };
   }
-  
+
   /**
    * Calculate language-wide directional analytics
    * Only returns meaningful data when directional learning is actually being used
@@ -389,30 +420,31 @@ export class DirectionalAnalyticsService {
     hasExplicitDirectionalLearning: boolean; // NEW: indicates if this language actually uses directional learning
   } {
     const wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
-    
+
     // Filter for words that have been enhanced AND have meaningful directional data
     const directionalWords = Object.values(wordProgress).filter(p => {
       if (!p.directions || p.version !== 2) return false;
-      
+
       // Check if word has had actual directional practice (not just migrated data)
       const termToDef = p.directions['term-to-definition'];
       const defToTerm = p.directions['definition-to-term'];
-      
+
       if (!termToDef || !defToTerm) return false;
-      
+
       // Consider it meaningful directional data if there's significant difference
       // or if the word has substantial practice in either direction
-      const hasPractice = (termToDef.timesCorrect + termToDef.timesIncorrect) > 2 || 
-                         (defToTerm.timesCorrect + defToTerm.timesIncorrect) > 2;
+      const hasPractice =
+        termToDef.timesCorrect + termToDef.timesIncorrect > 2 ||
+        defToTerm.timesCorrect + defToTerm.timesIncorrect > 2;
       const hasImbalance = Math.abs(termToDef.xp - defToTerm.xp) > 20;
-      
+
       return hasPractice || hasImbalance;
     });
 
     // Check if any words in this language actually have explicit directions
     // This would come from the original word data, indicating intentional directional learning
     const hasExplicitDirectionalLearning = directionalWords.length > 3; // Meaningful threshold
-    
+
     if (directionalWords.length === 0) {
       return {
         overallBalance: 0,
@@ -420,7 +452,7 @@ export class DirectionalAnalyticsService {
         averageTermToDefMastery: 0,
         averageDefToTermMastery: 0,
         wordsNeedingBalance: [],
-        hasExplicitDirectionalLearning: false
+        hasExplicitDirectionalLearning: false,
       };
     }
 
@@ -444,7 +476,8 @@ export class DirectionalAnalyticsService {
     const count = directionalWords.length;
     const avgTermToDef = totalTermToDefMastery / count;
     const avgDefToTerm = totalDefToTermMastery / count;
-    const overallBalance = ((avgDefToTerm - avgTermToDef) / Math.max(1, avgTermToDef + avgDefToTerm)) * 100;
+    const overallBalance =
+      ((avgDefToTerm - avgTermToDef) / Math.max(1, avgTermToDef + avgDefToTerm)) * 100;
 
     return {
       overallBalance: Math.round(overallBalance),
@@ -452,7 +485,7 @@ export class DirectionalAnalyticsService {
       averageTermToDefMastery: Math.round(avgTermToDef),
       averageDefToTermMastery: Math.round(avgDefToTerm),
       wordsNeedingBalance,
-      hasExplicitDirectionalLearning
+      hasExplicitDirectionalLearning,
     };
   }
 }

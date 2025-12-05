@@ -12,12 +12,7 @@
  * Backend-ready: easily extensible to include API calls
  */
 
-import { 
-  TieredStorageProvider, 
-  StorageTier, 
-  StorageOptions, 
-  StorageResult
-} from './interfaces';
+import { TieredStorageProvider, StorageTier, StorageOptions, StorageResult } from './interfaces';
 import { smartCache } from './cache';
 import { compressionService } from './compression';
 import { indexedDBStorage } from './indexedDB';
@@ -25,10 +20,10 @@ import { remoteStorage } from './remoteStorage';
 import { logger } from '../logger';
 
 interface TierConfig {
-  maxSize: number;        // Maximum size in bytes
-  ttl: number;           // Time to live in milliseconds
-  enabled: boolean;      // Whether this tier is enabled
-  priority: number;      // Priority for storage (higher = preferred)
+  maxSize: number; // Maximum size in bytes
+  ttl: number; // Time to live in milliseconds
+  enabled: boolean; // Whether this tier is enabled
+  priority: number; // Priority for storage (higher = preferred)
 }
 
 interface TieredStorageConfig {
@@ -41,7 +36,7 @@ interface TieredStorageConfig {
     indexedDB: TierConfig;
     remote?: TierConfig;
     archive?: TierConfig;
-    [key: string]: TierConfig | undefined;  // Allow dynamic tier access
+    [key: string]: TierConfig | undefined; // Allow dynamic tier access
   };
 }
 
@@ -51,33 +46,33 @@ const DEFAULT_TIERED_CONFIG: TieredStorageConfig = {
   enableCaching: true,
   tiers: {
     memory: {
-      maxSize: 50 * 1024 * 1024,  // 50MB
-      ttl: 60 * 60 * 1000,        // 1 hour
+      maxSize: 50 * 1024 * 1024, // 50MB
+      ttl: 60 * 60 * 1000, // 1 hour
       enabled: true,
       priority: 3,
     },
     local: {
       maxSize: 200 * 1024 * 1024, // 200MB
-      ttl: 24 * 60 * 60 * 1000,   // 24 hours
+      ttl: 24 * 60 * 60 * 1000, // 24 hours
       enabled: true,
       priority: 2,
     },
     indexedDB: {
       maxSize: 500 * 1024 * 1024, // 500MB
       ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
-      enabled: true,               // Enable IndexedDB tier
+      enabled: true, // Enable IndexedDB tier
       priority: 1,
     },
     remote: {
       maxSize: 1024 * 1024 * 1024, // 1GB
       ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
-      enabled: true,               // ✅ ENABLED - Vercel backend ready!
+      enabled: true, // ✅ ENABLED - Vercel backend ready!
       priority: 1,
     },
     archive: {
       maxSize: 10 * 1024 * 1024 * 1024, // 10GB
-      ttl: 365 * 24 * 60 * 60 * 1000,    // 1 year
-      enabled: false,                     // Disabled until backend is ready
+      ttl: 365 * 24 * 60 * 60 * 1000, // 1 year
+      enabled: false, // Disabled until backend is ready
       priority: 0,
     },
   },
@@ -88,7 +83,7 @@ export class TieredStorageService implements TieredStorageProvider {
 
   constructor(config: Partial<TieredStorageConfig> = {}) {
     this.config = { ...DEFAULT_TIERED_CONFIG, ...config };
-    
+
     // Enable remote tier in production or when explicitly enabled
     if (process.env.NODE_ENV === 'production' || config.tiers?.remote?.enabled) {
       this.config.tiers.remote!.enabled = true;
@@ -100,26 +95,26 @@ export class TieredStorageService implements TieredStorageProvider {
    */
   async get<T>(key: string, options: StorageOptions = {}): Promise<StorageResult<T>> {
     const startTime = performance.now();
-    
+
     // Try tiers in order of priority (highest first)
     const tiers = this.getOrderedTiers();
-    
+
     for (const tier of tiers) {
       const tierConfig = this.config.tiers[tier];
       if (!tierConfig?.enabled) continue;
-      
+
       try {
         const result = await this.getFromTier<T>(key, tier, options);
-        
+
         if (result.success && result.data !== undefined) {
           // Promote to higher tiers if beneficial
           if (tier !== 'memory' && this.shouldPromote(key, tier)) {
             await this.promoteToHigherTiers(key, result.data, tier);
           }
-          
+
           const duration = performance.now() - startTime;
           logger.debug(`📖 Retrieved ${key} from ${tier} tier (${Math.round(duration)}ms)`);
-          
+
           return {
             ...result,
             metadata: {
@@ -147,32 +142,32 @@ export class TieredStorageService implements TieredStorageProvider {
    */
   async set<T>(key: string, data: T, options: StorageOptions = {}): Promise<StorageResult<void>> {
     const startTime = performance.now();
-    
+
     try {
       // Determine target tier based on data characteristics
       const targetTier = await this.determineOptimalTier(key, data, options);
-      
+
       // Store in target tier
       const result = await this.setToTier(key, data, targetTier, options);
-      
+
       if (result.success) {
         // Also store in higher priority tiers if they have space
         await this.cascadeToHigherTiers(key, data, targetTier, options);
-        
+
         // Update cache dependencies
         if (options.priority !== 'low') {
           await smartCache.set(
-            `tier_location_${key}`, 
-            targetTier, 
+            `tier_location_${key}`,
+            targetTier,
             60000, // 1 minute TTL
             [key]
           );
         }
       }
-      
+
       const duration = performance.now() - startTime;
       logger.debug(`💾 Stored ${key} in ${targetTier} tier (${Math.round(duration)}ms)`);
-      
+
       return result;
     } catch (error) {
       logger.error(`Failed to store ${key}:`, error);
@@ -189,12 +184,12 @@ export class TieredStorageService implements TieredStorageProvider {
    */
   async delete(key: string, _options: StorageOptions = {}): Promise<StorageResult<void>> {
     const results: Array<{ tier: StorageTier; success: boolean }> = [];
-    
+
     // Delete from all tiers
     for (const tier of this.getOrderedTiers()) {
       const tierConfig = this.config.tiers[tier];
       if (!tierConfig?.enabled) continue;
-      
+
       try {
         const result = await this.deleteFromTier(key, tier);
         results.push({ tier, success: result.success });
@@ -206,10 +201,10 @@ export class TieredStorageService implements TieredStorageProvider {
 
     // Clear cache
     await smartCache.invalidate(`tier_location_${key}`);
-    
+
     const successCount = results.filter(r => r.success).length;
     const totalCount = results.length;
-    
+
     return {
       success: successCount > 0,
       metadata: {
@@ -227,7 +222,7 @@ export class TieredStorageService implements TieredStorageProvider {
     for (const tier of this.getOrderedTiers()) {
       const tierConfig = this.config.tiers[tier];
       if (!tierConfig?.enabled) continue;
-      
+
       try {
         const result = await this.getFromTier(key, tier);
         if (result.success) return true;
@@ -235,14 +230,18 @@ export class TieredStorageService implements TieredStorageProvider {
         continue;
       }
     }
-    
+
     return false;
   }
 
   /**
    * Get data specifically from a tier
    */
-  async getFromTier<T>(key: string, tier: StorageTier, options: StorageOptions = {}): Promise<StorageResult<T>> {
+  async getFromTier<T>(
+    key: string,
+    tier: StorageTier,
+    options: StorageOptions = {}
+  ): Promise<StorageResult<T>> {
     switch (tier) {
       case 'memory':
         return this.getFromMemory<T>(key);
@@ -262,7 +261,12 @@ export class TieredStorageService implements TieredStorageProvider {
   /**
    * Set data specifically to a tier
    */
-  async setToTier<T>(key: string, data: T, tier: StorageTier, options: StorageOptions = {}): Promise<StorageResult<void>> {
+  async setToTier<T>(
+    key: string,
+    data: T,
+    tier: StorageTier,
+    options: StorageOptions = {}
+  ): Promise<StorageResult<void>> {
     switch (tier) {
       case 'memory':
         return this.setToMemory(key, data, options);
@@ -298,11 +302,11 @@ export class TieredStorageService implements TieredStorageProvider {
 
       // Store in higher tier
       const setResult = await this.setToTier(key, result.data, higherTier);
-      
+
       if (setResult.success) {
         logger.debug(`⬆️ Promoted ${key} from ${tier} to ${higherTier}`);
       }
-      
+
       return setResult;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -329,13 +333,13 @@ export class TieredStorageService implements TieredStorageProvider {
 
       // Store in lower tier
       const setResult = await this.setToTier(key, result.data, lowerTier);
-      
+
       if (setResult.success) {
         // Remove from current tier
         await this.deleteFromTier(key, tier);
         logger.debug(`⬇️ Demoted ${key} from ${tier} to ${lowerTier}`);
       }
-      
+
       return setResult;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -357,7 +361,7 @@ export class TieredStorageService implements TieredStorageProvider {
     for (const tier of this.getOrderedTiers()) {
       const tierConfig = this.config.tiers[tier];
       if (!tierConfig?.enabled) continue;
-      
+
       try {
         const result = await this.getFromTier(key, tier);
         if (result.success) {
@@ -374,24 +378,28 @@ export class TieredStorageService implements TieredStorageProvider {
   }
 
   // Additional interface methods (simplified implementations)
-  async getBatch<T>(keys: string[], options: StorageOptions = {}): Promise<StorageResult<Record<string, T>>> {
+  async getBatch<T>(
+    keys: string[],
+    options: StorageOptions = {}
+  ): Promise<StorageResult<Record<string, T>>> {
     const results: Record<string, T> = {};
-    
+
     for (const key of keys) {
       const result = await this.get<T>(key, options);
       if (result.success && result.data !== undefined) {
         results[key] = result.data;
       }
     }
-    
+
     return { success: true, data: results };
   }
 
-  async setBatch<T>(data: Record<string, T>, options: StorageOptions = {}): Promise<StorageResult<void>> {
-    const promises = Object.entries(data).map(([key, value]) => 
-      this.set(key, value, options)
-    );
-    
+  async setBatch<T>(
+    data: Record<string, T>,
+    options: StorageOptions = {}
+  ): Promise<StorageResult<void>> {
+    const promises = Object.entries(data).map(([key, value]) => this.set(key, value, options));
+
     await Promise.all(promises);
     return { success: true };
   }
@@ -433,23 +441,35 @@ export class TieredStorageService implements TieredStorageProvider {
     return data ? { success: true, data } : { success: false };
   }
 
-  private async setToMemory<T>(key: string, data: T, options: StorageOptions): Promise<StorageResult<void>> {
+  private async setToMemory<T>(
+    key: string,
+    data: T,
+    options: StorageOptions
+  ): Promise<StorageResult<void>> {
     const ttl = options.ttl || this.config.tiers.memory.ttl;
     await smartCache.set(key, data, ttl);
     return { success: true };
   }
 
-  private async getFromLocalStorage<T>(key: string, _options: StorageOptions): Promise<StorageResult<T>> {
+  private async getFromLocalStorage<T>(
+    key: string,
+    _options: StorageOptions
+  ): Promise<StorageResult<T>> {
     try {
       const stored = localStorage.getItem(key);
       if (!stored) return { success: false };
 
       const parsed = JSON.parse(stored);
-      
+
       // Handle compressed data - check if it has the CompressedData structure
-      if (parsed && typeof parsed === 'object' && 
-          'data' in parsed && 'algorithm' in parsed && 
-          'originalSize' in parsed && 'compressedSize' in parsed) {
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'data' in parsed &&
+        'algorithm' in parsed &&
+        'originalSize' in parsed &&
+        'compressedSize' in parsed
+      ) {
         const data = await compressionService.decompress<T>(parsed);
         return { success: true, data, metadata: { compressed: true } };
       }
@@ -462,7 +482,11 @@ export class TieredStorageService implements TieredStorageProvider {
     }
   }
 
-  private async setToLocalStorage<T>(key: string, data: T, options: StorageOptions): Promise<StorageResult<void>> {
+  private async setToLocalStorage<T>(
+    key: string,
+    data: T,
+    options: StorageOptions
+  ): Promise<StorageResult<void>> {
     try {
       let toStore: string;
 
@@ -482,20 +506,28 @@ export class TieredStorageService implements TieredStorageProvider {
   }
 
   // IndexedDB tier methods
-  private async getFromIndexedDB<T>(key: string, _options: StorageOptions): Promise<StorageResult<T>> {
+  private async getFromIndexedDB<T>(
+    key: string,
+    _options: StorageOptions
+  ): Promise<StorageResult<T>> {
     try {
       const result = await indexedDBStorage.get<any>(key);
-      
+
       if (!result.success || !result.data) {
         return { success: false, error: result.error || 'Not found in IndexedDB' };
       }
 
       let data: T;
-      
+
       // Check if data has the CompressedData structure
-      if (result.data && typeof result.data === 'object' && 
-          'data' in result.data && 'algorithm' in result.data && 
-          'originalSize' in result.data && 'compressedSize' in result.data) {
+      if (
+        result.data &&
+        typeof result.data === 'object' &&
+        'data' in result.data &&
+        'algorithm' in result.data &&
+        'originalSize' in result.data &&
+        'compressedSize' in result.data
+      ) {
         data = await compressionService.decompress(result.data);
       } else {
         data = result.data;
@@ -508,7 +540,11 @@ export class TieredStorageService implements TieredStorageProvider {
     }
   }
 
-  private async setToIndexedDB<T>(key: string, data: T, options: StorageOptions): Promise<StorageResult<void>> {
+  private async setToIndexedDB<T>(
+    key: string,
+    data: T,
+    options: StorageOptions
+  ): Promise<StorageResult<void>> {
     try {
       let toStore: any;
 
@@ -538,31 +574,42 @@ export class TieredStorageService implements TieredStorageProvider {
       return await remoteStorage.get<T>(key, options);
     } catch (error) {
       logger.warn('Remote storage get failed:', error);
-      return { 
-        success: false, 
-        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      return {
+        success: false,
+        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   }
 
-  private async setToRemote<T>(key: string, data: T, options: StorageOptions): Promise<StorageResult<void>> {
+  private async setToRemote<T>(
+    key: string,
+    data: T,
+    options: StorageOptions
+  ): Promise<StorageResult<void>> {
     try {
       return await remoteStorage.set(key, data, options);
     } catch (error) {
       logger.warn('Remote storage set failed:', error);
-      return { 
-        success: false, 
-        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      return {
+        success: false,
+        error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   }
 
-  private async getFromArchive<T>(_key: string, _options: StorageOptions): Promise<StorageResult<T>> {
+  private async getFromArchive<T>(
+    _key: string,
+    _options: StorageOptions
+  ): Promise<StorageResult<T>> {
     // Archive storage pending backend integration
     return { success: false, error: 'Archive storage not yet implemented' };
   }
 
-  private async setToArchive<T>(_key: string, _data: T, _options: StorageOptions): Promise<StorageResult<void>> {
+  private async setToArchive<T>(
+    _key: string,
+    _data: T,
+    _options: StorageOptions
+  ): Promise<StorageResult<void>> {
     // Archive storage pending backend integration
     return { success: false, error: 'Archive storage not yet implemented' };
   }
@@ -603,21 +650,21 @@ export class TieredStorageService implements TieredStorageProvider {
         tiers: {},
         totalItems: 0,
         totalSize: 0,
-        enabled: this.config.tiers
+        enabled: this.config.tiers,
       };
 
       // Memory tier analytics (basic stats)
       analytics.tiers.memory = {
         items: 0, // Would need cache implementation update
         hitRate: 0, // Would need cache implementation update
-        enabled: this.config.tiers.memory.enabled
+        enabled: this.config.tiers.memory.enabled,
       };
 
       // Local storage analytics
       analytics.tiers.local = {
         items: localStorage.length,
         size: this.estimateLocalStorageSize(),
-        enabled: this.config.tiers.local.enabled
+        enabled: this.config.tiers.local.enabled,
       };
 
       // IndexedDB analytics
@@ -629,7 +676,7 @@ export class TieredStorageService implements TieredStorageProvider {
             items: idbStats.success ? idbStats.data?.itemCount || 0 : 0,
             size: idbStats.success ? idbStats.data?.totalSize || 0 : 0,
             categories: idbStats.success ? idbStats.data?.categories || {} : {},
-            enabled: true
+            enabled: true,
           };
         } catch (error) {
           analytics.tiers.indexedDB = {
@@ -637,18 +684,19 @@ export class TieredStorageService implements TieredStorageProvider {
             size: 0,
             categories: {},
             enabled: true,
-            error: 'Failed to get IndexedDB stats'
+            error: 'Failed to get IndexedDB stats',
           };
         }
       }
 
       // Calculate totals
-      analytics.totalItems = (analytics.tiers.memory?.items || 0) + 
-                           (analytics.tiers.local?.items || 0) + 
-                           (analytics.tiers.indexedDB?.items || 0);
-      
-      analytics.totalSize = (analytics.tiers.local?.size || 0) + 
-                          (analytics.tiers.indexedDB?.size || 0);
+      analytics.totalItems =
+        (analytics.tiers.memory?.items || 0) +
+        (analytics.tiers.local?.items || 0) +
+        (analytics.tiers.indexedDB?.items || 0);
+
+      analytics.totalSize =
+        (analytics.tiers.local?.size || 0) + (analytics.tiers.indexedDB?.size || 0);
 
       return analytics;
     } catch (error) {
@@ -681,14 +729,18 @@ export class TieredStorageService implements TieredStorageProvider {
     return currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
   }
 
-  private async determineOptimalTier<T>(_key: string, data: T, options: StorageOptions): Promise<StorageTier> {
+  private async determineOptimalTier<T>(
+    _key: string,
+    data: T,
+    options: StorageOptions
+  ): Promise<StorageTier> {
     // Default to memory for small, frequently accessed data
     const size = JSON.stringify(data).length;
-    
+
     if (size < 10 * 1024 && options.priority === 'high') {
       return 'memory';
     }
-    
+
     // Use local storage for most data
     return 'local';
   }
@@ -698,14 +750,23 @@ export class TieredStorageService implements TieredStorageProvider {
     return currentTier !== 'memory';
   }
 
-  private async promoteToHigherTiers<T>(key: string, data: T, currentTier: StorageTier): Promise<void> {
+  private async promoteToHigherTiers<T>(
+    key: string,
+    data: T,
+    currentTier: StorageTier
+  ): Promise<void> {
     const higherTier = this.getNextHigherTier(currentTier);
     if (higherTier) {
       await this.setToTier(key, data, higherTier);
     }
   }
 
-  private async cascadeToHigherTiers<T>(key: string, data: T, targetTier: StorageTier, options: StorageOptions): Promise<void> {
+  private async cascadeToHigherTiers<T>(
+    key: string,
+    data: T,
+    targetTier: StorageTier,
+    options: StorageOptions
+  ): Promise<void> {
     // Store in memory if not the target and data is small
     if (targetTier !== 'memory' && JSON.stringify(data).length < 50 * 1024) {
       await this.setToMemory(key, data, options);

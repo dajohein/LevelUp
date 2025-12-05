@@ -18,11 +18,7 @@ const DiagnosticsContainer = styled.div`
 
 const DiagnosticItem = styled.div<{ warning?: boolean; error?: boolean }>`
   margin: 2px 0;
-  color: ${props => 
-    props.error ? '#ff6b6b' : 
-    props.warning ? '#ffa726' : 
-    '#4caf50'
-  };
+  color: ${props => (props.error ? '#ff6b6b' : props.warning ? '#ffa726' : '#4caf50')};
 `;
 
 interface RenderInfo {
@@ -41,16 +37,16 @@ export const LoadingDiagnostics: React.FC = () => {
     intervalRef.current = setInterval(() => {
       const now = Date.now();
       const warnings: string[] = [];
-      
+
       renderCounts.forEach((info, component) => {
         // Check for rapid re-renders (more than 10 in 5 seconds)
-        if (info.count > 10 && (now - info.lastRender) < 5000) {
+        if (info.count > 10 && now - info.lastRender < 5000) {
           warnings.push(`${component}: ${info.count} renders in 5s`);
         }
       });
-      
+
       setInfiniteLoopWarnings(warnings);
-      
+
       // Reset counters every 10 seconds
       if (now % 10000 < 1000) {
         setRenderCounts(new Map());
@@ -68,12 +64,16 @@ export const LoadingDiagnostics: React.FC = () => {
   const trackRender = (componentName: string) => {
     const now = Date.now();
     setRenderCounts(prev => {
-      const current = prev.get(componentName) || { component: componentName, count: 0, lastRender: now };
+      const current = prev.get(componentName) || {
+        component: componentName,
+        count: 0,
+        lastRender: now,
+      };
       const updated = new Map(prev);
       updated.set(componentName, {
         ...current,
         count: current.count + 1,
-        lastRender: now
+        lastRender: now,
       });
       return updated;
     });
@@ -91,7 +91,7 @@ export const LoadingDiagnostics: React.FC = () => {
   return (
     <DiagnosticsContainer>
       <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🔍 Loading Diagnostics</div>
-      
+
       {infiniteLoopWarnings.length > 0 && (
         <div>
           <DiagnosticItem error>⚠️ Potential Issues:</DiagnosticItem>
@@ -102,23 +102,19 @@ export const LoadingDiagnostics: React.FC = () => {
           ))}
         </div>
       )}
-      
+
       <div>
         <DiagnosticItem>📊 Recent Renders:</DiagnosticItem>
         {Array.from(renderCounts.entries())
           .sort(([, a], [, b]) => b.count - a.count)
           .slice(0, 5)
           .map(([component, info]) => (
-            <DiagnosticItem 
-              key={component}
-              warning={info.count > 5}
-              error={info.count > 10}
-            >
+            <DiagnosticItem key={component} warning={info.count > 5} error={info.count > 10}>
               {component}: {info.count}x
             </DiagnosticItem>
           ))}
       </div>
-      
+
       <div style={{ marginTop: '8px', fontSize: '10px', opacity: 0.7 }}>
         Add trackRender('ComponentName') to useEffect to monitor
       </div>

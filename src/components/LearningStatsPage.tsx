@@ -231,7 +231,8 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
   // Calculate overall statistics
   const overallStats = useMemo(() => {
     const totalSessions = Object.values(wordProgress).reduce(
-      (sum: number, progress: any) => sum + ((progress.timesCorrect || 0) + (progress.timesIncorrect || 0)),
+      (sum: number, progress: any) =>
+        sum + ((progress.timesCorrect || 0) + (progress.timesIncorrect || 0)),
       0
     );
 
@@ -244,17 +245,17 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
       0
     );
 
-    const overallAccuracy = totalSessions > 0
-      ? (Object.values(wordProgress).reduce(
-          (sum: number, progress: any) => sum + (progress.timesCorrect || 0),
-          0
-        ) / totalSessions) * 100
-      : 0;
+    const overallAccuracy =
+      totalSessions > 0
+        ? (Object.values(wordProgress).reduce(
+            (sum: number, progress: any) => sum + (progress.timesCorrect || 0),
+            0
+          ) /
+            totalSessions) *
+          100
+        : 0;
 
-    const totalWords = modules.reduce(
-      (sum, module) => sum + (module.words?.length || 0),
-      0
-    );
+    const totalWords = modules.reduce((sum, module) => sum + (module.words?.length || 0), 0);
 
     const completedModules = modules.filter(module => {
       const stats = getModuleStats(languageCode!, module.id, wordProgress);
@@ -267,12 +268,14 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
       .map((progress: any) => new Date(progress.lastPracticed))
       .sort((a, b) => b.getTime() - a.getTime());
 
-    const streak = recentPractice.length > 0
-      ? Math.min(
-          7,
-          recentPractice.filter(date => Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000).length
-        )
-      : 0;
+    const streak =
+      recentPractice.length > 0
+        ? Math.min(
+            7,
+            recentPractice.filter(date => Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000)
+              .length
+          )
+        : 0;
 
     return {
       totalSessions,
@@ -298,7 +301,7 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
 
   return (
     <Container>
-      <Navigation 
+      <Navigation
         languageName={language.name}
         languageFlag={language.flag}
         showUserProfile={true}
@@ -308,18 +311,13 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
           <PageTitle>
             📊 {language.flag} {language.name} Learning Analytics
           </PageTitle>
-          <PageSubtitle>
-            Detailed insights into your learning progress and performance
-          </PageSubtitle>
+          <PageSubtitle>Detailed insights into your learning progress and performance</PageSubtitle>
         </PageHeader>
 
         {/* AI Learning Dashboard */}
         <StatsSection>
           <SectionTitle>🤖 AI Learning Coach</SectionTitle>
-          <AILearningDashboard
-            userId={getDemoUserId()}
-            languageCode={languageCode}
-          />
+          <AILearningDashboard userId={getDemoUserId()} languageCode={languageCode} />
         </StatsSection>
 
         {/* Overall Statistics */}
@@ -366,7 +364,9 @@ export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
                   </ModuleName>
                   <ModuleStatsRow>
                     <span>Words Learned:</span>
-                    <span>{stats.wordsLearned}/{stats.totalWords}</span>
+                    <span>
+                      {stats.wordsLearned}/{stats.totalWords}
+                    </span>
                   </ModuleStatsRow>
                   <ModuleStatsRow>
                     <span>Progress:</span>

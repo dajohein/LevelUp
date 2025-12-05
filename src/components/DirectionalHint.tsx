@@ -15,25 +15,23 @@ const DirectionalIcon = styled.button<{ direction: string }>`
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: 2px solid ${props => props.direction === 'term-to-definition' 
-    ? '#2196f3' 
-    : '#9c27b0'};
+  border: 2px solid ${props => (props.direction === 'term-to-definition' ? '#2196f3' : '#9c27b0')};
   border-radius: 50%;
-  background: ${props => props.direction === 'term-to-definition' 
-    ? 'rgba(33, 150, 243, 0.2)' 
-    : 'rgba(156, 39, 176, 0.2)'};
-  color: ${props => props.direction === 'term-to-definition' 
-    ? '#2196f3' 
-    : '#9c27b0'};
+  background: ${props =>
+    props.direction === 'term-to-definition'
+      ? 'rgba(33, 150, 243, 0.2)'
+      : 'rgba(156, 39, 176, 0.2)'};
+  color: ${props => (props.direction === 'term-to-definition' ? '#2196f3' : '#9c27b0')};
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   &:hover {
-    background: ${props => props.direction === 'term-to-definition' 
-      ? 'rgba(33, 150, 243, 0.35)' 
-      : 'rgba(156, 39, 176, 0.35)'};
+    background: ${props =>
+      props.direction === 'term-to-definition'
+        ? 'rgba(33, 150, 243, 0.35)'
+        : 'rgba(156, 39, 176, 0.35)'};
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
@@ -57,9 +55,11 @@ const Tooltip = styled.div<{ visible: boolean }>`
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border: 1px solid ${props => props.theme.colors.textSecondary};
-  opacity: ${props => props.visible ? 1 : 0};
-  visibility: ${props => props.visible ? 'visible' : 'hidden'};
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  opacity: ${props => (props.visible ? 1 : 0)};
+  visibility: ${props => (props.visible ? 'visible' : 'hidden')};
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
   z-index: 1000;
 
   &::after {
@@ -84,9 +84,11 @@ const DetailPopup = styled.div<{ visible: boolean }>`
   min-width: 240px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   border: 1px solid ${props => props.theme.colors.textSecondary};
-  opacity: ${props => props.visible ? 1 : 0};
-  visibility: ${props => props.visible ? 'visible' : 'hidden'};
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  opacity: ${props => (props.visible ? 1 : 0)};
+  visibility: ${props => (props.visible ? 'visible' : 'hidden')};
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
   z-index: 1001;
 
   &::before {
@@ -121,7 +123,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   padding: 2px;
   border-radius: 2px;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
@@ -131,9 +133,7 @@ const DirectionDisplay = styled.div<{ direction: string }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: ${props => props.direction === 'term-to-definition' 
-    ? '#2196f3' 
-    : '#9c27b0'};
+  color: ${props => (props.direction === 'term-to-definition' ? '#2196f3' : '#9c27b0')};
   font-weight: 500;
 `;
 
@@ -143,9 +143,9 @@ interface DirectionalHintProps {
   word?: any;
 }
 
-export const DirectionalHint: React.FC<DirectionalHintProps> = ({ 
-  direction = 'definition-to-term', 
-  showHint = true
+export const DirectionalHint: React.FC<DirectionalHintProps> = ({
+  direction = 'definition-to-term',
+  showHint = true,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -161,14 +161,16 @@ export const DirectionalHint: React.FC<DirectionalHintProps> = ({
         icon: <FaArrowRight size={12} />,
         shortText: 'Term → Definition',
         fullText: 'Translate from source to target language',
-        description: 'You will see a term in your native language and need to provide the translation in the target language you are learning.'
+        description:
+          'You will see a term in your native language and need to provide the translation in the target language you are learning.',
       };
     } else {
       return {
         icon: <FaArrowLeft size={12} />,
         shortText: 'Definition → Term',
-        fullText: 'Translate from target to source language', 
-        description: 'You will see a term in the target language and need to provide the meaning or translation in your native language.'
+        fullText: 'Translate from target to source language',
+        description:
+          'You will see a term in the target language and need to provide the meaning or translation in your native language.',
       };
     }
   };
@@ -198,9 +200,7 @@ export const DirectionalHint: React.FC<DirectionalHintProps> = ({
         {directionInfo.icon}
       </DirectionalIcon>
 
-      <Tooltip visible={showTooltip && !showPopup}>
-        {directionInfo.shortText}
-      </Tooltip>
+      <Tooltip visible={showTooltip && !showPopup}>{directionInfo.shortText}</Tooltip>
 
       <DetailPopup visible={showPopup}>
         <PopupHeader>
@@ -213,12 +213,8 @@ export const DirectionalHint: React.FC<DirectionalHintProps> = ({
           </CloseButton>
         </PopupHeader>
         <PopupContent>
-          <div style={{ marginBottom: '6px', fontWeight: 500 }}>
-            {directionInfo.fullText}
-          </div>
-          <div>
-            {directionInfo.description}
-          </div>
+          <div style={{ marginBottom: '6px', fontWeight: 500 }}>{directionInfo.fullText}</div>
+          <div>{directionInfo.description}</div>
         </PopupContent>
       </DetailPopup>
     </DirectionalIconContainer>

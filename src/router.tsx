@@ -28,7 +28,7 @@ import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoadin
 const SessionSelectWrapper = () => {
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId?: string }>();
   return (
-    <LazyWrapper 
+    <LazyWrapper
       fallback={() => (
         <div style={{ padding: '20px' }}>
           <SkeletonLayout type="card" count={2} />
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
       {
         path: 'language/:languageCode',
         element: (
-          <LazyWrapper 
+          <LazyWrapper
             fallback={() => (
               <div style={{ padding: '20px' }}>
                 <SkeletonLayout type="card" count={2} />
@@ -172,7 +172,7 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper 
+        <LazyWrapper
           fallback={() => (
             <div style={{ padding: '20px' }}>
               <SkeletonLayout type="game" />
@@ -189,7 +189,7 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode/session',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper 
+        <LazyWrapper
           fallback={() => (
             <div style={{ padding: '20px' }}>
               <SkeletonLayout type="game" />
@@ -206,7 +206,7 @@ export const router = createBrowserRouter([
     path: '/game/:languageCode/:moduleId',
     element: (
       <AppLayout showBottomNav={false}>
-        <LazyWrapper 
+        <LazyWrapper
           fallback={() => (
             <div style={{ padding: '20px' }}>
               <SkeletonLayout type="game" />

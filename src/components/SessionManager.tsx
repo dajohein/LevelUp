@@ -62,8 +62,12 @@ const SessionProgressBar = styled.div`
   }
 
   @keyframes shine {
-    0% { left: -100%; }
-    100% { left: 100%; }
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
   }
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
@@ -311,7 +315,7 @@ export interface SessionManagerProps {
     incorrectAnswers: number;
   };
   sessionTimer: number;
-  
+
   // Format utility
   formatTime: (seconds: number) => string;
 }
@@ -321,7 +325,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   currentSession,
   sessionProgress,
   sessionTimer,
-  formatTime
+  formatTime,
 }) => {
   return (
     <>

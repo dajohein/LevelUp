@@ -1,6 +1,6 @@
 /**
  * AI Challenge Integration Interface
- * 
+ *
  * Provides intelligent enhancements for challenge modes while preserving
  * their unique characteristics and fallback capability
  */
@@ -13,7 +13,13 @@ import { logger } from './logger';
 import { AIInterventionData } from '../types/challengeTypes';
 
 export interface ChallengeAIContext {
-  sessionType: 'streak-challenge' | 'boss-battle' | 'quick-dash' | 'deep-dive' | 'precision-mode' | 'fill-in-the-blank';
+  sessionType:
+    | 'streak-challenge'
+    | 'boss-battle'
+    | 'quick-dash'
+    | 'deep-dive'
+    | 'precision-mode'
+    | 'fill-in-the-blank';
   currentProgress: {
     wordsCompleted: number;
     targetWords: number;
@@ -114,7 +120,7 @@ class ChallengeAIIntegrator {
           recentPerformance: context.userState.recentPerformance,
           currentStreak: context.currentProgress.consecutiveCorrect,
           sessionDuration: context.currentProgress.sessionDuration,
-          challengeType: context.sessionType
+          challengeType: context.sessionType,
         },
         {} as Word, // Placeholder - will be filled by calling service
         context.challengeContext.currentDifficulty / 100, // Convert to 0-1 scale
@@ -131,16 +137,15 @@ class ChallengeAIIntegrator {
         performanceDataPoints: context.userState.recentPerformance.length,
         recentAccuracy: context.currentProgress.recentAccuracy,
         consecutiveCorrect: context.currentProgress.consecutiveCorrect,
-        consecutiveIncorrect: context.currentProgress.consecutiveIncorrect
+        consecutiveIncorrect: context.currentProgress.consecutiveIncorrect,
       });
 
       return {
         cognitiveLoad,
         momentum,
         recommendation,
-        shouldIntervene
+        shouldIntervene,
       };
-
     } catch (error) {
       logger.error('❌ AI analysis failed, using fallback:', error);
       return this.getFallbackAnalysis(context);
@@ -162,14 +167,14 @@ class ChallengeAIIntegrator {
       }
 
       const analysis = await this.analyzeChallenge(context);
-      
+
       // Get real word progress data for AI decision making
       const currentWordProgress = wordProgress[originalWord.id] || {
         wordId: originalWord.id,
         xp: 0,
         lastPracticed: new Date().toISOString(),
         timesCorrect: 0,
-        timesIncorrect: 0
+        timesIncorrect: 0,
       };
 
       // Use AI engine with real word data for optimal quiz mode selection
@@ -180,13 +185,13 @@ class ChallengeAIIntegrator {
           sessionDuration: context.currentProgress.sessionDuration,
           challengeType: context.sessionType,
           // Include word-specific progress for better AI decisions
-          wordProgress: currentWordProgress
+          wordProgress: currentWordProgress,
         },
         originalWord,
         context.challengeContext.currentDifficulty / 100,
         context.sessionType
       );
-      
+
       // AI-driven quiz mode selection based on cognitive load
       let aiRecommendedMode = aiDecision.quizMode;
       let difficultyAdjustment = aiDecision.difficultyAdjustment;
@@ -196,29 +201,55 @@ class ChallengeAIIntegrator {
       // Additional cognitive load adjustments on top of AI baseline
       if (analysis.cognitiveLoad.level === 'high' || analysis.cognitiveLoad.level === 'overload') {
         // User is struggling - make it easier
-        aiRecommendedMode = this.getEasierQuizMode(originalQuizMode) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+        aiRecommendedMode = this.getEasierQuizMode(originalQuizMode) as
+          | 'multiple-choice'
+          | 'letter-scramble'
+          | 'open-answer'
+          | 'fill-in-the-blank';
         difficultyAdjustment = -1;
         interventionNeeded = true;
-        reasoning.push(`High cognitive load detected - switching to easier ${aiRecommendedMode} mode`);
-      } else if (analysis.cognitiveLoad.level === 'low' && analysis.momentum.trend === 'increasing') {
+        reasoning.push(
+          `High cognitive load detected - switching to easier ${aiRecommendedMode} mode`
+        );
+      } else if (
+        analysis.cognitiveLoad.level === 'low' &&
+        analysis.momentum.trend === 'increasing'
+      ) {
         // User is doing well - can handle more challenge
-        aiRecommendedMode = this.getHarderQuizMode(originalQuizMode) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+        aiRecommendedMode = this.getHarderQuizMode(originalQuizMode) as
+          | 'multiple-choice'
+          | 'letter-scramble'
+          | 'open-answer'
+          | 'fill-in-the-blank';
         difficultyAdjustment = 1;
-        reasoning.push(`Low cognitive load + positive momentum - increasing challenge with ${aiRecommendedMode}`);
+        reasoning.push(
+          `Low cognitive load + positive momentum - increasing challenge with ${aiRecommendedMode}`
+        );
       } else if (context.sessionType === 'deep-dive') {
         // Deep Dive mode should always benefit from AI enhancements
         // Even with moderate cognitive load, we can provide contextual improvements
         if (analysis.cognitiveLoad.level === 'moderate' && Math.random() > 0.3) {
           // 70% chance to apply AI enhancement in deep-dive mode
           const enhancementTypes = ['contextual-analysis', 'usage-example', 'synonym-antonym'];
-          const randomEnhancement = enhancementTypes[Math.floor(Math.random() * enhancementTypes.length)];
-          
+          const randomEnhancement =
+            enhancementTypes[Math.floor(Math.random() * enhancementTypes.length)];
+
           // Only switch if it's different from current mode and compatible
-          if (randomEnhancement !== originalQuizMode && 
-              ['multiple-choice', 'contextual-analysis', 'usage-example', 'synonym-antonym'].includes(randomEnhancement)) {
-            aiRecommendedMode = randomEnhancement as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+          if (
+            randomEnhancement !== originalQuizMode &&
+            ['multiple-choice', 'contextual-analysis', 'usage-example', 'synonym-antonym'].includes(
+              randomEnhancement
+            )
+          ) {
+            aiRecommendedMode = randomEnhancement as
+              | 'multiple-choice'
+              | 'letter-scramble'
+              | 'open-answer'
+              | 'fill-in-the-blank';
             interventionNeeded = true;
-            reasoning.push(`Deep Dive AI enhancement - exploring ${aiRecommendedMode} for deeper understanding`);
+            reasoning.push(
+              `Deep Dive AI enhancement - exploring ${aiRecommendedMode} for deeper understanding`
+            );
           }
         }
       }
@@ -226,7 +257,7 @@ class ChallengeAIIntegrator {
       // Apply challenge-specific logic
       if (context.sessionType === 'streak-challenge') {
         aiRecommendedMode = this.adjustForStreakChallenge(
-          aiRecommendedMode, 
+          aiRecommendedMode,
           context.currentProgress.currentStreak || 0,
           analysis.cognitiveLoad
         ) as 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
@@ -239,7 +270,10 @@ class ChallengeAIIntegrator {
       }
 
       // Apply momentum-based adjustments
-      if (analysis.momentum.trend === 'decreasing' && context.currentProgress.consecutiveIncorrect >= 2) {
+      if (
+        analysis.momentum.trend === 'decreasing' &&
+        context.currentProgress.consecutiveIncorrect >= 2
+      ) {
         aiRecommendedMode = 'multiple-choice'; // Safety net
         difficultyAdjustment = Math.min(difficultyAdjustment, -1);
         interventionNeeded = true;
@@ -253,9 +287,8 @@ class ChallengeAIIntegrator {
         difficultyAdjustment,
         reasoning,
         interventionNeeded,
-        fallbackUsed: false
+        fallbackUsed: false,
       };
-
     } catch (error) {
       logger.error('❌ AI word selection enhancement failed:', error);
       return this.getFallbackSelection(originalWord, originalQuizMode);
@@ -267,12 +300,12 @@ class ChallengeAIIntegrator {
    */
   private getEasierQuizMode(currentMode: string): string {
     const difficultyOrder = [
-      'multiple-choice',      // Easiest
+      'multiple-choice', // Easiest
       'letter-scramble',
       'open-answer',
-      'fill-in-the-blank'    // Hardest
+      'fill-in-the-blank', // Hardest
     ];
-    
+
     const currentIndex = difficultyOrder.indexOf(currentMode);
     return currentIndex > 0 ? difficultyOrder[currentIndex - 1] : currentMode;
   }
@@ -283,46 +316,56 @@ class ChallengeAIIntegrator {
   private getHarderQuizMode(currentMode: string): string {
     const difficultyOrder = [
       'multiple-choice',
-      'letter-scramble', 
+      'letter-scramble',
       'open-answer',
-      'fill-in-the-blank'
+      'fill-in-the-blank',
     ];
-    
+
     const currentIndex = difficultyOrder.indexOf(currentMode);
-    return currentIndex < difficultyOrder.length - 1 ? difficultyOrder[currentIndex + 1] : currentMode;
+    return currentIndex < difficultyOrder.length - 1
+      ? difficultyOrder[currentIndex + 1]
+      : currentMode;
   }
 
   /**
    * Apply streak-specific adjustments
    */
-  private adjustForStreakChallenge(mode: string, streak: number, cognitiveLoad: CognitiveLoad): string {
+  private adjustForStreakChallenge(
+    mode: string,
+    streak: number,
+    cognitiveLoad: CognitiveLoad
+  ): string {
     // Early streak (0-5): Keep it accessible
     if (streak <= 5 && cognitiveLoad.level !== 'low') {
       return mode === 'fill-in-the-blank' ? 'open-answer' : mode;
     }
-    
+
     // High streak (15+): Maintain challenge unless user is struggling
     if (streak >= 15 && cognitiveLoad.level === 'high') {
       return 'multiple-choice'; // Emergency support
     }
-    
+
     return mode;
   }
 
   /**
-   * Apply boss battle specific adjustments  
+   * Apply boss battle specific adjustments
    */
-  private adjustForBossBattle(mode: string, phaseProgress: number, cognitiveLoad: CognitiveLoad): string {
+  private adjustForBossBattle(
+    mode: string,
+    phaseProgress: number,
+    cognitiveLoad: CognitiveLoad
+  ): string {
     // Early boss phase: Build confidence
     if (phaseProgress < 0.3 && cognitiveLoad.level !== 'low') {
       return mode === 'fill-in-the-blank' ? 'letter-scramble' : mode;
     }
-    
+
     // Final boss phase: Maintain epic difficulty unless critical overload
     if (phaseProgress > 0.8 && cognitiveLoad.level === 'overload') {
       return 'open-answer'; // Still challenging but not impossible
     }
-    
+
     return mode;
   }
 
@@ -330,25 +373,25 @@ class ChallengeAIIntegrator {
    * Determine if intervention is needed
    */
   private shouldIntervene(
-    cognitiveLoad: CognitiveLoad, 
-    momentum: LearningMomentum, 
+    cognitiveLoad: CognitiveLoad,
+    momentum: LearningMomentum,
     context: ChallengeAIContext
   ): boolean {
     // High cognitive load always triggers intervention
     if (cognitiveLoad.level === 'high' || cognitiveLoad.level === 'overload') {
       return true;
     }
-    
+
     // Multiple consecutive mistakes
     if (context.currentProgress.consecutiveIncorrect >= 3) {
       return true;
     }
-    
+
     // Declining momentum with low accuracy
     if (momentum.trend === 'decreasing' && context.currentProgress.recentAccuracy < 0.4) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -359,34 +402,38 @@ class ChallengeAIIntegrator {
     const baseCognitiveLoad: CognitiveLoad = {
       level: context.currentProgress.consecutiveIncorrect >= 2 ? 'high' : 'moderate',
       confidence: 0.6,
-      indicators: ['fallback-analysis']
+      indicators: ['fallback-analysis'],
     };
 
     const baseMomentum: LearningMomentum = {
       score: Math.max(0.1, context.currentProgress.recentAccuracy),
       trend: context.currentProgress.consecutiveCorrect >= 2 ? 'increasing' : 'stable',
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     };
 
     const baseRecommendation: AdaptiveLearningDecision = {
-      quizMode: context.currentProgress.consecutiveIncorrect >= 2 ? 'multiple-choice' : 'letter-scramble',
+      quizMode:
+        context.currentProgress.consecutiveIncorrect >= 2 ? 'multiple-choice' : 'letter-scramble',
       difficultyAdjustment: 0,
       reasoning: ['AI unavailable - using rule-based fallback'],
-      confidence: 0.5
+      confidence: 0.5,
     };
 
     return {
       cognitiveLoad: baseCognitiveLoad,
       momentum: baseMomentum,
       recommendation: baseRecommendation,
-      shouldIntervene: context.currentProgress.consecutiveIncorrect >= 3
+      shouldIntervene: context.currentProgress.consecutiveIncorrect >= 3,
     };
   }
 
   /**
    * Fallback word selection when AI is unavailable
    */
-  private getFallbackSelection(originalWord: Word, originalQuizMode: string): AIEnhancedWordSelection {
+  private getFallbackSelection(
+    originalWord: Word,
+    originalQuizMode: string
+  ): AIEnhancedWordSelection {
     return {
       selectedWord: originalWord,
       originalQuizMode,
@@ -394,7 +441,7 @@ class ChallengeAIIntegrator {
       difficultyAdjustment: 0,
       reasoning: ['AI unavailable - using original selection'],
       interventionNeeded: false,
-      fallbackUsed: true
+      fallbackUsed: true,
     };
   }
 
@@ -416,21 +463,18 @@ class ChallengeAIIntegrator {
   /**
    * Save AI intervention performance data
    */
-  async saveAIPerformanceData(
-    userId: string,
-    interventionData: AIInterventionData
-  ): Promise<void> {
+  async saveAIPerformanceData(userId: string, interventionData: AIInterventionData): Promise<void> {
     try {
       // Import here to avoid circular dependency
       const { userLearningProfileStorage } = await import('./storage/userLearningProfile');
-      
+
       await userLearningProfileStorage.updateAIPerformanceData(userId, interventionData);
-      
+
       logger.info('AI intervention performance saved', {
         userId,
         type: interventionData.type,
         successful: interventionData.successful,
-        accuracyImprovement: interventionData.afterAccuracy - interventionData.beforeAccuracy
+        accuracyImprovement: interventionData.afterAccuracy - interventionData.beforeAccuracy,
       });
     } catch (error) {
       logger.error('Failed to save AI performance data', { userId, error });

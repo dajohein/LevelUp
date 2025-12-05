@@ -9,19 +9,20 @@ import { DirectionalAnalyticsService } from '../services/dataMigrationService';
 export const languageUsesDirectionalLearning = (languageCode: string): boolean => {
   try {
     const modules = getModulesForLanguage(languageCode);
-    
+
     // Check if any words in any module have explicit direction
     for (const module of modules) {
       if (module.words) {
-        const hasDirectionalWords = module.words.some((word: any) => 
-          word.direction === 'term-to-definition' || word.direction === 'definition-to-term'
+        const hasDirectionalWords = module.words.some(
+          (word: any) =>
+            word.direction === 'term-to-definition' || word.direction === 'definition-to-term'
         );
         if (hasDirectionalWords) {
           return true;
         }
       }
     }
-    
+
     return false;
   } catch (error) {
     console.warn(`Error checking directional learning for ${languageCode}:`, error);
@@ -36,13 +37,14 @@ export const moduleUsesDirectionalLearning = (languageCode: string, moduleId: st
   try {
     const modules = getModulesForLanguage(languageCode);
     const module = modules.find((m: any) => m.id === moduleId);
-    
+
     if (!module || !module.words) {
       return false;
     }
-    
-    return module.words.some((word: any) => 
-      word.direction === 'term-to-definition' || word.direction === 'definition-to-term'
+
+    return module.words.some(
+      (word: any) =>
+        word.direction === 'term-to-definition' || word.direction === 'definition-to-term'
     );
   } catch (error) {
     console.warn(`Error checking directional learning for module ${moduleId}:`, error);
@@ -56,15 +58,18 @@ export const moduleUsesDirectionalLearning = (languageCode: string, moduleId: st
  */
 export const userHasMeaningfulDirectionalData = (languageCode: string): boolean => {
   try {
-    const analytics = DirectionalAnalyticsService.calculateLanguageDirectionalAnalytics(languageCode);
-    
+    const analytics =
+      DirectionalAnalyticsService.calculateLanguageDirectionalAnalytics(languageCode);
+
     // Consider meaningful if:
     // 1. Has directional data for multiple words
     // 2. Has enough practice sessions to be statistically relevant
     // 3. Language actually uses directional learning
-    return analytics.wordsWithDirectionalData >= 3 && 
-           analytics.hasExplicitDirectionalLearning &&
-           languageUsesDirectionalLearning(languageCode);
+    return (
+      analytics.wordsWithDirectionalData >= 3 &&
+      analytics.hasExplicitDirectionalLearning &&
+      languageUsesDirectionalLearning(languageCode)
+    );
   } catch (error) {
     console.warn(`Error checking meaningful directional data for ${languageCode}:`, error);
     return false;
@@ -74,7 +79,9 @@ export const userHasMeaningfulDirectionalData = (languageCode: string): boolean 
 /**
  * Get directional learning status for a language
  */
-export const getDirectionalLearningStatus = (languageCode: string): {
+export const getDirectionalLearningStatus = (
+  languageCode: string
+): {
   isSupported: boolean;
   hasMeaningfulData: boolean;
   shouldShowAnalytics: boolean;
@@ -82,12 +89,12 @@ export const getDirectionalLearningStatus = (languageCode: string): {
 } => {
   const isSupported = languageUsesDirectionalLearning(languageCode);
   const hasMeaningfulData = userHasMeaningfulDirectionalData(languageCode);
-  
+
   return {
     isSupported,
     hasMeaningfulData,
     shouldShowAnalytics: isSupported && hasMeaningfulData,
-    shouldShowHints: isSupported // Show hints if the language supports it, even without data yet
+    shouldShowHints: isSupported, // Show hints if the language supports it, even without data yet
   };
 };
 
@@ -96,8 +103,10 @@ export const getDirectionalLearningStatus = (languageCode: string): {
  */
 export const shouldShowDirectionalHint = (word: any): boolean => {
   // Show hint only if word has an explicit direction property
-  return !!(word?.direction && 
-           (word.direction === 'term-to-definition' || word.direction === 'definition-to-term'));
+  return !!(
+    word?.direction &&
+    (word.direction === 'term-to-definition' || word.direction === 'definition-to-term')
+  );
 };
 
 export default {
@@ -105,5 +114,5 @@ export default {
   moduleUsesDirectionalLearning,
   userHasMeaningfulDirectionalData,
   getDirectionalLearningStatus,
-  shouldShowDirectionalHint
+  shouldShowDirectionalHint,
 };

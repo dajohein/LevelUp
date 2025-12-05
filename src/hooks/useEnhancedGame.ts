@@ -33,7 +33,9 @@ export interface EnhancedGameState {
 
 export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
   const { wordProgress } = useSelector((state: RootState) => state.game);
-  const { currentSession, progress: sessionProgress } = useSelector((state: RootState) => state.session);
+  const { currentSession, progress: sessionProgress } = useSelector(
+    (state: RootState) => state.session
+  );
 
   const [enhancedState, setEnhancedState] = useState<EnhancedGameState>({
     isUsingSpacedRepetition: false,
@@ -55,9 +57,11 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
     }
 
     // Disable enhanced learning for challenges that need full word pool access
-    if (currentSession?.id === 'streak-challenge' || 
-        currentSession?.id === 'boss-battle' || 
-        currentSession?.id === 'precision-mode') {
+    if (
+      currentSession?.id === 'streak-challenge' ||
+      currentSession?.id === 'boss-battle' ||
+      currentSession?.id === 'precision-mode'
+    ) {
       logger.debug(`🎯 ${currentSession.name} detected - using full word pool mode`);
       setEnhancedState(prev => ({ ...prev, isUsingSpacedRepetition: false }));
       return false;
@@ -182,7 +186,10 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
         currentIndex: sessionProgress.wordsCompleted,
         totalWords: currentSession.targetWords,
         correctAnswers: sessionProgress.correctAnswers,
-        accuracy: sessionProgress.wordsCompleted > 0 ? sessionProgress.correctAnswers / sessionProgress.wordsCompleted : 0,
+        accuracy:
+          sessionProgress.wordsCompleted > 0
+            ? sessionProgress.correctAnswers / sessionProgress.wordsCompleted
+            : 0,
         timeElapsed: sessionProgress.timeElapsed,
         sessionType: currentSession.name || 'Learning Session',
         isEnhanced: false,

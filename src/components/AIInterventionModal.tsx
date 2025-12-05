@@ -22,8 +22,12 @@ const ModalOverlay = styled.div`
   animation: fadeIn 0.3s ease-out;
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 `;
 
@@ -40,11 +44,11 @@ const ModalContent = styled.div`
   animation: slideIn 0.3s ease-out;
 
   @keyframes slideIn {
-    from { 
+    from {
       transform: translateY(50px) scale(0.9);
       opacity: 0;
     }
-    to { 
+    to {
       transform: translateY(0) scale(1);
       opacity: 1;
     }
@@ -65,9 +69,15 @@ const AIAvatar = styled.div`
   animation: pulse 2s infinite;
 
   @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 `;
 
@@ -101,7 +111,7 @@ const MessageDescription = styled.p`
 const RecommendationsList = styled.ul`
   margin: 0;
   padding-left: ${props => props.theme.spacing.md};
-  
+
   li {
     margin-bottom: ${props => props.theme.spacing.xs};
     opacity: 0.9;
@@ -125,18 +135,28 @@ const UrgencyIndicator = styled.div<{ urgency: string }>`
     border-radius: 50%;
     background: ${props => {
       switch (props.urgency) {
-        case 'critical': return '#ff4444';
-        case 'high': return '#ff9800';
-        case 'medium': return '#2196f3';
-        default: return '#4caf50';
+        case 'critical':
+          return '#ff4444';
+        case 'high':
+          return '#ff9800';
+        case 'medium':
+          return '#2196f3';
+        default:
+          return '#4caf50';
       }
     }};
-    animation: ${props => props.urgency === 'critical' ? 'blink 1s infinite' : 'none'};
+    animation: ${props => (props.urgency === 'critical' ? 'blink 1s infinite' : 'none')};
   }
 
   @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+    0%,
+    50% {
+      opacity: 1;
+    }
+    51%,
+    100% {
+      opacity: 0.3;
+    }
   }
 `;
 
@@ -150,13 +170,16 @@ const ActionButtons = styled.div`
 const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'dismiss' }>`
   background: ${props => {
     switch (props.variant) {
-      case 'primary': return 'rgba(255, 255, 255, 0.9)';
-      case 'secondary': return 'rgba(255, 255, 255, 0.2)';
-      case 'dismiss': return 'rgba(255, 255, 255, 0.1)';
+      case 'primary':
+        return 'rgba(255, 255, 255, 0.9)';
+      case 'secondary':
+        return 'rgba(255, 255, 255, 0.2)';
+      case 'dismiss':
+        return 'rgba(255, 255, 255, 0.1)';
     }
   }};
-  color: ${props => props.variant === 'primary' ? '#2c3e50' : 'white'};
-  border: ${props => props.variant === 'primary' ? 'none' : '1px solid rgba(255, 255, 255, 0.3)'};
+  color: ${props => (props.variant === 'primary' ? '#2c3e50' : 'white')};
+  border: ${props => (props.variant === 'primary' ? 'none' : '1px solid rgba(255, 255, 255, 0.3)')};
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
   border-radius: 10px;
   font-size: 0.9rem;
@@ -169,9 +192,12 @@ const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'dismiss
     transform: translateY(-2px);
     background: ${props => {
       switch (props.variant) {
-        case 'primary': return 'white';
-        case 'secondary': return 'rgba(255, 255, 255, 0.3)';
-        case 'dismiss': return 'rgba(255, 255, 255, 0.2)';
+        case 'primary':
+          return 'white';
+        case 'secondary':
+          return 'rgba(255, 255, 255, 0.3)';
+        case 'dismiss':
+          return 'rgba(255, 255, 255, 0.2)';
       }
     }};
   }
@@ -247,26 +273,35 @@ export const AIInterventionModal: React.FC<AIInterventionModalProps> = ({
   onAccept,
   onDefer,
   onDismiss,
-  onClose
+  onClose,
 }) => {
   if (!intervention) return null;
 
   const getUrgencyMessage = (urgency: string) => {
     switch (urgency) {
-      case 'critical': return 'Immediate attention needed';
-      case 'high': return 'Important recommendation';
-      case 'medium': return 'Helpful suggestion';
-      default: return 'Optional tip';
+      case 'critical':
+        return 'Immediate attention needed';
+      case 'high':
+        return 'Important recommendation';
+      case 'medium':
+        return 'Helpful suggestion';
+      default:
+        return 'Optional tip';
     }
   };
 
   const getActionMessage = (action: string) => {
     switch (action) {
-      case 'immediate_break': return 'Take a break to refresh your mind';
-      case 'adjust_difficulty': return 'Let me adjust the difficulty level';
-      case 'suggest_session_end': return 'Consider ending on a positive note';
-      case 'focus_content': return 'Focus on specific content areas';
-      default: return 'AI recommendation available';
+      case 'immediate_break':
+        return 'Take a break to refresh your mind';
+      case 'adjust_difficulty':
+        return 'Let me adjust the difficulty level';
+      case 'suggest_session_end':
+        return 'Consider ending on a positive note';
+      case 'focus_content':
+        return 'Focus on specific content areas';
+      default:
+        return 'AI recommendation available';
     }
   };
 
@@ -276,20 +311,21 @@ export const AIInterventionModal: React.FC<AIInterventionModalProps> = ({
         <ModalOverlay onClick={onClose}>
           <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <CloseButton onClick={onClose}>×</CloseButton>
-            
+
             <AIAvatar>🧠</AIAvatar>
-            
+
             <ModalTitle>AI Learning Coach</ModalTitle>
-            
+
             <UrgencyIndicator urgency={intervention.urgency}>
               {getUrgencyMessage(intervention.urgency)}
             </UrgencyIndicator>
 
             <InterventionMessage>
               <MessageTitle>{getActionMessage(intervention.action)}</MessageTitle>
-              
+
               <MessageDescription>
-                {intervention.reasoning[0] || 'Based on your current learning patterns, I have a suggestion that could help improve your learning experience.'}
+                {intervention.reasoning[0] ||
+                  'Based on your current learning patterns, I have a suggestion that could help improve your learning experience.'}
               </MessageDescription>
 
               {intervention.reasoning.length > 1 && (
@@ -316,13 +352,22 @@ export const AIInterventionModal: React.FC<AIInterventionModalProps> = ({
                   <strong>Expected benefits:</strong>
                   <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
                     {intervention.expectedOutcome.performanceImprovement > 0 && (
-                      <li>+{(intervention.expectedOutcome.performanceImprovement * 100).toFixed(0)}% performance</li>
+                      <li>
+                        +{(intervention.expectedOutcome.performanceImprovement * 100).toFixed(0)}%
+                        performance
+                      </li>
                     )}
                     {intervention.expectedOutcome.engagementBoost > 0 && (
-                      <li>+{(intervention.expectedOutcome.engagementBoost * 100).toFixed(0)}% engagement</li>
+                      <li>
+                        +{(intervention.expectedOutcome.engagementBoost * 100).toFixed(0)}%
+                        engagement
+                      </li>
                     )}
                     {intervention.expectedOutcome.retentionIncrease > 0 && (
-                      <li>+{(intervention.expectedOutcome.retentionIncrease * 100).toFixed(0)}% retention</li>
+                      <li>
+                        +{(intervention.expectedOutcome.retentionIncrease * 100).toFixed(0)}%
+                        retention
+                      </li>
                     )}
                   </ul>
                 </div>
@@ -339,26 +384,28 @@ export const AIInterventionModal: React.FC<AIInterventionModalProps> = ({
               <ActionButton variant="primary" onClick={onAccept}>
                 {intervention.urgency === 'critical' ? 'Apply Now' : 'Accept'}
               </ActionButton>
-              
+
               {intervention.urgency !== 'critical' && (
                 <ActionButton variant="secondary" onClick={onDefer}>
                   Remind Later
                 </ActionButton>
               )}
-              
+
               <ActionButton variant="dismiss" onClick={onDismiss}>
                 Not Now
               </ActionButton>
             </ActionButtons>
 
-            <div style={{ 
-              textAlign: 'center', 
-              marginTop: '16px', 
-              fontSize: '0.8rem', 
-              opacity: 0.7 
-            }}>
-              Confidence: {(intervention.confidence * 100).toFixed(0)}% | 
-              Priority: {intervention.priority.charAt(0).toUpperCase() + intervention.priority.slice(1)}
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: '16px',
+                fontSize: '0.8rem',
+                opacity: 0.7,
+              }}
+            >
+              Confidence: {(intervention.confidence * 100).toFixed(0)}% | Priority:{' '}
+              {intervention.priority.charAt(0).toUpperCase() + intervention.priority.slice(1)}
             </div>
           </ModalContent>
         </ModalOverlay>

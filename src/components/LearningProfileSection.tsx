@@ -1,6 +1,6 @@
 /**
  * Learning Profile Display Component
- * 
+ *
  * Shows AI Learning Coach insights within UserProfile component
  * USER-SPECIFIC (not language-specific) learning patterns
  */
@@ -28,11 +28,7 @@ const pulseGlow = keyframes`
 
 // Styled Components
 const ProfileSection = styled.div<{ compact?: boolean }>`
-  background: linear-gradient(
-    135deg,
-    rgba(147, 51, 234, 0.1) 0%,
-    rgba(59, 130, 246, 0.1) 100%
-  );
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
   border: 1px solid rgba(147, 51, 234, 0.2);
   border-radius: 12px;
   padding: ${props => (props.compact ? '12px' : '16px')};
@@ -47,12 +43,7 @@ const ProfileSection = styled.div<{ compact?: boolean }>`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(147, 51, 234, 0.1),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.1), transparent);
     animation: ${shimmer} 3s infinite;
   }
 `;
@@ -134,17 +125,22 @@ const ConfidenceLabel = styled.div`
   margin-top: 4px;
 `;
 
-export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({ 
-  profile, 
-  compact = false 
+export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({
+  profile,
+  compact = false,
 }) => {
-
   // Safety check - ensure profile has required properties
-  if (!profile || !profile.personality || !profile.momentum || !profile.cognitiveLoad || !profile.motivation) {
-    console.warn('LearningProfileDisplay: Invalid profile data structure', { 
+  if (
+    !profile ||
+    !profile.personality ||
+    !profile.momentum ||
+    !profile.cognitiveLoad ||
+    !profile.motivation
+  ) {
+    console.warn('LearningProfileDisplay: Invalid profile data structure', {
       profile,
       expected: ['personality', 'momentum', 'cognitiveLoad', 'motivation'],
-      received: profile ? Object.keys(profile) : 'null'
+      received: profile ? Object.keys(profile) : 'null',
     });
     return (
       <ProfileSection compact={compact}>
@@ -152,20 +148,21 @@ export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({
         <div style={{ textAlign: 'center', color: '#ef4444', padding: '16px' }}>
           ⚠️ Profile data is incomplete. Please recreate your learning profile.
           <br />
-          <button 
-            style={{ 
-              marginTop: '12px', 
-              padding: '8px 16px', 
-              background: '#9333ea', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
+          <button
+            style={{
+              marginTop: '12px',
+              padding: '8px 16px',
+              background: '#9333ea',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
             onClick={async () => {
               console.log('Clearing incomplete profile and recreating...');
-              const { UserLearningProfileStorage } = await import('../services/storage/userLearningProfile');
+              const { UserLearningProfileStorage } =
+                await import('../services/storage/userLearningProfile');
               const storage = new UserLearningProfileStorage();
               try {
                 await storage.deleteProfile(profile?.userId || 'default-user');
@@ -193,7 +190,7 @@ export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({
     const speedMap = {
       fast: 'Quick',
       moderate: 'Steady',
-      deliberate: 'Careful'
+      deliberate: 'Careful',
     };
     return speedMap[speed as keyof typeof speedMap] || speed;
   };
@@ -215,7 +212,7 @@ export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({
   return (
     <ProfileSection compact={compact}>
       <SectionTitle>AI Learning Insights</SectionTitle>
-      
+
       <InsightGrid>
         <InsightCard>
           <InsightLabel>Learning Style</InsightLabel>
@@ -223,24 +220,27 @@ export const LearningProfileDisplay: React.FC<LearningProfileDisplayProps> = ({
             {formatLearningStyle(profile.personality?.learningStyle || 'multimodal')}
           </InsightValue>
         </InsightCard>
-        
+
         <InsightCard>
           <InsightLabel>Processing</InsightLabel>
           <InsightValue>
             {formatProcessingSpeed(profile.personality?.processingSpeed || 'moderate')}
           </InsightValue>
         </InsightCard>
-        
+
         <InsightCard>
           <InsightLabel>Motivation</InsightLabel>
           <InsightValue>
-            {getMotivationEmoji((profile.motivation?.currentLevel || 0.7) * 100)} {Math.round((profile.motivation?.currentLevel || 0.7) * 100)}%
+            {getMotivationEmoji((profile.motivation?.currentLevel || 0.7) * 100)}{' '}
+            {Math.round((profile.motivation?.currentLevel || 0.7) * 100)}%
           </InsightValue>
         </InsightCard>
-        
+
         <InsightCard>
           <InsightLabel>Cognitive Load</InsightLabel>
-          <InsightValue style={{ color: getCognitiveLoadColor(profile.cognitiveLoad?.level || 'optimal') }}>
+          <InsightValue
+            style={{ color: getCognitiveLoadColor(profile.cognitiveLoad?.level || 'optimal') }}
+          >
             {profile.cognitiveLoad?.level || 'optimal'}
           </InsightValue>
         </InsightCard>

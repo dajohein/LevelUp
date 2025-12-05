@@ -26,24 +26,24 @@ export interface LegacyWordProgress {
 // Enhanced WordProgress with backward compatibility
 export interface WordProgress {
   wordId: string;
-  
+
   // LEGACY FIELDS - PRESERVED FOR BACKWARD COMPATIBILITY
-  xp: number;                    // Original XP value
-  lastPracticed: string;         // ISO date string
-  timesCorrect: number;          // Original correct count
-  timesIncorrect: number;        // Original incorrect count
-  
+  xp: number; // Original XP value
+  lastPracticed: string; // ISO date string
+  timesCorrect: number; // Original correct count
+  timesIncorrect: number; // Original incorrect count
+
   // NEW FIELDS - OPTIONAL AND DEFAULTED
-  totalXp?: number;              // Aggregate XP across directions
-  firstLearned?: string;         // When word was first encountered
-  version?: number;              // Migration version (1=legacy, 2=enhanced)
-  
+  totalXp?: number; // Aggregate XP across directions
+  firstLearned?: string; // When word was first encountered
+  version?: number; // Migration version (1=legacy, 2=enhanced)
+
   // ENHANCED TRACKING - OPTIONAL
   directions?: {
     'term-to-definition'?: DirectionalProgress;
     'definition-to-term'?: DirectionalProgress;
   };
-  
+
   // METADATA - OPTIONAL
   learningPhase?: 'introduction' | 'practice' | 'mastery' | 'maintenance';
   tags?: string[];

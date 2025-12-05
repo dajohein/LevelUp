@@ -25,10 +25,9 @@ const Overlay = styled.div<{ isCorrect: boolean; show: boolean }>`
   opacity: 0;
   pointer-events: none;
   z-index: 1000;
-  ${props =>
-    css`
-      animation: ${props.show ? fadeIn : fadeOut} ${props.show ? '0.5s' : '1s'} ease-out forwards;
-    `}
+  ${props => css`
+    animation: ${props.show ? fadeIn : fadeOut} ${props.show ? '0.5s' : '1s'} ease-out forwards;
+  `}
 
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     ${props =>

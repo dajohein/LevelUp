@@ -73,11 +73,11 @@ export const usePWA = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         console.log('PWA installed');
       }
-      
+
       setDeferredPrompt(null);
       setIsInstallable(false);
     }
@@ -96,7 +96,7 @@ export const usePWA = () => {
     installApp,
     updateAvailable,
     updateApp,
-    swRegistration
+    swRegistration,
   };
 };
 
@@ -116,13 +116,13 @@ export const useNetworkStatus = () => {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
       setConnectionType(connection.effectiveType || 'unknown');
-      
+
       const handleConnectionChange = () => {
         setConnectionType(connection.effectiveType || 'unknown');
       };
-      
+
       connection.addEventListener('change', handleConnectionChange);
-      
+
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
@@ -149,7 +149,7 @@ export const usePushNotifications = () => {
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
-    
+
     // Check if VAPID key is configured (you would set this in environment variables)
     const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
     setVapidKeyAvailable(!!vapidKey);
@@ -169,7 +169,7 @@ export const usePushNotifications = () => {
 
     // Get VAPID key from environment variables
     const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
-    
+
     if (!vapidKey) {
       console.warn('VAPID key not configured. Push notifications require a VAPID key.');
       // Still allow local notifications without push subscription
@@ -197,7 +197,10 @@ export const useBackgroundSync = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
   const registerSync = async (tag: string) => {
-    if ('serviceWorker' in navigator && 'sync' in (window as any).ServiceWorkerRegistration.prototype) {
+    if (
+      'serviceWorker' in navigator &&
+      'sync' in (window as any).ServiceWorkerRegistration.prototype
+    ) {
       try {
         const registration = await navigator.serviceWorker.ready;
         await (registration as any).sync.register(tag);
@@ -216,6 +219,6 @@ export const useBackgroundSync = () => {
   return {
     syncStatus,
     syncProgress,
-    syncSessions
+    syncSessions,
   };
 };

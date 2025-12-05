@@ -1,6 +1,6 @@
 /**
  * Challenge Service Manager - Truly Generic Service Management
- * 
+ *
  * Eliminates ALL code duplication by providing a unified interface
  * that maps to service adapters conforming to IChallengeService.
  */
@@ -8,12 +8,12 @@
 import { /* Word, */ getWordsForLanguage } from './wordService'; // Removed unused import
 import { getWordsForModule } from './moduleService'; // For module-specific word selection
 import { WordProgress } from '../store/types';
-import { 
-  IChallengeService, 
-  ChallengeConfig, 
-  ChallengeContext, 
-  ChallengeResult, 
-  ServiceRegistry
+import {
+  IChallengeService,
+  ChallengeConfig,
+  ChallengeContext,
+  ChallengeResult,
+  ServiceRegistry,
   // StandardQuizMode // Removed unused import
 } from './challengeServiceInterface';
 import {
@@ -22,7 +22,7 @@ import {
   precisionModeAdapter,
   quickDashAdapter,
   deepDiveAdapter,
-  fillInTheBlankAdapter
+  fillInTheBlankAdapter,
 } from './challengeServiceAdapters';
 import { logger } from './logger';
 
@@ -39,7 +39,7 @@ export interface ServiceHealth {
 
 /**
  * Unified Challenge Service Manager
- * 
+ *
  * Uses the adapter pattern to provide a single, generic interface for ALL
  * challenge services, eliminating code duplication completely.
  */
@@ -55,7 +55,7 @@ class ChallengeServiceManager {
       'precision-mode': precisionModeAdapter,
       'quick-dash': quickDashAdapter,
       'deep-dive': deepDiveAdapter,
-      'fill-in-the-blank': fillInTheBlankAdapter
+      'fill-in-the-blank': fillInTheBlankAdapter,
     };
 
     // Initialize health tracking for all registered services
@@ -67,7 +67,7 @@ class ChallengeServiceManager {
         errorRate: 0,
         lastCall: null,
         successCount: 0,
-        errorCount: 0
+        errorCount: 0,
       });
     });
   }
@@ -87,8 +87,8 @@ class ChallengeServiceManager {
 
     try {
       // Get words based on whether module is specified
-      const allWords = moduleId 
-        ? getWordsForModule(languageCode, moduleId) 
+      const allWords = moduleId
+        ? getWordsForModule(languageCode, moduleId)
         : getWordsForLanguage(languageCode);
 
       const config: ChallengeConfig = {
@@ -98,14 +98,15 @@ class ChallengeServiceManager {
         timeLimit: options?.timeLimit || 5,
         difficulty: options?.difficulty || 3,
         allWords: allWords || [],
-        moduleId // Pass moduleId for module-specific challenges
+        moduleId, // Pass moduleId for module-specific challenges
       };
 
       await service.initialize(config);
-      
-      this.recordServiceCall(sessionId, startTime, true);
-      logger.info(`✅ Challenge service initialized: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ''}`);
 
+      this.recordServiceCall(sessionId, startTime, true);
+      logger.info(
+        `✅ Challenge service initialized: ${sessionId}${moduleId ? ` (module: ${moduleId})` : ''}`
+      );
     } catch (error) {
       this.recordServiceCall(sessionId, startTime, false);
       logger.error(`Failed to initialize ${sessionId} service`, { error, languageCode, options });
@@ -133,8 +134,8 @@ class ChallengeServiceManager {
 
     try {
       // Get words based on whether module is specified
-      const allWords = context.moduleId 
-        ? getWordsForModule(context.languageCode, context.moduleId) 
+      const allWords = context.moduleId
+        ? getWordsForModule(context.languageCode, context.moduleId)
         : getWordsForLanguage(context.languageCode);
 
       const challengeContext: ChallengeContext = {
@@ -145,20 +146,21 @@ class ChallengeServiceManager {
         wordProgress: context.wordProgress,
         languageCode: context.languageCode,
         moduleId: context.moduleId,
-        allWords: allWords || []
+        allWords: allWords || [],
       };
 
       const result = await service.getNextWord(challengeContext);
-      
+
       if (!result.word) {
         throw new Error(`${sessionId} service returned no word`);
       }
 
       this.recordServiceCall(sessionId, startTime, true);
-      logger.debug(`🎯 Challenge service provided word: ${result.word.term} (${sessionId}, ${result.quizMode})`);
-      
-      return result;
+      logger.debug(
+        `🎯 Challenge service provided word: ${result.word.term} (${sessionId}, ${result.quizMode})`
+      );
 
+      return result;
     } catch (error) {
       this.recordServiceCall(sessionId, startTime, false);
       logger.error(`Failed to get next word from ${sessionId} service`, { error, context });
@@ -181,7 +183,7 @@ class ChallengeServiceManager {
 
     try {
       const result = await service.recordCompletion(wordId, correct, timeSpent, metadata);
-      
+
       // Handle different return types from services
       let sessionContinues = true;
       if (typeof result === 'boolean') {
@@ -192,10 +194,14 @@ class ChallengeServiceManager {
 
       this.recordServiceCall(sessionId, startTime, true);
       return sessionContinues;
-
     } catch (error) {
       this.recordServiceCall(sessionId, startTime, false);
-      logger.error(`Failed to record completion in ${sessionId} service`, { error, wordId, correct, timeSpent });
+      logger.error(`Failed to record completion in ${sessionId} service`, {
+        error,
+        wordId,
+        correct,
+        timeSpent,
+      });
       return true; // Don't fail the session on recording errors
     }
   }
@@ -259,7 +265,9 @@ class ChallengeServiceManager {
   private getService(sessionId: string): IChallengeService {
     const service = this.serviceRegistry[sessionId];
     if (!service) {
-      throw new Error(`Unknown session type: ${sessionId}. Supported types: ${Object.keys(this.serviceRegistry).join(', ')}`);
+      throw new Error(
+        `Unknown session type: ${sessionId}. Supported types: ${Object.keys(this.serviceRegistry).join(', ')}`
+      );
     }
     return service;
   }
@@ -271,7 +279,7 @@ class ChallengeServiceManager {
       'precision-mode': 15,
       'quick-dash': 8,
       'deep-dive': 20,
-      'fill-in-the-blank': 15
+      'fill-in-the-blank': 15,
     };
     return defaults[sessionId] || 15;
   }

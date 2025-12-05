@@ -1,6 +1,6 @@
 /**
  * Simple AI Learning Enhancement Service
- * 
+ *
  * A minimal AI service that gradually adds intelligence to word selection
  * without complex dependencies. This is step 1 of re-enabling AI features.
  */
@@ -41,7 +41,7 @@ export class SimpleAILearningService {
   ): SimpleAIDecision {
     try {
       const { currentPerformance } = context;
-      
+
       // Default decision
       let quizMode: SimpleAIDecision['quizMode'] = 'multiple-choice';
       let difficultyAdjustment = 0;
@@ -49,7 +49,7 @@ export class SimpleAILearningService {
       let confidence = 0.8;
 
       // Simple rules-based AI logic
-      
+
       // Rule 1: If user is struggling, use multiple choice
       if (currentPerformance.consecutiveErrors >= 2) {
         quizMode = 'multiple-choice';
@@ -57,7 +57,7 @@ export class SimpleAILearningService {
         reasoning.push('Detected struggling pattern, switching to multiple choice for support');
         confidence = 0.9;
       }
-      
+
       // Rule 2: If user is excelling, increase challenge
       else if (currentPerformance.consecutiveSuccess >= 3 && currentPerformance.accuracy > 0.85) {
         quizMode = 'open-answer';
@@ -65,14 +65,15 @@ export class SimpleAILearningService {
         reasoning.push('High accuracy detected, increasing challenge with open answer');
         confidence = 0.85;
       }
-      
+
       // Rule 3: If response time is very slow, simplify
-      else if (currentPerformance.averageResponseTime > 8000) { // 8 seconds
+      else if (currentPerformance.averageResponseTime > 8000) {
+        // 8 seconds
         quizMode = 'multiple-choice';
         reasoning.push('Slow response time detected, providing multiple choice support');
         confidence = 0.75;
       }
-      
+
       // Rule 4: Mixed performance - use varied modes
       else if (currentPerformance.accuracy > 0.6 && currentPerformance.accuracy < 0.8) {
         const modes: SimpleAIDecision['quizMode'][] = ['letter-scramble', 'fill-in-the-blank'];
@@ -86,7 +87,7 @@ export class SimpleAILearningService {
         // Calculate a simple mastery score based on correct/incorrect ratio
         const totalAttempts = wordProgress.timesCorrect + wordProgress.timesIncorrect;
         const masteryLevel = totalAttempts > 0 ? wordProgress.timesCorrect / totalAttempts : 0;
-        
+
         if (masteryLevel < 0.3) {
           // Low mastery - need support
           if (quizMode === 'open-answer') {
@@ -110,17 +111,16 @@ export class SimpleAILearningService {
         quizMode,
         difficultyAdjustment,
         reasoning,
-        confidence
+        confidence,
       };
-
     } catch (error) {
       logger.error('Simple AI decision making failed, using defaults:', error);
-      
+
       return {
         quizMode: 'multiple-choice',
         difficultyAdjustment: 0,
         reasoning: ['AI analysis failed, using safe default mode'],
-        confidence: 0.5
+        confidence: 0.5,
       };
     }
   }
@@ -136,7 +136,7 @@ export class SimpleAILearningService {
         accuracy: 0.5,
         averageResponseTime: 5000,
         consecutiveErrors: 0,
-        consecutiveSuccess: 0
+        consecutiveSuccess: 0,
       };
     }
 
@@ -177,7 +177,7 @@ export class SimpleAILearningService {
       accuracy,
       averageResponseTime,
       consecutiveErrors,
-      consecutiveSuccess
+      consecutiveSuccess,
     };
   }
 }

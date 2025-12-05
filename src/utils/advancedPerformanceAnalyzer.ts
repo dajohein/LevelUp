@@ -1,6 +1,6 @@
 /**
  * Advanced Performance Testing & Optimization
- * 
+ *
  * This script provides comprehensive performance analysis tools
  * to identify bottlenecks, memory leaks, and optimization opportunities.
  */
@@ -25,7 +25,7 @@ class PerformanceAnalyzer {
     expensiveCalculations: 0,
     networkRequests: 0,
   };
-  
+
   private observers: Map<string, PerformanceObserver> = new Map();
   private storageOperationCount = 0;
   private startTime = performance.now();
@@ -41,9 +41,9 @@ class PerformanceAnalyzer {
   private initializeObservers() {
     // Measure paint and layout performance
     if ('PerformanceObserver' in window) {
-      const paintObserver = new PerformanceObserver((list) => {
+      const paintObserver = new PerformanceObserver(list => {
         const entries = list.getEntries();
-        entries.forEach((entry) => {
+        entries.forEach(entry => {
           if (entry.name === 'first-contentful-paint') {
             this.metrics.renderTime = entry.startTime;
           }
@@ -53,10 +53,11 @@ class PerformanceAnalyzer {
       this.observers.set('paint', paintObserver);
 
       // Measure long tasks (blocking operations)
-      const longTaskObserver = new PerformanceObserver((list) => {
+      const longTaskObserver = new PerformanceObserver(list => {
         const entries = list.getEntries();
-        entries.forEach((entry) => {
-          if (entry.duration > 50) { // Tasks longer than 50ms
+        entries.forEach(entry => {
+          if (entry.duration > 50) {
+            // Tasks longer than 50ms
             logger.warn(`Long task detected: ${entry.duration}ms`, {
               name: entry.name,
               startTime: entry.startTime,
@@ -64,7 +65,7 @@ class PerformanceAnalyzer {
           }
         });
       });
-      
+
       try {
         longTaskObserver.observe({ entryTypes: ['longtask'] });
         this.observers.set('longtask', longTaskObserver);
@@ -78,19 +79,22 @@ class PerformanceAnalyzer {
     // Monitor localStorage operations
     const originalSetItem = localStorage.setItem;
     const originalGetItem = localStorage.getItem;
-    
+
     localStorage.setItem = (key: string, value: string) => {
       this.storageOperationCount++;
       this.metrics.storageOperations++;
-      
+
       // Detect rapid repeated operations
       if (this.storageOperationCount > 10) {
         const timeDiff = performance.now() - this.startTime;
-        if (timeDiff < 1000) { // More than 10 operations in 1 second
-          logger.warn(`High storage operation frequency: ${this.storageOperationCount} ops in ${timeDiff}ms`);
+        if (timeDiff < 1000) {
+          // More than 10 operations in 1 second
+          logger.warn(
+            `High storage operation frequency: ${this.storageOperationCount} ops in ${timeDiff}ms`
+          );
         }
       }
-      
+
       return originalSetItem.call(localStorage, key, value);
     };
 
@@ -106,10 +110,12 @@ class PerformanceAnalyzer {
   trackComponentRender(componentName: string) {
     const current = this.metrics.componentRenders.get(componentName) || 0;
     this.metrics.componentRenders.set(componentName, current + 1);
-    
+
     // Warn about excessive renders
     if (current > 20) {
-      logger.warn(`Component ${componentName} has rendered ${current} times - potential performance issue`);
+      logger.warn(
+        `Component ${componentName} has rendered ${current} times - potential performance issue`
+      );
     }
   }
 
@@ -120,13 +126,13 @@ class PerformanceAnalyzer {
     const start = performance.now();
     const result = fn();
     const duration = performance.now() - start;
-    
+
     this.metrics.expensiveCalculations++;
-    
+
     if (duration > 10) {
       logger.warn(`Expensive calculation detected: ${operationName} took ${duration}ms`);
     }
-    
+
     return result;
   }
 
@@ -163,30 +169,36 @@ class PerformanceAnalyzer {
 
   private generateOptimizationSuggestions(): string[] {
     const suggestions: string[] = [];
-    
+
     // Check storage operations
     if (this.metrics.storageOperations > 50) {
       suggestions.push('Consider implementing storage operation debouncing or caching');
     }
-    
+
     // Check component renders
     this.metrics.componentRenders.forEach((count, component) => {
       if (count > 15) {
-        suggestions.push(`Component ${component} is re-rendering frequently (${count} times) - consider React.memo or useMemo`);
+        suggestions.push(
+          `Component ${component} is re-rendering frequently (${count} times) - consider React.memo or useMemo`
+        );
       }
     });
-    
+
     // Check memory
     const memoryStats = this.getMemoryStats();
     if (memoryStats && memoryStats.usedJSHeapSize > 100) {
-      suggestions.push('High memory usage detected - check for memory leaks or large object retention');
+      suggestions.push(
+        'High memory usage detected - check for memory leaks or large object retention'
+      );
     }
-    
+
     // Check expensive calculations
     if (this.metrics.expensiveCalculations > 20) {
-      suggestions.push('Multiple expensive calculations detected - consider memoization strategies');
+      suggestions.push(
+        'Multiple expensive calculations detected - consider memoization strategies'
+      );
     }
-    
+
     return suggestions;
   }
 
@@ -210,7 +222,7 @@ class PerformanceAnalyzer {
    * Cleanup observers
    */
   cleanup() {
-    this.observers.forEach((observer) => observer.disconnect());
+    this.observers.forEach(observer => observer.disconnect());
     this.observers.clear();
   }
 }

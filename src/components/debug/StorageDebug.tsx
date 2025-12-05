@@ -1,6 +1,6 @@
 /**
  * Storage Debug Component
- * 
+ *
  * Provides debugging tools for testing server-side storage in the browser
  */
 
@@ -42,11 +42,11 @@ const Button = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-size: 10px;
-  
+
   &:hover {
     background: #005fa3;
   }
-  
+
   &:disabled {
     background: #555;
     cursor: not-allowed;
@@ -54,10 +54,8 @@ const Button = styled.button`
 `;
 
 const Status = styled.div<{ status: 'success' | 'error' | 'info' }>`
-  color: ${props => 
-    props.status === 'success' ? '#4caf50' :
-    props.status === 'error' ? '#f44336' : '#2196f3'
-  };
+  color: ${props =>
+    props.status === 'success' ? '#4caf50' : props.status === 'error' ? '#f44336' : '#2196f3'};
   margin: 4px 0;
 `;
 
@@ -68,7 +66,9 @@ interface StorageDebugProps {
 
 export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }) => {
   const [status, setStatus] = useState<any>(null);
-  const [logs, setLogs] = useState<Array<{ type: 'success' | 'error' | 'info'; message: string }>>([]);
+  const [logs, setLogs] = useState<Array<{ type: 'success' | 'error' | 'info'; message: string }>>(
+    []
+  );
   const [testResults, setTestResults] = useState<Record<string, any>>({});
 
   const addLog = (type: 'success' | 'error' | 'info', message: string) => {
@@ -88,25 +88,28 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
   const testWordProgress = async () => {
     try {
       const testData = {
-        'test': {
+        test: {
           wordId: 'test',
           xp: 10,
           lastPracticed: new Date().toISOString(),
           timesCorrect: 1,
           timesIncorrect: 0,
-          learningPhase: 'practice' as const
-        }
+          learningPhase: 'practice' as const,
+        },
       };
 
       // Test save
       const saveResult = await enhancedStorage.saveWordProgress('en', testData);
       if (saveResult.success) {
         addLog('success', 'Word progress saved');
-        
+
         // Test load
         const loadResult = await enhancedStorage.loadWordProgress('en');
         if (loadResult.success) {
-          addLog('success', `Word progress loaded (${Object.keys(loadResult.data || {}).length} words)`);
+          addLog(
+            'success',
+            `Word progress loaded (${Object.keys(loadResult.data || {}).length} words)`
+          );
           setTestResults(prev => ({ ...prev, wordProgress: 'success' }));
         } else {
           addLog('error', 'Word progress load failed');
@@ -142,7 +145,10 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
     try {
       const analytics = await enhancedStorage.getStorageAnalytics();
       if (analytics.success) {
-        addLog('success', `Analytics: Cache hit rate ${(analytics.data.cache.hitRate * 100).toFixed(1)}%`);
+        addLog(
+          'success',
+          `Analytics: Cache hit rate ${(analytics.data.cache.hitRate * 100).toFixed(1)}%`
+        );
         setTestResults(prev => ({ ...prev, analytics: analytics.data }));
       } else {
         addLog('error', 'Analytics failed');
@@ -162,7 +168,14 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
 
   return (
     <DebugContainer>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}
+      >
         <strong>🔧 Storage Debug</strong>
         <Button onClick={onClose}>✕</Button>
       </div>
@@ -186,8 +199,8 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
           <Button onClick={getAnalytics}>Get Analytics</Button>
         </div>
         {Object.entries(testResults).map(([test, result]) => (
-          <Status 
-            key={test} 
+          <Status
+            key={test}
             status={result === 'success' || result === 'healthy' ? 'success' : 'error'}
           >
             {test}: {String(result)}
@@ -204,9 +217,7 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
         ))}
       </Section>
 
-      <div style={{ fontSize: '10px', color: '#666' }}>
-        Press Ctrl+Shift+S to toggle
-      </div>
+      <div style={{ fontSize: '10px', color: '#666' }}>Press Ctrl+Shift+S to toggle</div>
     </DebugContainer>
   );
 };

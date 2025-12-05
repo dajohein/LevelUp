@@ -4,13 +4,13 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  IAnalyticsCollector, 
-  AnalyticsEvent, 
+import {
+  IAnalyticsCollector,
+  AnalyticsEvent,
   AnalyticsEventType,
   AnalyticsError,
   AnalyticsErrorType,
-  AnalyticsConfig 
+  AnalyticsConfig,
 } from './interfaces';
 import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { logger } from '../logger';
@@ -21,7 +21,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   private flushTimer?: NodeJS.Timeout;
   private isOnline: boolean = navigator.onLine;
   private pendingEvents: AnalyticsEvent[] = [];
-  
+
   constructor(
     private config: AnalyticsConfig,
     private storage: EnhancedStorageService
@@ -45,13 +45,13 @@ export class AnalyticsCollector implements IAnalyticsCollector {
           version: '2.0.0',
           platform: this.detectPlatform(),
           userAgent: navigator.userAgent,
-          ...event.metadata
-        }
+          ...event.metadata,
+        },
       };
 
       // Add to buffer
       this.eventBuffer.push(fullEvent);
-      
+
       // Track specific event metrics
       await this.trackEventMetrics(fullEvent);
 
@@ -66,7 +66,11 @@ export class AnalyticsCollector implements IAnalyticsCollector {
     }
   }
 
-  async trackMetric(metric: string, value: number, tags: Record<string, string> = {}): Promise<void> {
+  async trackMetric(
+    metric: string,
+    value: number,
+    tags: Record<string, string> = {}
+  ): Promise<void> {
     await this.trackEvent({
       type: AnalyticsEventType.RESPONSE_TIME, // Generic metric type
       sessionId: this.sessionId,
@@ -74,8 +78,8 @@ export class AnalyticsCollector implements IAnalyticsCollector {
         metric,
         value,
         tags,
-        unit: this.inferUnit(metric)
-      }
+        unit: this.inferUnit(metric),
+      },
     });
   }
 
@@ -97,8 +101,8 @@ export class AnalyticsCollector implements IAnalyticsCollector {
 
       logger.info('Analytics events flushed', { count: eventsToFlush.length });
     } catch (error) {
-      this.handleError(AnalyticsErrorType.COLLECTION_FAILED, error, { 
-        bufferSize: this.eventBuffer.length 
+      this.handleError(AnalyticsErrorType.COLLECTION_FAILED, error, {
+        bufferSize: this.eventBuffer.length,
       });
     }
   }
@@ -106,7 +110,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   // Real-time event processing
   private async processEvents(events: AnalyticsEvent[]): Promise<void> {
     // Store events for analytics processing
-    await this.storage.saveAnalyticsEvents(this.eventBuffer);    // Trigger real-time metrics calculation
+    await this.storage.saveAnalyticsEvents(this.eventBuffer); // Trigger real-time metrics calculation
     if (this.config.realTimeUpdates) {
       await this.updateRealTimeMetrics(events);
     }
@@ -122,11 +126,11 @@ export class AnalyticsCollector implements IAnalyticsCollector {
     try {
       const sessionEvents = await this.getSessionEvents();
       const allEvents = [...sessionEvents, ...events];
-      
+
       // Calculate and store updated metrics
       const metrics = this.calculateSessionMetrics(allEvents);
       await this.storage.saveRealtimeMetrics(this.sessionId, metrics);
-      
+
       // Emit metrics update event
       this.emitMetricsUpdate(metrics);
     } catch (error) {
@@ -138,15 +142,15 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   private calculateSessionMetrics(events: AnalyticsEvent[]) {
     const sessionStart = events.find(e => e.type === AnalyticsEventType.SESSION_START);
     const sessionEnd = events.find(e => e.type === AnalyticsEventType.SESSION_END);
-    
+
     const wordAttempts = events.filter(e => e.type === AnalyticsEventType.WORD_ATTEMPT);
     const wordSuccesses = events.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS);
     const hintsUsed = events.filter(e => e.type === AnalyticsEventType.HINT_USED);
     const pauses = events.filter(e => e.type === AnalyticsEventType.PAUSE_SESSION);
-    
-    const duration = sessionEnd ? 
-      sessionEnd.timestamp - (sessionStart?.timestamp || events[0]?.timestamp || 0) : 
-      Date.now() - (sessionStart?.timestamp || events[0]?.timestamp || 0);
+
+    const duration = sessionEnd
+      ? sessionEnd.timestamp - (sessionStart?.timestamp || events[0]?.timestamp || 0)
+      : Date.now() - (sessionStart?.timestamp || events[0]?.timestamp || 0);
 
     return {
       duration,
@@ -156,14 +160,16 @@ export class AnalyticsCollector implements IAnalyticsCollector {
       streakCount: this.calculateCurrentStreak(events),
       pauseCount: pauses.length,
       hintsUsed: hintsUsed.length,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     };
   }
 
   // Streak calculation
   private calculateCurrentStreak(events: AnalyticsEvent[]): number {
     const wordEvents = events
-      .filter(e => [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type))
+      .filter(e =>
+        [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type)
+      )
       .sort((a, b) => b.timestamp - a.timestamp);
 
     let streak = 0;
@@ -174,19 +180,19 @@ export class AnalyticsCollector implements IAnalyticsCollector {
         break;
       }
     }
-    
+
     return streak;
   }
 
   // Event metrics tracking
   private async trackEventMetrics(event: AnalyticsEvent): Promise<void> {
-    const metrics = await this.storage.loadRealtimeMetrics(this.sessionId) || {
+    const metrics = (await this.storage.loadRealtimeMetrics(this.sessionId)) || {
       accuracy: 0,
       responseTime: 0,
       streakCount: 0,
       hintsUsed: 0,
-      totalEvents: 0
-    };    // Update event counts
+      totalEvents: 0,
+    }; // Update event counts
     metrics.eventCounts[event.type] = (metrics.eventCounts[event.type] || 0) + 1;
 
     // Track response times for certain events
@@ -194,7 +200,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
       metrics.responseTimings.push({
         type: event.type,
         time: event.data.responseTime,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       });
     }
 
@@ -234,18 +240,18 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   // Simple pattern detection
   private async detectEventPatterns(events: AnalyticsEvent[]): Promise<any[]> {
     const patterns = [];
-    
+
     // Detect rapid failure pattern
     const recentFailures = events
       .filter(e => e.type === AnalyticsEventType.WORD_FAILURE)
       .filter(e => Date.now() - e.timestamp < 30000); // Last 30 seconds
-    
+
     if (recentFailures.length >= 3) {
       patterns.push({
         type: 'rapid_failures',
         confidence: 0.8,
         events: recentFailures.length,
-        suggestion: 'Consider reducing difficulty or taking a break'
+        suggestion: 'Consider reducing difficulty or taking a break',
       });
     }
 
@@ -253,13 +259,13 @@ export class AnalyticsCollector implements IAnalyticsCollector {
     const recentHints = events
       .filter(e => e.type === AnalyticsEventType.HINT_USED)
       .filter(e => Date.now() - e.timestamp < 60000); // Last minute
-    
+
     if (recentHints.length >= 2) {
       patterns.push({
         type: 'hint_dependency',
         confidence: 0.7,
         events: recentHints.length,
-        suggestion: 'Review fundamental concepts for this topic'
+        suggestion: 'Review fundamental concepts for this topic',
       });
     }
 
@@ -271,20 +277,22 @@ export class AnalyticsCollector implements IAnalyticsCollector {
     // Simple prediction: session success likelihood
     const sessionEvents = await this.getSessionEvents();
     const allEvents = [...sessionEvents, ...events];
-    
+
     const accuracy = this.calculateSessionMetrics(allEvents).accuracy;
     const successLikelihood = Math.min(accuracy * 1.2, 1.0); // Slight optimism bias
-    
-    await this.storage.saveAnalyticsEvents([{
-      type: 'prediction_generated' as any,
-      sessionId: this.sessionId,
-      data: {
-        sessionSuccessLikelihood: successLikelihood,
-        calculatedAt: Date.now(),
-        basedOnEvents: allEvents.length
+
+    await this.storage.saveAnalyticsEvents([
+      {
+        type: 'prediction_generated' as any,
+        sessionId: this.sessionId,
+        data: {
+          sessionSuccessLikelihood: successLikelihood,
+          calculatedAt: Date.now(),
+          basedOnEvents: allEvents.length,
+        },
+        timestamp: Date.now(),
       },
-      timestamp: Date.now()
-    }]);
+    ]);
   }
 
   // Utility methods
@@ -292,11 +300,10 @@ export class AnalyticsCollector implements IAnalyticsCollector {
     const criticalEvents = [
       AnalyticsEventType.SESSION_END,
       AnalyticsEventType.LEVEL_UP,
-      AnalyticsEventType.ACHIEVEMENT_UNLOCKED
+      AnalyticsEventType.ACHIEVEMENT_UNLOCKED,
     ];
-    
-    return criticalEvents.includes(event.type) || 
-           this.eventBuffer.length >= this.config.batchSize;
+
+    return criticalEvents.includes(event.type) || this.eventBuffer.length >= this.config.batchSize;
   }
 
   private detectPlatform(): string {
@@ -323,7 +330,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
       this.isOnline = true;
       this.processPendingEvents();
     });
-    
+
     window.addEventListener('offline', () => {
       this.isOnline = false;
     });
@@ -334,13 +341,13 @@ export class AnalyticsCollector implements IAnalyticsCollector {
         this.trackEvent({
           type: AnalyticsEventType.PAUSE_SESSION,
           sessionId: this.sessionId,
-          data: { reason: 'page_hidden' }
+          data: { reason: 'page_hidden' },
         });
       } else {
         this.trackEvent({
           type: AnalyticsEventType.RESUME_SESSION,
           sessionId: this.sessionId,
-          data: { reason: 'page_visible' }
+          data: { reason: 'page_visible' },
         });
       }
     });
@@ -360,7 +367,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   }
 
   private async getSessionEvents(): Promise<AnalyticsEvent[]> {
-    const events = await this.storage.loadAnalyticsEvents({ sessionId: this.sessionId }) || [];
+    const events = (await this.storage.loadAnalyticsEvents({ sessionId: this.sessionId })) || [];
     return Array.isArray(events) ? events : [];
   }
 
@@ -369,7 +376,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   }
 
   private async loadPendingEvents(): Promise<void> {
-    const pending = await this.storage.loadAnalyticsEvents({ type: 'pending' }) || [];
+    const pending = (await this.storage.loadAnalyticsEvents({ type: 'pending' })) || [];
     this.pendingEvents = Array.isArray(pending) ? pending : [];
   }
 
@@ -386,7 +393,7 @@ export class AnalyticsCollector implements IAnalyticsCollector {
   private emitMetricsUpdate(metrics: any): void {
     // Emit custom event for real-time UI updates
     const event = new CustomEvent('analytics:metricsUpdate', {
-      detail: { metrics, sessionId: this.sessionId }
+      detail: { metrics, sessionId: this.sessionId },
     });
     window.dispatchEvent(event);
   }
@@ -397,20 +404,24 @@ export class AnalyticsCollector implements IAnalyticsCollector {
       message: error.message || 'Unknown analytics error',
       type,
       context,
-      recoverable: type !== AnalyticsErrorType.INVALID_DATA
+      recoverable: type !== AnalyticsErrorType.INVALID_DATA,
     };
 
     logger.error('Analytics error', analyticsError);
-    
+
     // Store error for later analysis
-    this.storage.saveAnalyticsEvents([{
-      type: 'analytics_error' as any,
-      sessionId: this.sessionId,
-      data: { error: analyticsError },
-      timestamp: Date.now()
-    }]).catch(() => {
-      // Silent fail for error storage
-    });
+    this.storage
+      .saveAnalyticsEvents([
+        {
+          type: 'analytics_error' as any,
+          sessionId: this.sessionId,
+          data: { error: analyticsError },
+          timestamp: Date.now(),
+        },
+      ])
+      .catch(() => {
+        // Silent fail for error storage
+      });
   }
 
   // Cleanup

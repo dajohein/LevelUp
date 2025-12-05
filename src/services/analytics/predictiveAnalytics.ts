@@ -11,7 +11,7 @@ import {
   PredictionContext,
   LearningRecommendation,
   LearningMetrics,
-  PredictionType
+  PredictionType,
 } from './interfaces';
 import { EnhancedStorageService } from '../storage/enhancedStorage';
 import { logger } from '../logger';
@@ -53,7 +53,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
   async generatePredictions(userId: string, context: PredictionContext): Promise<Prediction[]> {
     const cacheKey = `pred_${userId}_${JSON.stringify(context)}`;
     const cached = this.predictionCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return [cached.prediction];
     }
@@ -76,7 +76,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
       if (predictions.length > 0) {
         this.predictionCache.set(cacheKey, {
           prediction: predictions[0],
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
@@ -87,20 +87,25 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
     }
   }
 
-  async optimizeLearningPath(userId: string, currentMetrics: LearningMetrics): Promise<LearningRecommendation[]> {
+  async optimizeLearningPath(
+    userId: string,
+    currentMetrics: LearningMetrics
+  ): Promise<LearningRecommendation[]> {
     try {
       const context: PredictionContext = {
         userId,
         currentLevel: currentMetrics.masteryLevel,
         sessionTime: Date.now(),
-        recentPerformance: currentMetrics
+        recentPerformance: currentMetrics,
       };
 
       const predictions = await this.generatePredictions(userId, context);
       const recommendations: LearningRecommendation[] = [];
 
       // Difficulty optimization
-      const difficultyPrediction = predictions.find(p => p.type === PredictionType.OPTIMAL_DIFFICULTY);
+      const difficultyPrediction = predictions.find(
+        p => p.type === PredictionType.OPTIMAL_DIFFICULTY
+      );
       if (difficultyPrediction) {
         recommendations.push({
           type: 'difficulty_adjustment',
@@ -109,7 +114,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           value: difficultyPrediction.value,
           reasoning: difficultyPrediction.reasoning,
           confidence: difficultyPrediction.confidence,
-          expectedImprovement: this.calculateExpectedImprovement(difficultyPrediction)
+          expectedImprovement: this.calculateExpectedImprovement(difficultyPrediction),
         });
       }
 
@@ -123,12 +128,14 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           value: sessionPrediction.value,
           reasoning: sessionPrediction.reasoning,
           confidence: sessionPrediction.confidence,
-          expectedImprovement: this.calculateExpectedImprovement(sessionPrediction)
+          expectedImprovement: this.calculateExpectedImprovement(sessionPrediction),
         });
       }
 
       // Content recommendations
-      const contentPredictions = predictions.filter(p => p.type === PredictionType.CONTENT_RECOMMENDATION);
+      const contentPredictions = predictions.filter(
+        p => p.type === PredictionType.CONTENT_RECOMMENDATION
+      );
       for (const prediction of contentPredictions) {
         recommendations.push({
           type: 'content_suggestion',
@@ -137,7 +144,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           value: prediction.value,
           reasoning: prediction.reasoning,
           confidence: prediction.confidence,
-          expectedImprovement: this.calculateExpectedImprovement(prediction)
+          expectedImprovement: this.calculateExpectedImprovement(prediction),
         });
       }
 
@@ -151,7 +158,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           value: timePrediction.value,
           reasoning: timePrediction.reasoning,
           confidence: timePrediction.confidence,
-          expectedImprovement: this.calculateExpectedImprovement(timePrediction)
+          expectedImprovement: this.calculateExpectedImprovement(timePrediction),
         });
       }
 
@@ -159,7 +166,6 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       });
-
     } catch (error) {
       logger.error('Learning path optimization failed', error);
       return [];
@@ -181,10 +187,10 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
 
       // Extract features and labels from training data
       const { features, labels } = await this.prepareTrainingData(trainingData, type);
-      
+
       // Train using simple linear regression with regularization
       const trainedWeights = this.trainLinearModel(features, labels, model.weights);
-      
+
       // Update model
       model.weights = trainedWeights.weights;
       model.bias = trainedWeights.bias;
@@ -193,21 +199,23 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
       model.dataPoints = trainingData.length;
 
       this.models.set(type, model);
-      
+
       // Persist model
       await this.saveModel(type, model);
-      
+
       logger.info(`Model ${type} trained with accuracy: ${model.accuracy.toFixed(3)}`);
-      
     } catch (error) {
       logger.error(`Model training failed for ${type}`, error);
     }
   }
 
-  private async extractFeatures(userId: string, context: PredictionContext): Promise<ModelFeatures> {
+  private async extractFeatures(
+    userId: string,
+    context: PredictionContext
+  ): Promise<ModelFeatures> {
     const cacheKey = `features_${userId}_${context.sessionTime}`;
     const cached = this.featureCache.get(cacheKey);
-    
+
     if (cached) return cached;
 
     try {
@@ -225,12 +233,11 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
         difficultyLevel: context.currentLevel || 1,
         timeOfDay: new Date().getHours(),
         dayOfWeek: new Date().getDay(),
-        engagementScore: this.calculateEngagementScore(sessionEvents)
+        engagementScore: this.calculateEngagementScore(sessionEvents),
       };
 
       this.featureCache.set(cacheKey, features);
       return features;
-      
     } catch (error) {
       logger.error('Feature extraction failed', error);
       return this.getDefaultFeatures();
@@ -238,8 +245,8 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
   }
 
   private async makePrediction(
-    type: PredictionType, 
-    features: ModelFeatures, 
+    type: PredictionType,
+    features: ModelFeatures,
     _context: PredictionContext
   ): Promise<Prediction | null> {
     const model = this.models.get(type);
@@ -250,7 +257,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
     try {
       // Convert features to array
       const featureVector = this.featuresToVector(features, model.features);
-      
+
       // Calculate prediction using linear model
       let prediction = model.bias;
       for (let i = 0; i < model.weights.length; i++) {
@@ -259,10 +266,10 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
 
       // Apply activation function based on prediction type
       const normalizedValue = this.applyActivation(prediction, type);
-      
+
       // Calculate confidence based on model accuracy and feature quality
       const confidence = this.calculatePredictionConfidence(model, features, normalizedValue);
-      
+
       // Generate reasoning
       const reasoning = this.generateReasoning(type, features, normalizedValue, model);
 
@@ -275,10 +282,9 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
         context: {
           modelAccuracy: model.accuracy,
           featureQuality: this.assessFeatureQuality(features),
-          dataPoints: model.dataPoints
-        }
+          dataPoints: model.dataPoints,
+        },
       };
-      
     } catch (error) {
       logger.error(`Prediction failed for ${type}`, error);
       return null;
@@ -286,45 +292,45 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
   }
 
   private trainLinearModel(
-    features: number[][], 
-    labels: number[], 
+    features: number[][],
+    labels: number[],
     initialWeights: number[]
   ): { weights: number[]; bias: number } {
     const learningRate = 0.01;
     const regularization = 0.001;
     const epochs = 1000;
-    
+
     let weights = [...initialWeights];
     let bias = 0;
-    
+
     for (let epoch = 0; epoch < epochs; epoch++) {
       let totalError = 0;
       const weightGradients = new Array(weights.length).fill(0);
       let biasGradient = 0;
-      
+
       // Calculate gradients
       for (let i = 0; i < features.length; i++) {
         const predicted = bias + features[i].reduce((sum, f, j) => sum + f * weights[j], 0);
         const error = predicted - labels[i];
         totalError += error * error;
-        
+
         // Update gradients
         biasGradient += error;
         for (let j = 0; j < weights.length; j++) {
           weightGradients[j] += error * features[i][j] + regularization * weights[j];
         }
       }
-      
+
       // Update weights and bias
-      bias -= learningRate * biasGradient / features.length;
+      bias -= (learningRate * biasGradient) / features.length;
       for (let j = 0; j < weights.length; j++) {
-        weights[j] -= learningRate * weightGradients[j] / features.length;
+        weights[j] -= (learningRate * weightGradients[j]) / features.length;
       }
-      
+
       // Early stopping if converged
       if (totalError / features.length < 0.001) break;
     }
-    
+
     return { weights, bias };
   }
 
@@ -332,24 +338,24 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
     const modelConfigs: Array<{ type: PredictionType; features: string[] }> = [
       {
         type: PredictionType.PERFORMANCE_FORECAST,
-        features: ['accuracy', 'responseTime', 'streakLength', 'sessionDuration', 'timeOfDay']
+        features: ['accuracy', 'responseTime', 'streakLength', 'sessionDuration', 'timeOfDay'],
       },
       {
         type: PredictionType.OPTIMAL_DIFFICULTY,
-        features: ['accuracy', 'responseTime', 'streakLength', 'hintsUsed', 'engagementScore']
+        features: ['accuracy', 'responseTime', 'streakLength', 'hintsUsed', 'engagementScore'],
       },
       {
         type: PredictionType.SESSION_LENGTH,
-        features: ['sessionDuration', 'engagementScore', 'accuracy', 'timeOfDay', 'dayOfWeek']
+        features: ['sessionDuration', 'engagementScore', 'accuracy', 'timeOfDay', 'dayOfWeek'],
       },
       {
         type: PredictionType.CONTENT_RECOMMENDATION,
-        features: ['accuracy', 'hintsUsed', 'difficultyLevel', 'engagementScore']
+        features: ['accuracy', 'hintsUsed', 'difficultyLevel', 'engagementScore'],
       },
       {
         type: PredictionType.OPTIMAL_TIME,
-        features: ['timeOfDay', 'dayOfWeek', 'accuracy', 'engagementScore', 'sessionDuration']
-      }
+        features: ['timeOfDay', 'dayOfWeek', 'accuracy', 'engagementScore', 'sessionDuration'],
+      },
     ];
 
     for (const config of modelConfigs) {
@@ -360,7 +366,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
         bias: 0,
         accuracy: 0.5,
         lastTrained: 0,
-        dataPoints: 0
+        dataPoints: 0,
       });
     }
   }
@@ -377,17 +383,20 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
       .filter(e => e.type === AnalyticsEventType.RESPONSE_TIME)
       .map(e => e.data.responseTime as number)
       .filter(time => time > 0);
-    
-    return responseTimes.length > 0 ? 
-      responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length : 5000;
+
+    return responseTimes.length > 0
+      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+      : 5000;
   }
 
   private calculateCurrentStreak(events: AnalyticsEvent[]): number {
     let streak = 0;
     const orderedEvents = events
-      .filter(e => [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type))
+      .filter(e =>
+        [AnalyticsEventType.WORD_SUCCESS, AnalyticsEventType.WORD_FAILURE].includes(e.type)
+      )
       .sort((a, b) => b.timestamp - a.timestamp);
-    
+
     for (const event of orderedEvents) {
       if (event.type === AnalyticsEventType.WORD_SUCCESS) {
         streak++;
@@ -395,13 +404,13 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
         break;
       }
     }
-    
+
     return streak;
   }
 
   private calculateSessionDuration(events: AnalyticsEvent[]): number {
     if (events.length === 0) return 0;
-    
+
     const timestamps = events.map(e => e.timestamp);
     return Math.max(...timestamps) - Math.min(...timestamps);
   }
@@ -415,10 +424,10 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
     const totalEvents = events.length;
     const pauseEvents = events.filter(e => e.type === AnalyticsEventType.PAUSE_SESSION).length;
     const skipEvents = events.filter(e => e.type === AnalyticsEventType.SKIP_WORD).length;
-    
+
     if (totalEvents === 0) return 0.5;
-    
-    const engagementRatio = 1 - ((pauseEvents + skipEvents) / totalEvents);
+
+    const engagementRatio = 1 - (pauseEvents + skipEvents) / totalEvents;
     return Math.max(0, Math.min(1, engagementRatio));
   }
 
@@ -443,15 +452,15 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
   }
 
   private calculatePredictionConfidence(
-    model: PredictionModel, 
-    features: ModelFeatures, 
+    model: PredictionModel,
+    features: ModelFeatures,
     _prediction: number
   ): number {
     const baseConfidence = model.accuracy;
     const featureQuality = this.assessFeatureQuality(features);
     const dataQuality = Math.min(1, model.dataPoints / 1000); // More data = higher confidence
-    
-    return (baseConfidence * 0.5 + featureQuality * 0.3 + dataQuality * 0.2);
+
+    return baseConfidence * 0.5 + featureQuality * 0.3 + dataQuality * 0.2;
   }
 
   private assessFeatureQuality(features: ModelFeatures): number {
@@ -461,18 +470,18 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
       if (value < 0 || value > 1000000) return 0.3; // Outliers
       return 1;
     });
-    
+
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
   }
 
   private generateReasoning(
-    type: PredictionType, 
-    features: ModelFeatures, 
-    _prediction: number, 
+    type: PredictionType,
+    features: ModelFeatures,
+    _prediction: number,
     model: PredictionModel
   ): string[] {
     const reasoning: string[] = [];
-    
+
     switch (type) {
       case PredictionType.OPTIMAL_DIFFICULTY:
         if (features.accuracy > 0.8) {
@@ -482,7 +491,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           reasoning.push('Frequent hint usage indicates current difficulty may be appropriate');
         }
         break;
-        
+
       case PredictionType.SESSION_LENGTH:
         if (features.engagementScore > 0.7) {
           reasoning.push('High engagement suggests longer sessions may be beneficial');
@@ -491,24 +500,28 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
           reasoning.push('Current session length shows good focus capacity');
         }
         break;
-        
+
       default:
-        reasoning.push(`Prediction based on ${model.dataPoints} data points with ${(model.accuracy * 100).toFixed(1)}% accuracy`);
+        reasoning.push(
+          `Prediction based on ${model.dataPoints} data points with ${(model.accuracy * 100).toFixed(1)}% accuracy`
+        );
     }
-    
+
     return reasoning;
   }
 
   private shouldGeneratePrediction(model: PredictionModel, features: ModelFeatures): boolean {
-    return model.accuracy > 0.5 && 
-           model.dataPoints >= this.MIN_DATA_POINTS && 
-           this.assessFeatureQuality(features) > 0.6;
+    return (
+      model.accuracy > 0.5 &&
+      model.dataPoints >= this.MIN_DATA_POINTS &&
+      this.assessFeatureQuality(features) > 0.6
+    );
   }
 
   private calculateExpectedImprovement(prediction: Prediction): number {
     // Simple heuristic for expected improvement based on confidence and prediction type
     const baseImprovement = prediction.confidence * 0.2; // Max 20% improvement
-    
+
     switch (prediction.type) {
       case PredictionType.OPTIMAL_DIFFICULTY:
         return baseImprovement * 1.5; // Difficulty adjustments can have high impact
@@ -529,24 +542,26 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
       difficultyLevel: 5,
       timeOfDay: 14,
       dayOfWeek: 3,
-      engagementScore: 0.7
+      engagementScore: 0.7,
     };
   }
 
   // Data loading and persistence methods
   private async getRecentEvents(userId: string, timeframe: number): Promise<AnalyticsEvent[]> {
     try {
-      return await this.storage.loadAnalyticsEvents({
-        userId,
-        timeRange: { start: Date.now() - timeframe, end: Date.now() }
-      }) || [];
+      return (
+        (await this.storage.loadAnalyticsEvents({
+          userId,
+          timeRange: { start: Date.now() - timeframe, end: Date.now() },
+        })) || []
+      );
     } catch {
       return [];
     }
   }
 
   private async prepareTrainingData(
-    _events: AnalyticsEvent[], 
+    _events: AnalyticsEvent[],
     _type: PredictionType
   ): Promise<{ features: number[][]; labels: number[] }> {
     // This would implement data preparation logic specific to each prediction type
@@ -555,8 +570,8 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
   }
 
   private async validateModel(
-    _model: PredictionModel, 
-    _features: number[][], 
+    _model: PredictionModel,
+    _features: number[][],
     _labels: number[]
   ): Promise<number> {
     // Cross-validation implementation would go here

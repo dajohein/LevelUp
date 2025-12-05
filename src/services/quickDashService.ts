@@ -1,16 +1,13 @@
 /**
  * Quick Dash Challenge Service - AI Enhanced
- * 
+ *
  * Implements time-pressured learning with speed optimization and AI assistance
  * for cognitive load management under time constraints.
  */
 
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { 
-  challengeAIIntegrator, 
-  ChallengeAIContext
-} from './challengeAIIntegrator';
+import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge, generateQuizOptions } from './wordSelectionManager';
@@ -49,7 +46,7 @@ class QuickDashService {
    * Initialize Quick Dash challenge
    */
   async initializeQuickDash(
-    languageCode: string, 
+    languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 8,
     timeLimit: number = 300, // 5 minutes
@@ -70,10 +67,12 @@ class QuickDashService {
       wordTimers: [],
       pressurePoints: [],
       aiEnhancementsEnabled: challengeAIIntegrator.isAIAvailable(),
-      speedOptimizations: []
+      speedOptimizations: [],
     };
 
-    logger.debug(`⚡ Quick Dash initialized with session ID: ${sessionId}, target: ${targetWords} words in ${timeLimit}s`);
+    logger.debug(
+      `⚡ Quick Dash initialized with session ID: ${sessionId}, target: ${targetWords} words in ${timeLimit}s`
+    );
   }
 
   /**
@@ -93,7 +92,7 @@ class QuickDashService {
 
     // Calculate time pressure
     const timePressure = this.calculateTimePressure(timeRemaining);
-    
+
     // Determine difficulty based on time pressure and progress
     let difficulty: 'easy' | 'medium' | 'hard';
     if (timePressure > 0.7 || timeRemaining < 60) {
@@ -123,7 +122,7 @@ class QuickDashService {
       word: selectedWord,
       wordProgress,
       context: 'high-pressure',
-      allowOpenAnswer: true
+      allowOpenAnswer: true,
     });
     let aiEnhanced = false;
     let speedHints: string[] = [];
@@ -141,10 +140,10 @@ class QuickDashService {
           consecutiveCorrect: 0,
           consecutiveIncorrect: 0,
           recentAccuracy: this.calculateCurrentAccuracy(wordProgress),
-          sessionDuration: (Date.now() - this.state.startTime) / 1000
+          sessionDuration: (Date.now() - this.state.startTime) / 1000,
         },
         userState: {
-          recentPerformance: []
+          recentPerformance: [],
         },
         challengeContext: {
           currentDifficulty: 50,
@@ -152,8 +151,8 @@ class QuickDashService {
           speedFocus: true,
           remainingTime: timeRemaining,
           isEarlyPhase: currentProgress < 3,
-          isFinalPhase: timeRemaining < 60 // Final minute
-        }
+          isFinalPhase: timeRemaining < 60, // Final minute
+        },
       };
 
       try {
@@ -165,19 +164,26 @@ class QuickDashService {
         );
 
         if (aiResult.interventionNeeded) {
-          if (aiResult.aiRecommendedMode && ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(aiResult.aiRecommendedMode as any)) {
+          if (
+            aiResult.aiRecommendedMode &&
+            ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(
+              aiResult.aiRecommendedMode as any
+            )
+          ) {
             quizMode = aiResult.aiRecommendedMode as QuickDashResult['quizMode'];
           }
           aiEnhanced = true;
           speedHints = generateHints({
             word: selectedWord,
             quizMode,
-            context: 'speed'
+            context: 'speed',
           });
           reasoning = aiResult.reasoning || [];
-          
+
           // Record speed optimization patterns
-          this.state.speedOptimizations.push(`time-pressure-${timePressure > 0.7 ? 'high' : 'moderate'}`);
+          this.state.speedOptimizations.push(
+            `time-pressure-${timePressure > 0.7 ? 'high' : 'moderate'}`
+          );
         }
       } catch (error) {
         logger.warn('AI enhancement failed for Quick Dash, using fallback', { error });
@@ -185,8 +191,12 @@ class QuickDashService {
     }
 
     // Calculate optimal time allocation for this word
-    const timeAllocated = calculateAdaptiveTimeAllocation(timeRemaining, targetWords - currentProgress, 'quick-dash');
-    
+    const timeAllocated = calculateAdaptiveTimeAllocation(
+      timeRemaining,
+      targetWords - currentProgress,
+      'quick-dash'
+    );
+
     // Generate options based on quiz mode
     const options = this.generateOptions(selectedWord, quizMode);
 
@@ -194,10 +204,12 @@ class QuickDashService {
     const currentAccuracy = this.calculateCurrentAccuracy(wordProgress);
     this.state.pressurePoints.push({
       timeRemaining,
-      accuracy: currentAccuracy
+      accuracy: currentAccuracy,
     });
 
-    logger.debug(`⚡ Quick Dash word selected: ${selectedWord.term} (${quizMode}, AI: ${aiEnhanced}, Time: ${timeAllocated}s)`);
+    logger.debug(
+      `⚡ Quick Dash word selected: ${selectedWord.term} (${quizMode}, AI: ${aiEnhanced}, Time: ${timeAllocated}s)`
+    );
 
     return {
       word: selectedWord,
@@ -206,7 +218,7 @@ class QuickDashService {
       aiEnhanced,
       timeAllocated,
       speedHints: speedHints.length > 0 ? speedHints : undefined,
-      reasoning: reasoning.length > 0 ? reasoning : undefined
+      reasoning: reasoning.length > 0 ? reasoning : undefined,
     };
   }
 
@@ -242,8 +254,11 @@ class QuickDashService {
     }
 
     try {
-      const avgTimePerWord = this.state.wordTimers.length > 0 ? 
-        this.state.wordTimers.reduce((sum, time) => sum + time, 0) / this.state.wordTimers.length : 0;
+      const avgTimePerWord =
+        this.state.wordTimers.length > 0
+          ? this.state.wordTimers.reduce((sum, time) => sum + time, 0) /
+            this.state.wordTimers.length
+          : 0;
 
       // Transform to QuickDashSessionData format expected by storage
       const storageData: QuickDashSessionData = {
@@ -254,16 +269,16 @@ class QuickDashService {
         accuracy: sessionData.accuracy,
         wasAIEnhanced: sessionData.wasAIEnhanced,
         pressurePoints: this.state.pressurePoints,
-        timeOptimizations: this.state.speedOptimizations
+        timeOptimizations: this.state.speedOptimizations,
       };
 
       await userLearningProfileStorage.updateQuickDashData(userId, storageData);
-      
+
       logger.info('Quick Dash performance saved', {
         userId,
         score: sessionData.score,
         completed: sessionData.completed,
-        wasAIEnhanced: sessionData.wasAIEnhanced
+        wasAIEnhanced: sessionData.wasAIEnhanced,
       });
     } catch (error) {
       logger.error('Failed to save Quick Dash performance', { userId, error });
@@ -275,15 +290,15 @@ class QuickDashService {
    */
   private calculateTimePressure(timeRemaining: number): number {
     if (!this.state) return 0;
-    
+
     const timeRatio = timeRemaining / this.state.timeLimit;
     const progressRatio = this.state.currentWordIndex / this.state.targetWords;
-    
+
     // Pressure increases when time is running out relative to progress
     if (progressRatio > timeRatio) {
       return Math.min(1, (progressRatio - timeRatio) * 2);
     }
-    
+
     return Math.max(0, 1 - timeRatio);
   }
 
@@ -292,7 +307,7 @@ class QuickDashService {
    */
   private calculateCurrentAccuracy(_wordProgress: { [key: string]: WordProgress }): number {
     if (!this.state || this.state.currentWordIndex === 0) return 1.0;
-    
+
     // This would typically be calculated from the actual session results
     // For now, return a reasonable estimate
     return 0.85; // 85% default accuracy
@@ -305,16 +320,16 @@ class QuickDashService {
     switch (quizMode) {
       case 'multiple-choice':
         return this.generateMultipleChoiceOptions(word);
-      
+
       case 'letter-scramble':
         return this.generateLetterScrambleOptions(word);
-      
+
       case 'open-answer':
         return []; // Open answer doesn't need options
-      
+
       case 'fill-in-the-blank':
         return this.generateFillInTheBlankOptions(word);
-      
+
       default:
         return [];
     }
@@ -331,9 +346,9 @@ class QuickDashService {
       moduleId: this.state?.moduleId,
       quizMode: 'multiple-choice',
       optionCount: 3,
-      difficultyBias: 'easier' // Speed mode prefers clearly different options
+      difficultyBias: 'easier', // Speed mode prefers clearly different options
     });
-    
+
     return result.options;
   }
 
@@ -343,7 +358,7 @@ class QuickDashService {
   private generateLetterScrambleOptions(word: Word): string[] {
     const correctTerm = word.term;
     const options = [correctTerm];
-    
+
     // For speed mode, create easily distinguishable scrambles
     for (let i = 0; i < 3; i++) {
       let scrambled = this.quickScrambleWord(correctTerm, i + 1);
@@ -353,7 +368,7 @@ class QuickDashService {
       }
       options.push(scrambled);
     }
-    
+
     return options.sort(() => 0.5 - Math.random());
   }
 
@@ -368,9 +383,9 @@ class QuickDashService {
       moduleId: this.state?.moduleId,
       quizMode: 'fill-in-the-blank',
       optionCount: 3,
-      difficultyBias: 'similar' // Fill-in-the-blank uses similar length words
+      difficultyBias: 'similar', // Fill-in-the-blank uses similar length words
     });
-    
+
     return result.options;
   }
 
@@ -379,20 +394,20 @@ class QuickDashService {
    */
   private quickScrambleWord(word: string, level: number): string {
     const chars = word.split('');
-    
+
     // Simple but effective scrambling for speed mode
     switch (Math.floor(level) % 3) {
       case 0:
         // Reverse order
         return chars.reverse().join('');
-      
+
       case 1:
         // Swap first and last characters
         if (chars.length > 1) {
           [chars[0], chars[chars.length - 1]] = [chars[chars.length - 1], chars[0]];
         }
         return chars.join('');
-      
+
       case 2:
       default:
         // Random shuffle but keep first letter (easier for speed recognition)

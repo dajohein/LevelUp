@@ -45,10 +45,10 @@ export class GameProgressTracker {
     isUnidirectionalMode: (mode: string) => boolean
   ): AnswerValidationResult {
     const isCorrect = checkAnswerCorrectness(answer);
-    
+
     // Calculate current mastery for progress tracking
     const currentMastery = this.calculateWordMastery(currentWord, wordProgress);
-    
+
     // Prepare feedback information based on quiz mode
     const feedbackInfo = this.prepareFeedbackInfo(
       currentWord,
@@ -66,13 +66,13 @@ export class GameProgressTracker {
       streak: 0, // Will be updated by caller with session data
       accuracy: 0, // Will be updated by caller with session data
       timeSpent: 0, // Will be updated by caller with timing data
-      wordsCompleted: 0 // Will be updated by caller with session data
+      wordsCompleted: 0, // Will be updated by caller with session data
     };
 
     return {
       isCorrect,
       feedbackInfo,
-      progressMetrics
+      progressMetrics,
     };
   }
 
@@ -85,10 +85,7 @@ export class GameProgressTracker {
     }
 
     const progress = wordProgress[currentWord.id];
-    return calculateMasteryDecay(
-      progress.lastReviewed,
-      progress.mastery || 0
-    );
+    return calculateMasteryDecay(progress.lastReviewed, progress.mastery || 0);
   }
 
   /**
@@ -133,10 +130,12 @@ export class GameProgressTracker {
    * Update word progress in Redux store
    */
   updateWordProgress(wordId: string, progressData: any): void {
-    this.dispatch(updateWordProgress({
-      wordId,
-      progress: progressData
-    }));
+    this.dispatch(
+      updateWordProgress({
+        wordId,
+        progress: progressData,
+      })
+    );
   }
 
   /**
@@ -159,7 +158,7 @@ export class GameProgressTracker {
         shouldShowCard: false,
         isDevelopmentMode: process.env.NODE_ENV === 'development',
         isTrulyNewWord: false,
-        needsReinforcement: false
+        needsReinforcement: false,
       };
     }
 
@@ -173,7 +172,7 @@ export class GameProgressTracker {
         shouldShowCard: process.env.NODE_ENV === 'development' && shouldShowCard,
         isDevelopmentMode: process.env.NODE_ENV === 'development',
         isTrulyNewWord: true,
-        needsReinforcement: false
+        needsReinforcement: false,
       };
     }
 
@@ -195,7 +194,7 @@ export class GameProgressTracker {
       shouldShowCard: process.env.NODE_ENV === 'development' && shouldShowCard,
       isDevelopmentMode: process.env.NODE_ENV === 'development',
       isTrulyNewWord,
-      needsReinforcement
+      needsReinforcement,
     };
   }
 
@@ -207,14 +206,14 @@ export class GameProgressTracker {
     performanceScore: number;
   } {
     const timeSpent = Date.now() - startTime;
-    
+
     // Calculate performance score based on response time
     // Faster responses get higher scores (max 100, min 0)
     const performanceScore = Math.max(0, Math.min(100, 100 - (timeSpent / 1000) * 10));
 
     return {
       timeSpent,
-      performanceScore
+      performanceScore,
     };
   }
 
@@ -234,7 +233,7 @@ export class GameProgressTracker {
       isCorrect,
       streak: currentStreak,
       accuracy: sessionAccuracy,
-      repetitions: 1 // Will be incremented by existing logic
+      repetitions: 1, // Will be incremented by existing logic
     };
 
     this.updateWordProgress(wordId, progressData);

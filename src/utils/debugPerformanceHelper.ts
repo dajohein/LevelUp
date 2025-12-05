@@ -1,18 +1,18 @@
 /**
  * Debug Performance Helper
- * 
+ *
  * Easy way to enable performance monitoring when debugging issues.
- * 
+ *
  * Usage in browser console:
  * - window.enablePerformanceDebug()  // Start tracking
  * - window.getPerformanceReport()    // Get analysis
  * - window.disablePerformanceDebug() // Stop tracking
  */
 
-import { 
-  enablePerformanceTracking, 
-  disablePerformanceTracking, 
-  analyzePerformance 
+import {
+  enablePerformanceTracking,
+  disablePerformanceTracking,
+  analyzePerformance,
 } from './advancedPerformanceAnalyzer';
 
 // Add debug helpers to window for easy console access

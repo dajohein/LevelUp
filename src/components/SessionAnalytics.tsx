@@ -196,16 +196,16 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
     if (!languageCode) return;
 
     const now = Date.now();
-    const shouldUpdate = (now - lastUpdate) > 10000; // Only update every 10 seconds max
+    const shouldUpdate = now - lastUpdate > 10000; // Only update every 10 seconds max
 
     if (shouldUpdate) {
       // Try to reload analytics data
       learningCacheService.reloadAnalytics();
-      
+
       // Get fresh data
       const analytics = enhancedWordService.getLearningAnalytics(languageCode);
       const recentSessions = enhancedWordService.getSessionHistory(languageCode, 5);
-      
+
       setAnalyticsData(analytics);
       setSessionData(recentSessions);
       setLastUpdate(now);
@@ -214,7 +214,8 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
 
   // Use cached data if available
   const analytics = analyticsData || enhancedWordService.getLearningAnalytics(languageCode);
-  const recentSessions = sessionData.length > 0 ? sessionData : enhancedWordService.getSessionHistory(languageCode, 5);
+  const recentSessions =
+    sessionData.length > 0 ? sessionData : enhancedWordService.getSessionHistory(languageCode, 5);
 
   if (!analytics && recentSessions.length === 0) {
     return (
@@ -307,7 +308,9 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
         <WeeklyProgressChart>
           <SectionTitle>📈 Weekly Progress</SectionTitle>
           {analytics.weeklyProgress.slice(0, 4).map((week: any) => {
-            const maxSessions = Math.max(...analytics.weeklyProgress.map((w: any) => w.sessionsCompleted));
+            const maxSessions = Math.max(
+              ...analytics.weeklyProgress.map((w: any) => w.sessionsCompleted)
+            );
             const progressWidth =
               maxSessions > 0 ? (week.sessionsCompleted / maxSessions) * 100 : 0;
             const accuracyColor =

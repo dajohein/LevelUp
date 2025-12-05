@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { Navigation } from './Navigation';
-import { 
+import {
   // Layout & Containers
   Container,
   Section,
@@ -10,7 +10,7 @@ import {
   GridContainer,
   TwoColumnLayout,
   CenteredContent,
-  
+
   // Typography
   Heading1,
   Heading2,
@@ -19,20 +19,20 @@ import {
   SmallText,
   Link,
   GradientText,
-  
+
   // Buttons
   BaseButton,
   IconButton,
   FAB,
   ButtonGroup,
-  
+
   // Cards
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   CardFooter,
-  
+
   // Forms
   Form,
   Input,
@@ -44,11 +44,11 @@ import {
   FieldItem,
   HelpText,
   FormActions,
-  
+
   // Progress components are shown using custom AnimatedProgressBar
-  
+
   // Feedback
-  Alert
+  Alert,
 } from '@/components/ui';
 
 // Simple Badge component for demo purposes
@@ -61,7 +61,7 @@ const Badge = styled.span<{
   border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 600;
-  
+
   ${props => {
     switch (props.variant) {
       case 'success':
@@ -107,7 +107,7 @@ const AnimatedButton = styled(BaseButton)`
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  
+
   /* Match SessionCompletion.tsx and ModuleOverview.tsx button styling */
   &:hover:not(:disabled) {
     transform: translateY(-2px);
@@ -129,7 +129,9 @@ const AnimatedButton = styled(BaseButton)`
     border-radius: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
-    transition: width 0.6s ease, height 0.6s ease;
+    transition:
+      width 0.6s ease,
+      height 0.6s ease;
   }
 
   &:active::after {
@@ -141,11 +143,11 @@ const AnimatedButton = styled(BaseButton)`
   @media (prefers-reduced-motion: reduce) {
     transition: none;
     animation: none;
-    
+
     &:hover {
       transform: none;
     }
-    
+
     &::after {
       display: none;
     }
@@ -273,7 +275,7 @@ const AnimatedCard = styled(Card)`
 
 // EXACT game progress bar styling - matches LearningProgress.tsx ProgressBar
 const AnimatedProgressBar = styled.div<{ value?: number }>`
-  background: linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0.2));
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2));
   border-radius: 20px;
   height: 24px;
   overflow: hidden;
@@ -307,8 +309,6 @@ const AnimatedProgressBar = styled.div<{ value?: number }>`
   }
 `;
 
-
-
 const DemoContainer = styled.div`
   min-height: 100vh;
   background: ${props => props.theme.colors.background};
@@ -333,12 +333,13 @@ const DemoSection = styled(Section)`
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(76, 175, 80, 0.5) 20%, 
-      rgba(59, 130, 246, 0.5) 40%, 
-      rgba(139, 92, 246, 0.5) 60%, 
-      rgba(245, 158, 11, 0.5) 80%, 
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(76, 175, 80, 0.5) 20%,
+      rgba(59, 130, 246, 0.5) 40%,
+      rgba(139, 92, 246, 0.5) 60%,
+      rgba(245, 158, 11, 0.5) 80%,
       transparent 100%
     );
   }
@@ -364,7 +365,7 @@ const ComponentExample = styled.div`
   backdrop-filter: blur(5px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -396,7 +397,7 @@ const Stats = styled.div`
   margin: ${props => props.theme.spacing.xl} 0;
 `;
 
-// Game-authentic StatCard - matches LanguageOverview.tsx exactly  
+// Game-authentic StatCard - matches LanguageOverview.tsx exactly
 const StatCard = styled.div`
   background-color: ${props => props.theme.colors.surface};
   padding: ${props => props.theme.spacing.lg};
@@ -475,7 +476,7 @@ export const ComponentLibraryDemo: React.FC = () => {
     email: '',
     size: 'md',
     notifications: false,
-    plan: 'basic'
+    plan: 'basic',
   });
 
   return (
@@ -556,7 +557,10 @@ const StatCard = styled.div\`
               <Heading1>Heading 1 - Main Titles</Heading1>
               <Heading2>Heading 2 - Section Headers</Heading2>
               <Heading3>Heading 3 - Subsections</Heading3>
-              <BodyText>Body text for regular content and descriptions. Optimized for readability across all devices.</BodyText>
+              <BodyText>
+                Body text for regular content and descriptions. Optimized for readability across all
+                devices.
+              </BodyText>
               <SmallText>Small text for captions, hints, and secondary information.</SmallText>
               <GradientText>Gradient text for special emphasis and branding.</GradientText>
               <Link href="#demo">Interactive links with hover effects</Link>
@@ -571,48 +575,42 @@ const StatCard = styled.div\`
           {/* Buttons Section */}
           <DemoSection>
             <SectionTitle>🔘 Buttons</SectionTitle>
-            
+
             <Heading3>Button Variants</Heading3>
             <VariantShowcase>
-              <PrimaryButton>
-                Primary
-              </PrimaryButton>
-              <SecondaryButton>
-                Secondary
-              </SecondaryButton>
-              <OutlineButton>
-                Outline
-              </OutlineButton>
-              <BaseButton 
+              <PrimaryButton>Primary</PrimaryButton>
+              <SecondaryButton>Secondary</SecondaryButton>
+              <OutlineButton>Outline</OutlineButton>
+              <BaseButton
                 variant="ghost"
                 style={{
                   background: 'transparent',
                   color: '#FFFFFF',
                   border: 'none',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   e.currentTarget.style.background = 'transparent';
                 }}
               >
                 Ghost
               </BaseButton>
-              <BaseButton 
+              <BaseButton
                 variant="danger"
                 style={{
                   background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                   color: 'white',
                   boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
                 }}
@@ -623,15 +621,25 @@ const StatCard = styled.div\`
 
             <Heading3>Button Sizes</Heading3>
             <VariantShowcase>
-              <BaseButton variant="primary" size="sm">Small</BaseButton>
-              <BaseButton variant="primary" size="md">Medium</BaseButton>
-              <BaseButton variant="primary" size="lg">Large</BaseButton>
-              <BaseButton variant="primary" size="xl">Extra Large</BaseButton>
+              <BaseButton variant="primary" size="sm">
+                Small
+              </BaseButton>
+              <BaseButton variant="primary" size="md">
+                Medium
+              </BaseButton>
+              <BaseButton variant="primary" size="lg">
+                Large
+              </BaseButton>
+              <BaseButton variant="primary" size="xl">
+                Extra Large
+              </BaseButton>
             </VariantShowcase>
 
             <Heading3>Special Buttons</Heading3>
             <VariantShowcase>
-              <IconButton size="md" title="Settings">⚙️</IconButton>
+              <IconButton size="md" title="Settings">
+                ⚙️
+              </IconButton>
               <ButtonGroup>
                 <BaseButton variant="outline">Left</BaseButton>
                 <BaseButton variant="outline">Center</BaseButton>
@@ -685,7 +693,7 @@ const PrimaryButton = styled(BaseButton)\`
           <DemoSection>
             <SectionTitle>🃏 Cards</SectionTitle>
             <ComponentGrid columns={2} gap="lg">
-              <AnimatedCard 
+              <AnimatedCard
                 variant="default"
                 style={{
                   background: 'linear-gradient(135deg, #1E1E1E, #2A2A2A)',
@@ -693,23 +701,25 @@ const PrimaryButton = styled(BaseButton)\`
                   borderRadius: '16px',
                   padding: '1.5rem',
                   backdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                 }}
               >
                 <CardHeader>
                   <CardTitle>Game-style Card</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>Features shimmer animation on hover and authentic game styling with depth.</BodyText>
+                  <BodyText>
+                    Features shimmer animation on hover and authentic game styling with depth.
+                  </BodyText>
                 </CardContent>
                 <CardFooter>
-                  <AnimatedButton 
-                    variant="outline" 
+                  <AnimatedButton
+                    variant="outline"
                     size="sm"
                     style={{
                       background: 'transparent',
                       color: '#4CAF50',
-                      border: '2px solid #4CAF50'
+                      border: '2px solid #4CAF50',
                     }}
                   >
                     Learn More
@@ -717,7 +727,7 @@ const PrimaryButton = styled(BaseButton)\`
                 </CardFooter>
               </AnimatedCard>
 
-              <Card 
+              <Card
                 variant="elevated"
                 style={{
                   background: '#1E1E1E',
@@ -725,14 +735,14 @@ const PrimaryButton = styled(BaseButton)\`
                   borderRadius: '12px',
                   padding: '1.5rem',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   e.currentTarget.style.background = '#1E1E1E';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
@@ -742,15 +752,17 @@ const PrimaryButton = styled(BaseButton)\`
                   <CardTitle>Module Card Style</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>Enhanced card with shadow effects matching ModuleOverview components.</BodyText>
+                  <BodyText>
+                    Enhanced card with shadow effects matching ModuleOverview components.
+                  </BodyText>
                 </CardContent>
                 <CardFooter>
-                  <BaseButton 
-                    variant="primary" 
+                  <BaseButton
+                    variant="primary"
                     size="sm"
                     style={{
                       background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                      boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                      boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
                     }}
                   >
                     Get Started
@@ -784,10 +796,10 @@ const Card = styled.div\`
                 <Form>
                   <div>
                     <Label required>Full Name</Label>
-                    <Input 
+                    <Input
                       placeholder="Enter your name"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       style={{
                         background: '#1E1E1E',
                         border: '2px solid #4CAF50',
@@ -797,13 +809,13 @@ const Card = styled.div\`
                         fontSize: '1rem',
                         fontWeight: '500',
                         textAlign: 'center',
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
                       }}
-                      onFocus={(e) => {
+                      onFocus={e => {
                         e.target.style.borderColor = '#2E7D32';
                         e.target.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.2)';
                       }}
-                      onBlur={(e) => {
+                      onBlur={e => {
                         e.target.style.borderColor = '#4CAF50';
                         e.target.style.boxShadow = 'none';
                       }}
@@ -813,11 +825,11 @@ const Card = styled.div\`
 
                   <div>
                     <Label>Email Address</Label>
-                    <Input 
+                    <Input
                       type="email"
                       placeholder="your@email.com"
                       value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       style={{
                         background: '#1E1E1E',
                         border: '2px solid #4CAF50',
@@ -827,36 +839,44 @@ const Card = styled.div\`
                         fontSize: '1rem',
                         fontWeight: '500',
                         textAlign: 'center',
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
                       }}
                     />
                   </div>
 
                   <div>
                     <Label>Preferred Size</Label>
-                    <Select 
+                    <Select
                       value={formData.size}
-                      onChange={(e) => setFormData(prev => ({ ...prev, size: e.target.value }))}
+                      onChange={e => setFormData(prev => ({ ...prev, size: e.target.value }))}
                       style={{
                         background: '#1E1E1E',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         padding: '0.75rem',
                         color: '#FFFFFF',
-                        fontSize: '1rem'
+                        fontSize: '1rem',
                       }}
                     >
-                      <option value="sm" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>Small</option>
-                      <option value="md" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>Medium</option>
-                      <option value="lg" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>Large</option>
+                      <option value="sm" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>
+                        Small
+                      </option>
+                      <option value="md" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>
+                        Medium
+                      </option>
+                      <option value="lg" style={{ background: '#1E1E1E', color: '#FFFFFF' }}>
+                        Large
+                      </option>
                     </Select>
                   </div>
 
                   <FieldGroup>
                     <FieldItem>
-                      <Checkbox 
+                      <Checkbox
                         checked={formData.notifications}
-                        onChange={(e) => setFormData(prev => ({ ...prev, notifications: e.target.checked }))}
+                        onChange={e =>
+                          setFormData(prev => ({ ...prev, notifications: e.target.checked }))
+                        }
                         style={{ accentColor: '#4CAF50' }}
                       />
                       <Label>Enable notifications</Label>
@@ -865,7 +885,7 @@ const Card = styled.div\`
 
                   <FieldGroup direction="row">
                     <FieldItem>
-                      <Radio 
+                      <Radio
                         name="plan"
                         checked={formData.plan === 'basic'}
                         onChange={() => setFormData(prev => ({ ...prev, plan: 'basic' }))}
@@ -874,7 +894,7 @@ const Card = styled.div\`
                       <Label>Basic Plan</Label>
                     </FieldItem>
                     <FieldItem>
-                      <Radio 
+                      <Radio
                         name="plan"
                         checked={formData.plan === 'premium'}
                         onChange={() => setFormData(prev => ({ ...prev, plan: 'premium' }))}
@@ -885,20 +905,20 @@ const Card = styled.div\`
                   </FieldGroup>
 
                   <FormActions align="right">
-                    <BaseButton 
+                    <BaseButton
                       variant="ghost"
                       style={{
                         background: 'transparent',
-                        color: '#FFFFFF'
+                        color: '#FFFFFF',
                       }}
                     >
                       Cancel
                     </BaseButton>
-                    <BaseButton 
+                    <BaseButton
                       variant="primary"
                       style={{
                         background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                        boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                        boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
                       }}
                     >
                       Save Settings
@@ -954,7 +974,7 @@ const StyledInput = styled.input\`
                       alignItems: 'center',
                       justifyContent: 'center',
                       position: 'relative',
-                      marginBottom: '1rem'
+                      marginBottom: '1rem',
                     }}
                   >
                     <div
@@ -967,14 +987,14 @@ const StyledInput = styled.input\`
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 'bold',
-                        color: '#4CAF50'
+                        color: '#4CAF50',
                       }}
                     >
                       60%
                     </div>
                   </div>
                 </FlexContainer>
-                <SmallText style={{textAlign: 'center'}}>60% Mastery</SmallText>
+                <SmallText style={{ textAlign: 'center' }}>60% Mastery</SmallText>
               </ComponentExample>
             </ComponentGrid>
 
@@ -1001,8 +1021,8 @@ const ProgressFill = styled.div\`
           <DemoSection>
             <SectionTitle>💬 Feedback</SectionTitle>
             <ComponentGrid columns={2} gap="md">
-              <Alert 
-                variant="success" 
+              <Alert
+                variant="success"
                 dismissible
                 style={{
                   background: 'rgba(76, 175, 80, 0.2)',
@@ -1010,13 +1030,13 @@ const ProgressFill = styled.div\`
                   borderLeft: '4px solid #4CAF50',
                   borderRadius: '8px',
                   padding: '1rem',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
                 }}
               >
                 <strong>Success!</strong> Your settings have been saved successfully.
               </Alert>
 
-              <Alert 
+              <Alert
                 variant="warning"
                 style={{
                   background: 'rgba(255, 152, 0, 0.2)',
@@ -1024,14 +1044,14 @@ const ProgressFill = styled.div\`
                   borderLeft: '4px solid #FF9800',
                   borderRadius: '8px',
                   padding: '1rem',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
                 }}
               >
                 <strong>Warning:</strong> This action cannot be undone.
               </Alert>
 
-              <Alert 
-                variant="error" 
+              <Alert
+                variant="error"
                 dismissible
                 style={{
                   background: 'rgba(239, 68, 68, 0.2)',
@@ -1039,13 +1059,13 @@ const ProgressFill = styled.div\`
                   borderLeft: '4px solid #ef4444',
                   borderRadius: '8px',
                   padding: '1rem',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
                 }}
               >
                 <strong>Error!</strong> Failed to connect to the server.
               </Alert>
 
-              <Alert 
+              <Alert
                 variant="info"
                 style={{
                   background: 'rgba(59, 130, 246, 0.2)',
@@ -1053,7 +1073,7 @@ const ProgressFill = styled.div\`
                   borderLeft: '4px solid #3b82f6',
                   borderRadius: '8px',
                   padding: '1rem',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
                 }}
               >
                 <strong>Info:</strong> New features are now available in the latest update.
@@ -1063,7 +1083,7 @@ const ProgressFill = styled.div\`
             <ComponentExample>
               <Heading3>Status Badges</Heading3>
               <FlexContainer gap="sm" wrap>
-                <PulsingBadge 
+                <PulsingBadge
                   variant="success"
                   style={{
                     background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
@@ -1071,7 +1091,7 @@ const ProgressFill = styled.div\`
                     padding: '0.25rem 0.75rem',
                     borderRadius: '12px',
                     fontSize: '0.875rem',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 >
                   🟢 Online
@@ -1084,7 +1104,7 @@ const ProgressFill = styled.div\`
                     padding: '0.25rem 0.75rem',
                     borderRadius: '12px',
                     fontSize: '0.875rem',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 >
                   ⚠️ Pending
@@ -1097,7 +1117,7 @@ const ProgressFill = styled.div\`
                     padding: '0.25rem 0.75rem',
                     borderRadius: '12px',
                     fontSize: '0.875rem',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 >
                   🔴 Offline
@@ -1110,7 +1130,7 @@ const ProgressFill = styled.div\`
                     padding: '0.25rem 0.75rem',
                     borderRadius: '12px',
                     fontSize: '0.875rem',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 >
                   ℹ️ Beta
@@ -1135,36 +1155,38 @@ const Alert = styled.div\`
           {/* Layout Section */}
           <DemoSection>
             <SectionTitle>📐 Layout System</SectionTitle>
-            <BodyText>Responsive containers and layout utilities matching game components:</BodyText>
-            
+            <BodyText>
+              Responsive containers and layout utilities matching game components:
+            </BodyText>
+
             <ComponentExample>
               <Heading3>Flex Container (Navigation Style)</Heading3>
-              <FlexContainer 
-                gap="md" 
-                justify="space-between" 
+              <FlexContainer
+                gap="md"
+                justify="space-between"
                 align="center"
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   padding: '1rem',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <BaseButton 
+                <BaseButton
                   variant="primary"
                   style={{
                     background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
                   }}
                 >
                   Left
                 </BaseButton>
                 <BodyText>Flexible spacing</BodyText>
-                <BaseButton 
+                <BaseButton
                   variant="secondary"
                   style={{
                     background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                   }}
                 >
                   Right
@@ -1174,17 +1196,17 @@ const Alert = styled.div\`
 
             <ComponentExample>
               <Heading3>Grid Container (Module Overview Style)</Heading3>
-              <GridContainer 
-                columns={4} 
+              <GridContainer
+                columns={4}
                 gap="sm"
                 style={{
                   maxWidth: '800px',
-                  margin: '0 auto'
+                  margin: '0 auto',
                 }}
               >
-                {[1,2,3,4,5,6,7,8].map(i => (
-                  <Card 
-                    key={i} 
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <Card
+                    key={i}
                     variant="default"
                     style={{
                       background: '#1E1E1E',
@@ -1196,14 +1218,14 @@ const Alert = styled.div\`
                       minHeight: '100px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={e => {
                       e.currentTarget.style.borderColor = '#4CAF50';
                       e.currentTarget.style.transform = 'translateY(-2px)';
                       e.currentTarget.style.boxShadow = '0 8px 24px rgba(76, 175, 80, 0.2)';
                     }}
-                    onMouseLeave={(e) => {
+                    onMouseLeave={e => {
                       e.currentTarget.style.borderColor = 'transparent';
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = 'none';
@@ -1243,26 +1265,28 @@ const GridContainer = styled.div\`
           <DemoSection>
             <SectionTitle>✅ Best Practices</SectionTitle>
             <ComponentGrid columns={2} gap="lg">
-              <Card 
+              <Card
                 variant="elevated"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))',
+                  background:
+                    'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))',
                   border: '1px solid rgba(76, 175, 80, 0.2)',
                   borderLeft: '3px solid #4CAF50',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(76, 175, 80, 0.15)';
                   e.currentTarget.style.borderColor = 'rgba(76, 175, 80, 0.3)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 12px 40px rgba(76, 175, 80, 0.2)';
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))';
+                onMouseLeave={e => {
+                  e.currentTarget.style.background =
+                    'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))';
                   e.currentTarget.style.borderColor = 'rgba(76, 175, 80, 0.2)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
@@ -1272,30 +1296,35 @@ const GridContainer = styled.div\`
                   <CardTitle>🎨 Design Consistency</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>Use the unified theme system and stick to predefined variants for consistent visual language.</BodyText>
+                  <BodyText>
+                    Use the unified theme system and stick to predefined variants for consistent
+                    visual language.
+                  </BodyText>
                 </CardContent>
               </Card>
 
-              <Card 
+              <Card
                 variant="elevated"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))',
+                  background:
+                    'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))',
                   border: '1px solid rgba(59, 130, 246, 0.2)',
                   borderLeft: '3px solid #3b82f6',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
                   e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 12px 40px rgba(59, 130, 246, 0.2)';
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))';
+                onMouseLeave={e => {
+                  e.currentTarget.style.background =
+                    'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))';
                   e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.2)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
@@ -1305,30 +1334,35 @@ const GridContainer = styled.div\`
                   <CardTitle>📱 Mobile First</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>All components are designed mobile-first with touch-friendly interactions and responsive breakpoints.</BodyText>
+                  <BodyText>
+                    All components are designed mobile-first with touch-friendly interactions and
+                    responsive breakpoints.
+                  </BodyText>
                 </CardContent>
               </Card>
 
-              <Card 
+              <Card
                 variant="elevated"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05))',
+                  background:
+                    'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05))',
                   border: '1px solid rgba(139, 92, 246, 0.2)',
                   borderLeft: '3px solid #8b5cf6',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)';
                   e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 12px 40px rgba(139, 92, 246, 0.2)';
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05))';
+                onMouseLeave={e => {
+                  e.currentTarget.style.background =
+                    'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05))';
                   e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
@@ -1338,30 +1372,35 @@ const GridContainer = styled.div\`
                   <CardTitle>♿ Accessibility</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>Components follow WCAG guidelines with proper ARIA labels, keyboard navigation, and color contrast.</BodyText>
+                  <BodyText>
+                    Components follow WCAG guidelines with proper ARIA labels, keyboard navigation,
+                    and color contrast.
+                  </BodyText>
                 </CardContent>
               </Card>
 
-              <Card 
+              <Card
                 variant="elevated"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))',
+                  background:
+                    'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))',
                   border: '1px solid rgba(245, 158, 11, 0.2)',
                   borderLeft: '3px solid #f59e0b',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)';
                   e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 12px 40px rgba(245, 158, 11, 0.2)';
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))';
+                onMouseLeave={e => {
+                  e.currentTarget.style.background =
+                    'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))';
                   e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.2)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
@@ -1371,7 +1410,10 @@ const GridContainer = styled.div\`
                   <CardTitle>⚡ Performance</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BodyText>Optimized with Emotion's compile-time CSS generation and tree-shaking for minimal bundle size.</BodyText>
+                  <BodyText>
+                    Optimized with Emotion's compile-time CSS generation and tree-shaking for
+                    minimal bundle size.
+                  </BodyText>
                 </CardContent>
               </Card>
             </ComponentGrid>
@@ -1380,7 +1422,9 @@ const GridContainer = styled.div\`
           {/* Game-Specific Components */}
           <DemoSection id="game-components">
             <SectionTitle>🎮 Game-Specific Components</SectionTitle>
-            <BodyText>Specialized components for the LevelUp language learning game (100% Complete)</BodyText>
+            <BodyText>
+              Specialized components for the LevelUp language learning game (100% Complete)
+            </BodyText>
 
             <ComponentGrid>
               {/* Badges Section */}
@@ -1396,41 +1440,50 @@ const GridContainer = styled.div\`
                       <Badge variant="error">Locked</Badge>
                       <Badge variant="info">New</Badge>
                     </FlexContainer>
-                    
+
                     {/* Activity Indicator Demo */}
                     <div style={{ marginTop: '1rem' }}>
-                      <BodyText style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#888' }}>
+                      <BodyText
+                        style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#888' }}
+                      >
                         Activity Indicator (as seen on language cards):
                       </BodyText>
-                      <div style={{ 
-                        position: 'relative',
-                        background: 'rgba(59, 130, 246, 0.1)', 
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                        borderRadius: '8px',
-                        padding: '1rem',
-                        minHeight: '60px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
+                      <div
+                        style={{
+                          position: 'relative',
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          minHeight: '60px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
                         {/* Active Activity Indicator */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: '#4caf50',
-                          boxShadow: '0 0 8px rgba(76, 175, 80, 0.6)'
-                        }} />
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#4caf50',
+                            boxShadow: '0 0 8px rgba(76, 175, 80, 0.6)',
+                          }}
+                        />
                         <BodyText style={{ margin: 0, fontSize: '0.9rem' }}>
                           Recent Activity (Green dot indicates practice within 7 days)
                         </BodyText>
                       </div>
                     </div>
-                    
-                    <BodyText>Achievement, difficulty, level, and status badges with animations, visual feedback, and activity indicators.</BodyText>
+
+                    <BodyText>
+                      Achievement, difficulty, level, and status badges with animations, visual
+                      feedback, and activity indicators.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1442,14 +1495,18 @@ const GridContainer = styled.div\`
                 </CardHeader>
                 <CardContent>
                   <FlexContainer direction="column" gap="md">
-                    <div style={{ 
-                      background: 'rgba(59, 130, 246, 0.1)', 
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div
+                        style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}
+                      >
                         German Module
                       </div>
                       <div style={{ fontSize: '0.9rem', color: '#888' }}>
@@ -1457,15 +1514,21 @@ const GridContainer = styled.div\`
                       </div>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.5rem' }}>
-                      <strong>Child Components Added:</strong> ModuleHeader, ModuleIcon, ModuleInfo, ModuleName, ModuleDescription, ModuleContent, ModuleActions
+                      <strong>Child Components Added:</strong> ModuleHeader, ModuleIcon, ModuleInfo,
+                      ModuleName, ModuleDescription, ModuleContent, ModuleActions
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa' }}>
-                      <strong>Word Card Children:</strong> WordTerm, WordDefinition, MasteryInfo, MasteryBar, MasteryLevel
+                      <strong>Word Card Children:</strong> WordTerm, WordDefinition, MasteryInfo,
+                      MasteryBar, MasteryLevel
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa' }}>
-                      <strong>Language Card Children:</strong> LanguageHeader, LanguageFlag, LanguageInfo, LanguageName, LanguageFrom
+                      <strong>Language Card Children:</strong> LanguageHeader, LanguageFlag,
+                      LanguageInfo, LanguageName, LanguageFrom
                     </div>
-                    <BodyText>Complete card system with ModuleCard, WordCard, LanguageCard, AnalyticCard and all child components for authentic game structure.</BodyText>
+                    <BodyText>
+                      Complete card system with ModuleCard, WordCard, LanguageCard, AnalyticCard and
+                      all child components for authentic game structure.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1477,54 +1540,70 @@ const GridContainer = styled.div\`
                 </CardHeader>
                 <CardContent>
                   <FlexContainer direction="column" gap="md">
-                    <div style={{ 
-                      background: 'rgba(0, 0, 0, 0.2)', 
-                      borderRadius: '8px',
-                      padding: '1rem'
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        marginBottom: '0.5rem' 
-                      }}>
-                        <span style={{ 
-                          color: '#888', 
-                          fontSize: '0.8rem', 
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                    <div
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#888',
+                            fontSize: '0.8rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
                           WORDS LEARNED
                         </span>
-                        <span style={{ 
-                          color: '#fff', 
-                          fontWeight: '600',
-                          fontSize: '0.9rem'
-                        }}>
+                        <span
+                          style={{
+                            color: '#fff',
+                            fontWeight: '600',
+                            fontSize: '0.9rem',
+                          }}
+                        >
                           245
                         </span>
                       </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between' 
-                      }}>
-                        <span style={{ 
-                          color: '#888', 
-                          fontSize: '0.8rem', 
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#888',
+                            fontSize: '0.8rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
                           ACCURACY
                         </span>
-                        <span style={{ 
-                          color: '#fff', 
-                          fontWeight: '600',
-                          fontSize: '0.9rem'
-                        }}>
+                        <span
+                          style={{
+                            color: '#fff',
+                            fontWeight: '600',
+                            fontSize: '0.9rem',
+                          }}
+                        >
                           87%
                         </span>
                       </div>
                     </div>
-                    <BodyText>StatRow, MetricItem, ScoreDisplay, TrendIndicator, and analytics components.</BodyText>
+                    <BodyText>
+                      StatRow, MetricItem, ScoreDisplay, TrendIndicator, and analytics components.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1537,29 +1616,20 @@ const GridContainer = styled.div\`
                 <CardContent>
                   <FlexContainer direction="column" gap="md">
                     <FlexContainer gap="sm" wrap>
-                      <BaseButton 
-                        variant="primary" 
-                        size="sm"
-                        style={{ fontSize: '0.8rem' }}
-                      >
+                      <BaseButton variant="primary" size="sm" style={{ fontSize: '0.8rem' }}>
                         Practice Now
                       </BaseButton>
-                      <BaseButton 
-                        variant="ghost" 
-                        size="sm"
-                        style={{ fontSize: '0.8rem' }}
-                      >
+                      <BaseButton variant="ghost" size="sm" style={{ fontSize: '0.8rem' }}>
                         View Details
                       </BaseButton>
-                      <BaseButton 
-                        variant="secondary" 
-                        size="sm"
-                        style={{ fontSize: '0.8rem' }}
-                      >
+                      <BaseButton variant="secondary" size="sm" style={{ fontSize: '0.8rem' }}>
                         Filter
                       </BaseButton>
                     </FlexContainer>
-                    <BodyText>ActionButton, FilterButton, QuickPracticeButton, Tooltip, DirectionalIcon, and NavigationHint.</BodyText>
+                    <BodyText>
+                      ActionButton, FilterButton, QuickPracticeButton, Tooltip, DirectionalIcon, and
+                      NavigationHint.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1571,20 +1641,26 @@ const GridContainer = styled.div\`
                 </CardHeader>
                 <CardContent>
                   <FlexContainer direction="column" gap="md">
-                    <div style={{ 
-                      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3))',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      textAlign: 'center',
-                      minHeight: '80px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
+                    <div
+                      style={{
+                        background:
+                          'linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3))',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        textAlign: 'center',
+                        minHeight: '80px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <BodyText style={{ margin: 0 }}>Game Container Preview</BodyText>
                     </div>
-                    <BodyText>GameContainer, SessionLayout, AnalyticsLayout, ModuleLayout, PWALayout, and responsive grid systems.</BodyText>
+                    <BodyText>
+                      GameContainer, SessionLayout, AnalyticsLayout, ModuleLayout, PWALayout, and
+                      responsive grid systems.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1598,60 +1674,76 @@ const GridContainer = styled.div\`
                   <FlexContainer direction="column" gap="md">
                     {/* Game Mode Containers */}
                     <div>
-                      <BodyText style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>
+                      <BodyText
+                        style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}
+                      >
                         Game Mode Containers:
                       </BodyText>
-                      <div style={{ 
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                        gap: '0.5rem',
-                        marginBottom: '1rem'
-                      }}>
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1))',
-                          border: '1px solid rgba(33, 150, 243, 0.3)',
-                          borderRadius: '8px',
-                          padding: '0.5rem',
-                          textAlign: 'center',
-                          fontSize: '0.8rem',
-                          position: 'relative'
-                        }}>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                          gap: '0.5rem',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1))',
+                            border: '1px solid rgba(33, 150, 243, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            fontSize: '0.8rem',
+                            position: 'relative',
+                          }}
+                        >
                           <span style={{ position: 'absolute', top: '2px', right: '4px' }}>⚡</span>
                           Quick Dash
                         </div>
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(156, 39, 176, 0.1))',
-                          border: '1px solid rgba(156, 39, 176, 0.3)',
-                          borderRadius: '8px',
-                          padding: '0.5rem',
-                          textAlign: 'center',
-                          fontSize: '0.8rem',
-                          position: 'relative'
-                        }}>
+                        <div
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(156, 39, 176, 0.1))',
+                            border: '1px solid rgba(156, 39, 176, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            fontSize: '0.8rem',
+                            position: 'relative',
+                          }}
+                        >
                           <span style={{ position: 'absolute', top: '2px', right: '4px' }}>🧠</span>
                           Deep Dive
                         </div>
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1))',
-                          border: '1px solid rgba(255, 152, 0, 0.3)',
-                          borderRadius: '8px',
-                          padding: '0.5rem',
-                          textAlign: 'center',
-                          fontSize: '0.8rem',
-                          position: 'relative'
-                        }}>
+                        <div
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1))',
+                            border: '1px solid rgba(255, 152, 0, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            fontSize: '0.8rem',
+                            position: 'relative',
+                          }}
+                        >
                           <span style={{ position: 'absolute', top: '2px', right: '4px' }}>🔥</span>
                           Streak
                         </div>
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))',
-                          border: '1px solid rgba(244, 67, 54, 0.3)',
-                          borderRadius: '8px',
-                          padding: '0.5rem',
-                          textAlign: 'center',
-                          fontSize: '0.8rem',
-                          position: 'relative'
-                        }}>
+                        <div
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))',
+                            border: '1px solid rgba(244, 67, 54, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            fontSize: '0.8rem',
+                            position: 'relative',
+                          }}
+                        >
                           <span style={{ position: 'absolute', top: '2px', right: '4px' }}>👹</span>
                           Boss Battle
                         </div>
@@ -1660,66 +1752,81 @@ const GridContainer = styled.div\`
 
                     {/* Game Meters */}
                     <div>
-                      <BodyText style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>
+                      <BodyText
+                        style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}
+                      >
                         Performance Meters:
                       </BodyText>
-                      <div style={{ 
-                        display: 'flex',
-                        gap: '0.5rem',
-                        flexWrap: 'wrap'
-                      }}>
-                        <div style={{ 
-                          background: 'rgba(33, 150, 243, 0.1)',
-                          border: '1px solid rgba(33, 150, 243, 0.3)',
-                          borderRadius: '6px',
-                          padding: '0.5rem',
-                          fontSize: '0.8rem',
+                      <div
+                        style={{
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}>
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: 'rgba(33, 150, 243, 0.1)',
+                            border: '1px solid rgba(33, 150, 243, 0.3)',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                          }}
+                        >
                           ⚡ 2.3/s
                         </div>
-                        <div style={{ 
-                          background: 'rgba(255, 152, 0, 0.1)',
-                          border: '1px solid rgba(255, 152, 0, 0.3)',
-                          borderRadius: '6px',
-                          padding: '0.5rem',
-                          fontSize: '0.8rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}>
+                        <div
+                          style={{
+                            background: 'rgba(255, 152, 0, 0.1)',
+                            border: '1px solid rgba(255, 152, 0, 0.3)',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                          }}
+                        >
                           🔥 8x
                         </div>
-                        <div style={{ 
-                          background: 'rgba(76, 175, 80, 0.1)',
-                          border: '1px solid rgba(76, 175, 80, 0.3)',
-                          borderRadius: '6px',
-                          padding: '0.5rem',
-                          fontSize: '0.8rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}>
+                        <div
+                          style={{
+                            background: 'rgba(76, 175, 80, 0.1)',
+                            border: '1px solid rgba(76, 175, 80, 0.3)',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                          }}
+                        >
                           🎯 94%
                         </div>
-                        <div style={{ 
-                          background: 'rgba(156, 39, 176, 0.1)',
-                          border: '1px solid rgba(156, 39, 176, 0.3)',
-                          borderRadius: '6px',
-                          padding: '0.5rem',
-                          fontSize: '0.8rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}>
+                        <div
+                          style={{
+                            background: 'rgba(156, 39, 176, 0.1)',
+                            border: '1px solid rgba(156, 39, 176, 0.3)',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                          }}
+                        >
                           🧠 87%
                         </div>
                       </div>
                     </div>
 
-                    <BodyText>Complete game UI including mode containers, progress meters, boss battle components, and action buttons with animations.</BodyText>
+                    <BodyText>
+                      Complete game UI including mode containers, progress meters, boss battle
+                      components, and action buttons with animations.
+                    </BodyText>
                   </FlexContainer>
                 </CardContent>
               </Card>
@@ -1731,53 +1838,64 @@ const GridContainer = styled.div\`
                 </CardHeader>
                 <CardContent>
                   <FlexContainer direction="column" gap="md">
-                    <div style={{ 
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '1rem'
-                    }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '1rem',
+                      }}
+                    >
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          fontSize: '2rem', 
-                          fontWeight: 'bold', 
-                          color: '#4CAF50',
-                          marginBottom: '4px' 
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '2rem',
+                            fontWeight: 'bold',
+                            color: '#4CAF50',
+                            marginBottom: '4px',
+                          }}
+                        >
                           100%
                         </div>
-                        <div style={{ 
-                          fontSize: '0.8rem', 
-                          color: '#888',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '0.8rem',
+                            color: '#888',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
                           COMPLETE
                         </div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          fontSize: '2rem', 
-                          fontWeight: 'bold', 
-                          color: '#3b82f6',
-                          marginBottom: '4px' 
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '2rem',
+                            fontWeight: 'bold',
+                            color: '#3b82f6',
+                            marginBottom: '4px',
+                          }}
+                        >
                           95+
                         </div>
-                        <div style={{ 
-                          fontSize: '0.8rem', 
-                          color: '#888',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '0.8rem',
+                            color: '#888',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
                           COMPONENTS
                         </div>
                       </div>
                     </div>
                     <BodyText>
-                      Complete game-specific component library including badges, specialized cards, 
-                      data display, interactive elements, responsive layouts, and game UI components. 
-                      All components extracted from actual game implementations with perfect styling 
-                      consistency plus comprehensive child components for modular composition.
+                      Complete game-specific component library including badges, specialized cards,
+                      data display, interactive elements, responsive layouts, and game UI
+                      components. All components extracted from actual game implementations with
+                      perfect styling consistency plus comprehensive child components for modular
+                      composition.
                     </BodyText>
                   </FlexContainer>
                 </CardContent>
@@ -1788,7 +1906,8 @@ const GridContainer = styled.div\`
           {/* Footer */}
           <CenteredContent style={{ marginTop: '4rem', paddingBottom: '2rem' }}>
             <BodyText>
-              🎯 This component library provides a solid foundation for consistent, maintainable, and scalable UI development
+              🎯 This component library provides a solid foundation for consistent, maintainable,
+              and scalable UI development
             </BodyText>
             <FlexContainer gap="md" style={{ marginTop: '1rem' }}>
               <Link href="/docs">Documentation</Link>
@@ -1799,9 +1918,7 @@ const GridContainer = styled.div\`
         </Container>
 
         {/* FAB for quick access */}
-        <FAB onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          ↑
-        </FAB>
+        <FAB onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>↑</FAB>
       </DemoContainer>
     </>
   );

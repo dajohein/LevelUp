@@ -117,7 +117,7 @@ export const wordProgressStorage = {
     const lastTime = lastSaveTime[languageCode] || 0;
 
     // Skip save if data is identical and within debounce window
-    if (dataHash === lastHash && (now - lastTime) < SAVE_DEBOUNCE_MS) {
+    if (dataHash === lastHash && now - lastTime < SAVE_DEBOUNCE_MS) {
       return; // Skip duplicate save
     }
 
@@ -222,10 +222,7 @@ export const wordProgressStorage = {
 
     try {
       // Load existing data for all languages
-      const existingData = safeJSONParse<any>(
-        localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
-        {}
-      );
+      const existingData = safeJSONParse<any>(localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS), {});
 
       // Update the specific language with raw data
       existingData[languageCode] = data;
@@ -420,13 +417,10 @@ export const achievementsStorage = {
       };
     }
 
-    return safeJSONParse<PersistentAchievements>(
-      localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS),
-      {
-        unlockedAchievements: [],
-        latestUnlock: null,
-      }
-    );
+    return safeJSONParse<PersistentAchievements>(localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS), {
+      unlockedAchievements: [],
+      latestUnlock: null,
+    });
   },
 
   clear: (): void => {

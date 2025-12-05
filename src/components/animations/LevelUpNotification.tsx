@@ -74,10 +74,9 @@ const Overlay = styled.div<{ isExiting: boolean }>`
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  ${props =>
-    css`
-      animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;
-    `}
+  ${props => css`
+    animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;
+  `}
 `;
 
 const LevelUpCard = styled.div<{ levelColor: string }>`
@@ -244,10 +243,9 @@ const ConfettiPiece = styled.div<{ color: string; delay: number; left: number }>
   background: ${props => props.color};
   left: ${props => props.left}%;
   top: -10px;
-  ${props =>
-    css`
-      animation: ${confettiDrop} 3s linear ${props.delay}s infinite;
-    `}
+  ${props => css`
+    animation: ${confettiDrop} 3s linear ${props.delay}s infinite;
+  `}
 `;
 
 interface LevelUpNotificationProps {

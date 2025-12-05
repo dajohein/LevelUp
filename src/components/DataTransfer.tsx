@@ -1,6 +1,13 @@
 import React, { useState, useRef } from 'react';
 import styled from '@emotion/styled';
-import { FaDownload, FaUpload, FaFileExport, FaFileImport, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import {
+  FaDownload,
+  FaUpload,
+  FaFileExport,
+  FaFileImport,
+  FaCheckCircle,
+  FaExclamationTriangle,
+} from 'react-icons/fa';
 import { dataTransferService, ImportResult } from '../services/dataTransferService';
 import { logger } from '../services/logger';
 
@@ -64,10 +71,14 @@ const ActionDescription = styled.p`
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'success' | 'warning' }>`
   background: ${props => {
     switch (props.variant) {
-      case 'success': return 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-      case 'warning': return 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
-      case 'secondary': return 'rgba(255, 255, 255, 0.1)';
-      default: return 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
+      case 'success':
+        return 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+      case 'warning':
+        return 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+      case 'secondary':
+        return 'rgba(255, 255, 255, 0.1)';
+      default:
+        return 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
     }
   }};
   color: white;
@@ -107,7 +118,7 @@ const ImportModal = styled.div<{ isOpen: boolean }>`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  display: ${props => (props.isOpen ? 'flex' : 'none')};
   align-items: center;
   justify-content: center;
   z-index: 10000;
@@ -160,7 +171,7 @@ const LanguageCheckbox = styled.label`
   margin: 8px 0;
   color: ${props => props.theme.colors.text};
   cursor: pointer;
-  
+
   input {
     margin: 0;
   }
@@ -175,18 +186,25 @@ const ButtonRow = styled.div`
 const StatusMessage = styled.div<{ type: 'success' | 'error' | 'warning' }>`
   background: ${props => {
     switch (props.type) {
-      case 'success': return 'rgba(76, 175, 80, 0.2)';
-      case 'error': return 'rgba(244, 67, 54, 0.2)';
-      case 'warning': return 'rgba(255, 152, 0, 0.2)';
+      case 'success':
+        return 'rgba(76, 175, 80, 0.2)';
+      case 'error':
+        return 'rgba(244, 67, 54, 0.2)';
+      case 'warning':
+        return 'rgba(255, 152, 0, 0.2)';
     }
   }};
-  border: 1px solid ${props => {
-    switch (props.type) {
-      case 'success': return 'rgba(76, 175, 80, 0.5)';
-      case 'error': return 'rgba(244, 67, 54, 0.5)';
-      case 'warning': return 'rgba(255, 152, 0, 0.5)';
-    }
-  }};
+  border: 1px solid
+    ${props => {
+      switch (props.type) {
+        case 'success':
+          return 'rgba(76, 175, 80, 0.5)';
+        case 'error':
+          return 'rgba(244, 67, 54, 0.5)';
+        case 'warning':
+          return 'rgba(255, 152, 0, 0.5)';
+      }
+    }};
   border-radius: 8px;
   padding: 12px;
   margin: 12px 0;
@@ -206,7 +224,7 @@ export const DataTransfer: React.FC = () => {
   }>({
     isOpen: false,
     selectedLanguages: [],
-    mergeMode: true
+    mergeMode: true,
   });
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -230,13 +248,13 @@ export const DataTransfer: React.FC = () => {
 
     try {
       const preview = await dataTransferService.previewImport(file);
-      
+
       if (preview.success && preview.data) {
         setImportModal({
           isOpen: true,
           preview: { file, ...preview.data },
           selectedLanguages: preview.data.languages.map(l => l.code),
-          mergeMode: true
+          mergeMode: true,
         });
       } else {
         alert(`Invalid file: ${preview.error}`);
@@ -259,11 +277,11 @@ export const DataTransfer: React.FC = () => {
       const result = await dataTransferService.importData(importModal.preview.file, {
         selectedLanguages: importModal.selectedLanguages,
         mergeWithExisting: importModal.mergeMode,
-        overwriteExisting: !importModal.mergeMode
+        overwriteExisting: !importModal.mergeMode,
       });
 
       setImportResult(result);
-      
+
       if (result.success && result.importedLanguages && result.importedLanguages.length > 0) {
         // Close modal and refresh page after successful import
         setTimeout(() => {
@@ -277,7 +295,7 @@ export const DataTransfer: React.FC = () => {
       logger.error('❌ Import failed:', error);
       setImportResult({
         success: false,
-        message: 'Import failed due to an unexpected error.'
+        message: 'Import failed due to an unexpected error.',
       });
     }
   };
@@ -287,7 +305,7 @@ export const DataTransfer: React.FC = () => {
       ...prev,
       selectedLanguages: prev.selectedLanguages.includes(languageCode)
         ? prev.selectedLanguages.filter(code => code !== languageCode)
-        : [...prev.selectedLanguages, languageCode]
+        : [...prev.selectedLanguages, languageCode],
     }));
   };
 
@@ -295,14 +313,14 @@ export const DataTransfer: React.FC = () => {
     if (!importModal.preview?.languages) return;
     setImportModal(prev => ({
       ...prev,
-      selectedLanguages: prev.preview.languages.map((l: any) => l.code)
+      selectedLanguages: prev.preview.languages.map((l: any) => l.code),
     }));
   };
 
   const selectNoLanguages = () => {
     setImportModal(prev => ({
       ...prev,
-      selectedLanguages: []
+      selectedLanguages: [],
     }));
   };
 
@@ -312,11 +330,11 @@ export const DataTransfer: React.FC = () => {
         <FaFileExport />
         Progress Transfer
       </Title>
-      
+
       <Description>
-        Transfer your learning progress between different LevelUp app instances. 
-        Export your data to back it up or move it to another device, and import 
-        progress from other LevelUp installations.
+        Transfer your learning progress between different LevelUp app instances. Export your data to
+        back it up or move it to another device, and import progress from other LevelUp
+        installations.
       </Description>
 
       <ActionGrid>
@@ -326,8 +344,8 @@ export const DataTransfer: React.FC = () => {
             Export Progress
           </ActionTitle>
           <ActionDescription>
-            Download all your learning progress, including word mastery, XP, 
-            and settings as a JSON file. This creates a complete backup of your data.
+            Download all your learning progress, including word mastery, XP, and settings as a JSON
+            file. This creates a complete backup of your data.
           </ActionDescription>
           <Button onClick={handleExport} disabled={isExporting}>
             <FaFileExport />
@@ -341,8 +359,8 @@ export const DataTransfer: React.FC = () => {
             Import Progress
           </ActionTitle>
           <ActionDescription>
-            Import progress from another LevelUp app. You can choose which languages 
-            to import and whether to merge with or replace your existing progress.
+            Import progress from another LevelUp app. You can choose which languages to import and
+            whether to merge with or replace your existing progress.
           </ActionDescription>
           <Button onClick={() => fileInputRef.current?.click()}>
             <FaFileImport />
@@ -397,7 +415,7 @@ export const DataTransfer: React.FC = () => {
                     Select None
                   </Button>
                 </ButtonRow>
-                
+
                 <LanguageList>
                   {importModal.preview.languages.map((language: any) => (
                     <LanguageCheckbox key={language.code}>

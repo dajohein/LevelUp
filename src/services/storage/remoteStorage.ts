@@ -1,6 +1,6 @@
 /**
  * Remote Storage Service
- * 
+ *
  * Integrates with Vercel serverless functions for remote data storage
  * Maintains language isolation and works with the existing tiered storage system
  */
@@ -44,7 +44,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
 
   constructor(config: Partial<RemoteStorageConfig> = {}) {
     this.config = { ...DEFAULT_REMOTE_CONFIG, ...config };
-    
+
     // Monitor online status
     window.addEventListener('online', () => {
       this.isOnline = true;
@@ -52,7 +52,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
         logger.info('📡 Remote storage: Back online');
       }
     });
-    
+
     window.addEventListener('offline', () => {
       this.isOnline = false;
       if (this.config.debugMode) {
@@ -82,20 +82,23 @@ export class RemoteStorageService implements AsyncStorageProvider {
   /**
    * Initialize user session (create or authenticate)
    */
-  async initializeUser(existingSession?: { userId: string; sessionToken: string }): Promise<RemoteUserSession> {
+  async initializeUser(existingSession?: {
+    userId: string;
+    sessionToken: string;
+  }): Promise<RemoteUserSession> {
     if (existingSession) {
       // Validate existing session
       try {
         const result = await this.apiCall('/api/users', {
           action: 'authenticate',
-          sessionToken: existingSession.sessionToken
+          sessionToken: existingSession.sessionToken,
         });
 
         if (result.success) {
           this.userSession = {
             userId: result.data.userId,
             sessionToken: existingSession.sessionToken,
-            isGuest: false
+            isGuest: false,
           };
           return this.userSession;
         }
@@ -110,20 +113,20 @@ export class RemoteStorageService implements AsyncStorageProvider {
         action: 'create',
         userData: {
           username: `guest_${Date.now()}`,
-          preferences: {}
-        }
+          preferences: {},
+        },
       });
 
       if (result.success) {
         this.userSession = {
           userId: result.data.userId,
           sessionToken: result.data.sessionToken,
-          isGuest: true
+          isGuest: true,
         };
-        
+
         // Store session in localStorage for persistence
         localStorage.setItem('levelup_remote_session', JSON.stringify(this.userSession));
-        
+
         return this.userSession;
       }
     } catch (error) {
@@ -165,21 +168,23 @@ export class RemoteStorageService implements AsyncStorageProvider {
     }
 
     const url = `${this.config.baseUrl}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(this.config.apiKey && { 'Authorization': `Bearer ${this.config.apiKey}` })
+          ...(this.config.apiKey && { Authorization: `Bearer ${this.config.apiKey}` }),
         },
         body: JSON.stringify(data),
-        signal: AbortSignal.timeout(this.config.timeout)
+        signal: AbortSignal.timeout(this.config.timeout),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error(`API call failed - Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
+        logger.error(
+          `API call failed - Status: ${response.status}, URL: ${url}, Response: ${errorText}`
+        );
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -200,18 +205,18 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async get<T>(key: string, options: StorageOptions = {}): Promise<StorageResult<T>> {
     const startTime = performance.now();
     const languageCode = this.currentLanguage;
-    
+
     try {
       const session = await this.getUserSession();
-      
+
       const result = await this.apiCall('/api/storage', {
         action: 'get',
         userId: session.userId,
         languageCode,
         key,
         options: {
-          compress: this.config.enableCompression && options.compress !== false
-        }
+          compress: this.config.enableCompression && options.compress !== false,
+        },
       });
 
       const retrievalTime = performance.now() - startTime;
@@ -224,8 +229,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
             ...result.metadata,
             retrievalTime,
             tier: 'remote',
-            sessionType: session.isGuest ? 'guest' : 'user'
-          }
+            sessionType: session.isGuest ? 'guest' : 'user',
+          },
         };
       } else {
         return {
@@ -233,22 +238,22 @@ export class RemoteStorageService implements AsyncStorageProvider {
           error: result.error || 'Remote storage error',
           metadata: {
             retrievalTime,
-            tier: 'remote'
-          }
+            tier: 'remote',
+          },
         };
       }
     } catch (error) {
       const retrievalTime = performance.now() - startTime;
       logger.error('Remote storage get error:', error);
-      
+
       return {
         success: false,
         error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         metadata: {
           retrievalTime,
           tier: 'remote',
-          offline: !this.isOnline
-        }
+          offline: !this.isOnline,
+        },
       };
     }
   }
@@ -259,16 +264,17 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async set<T>(key: string, data: T, options: StorageOptions = {}): Promise<StorageResult<void>> {
     const startTime = performance.now();
     const languageCode = this.currentLanguage;
-    
+
     try {
       const session = await this.getUserSession();
-      
+
       // Apply compression if enabled
       let processedData = data;
       if (this.config.enableCompression && options.compress !== false) {
         const dataStr = JSON.stringify(data);
-        if (dataStr.length > 1024) { // Only compress larger data
-          processedData = await compressionService.compress(data) as T;
+        if (dataStr.length > 1024) {
+          // Only compress larger data
+          processedData = (await compressionService.compress(data)) as T;
         }
       }
 
@@ -280,8 +286,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
         data: processedData,
         options: {
           compress: this.config.enableCompression && options.compress !== false,
-          ttl: options.ttl
-        }
+          ttl: options.ttl,
+        },
       });
 
       const retrievalTime = performance.now() - startTime;
@@ -293,8 +299,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
             ...result.metadata,
             retrievalTime,
             tier: 'remote',
-            sessionType: session.isGuest ? 'guest' : 'user'
-          }
+            sessionType: session.isGuest ? 'guest' : 'user',
+          },
         };
       } else {
         return {
@@ -302,22 +308,22 @@ export class RemoteStorageService implements AsyncStorageProvider {
           error: result.error || 'Remote storage error',
           metadata: {
             retrievalTime,
-            tier: 'remote'
-          }
+            tier: 'remote',
+          },
         };
       }
     } catch (error) {
       const retrievalTime = performance.now() - startTime;
       logger.error('Remote storage set error:', error);
-      
+
       return {
         success: false,
         error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         metadata: {
           retrievalTime,
           tier: 'remote',
-          offline: !this.isOnline
-        }
+          offline: !this.isOnline,
+        },
       };
     }
   }
@@ -328,15 +334,15 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async delete(key: string, _options?: StorageOptions): Promise<StorageResult<void>> {
     const startTime = performance.now();
     const languageCode = this.currentLanguage;
-    
+
     try {
       const session = await this.getUserSession();
-      
+
       const result = await this.apiCall('/api/storage', {
         action: 'delete',
         userId: session.userId,
         languageCode,
-        key
+        key,
       });
 
       const retrievalTime = performance.now() - startTime;
@@ -348,8 +354,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
             ...result.metadata,
             retrievalTime,
             tier: 'remote',
-            sessionType: session.isGuest ? 'guest' : 'user'
-          }
+            sessionType: session.isGuest ? 'guest' : 'user',
+          },
         };
       } else {
         return {
@@ -357,22 +363,22 @@ export class RemoteStorageService implements AsyncStorageProvider {
           error: result.error || 'Remote storage error',
           metadata: {
             retrievalTime,
-            tier: 'remote'
-          }
+            tier: 'remote',
+          },
         };
       }
     } catch (error) {
       const retrievalTime = performance.now() - startTime;
       logger.error('Remote storage delete error:', error);
-      
+
       return {
         success: false,
         error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         metadata: {
           retrievalTime,
           tier: 'remote',
-          offline: !this.isOnline
-        }
+          offline: !this.isOnline,
+        },
       };
     }
   }
@@ -392,10 +398,13 @@ export class RemoteStorageService implements AsyncStorageProvider {
   /**
    * Get multiple keys at once (batch operation)
    */
-  async getBatch<T>(keys: string[], options: StorageOptions = {}): Promise<StorageResult<Record<string, T>>> {
+  async getBatch<T>(
+    keys: string[],
+    options: StorageOptions = {}
+  ): Promise<StorageResult<Record<string, T>>> {
     const results: Record<string, T> = {};
     let hasErrors = false;
-    
+
     for (const key of keys) {
       const result = await this.get<T>(key, options);
       if (result.success && result.data !== undefined) {
@@ -404,25 +413,28 @@ export class RemoteStorageService implements AsyncStorageProvider {
         hasErrors = true;
       }
     }
-    
+
     return {
       success: !hasErrors || Object.keys(results).length > 0,
       data: results,
       metadata: {
         tier: 'remote',
         batchSize: keys.length,
-        successful: Object.keys(results).length
-      }
+        successful: Object.keys(results).length,
+      },
     };
   }
 
   /**
    * Set multiple keys at once (batch operation)
    */
-  async setBatch<T>(data: Record<string, T>, options: StorageOptions = {}): Promise<StorageResult<void>> {
+  async setBatch<T>(
+    data: Record<string, T>,
+    options: StorageOptions = {}
+  ): Promise<StorageResult<void>> {
     let successCount = 0;
     let hasErrors = false;
-    
+
     for (const [key, value] of Object.entries(data)) {
       const result = await this.set(key, value, options);
       if (result.success) {
@@ -431,14 +443,14 @@ export class RemoteStorageService implements AsyncStorageProvider {
         hasErrors = true;
       }
     }
-    
+
     return {
       success: !hasErrors || successCount > 0,
       metadata: {
         tier: 'remote',
         batchSize: Object.keys(data).length,
-        successful: successCount
-      }
+        successful: successCount,
+      },
     };
   }
 
@@ -455,21 +467,21 @@ export class RemoteStorageService implements AsyncStorageProvider {
           await this.delete(key);
         }
       }
-      
+
       return {
         success: true,
         metadata: {
           tier: 'remote',
-          cleared: keys.data?.length || 0
-        }
+          cleared: keys.data?.length || 0,
+        },
       };
     } catch (error) {
       return {
         success: false,
         error: `Clear operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         metadata: {
-          tier: 'remote'
-        }
+          tier: 'remote',
+        },
       };
     }
   }
@@ -482,8 +494,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
       success: false,
       error: 'Size calculation not supported in remote storage',
       metadata: {
-        tier: 'remote'
-      }
+        tier: 'remote',
+      },
     };
   }
 
@@ -493,27 +505,27 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async getKeys(pattern?: string): Promise<StorageResult<string[]>> {
     const startTime = performance.now();
     const languageCode = this.currentLanguage;
-    
+
     try {
       const session = await this.getUserSession();
-      
+
       const result = await this.apiCall('/api/storage', {
         action: 'list',
         userId: session.userId,
-        languageCode
+        languageCode,
       });
 
       const retrievalTime = performance.now() - startTime;
 
       if (result.success) {
         let keys = result.data;
-        
+
         // Apply pattern filter if provided
         if (pattern) {
           const regex = new RegExp(pattern);
           keys = keys.filter((key: string) => regex.test(key));
         }
-        
+
         return {
           success: true,
           data: keys,
@@ -522,8 +534,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
             retrievalTime,
             tier: 'remote',
             sessionType: session.isGuest ? 'guest' : 'user',
-            filtered: !!pattern
-          }
+            filtered: !!pattern,
+          },
         };
       } else {
         return {
@@ -531,22 +543,22 @@ export class RemoteStorageService implements AsyncStorageProvider {
           error: result.error || 'Remote storage error',
           metadata: {
             retrievalTime,
-            tier: 'remote'
-          }
+            tier: 'remote',
+          },
         };
       }
     } catch (error) {
       const retrievalTime = performance.now() - startTime;
       logger.error('Remote storage getKeys error:', error);
-      
+
       return {
         success: false,
         error: `Remote storage unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         metadata: {
           retrievalTime,
           tier: 'remote',
-          offline: !this.isOnline
-        }
+          offline: !this.isOnline,
+        },
       };
     }
   }
@@ -560,13 +572,13 @@ export class RemoteStorageService implements AsyncStorageProvider {
       return {
         success: true,
         data: {
-          status: available ? 'healthy' : 'unhealthy'
+          status: available ? 'healthy' : 'unhealthy',
         },
         metadata: {
           tier: 'remote',
           online: this.isOnline,
-          sessionActive: !!this.userSession
-        }
+          sessionActive: !!this.userSession,
+        },
       };
     } catch (error) {
       return {
@@ -574,8 +586,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
         data: { status: 'unhealthy' },
         metadata: {
           tier: 'remote',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }
@@ -586,28 +598,28 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async generateAccountCode(): Promise<{ code: string; expires: number }> {
     try {
       const session = await this.getUserSession();
-      
+
       // Debug logging
-      logger.info('Generating account code for session:', { 
-        userId: session.userId, 
+      logger.info('Generating account code for session:', {
+        userId: session.userId,
         hasSessionToken: !!session.sessionToken,
-        apiUrl: `${this.config.baseUrl}/api/users`
+        apiUrl: `${this.config.baseUrl}/api/users`,
       });
-      
+
       const requestData = {
         action: 'generateCode',
-        sessionToken: session.sessionToken
+        sessionToken: session.sessionToken,
       };
-      
+
       logger.info('Request data:', requestData);
-      
+
       const result = await this.apiCall('/api/users', requestData);
 
       if (result.success) {
-        const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+        const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
         return {
           code: result.data.accountCode,
-          expires
+          expires,
         };
       }
 
@@ -621,11 +633,13 @@ export class RemoteStorageService implements AsyncStorageProvider {
   /**
    * Link current device to existing account using code
    */
-  async linkDeviceWithCode(accountCode: string): Promise<{ success: boolean; linkedDevices: number }> {
+  async linkDeviceWithCode(
+    accountCode: string
+  ): Promise<{ success: boolean; linkedDevices: number }> {
     try {
       const result = await this.apiCall('/api/users', {
         action: 'linkDevice',
-        accountCode: accountCode.toUpperCase()
+        accountCode: accountCode.toUpperCase(),
       });
 
       if (result.success) {
@@ -634,7 +648,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
           userId: result.data.userId,
           sessionToken: result.data.sessionToken,
           isGuest: false, // No longer a guest account
-          linkedDevices: result.data.linkedDevices
+          linkedDevices: result.data.linkedDevices,
         };
 
         // Update localStorage with new session
@@ -642,12 +656,12 @@ export class RemoteStorageService implements AsyncStorageProvider {
 
         logger.info('🔗 Device successfully linked to account', {
           userId: this.userSession.userId,
-          linkedDevices: result.data.linkedDevices
+          linkedDevices: result.data.linkedDevices,
         });
 
         return {
           success: true,
-          linkedDevices: result.data.linkedDevices
+          linkedDevices: result.data.linkedDevices,
         };
       }
 
@@ -678,7 +692,6 @@ export class RemoteStorageService implements AsyncStorageProvider {
       // This would be implemented when we have multi-device progress storage
       logger.info(`Getting progress for device ${deviceId} (not yet implemented)`);
       return {};
-      
     } catch (error) {
       logger.error('Failed to get device progress:', error);
       return {};
@@ -702,7 +715,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
    */
   async isAvailable(): Promise<boolean> {
     if (!this.isOnline) return false;
-    
+
     try {
       await this.getUserSession();
       return true;
@@ -721,12 +734,12 @@ export class RemoteStorageService implements AsyncStorageProvider {
         available: this.isOnline,
         userId: session.userId,
         sessionType: session.isGuest ? 'guest' : 'user',
-        lastSync: Date.now()
+        lastSync: Date.now(),
       };
     } catch {
       return {
         available: false,
-        error: 'Session unavailable'
+        error: 'Session unavailable',
       };
     }
   }

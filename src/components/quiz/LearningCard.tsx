@@ -261,10 +261,11 @@ export const LearningCard: React.FC<LearningCardProps> = ({
         <Translation>{getAnswerWord(word)}</Translation>
         {word.context && (
           <Context>
-            "{typeof word.context === 'string' 
-              ? word.context 
-              : word.context.sentence || word.context.translation || ''
-            }"
+            "
+            {typeof word.context === 'string'
+              ? word.context
+              : word.context.sentence || word.context.translation || ''}
+            "
           </Context>
         )}
       </WordDisplay>

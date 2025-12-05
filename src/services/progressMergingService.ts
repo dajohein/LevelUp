@@ -1,6 +1,6 @@
 /**
  * Progress Merging Service
- * 
+ *
  * Handles merging progress data when devices are linked,
  * maintaining language isolation and optimizing for best progress
  */
@@ -33,34 +33,33 @@ class ProgressMergingService {
   async mergeLinkedDevicesProgress(): Promise<ProgressMergeResult> {
     try {
       logger.info('Starting progress merge for linked devices');
-      
+
       // Get current session info
       const linkedDevices = await remoteStorage.getLinkedDevicesCount();
       if (linkedDevices <= 1) {
         return {
           success: true,
           mergedLanguages: [],
-          improvementsFound: 0
+          improvementsFound: 0,
         };
       }
 
       // For now, this is a placeholder - actual merging logic would go here
       // when we have multi-device progress storage fully implemented
       logger.info('Progress merging not yet fully implemented');
-      
+
       return {
         success: true,
         mergedLanguages: [],
-        improvementsFound: 0
+        improvementsFound: 0,
       };
-      
     } catch (error) {
       logger.error('Failed to merge linked devices progress:', error);
       return {
         success: false,
         mergedLanguages: [],
         improvementsFound: 0,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -75,12 +74,12 @@ class ProgressMergingService {
   }> {
     try {
       const linkedDevices = await remoteStorage.getLinkedDevicesCount();
-      
+
       if (linkedDevices <= 1) {
         return {
           canMerge: false,
           linkedDevices,
-          estimatedImprovements: 0
+          estimatedImprovements: 0,
         };
       }
 
@@ -89,15 +88,14 @@ class ProgressMergingService {
       return {
         canMerge: true,
         linkedDevices,
-        estimatedImprovements: 0 // Could be calculated by comparing progress
+        estimatedImprovements: 0, // Could be calculated by comparing progress
       };
-      
     } catch (error) {
       logger.warn('Failed to get progress merge summary:', error);
       return {
         canMerge: false,
         linkedDevices: 0,
-        estimatedImprovements: 0
+        estimatedImprovements: 0,
       };
     }
   }

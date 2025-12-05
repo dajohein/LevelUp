@@ -107,10 +107,10 @@ export const calculateNextReviewTime = (
       phase === 'introduction'
         ? 'struggling'
         : phase === 'learning'
-        ? 'learning'
-        : phase === 'consolidation'
-        ? 'learned'
-        : 'mastered'
+          ? 'learning'
+          : phase === 'consolidation'
+            ? 'learned'
+            : 'mastered'
     ];
 
   const adjustedInterval = baseInterval * multiplier;
@@ -139,14 +139,14 @@ export interface AIQuizModeOverride {
 
 /**
  * Determines the appropriate quiz mode based on mastery level and learning phase
- * 
+ *
  * Progressive Difficulty System:
  * - 0-30%: Multiple choice only (recognition)
- * - 30-60%: Letter scramble + multiple choice (construction)  
+ * - 30-60%: Letter scramble + multiple choice (construction)
  * - 60-85%: Open answer + letter scramble (recall)
  * - 85-90%: Open answer focus (mastery consolidation)
  * - 90%+: Fill-in-the-blank introduced (ultimate context challenge)
- * 
+ *
  * Fill-in-the-blank is reserved for very high mastery words (90%+) to ensure
  * users have demonstrated consistent performance before facing context challenges.
  */
@@ -156,7 +156,6 @@ export const selectQuizMode = (
   word?: Word,
   aiOverride?: AIQuizModeOverride
 ): 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank' => {
-  
   // Apply AI override if provided and confident enough
   if (aiOverride && aiOverride.confidence > 0.7) {
     logger.debug('Applying AI quiz mode override', {
@@ -164,7 +163,7 @@ export const selectQuizMode = (
       overrideMode: aiOverride.quizMode,
       reasoning: aiOverride.reasoning,
       confidence: aiOverride.confidence,
-      source: aiOverride.source
+      source: aiOverride.source,
     });
     return aiOverride.quizMode;
   }
@@ -236,10 +235,12 @@ export const createWordGroups = (
       : 0;
 
     const phase = getWordLearningPhase(currentMastery);
-    
+
     // Debug logging for phase calculation
     if (process.env.NODE_ENV === 'development' && progress?.xp > 30) {
-      logger.debug(`Word ${word.term} (ID: ${word.id}): stored XP=${progress.xp}, current mastery=${currentMastery}, phase=${phase}`);
+      logger.debug(
+        `Word ${word.term} (ID: ${word.id}): stored XP=${progress.xp}, current mastery=${currentMastery}, phase=${phase}`
+      );
     }
 
     return {
@@ -250,11 +251,14 @@ export const createWordGroups = (
   });
 
   // Group words by learning phase
-  const wordsByPhase = wordsWithMastery.reduce((acc, word) => {
-    if (!acc[word.phase]) acc[word.phase] = [];
-    acc[word.phase].push(word);
-    return acc;
-  }, {} as Record<LearningPhase, typeof wordsWithMastery>);
+  const wordsByPhase = wordsWithMastery.reduce(
+    (acc, word) => {
+      if (!acc[word.phase]) acc[word.phase] = [];
+      acc[word.phase].push(word);
+      return acc;
+    },
+    {} as Record<LearningPhase, typeof wordsWithMastery>
+  );
 
   const groups: WordGroup[] = [];
 
@@ -492,13 +496,16 @@ export const analyzeSessionPerformance = (
   const strugglingWords = results.filter(r => !r.isCorrect).map(r => r.wordId);
 
   // Analyze quiz mode performance
-  const modePerformance = results.reduce((acc, r) => {
-    if (!acc[r.quizMode]) acc[r.quizMode] = { correct: 0, total: 0, totalTime: 0 };
-    acc[r.quizMode].total++;
-    acc[r.quizMode].totalTime += r.timeSpent;
-    if (r.isCorrect) acc[r.quizMode].correct++;
-    return acc;
-  }, {} as Record<string, { correct: number; total: number; totalTime: number }>);
+  const modePerformance = results.reduce(
+    (acc, r) => {
+      if (!acc[r.quizMode]) acc[r.quizMode] = { correct: 0, total: 0, totalTime: 0 };
+      acc[r.quizMode].total++;
+      acc[r.quizMode].totalTime += r.timeSpent;
+      if (r.isCorrect) acc[r.quizMode].correct++;
+      return acc;
+    },
+    {} as Record<string, { correct: number; total: number; totalTime: number }>
+  );
 
   const fastestMode =
     Object.entries(modePerformance).sort(

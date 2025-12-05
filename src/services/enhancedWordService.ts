@@ -318,18 +318,18 @@ class EnhancedWordService {
     const sessionId = `enhanced-fallback-${Date.now()}`;
 
     const result = selectWordForRegularSession(languageCode, wordProgress, sessionId, moduleId);
-    
+
     if (!result) {
       return { word: null, options: [], quizMode: 'multiple-choice' };
     }
 
     // Convert alternatives to string options
     const options = result.alternatives.slice(0, 4).map((word: Word) => word.term);
-    
+
     // Determine quiz mode based on mastery (simple heuristic)
     const mastery = result.metadata.masteryScore;
     let quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-    
+
     if (mastery < 30) {
       quizMode = 'multiple-choice';
     } else if (mastery < 60) {
@@ -341,7 +341,7 @@ class EnhancedWordService {
     return {
       word: result.word,
       options,
-      quizMode
+      quizMode,
     };
   }
 

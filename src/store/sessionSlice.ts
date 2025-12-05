@@ -167,7 +167,7 @@ export const sessionTypes: SessionType[] = [
 const loadPersistedSessionState = (): Partial<SessionState> => {
   try {
     const savedState = sessionStateStorage.load();
-    
+
     return {
       currentLanguage: savedState.language || '',
       currentSession: null, // Clear any persisted session - user must explicitly choose
@@ -192,7 +192,7 @@ const persistedSessionState = loadPersistedSessionState();
 /**
  * Session state persistence follows the centralized architecture pattern.
  * All saves are coordinated through middleware to prevent data races.
- * 
+ *
  * Flow: Session Actions → Persistence Middleware → Storage Orchestrator
  */
 
@@ -260,12 +260,7 @@ const sessionSlice = createSlice({
         currentSession: any;
       }>
     ) => {
-      const {
-        isCorrect,
-        bonuses = {},
-        isSessionActive,
-        currentSession
-      } = action.payload;
+      const { isCorrect, bonuses = {}, isSessionActive, currentSession } = action.payload;
 
       // 1. Update session progress (if in an active session)
       if (isSessionActive && currentSession) {

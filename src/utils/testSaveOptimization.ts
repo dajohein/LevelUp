@@ -14,23 +14,23 @@ export const testSaveOptimization = async () => {
   const results = {
     testsPassed: 0,
     testsTotal: 2,
-    issues: [] as string[]
+    issues: [] as string[],
   };
 
   // Test 1: Single answer should trigger minimal background operations
   try {
     const beforeStats = await storageOrchestrator.getStatistics();
     const initialPending = beforeStats?.backgroundAutoSave?.pendingChanges || 0;
-    
+
     // Simulate answering a question correctly
     store.dispatch(addCorrectAnswer({}));
-    
+
     // Wait for background processing
     await new Promise(resolve => setTimeout(resolve, 250));
-    
+
     const afterStats = await storageOrchestrator.getStatistics();
     const currentPending = afterStats?.backgroundAutoSave?.pendingChanges || 0;
-    
+
     // Since we have background processing, pending changes should be managed
     if (currentPending <= initialPending + 1) {
       results.testsPassed++;
@@ -49,13 +49,13 @@ export const testSaveOptimization = async () => {
   try {
     // Force save all pending operations
     await storageOrchestrator.saveCurrentState('immediate');
-    
+
     // Wait a moment for processing
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const afterSave = await storageOrchestrator.getStatistics();
     const isProcessing = afterSave?.backgroundAutoSave?.isProcessing || false;
-    
+
     // System should complete forced saves quickly
     if (!isProcessing) {
       results.testsPassed++;
@@ -73,7 +73,7 @@ export const testSaveOptimization = async () => {
   // Summary
   logger.info(`\n🏁 Save Optimization Test Complete:`);
   logger.info(`   ✅ Tests passed: ${results.testsPassed}/${results.testsTotal}`);
-  
+
   if (results.issues.length > 0) {
     logger.warn(`   ❌ Issues found:`);
     results.issues.forEach(issue => logger.warn(`      - ${issue}`));
@@ -83,7 +83,9 @@ export const testSaveOptimization = async () => {
 
   const finalStats = await storageOrchestrator.getStatistics();
   logger.info(`\n📊 Storage Statistics:`);
-  logger.info(`   Background Auto-Save: ${finalStats?.backgroundAutoSave?.enabled ? 'enabled' : 'disabled'}`);
+  logger.info(
+    `   Background Auto-Save: ${finalStats?.backgroundAutoSave?.enabled ? 'enabled' : 'disabled'}`
+  );
   logger.info(`   Pending Changes: ${finalStats?.backgroundAutoSave?.pendingChanges || 0}`);
   logger.info(`   Is Processing: ${finalStats?.backgroundAutoSave?.isProcessing || false}`);
 
@@ -92,7 +94,7 @@ export const testSaveOptimization = async () => {
     testsPassed: results.testsPassed,
     testsTotal: results.testsTotal,
     issues: results.issues,
-    statistics: finalStats
+    statistics: finalStats,
   };
 };
 

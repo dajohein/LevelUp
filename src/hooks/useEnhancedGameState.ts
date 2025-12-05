@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
-import { 
-  nextWord, 
-  setCurrentWord, 
-  setLanguage, 
+import {
+  nextWord,
+  setCurrentWord,
+  setLanguage,
   setCurrentModule,
-  checkAnswer
+  checkAnswer,
 } from '../store/gameSlice';
 import {
   addTimeElapsed,
@@ -52,7 +52,10 @@ export interface GameState {
 export interface GameHandlers {
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
-  handleWordTransition: (transitionType?: 'enhanced' | 'standard' | 'quiz', additionalData?: any) => Promise<void>;
+  handleWordTransition: (
+    transitionType?: 'enhanced' | 'standard' | 'quiz',
+    additionalData?: any
+  ) => Promise<void>;
   handleContinueFromLearningCard: () => void;
   checkAnswerCorrectness: (answer: string) => boolean;
   formatTime: (seconds: number) => string;
@@ -117,7 +120,7 @@ export const useEnhancedGameState = ({
   sessionProgress,
   isSessionActive,
   sessionStartTime,
-  gameLanguage
+  gameLanguage,
 }: UseEnhancedGameStateProps): UseEnhancedGameStateReturn => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -135,7 +138,7 @@ export const useEnhancedGameState = ({
   const [wordStartTime, setWordStartTime] = useState<number | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showLearningCard, setShowLearningCard] = useState(false);
-  
+
   // Ref to prevent multiple session initializations
   const sessionInitializedRef = useRef(false);
 
@@ -148,7 +151,7 @@ export const useEnhancedGameState = ({
     correctAnswer: string;
     context: string;
   } | null>(null);
-  
+
   const previousWordRef = useRef<string>('');
 
   // Enhanced integrations
@@ -209,192 +212,206 @@ export const useEnhancedGameState = ({
 
     return {
       isTrulyNewWord: status.isTrulyNewWord,
-      needsReinforcement: status.needsReinforcement
+      needsReinforcement: status.needsReinforcement,
     };
   }, [currentWord?.id, wordProgress]);
 
   // Answer correctness checker
-  const checkAnswerCorrectness = useCallback((answer: string): boolean => {
-    const enhancedWordInfo = getCurrentWordInfo();
-    const wordToUse = enhancedWordInfo?.word || currentWord;
+  const checkAnswerCorrectness = useCallback(
+    (answer: string): boolean => {
+      const enhancedWordInfo = getCurrentWordInfo();
+      const wordToUse = enhancedWordInfo?.word || currentWord;
 
-    if (!wordToUse) return false;
+      if (!wordToUse) return false;
 
-    const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
-    
-    // For enhanced comprehension modes, any non-empty answer is considered correct
-    // These are open-ended learning exercises, not strict quizzes
-    if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizModeToUse)) {
-      return answer.trim().length > 0; // Accept any meaningful input
-    }
-    
-    const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
-    return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-  }, [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]);
+      const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
+
+      // For enhanced comprehension modes, any non-empty answer is considered correct
+      // These are open-ended learning exercises, not strict quizzes
+      if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizModeToUse)) {
+        return answer.trim().length > 0; // Accept any meaningful input
+      }
+
+      const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
+      return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+    },
+    [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]
+  );
 
   // Main submission handler
-  const handleSubmit = useCallback((answer: string) => {
-    const enhancedWordInfo = getCurrentWordInfo();
-    const currentWordToUse = gameServices.modeHandler.getCurrentWord(enhancedWordInfo, currentWord);
-    const quizModeToUse = gameServices.modeHandler.getCurrentQuizMode(enhancedWordInfo, quizMode);
+  const handleSubmit = useCallback(
+    (answer: string) => {
+      const enhancedWordInfo = getCurrentWordInfo();
+      const currentWordToUse = gameServices.modeHandler.getCurrentWord(
+        enhancedWordInfo,
+        currentWord
+      );
+      const quizModeToUse = gameServices.modeHandler.getCurrentQuizMode(enhancedWordInfo, quizMode);
 
-    // Validate answer and get feedback using service
-    const validationResult = gameServices.progressTracker.validateAnswer(
-      answer,
-      currentWordToUse,
-      quizModeToUse,
+      // Validate answer and get feedback using service
+      const validationResult = gameServices.progressTracker.validateAnswer(
+        answer,
+        currentWordToUse,
+        quizModeToUse,
+        wordProgress,
+        getQuizQuestion,
+        getQuizAnswer,
+        getQuestionWord,
+        getAnswerWord,
+        checkAnswerCorrectness,
+        (mode: string) => gameServices.modeHandler.isUnidirectionalMode(mode)
+      );
+
+      // Update feedback state
+      setFeedbackWordInfo(validationResult.feedbackInfo);
+      setLastAnswerCorrect(validationResult.isCorrect);
+      setLastSelectedAnswer(answer);
+      setFeedbackQuestionKey(
+        gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
+      );
+
+      // Play audio feedback
+      if (validationResult.isCorrect) {
+        playCorrect();
+      } else {
+        playIncorrect();
+      }
+
+      // CRITICAL: Dispatch game/checkAnswer action to update word progress
+      // This ensures word progress is saved and modules show correct completion percentages
+      dispatch(checkAnswer(answer));
+
+      // Handle enhanced vs standard game logic
+      if (isUsingSpacedRepetition) {
+        const result = handleEnhancedAnswer(validationResult.isCorrect);
+
+        const completionResult = gameServices.sessionManager.handleEnhancedSessionCompletion(
+          result,
+          gameLanguage || undefined,
+          languageCode
+        );
+
+        if (completionResult.isComplete && completionResult.shouldNavigate) {
+          setSessionCompleted(true);
+          navigate(completionResult.navigationPath!);
+          return;
+        }
+      }
+
+      // Standard game logic
+      setInputValue('');
+      setIsTransitioning(true);
+
+      gameServices.sessionManager.handleAnswerSubmission(
+        validationResult.isCorrect,
+        currentSession,
+        isSessionActive,
+        sessionTimer,
+        sessionProgress
+      );
+
+      // Trigger delayed transition
+      setTimeout(
+        () => {
+          handleWordTransition();
+        },
+        gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
+      );
+    },
+    [
+      currentWord,
+      quizMode,
       wordProgress,
+      currentSession,
+      sessionProgress,
+      isSessionActive,
+      sessionTimer,
+      languageCode,
+      gameLanguage,
+      isUsingSpacedRepetition,
+      getCurrentWordInfo,
+      handleEnhancedAnswer,
       getQuizQuestion,
       getQuizAnswer,
       getQuestionWord,
       getAnswerWord,
       checkAnswerCorrectness,
-      (mode: string) => gameServices.modeHandler.isUnidirectionalMode(mode)
-    );
-
-    // Update feedback state
-    setFeedbackWordInfo(validationResult.feedbackInfo);
-    setLastAnswerCorrect(validationResult.isCorrect);
-    setLastSelectedAnswer(answer);
-    setFeedbackQuestionKey(
-      gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
-    );
-
-    // Play audio feedback
-    if (validationResult.isCorrect) {
-      playCorrect();
-    } else {
-      playIncorrect();
-    }
-
-    // CRITICAL: Dispatch game/checkAnswer action to update word progress
-    // This ensures word progress is saved and modules show correct completion percentages
-    dispatch(checkAnswer(answer));
-
-    // Handle enhanced vs standard game logic
-    if (isUsingSpacedRepetition) {
-      const result = handleEnhancedAnswer(validationResult.isCorrect);
-
-      const completionResult = gameServices.sessionManager.handleEnhancedSessionCompletion(
-        result,
-        gameLanguage || undefined,
-        languageCode
-      );
-
-      if (completionResult.isComplete && completionResult.shouldNavigate) {
-        setSessionCompleted(true);
-        navigate(completionResult.navigationPath!);
-        return;
-      }
-    }
-
-    // Standard game logic
-    setInputValue('');
-    setIsTransitioning(true);
-
-    gameServices.sessionManager.handleAnswerSubmission(
-      validationResult.isCorrect,
-      currentSession,
-      isSessionActive,
-      sessionTimer,
-      sessionProgress
-    );
-
-    // Trigger delayed transition
-    setTimeout(
-      () => {
-        handleWordTransition();
-      },
-      gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
-    );
-  }, [
-    currentWord,
-    quizMode,
-    wordProgress,
-    currentSession,
-    sessionProgress,
-    isSessionActive,
-    sessionTimer,
-    languageCode,
-    gameLanguage,
-    isUsingSpacedRepetition,
-    getCurrentWordInfo,
-    handleEnhancedAnswer,
-    getQuizQuestion,
-    getQuizAnswer,
-    getQuestionWord,
-    getAnswerWord,
-    checkAnswerCorrectness,
-    playCorrect,
-    playIncorrect,
-    navigate
-  ]);
+      playCorrect,
+      playIncorrect,
+      navigate,
+    ]
+  );
 
   // Word transition handler
-  const handleWordTransition = useCallback(async (
-    transitionType: 'enhanced' | 'standard' | 'quiz' = 'standard', 
-    additionalData?: any
-  ) => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (transitionType === 'enhanced') {
-        const result = additionalData;
-        if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
-          setSessionCompleted(true);
-        } else {
-          setIsTransitioning(false);
-          setWordTimer(0);
-          setWordStartTime(Date.now());
-        }
-        return;
-      }
+  const handleWordTransition = useCallback(
+    async (transitionType: 'enhanced' | 'standard' | 'quiz' = 'standard', additionalData?: any) => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-      setIsTransitioning(false);
-      setWordTimer(0);
-      setWordStartTime(Date.now());
-
-      if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
-        if (currentSession?.id && challengeServiceManager.isSessionTypeSupported(currentSession.id)) {
-          const timeRemaining = Math.max(0, (currentSession.timeLimit! * 60) - sessionTimer);
-          
-          const context = {
-            wordsCompleted: sessionProgress.wordsCompleted,
-            currentStreak: sessionProgress.currentStreak,
-            timeRemaining,
-            targetWords: currentSession.targetWords || 15,
-            wordProgress,
-            languageCode: languageCode,
-            moduleId: currentModule || undefined // Add current module for module-specific practice
-          };
-
-          const result = await challengeServiceManager.getNextWord(currentSession.id, context);
-          
-          if (result.word) {
-            dispatch(setCurrentWord({
-              word: result.word,
-              options: result.options,
-              quizMode: result.quizMode,
-            }));
+        if (transitionType === 'enhanced') {
+          const result = additionalData;
+          if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
+            setSessionCompleted(true);
+          } else {
+            setIsTransitioning(false);
+            setWordTimer(0);
+            setWordStartTime(Date.now());
           }
-        } else {
-          dispatch(nextWord());
+          return;
         }
+
+        setIsTransitioning(false);
+        setWordTimer(0);
+        setWordStartTime(Date.now());
+
+        if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
+          if (
+            currentSession?.id &&
+            challengeServiceManager.isSessionTypeSupported(currentSession.id)
+          ) {
+            const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+
+            const context = {
+              wordsCompleted: sessionProgress.wordsCompleted,
+              currentStreak: sessionProgress.currentStreak,
+              timeRemaining,
+              targetWords: currentSession.targetWords || 15,
+              wordProgress,
+              languageCode: languageCode,
+              moduleId: currentModule || undefined, // Add current module for module-specific practice
+            };
+
+            const result = await challengeServiceManager.getNextWord(currentSession.id, context);
+
+            if (result.word) {
+              dispatch(
+                setCurrentWord({
+                  word: result.word,
+                  options: result.options,
+                  quizMode: result.quizMode,
+                })
+              );
+            }
+          } else {
+            dispatch(nextWord());
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to get next word from ${currentSession?.id} service:`, error);
+        dispatch(nextWord());
       }
-    } catch (error) {
-      console.error(`Failed to get next word from ${currentSession?.id} service:`, error);
-      dispatch(nextWord());
-    }
-  }, [
-    currentSession?.id, 
-    sessionProgress.wordsCompleted, 
-    sessionProgress.currentStreak, 
-    sessionTimer, 
-    wordProgress, 
-    languageCode, 
-    isUsingSpacedRepetition,
-    dispatch
-  ]);
+    },
+    [
+      currentSession?.id,
+      sessionProgress.wordsCompleted,
+      sessionProgress.currentStreak,
+      sessionTimer,
+      wordProgress,
+      languageCode,
+      isUsingSpacedRepetition,
+      dispatch,
+    ]
+  );
 
   const handleOpenQuestionSubmit = useCallback(() => {
     handleSubmit(inputValue);
@@ -426,23 +443,27 @@ export const useEnhancedGameState = ({
     if (currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
       const wordXP = wordProgress[currentWord.id]?.xp || 0;
-      
+
       // Show learning card for truly new words regardless of spaced repetition mode
       // This ensures new words get proper introduction in both enhanced and session modes
-      const shouldShowCard = wordLearningStatus.isTrulyNewWord || 
+      const shouldShowCard =
+        wordLearningStatus.isTrulyNewWord ||
         (wordLearningStatus.needsReinforcement && isUsingSpacedRepetition);
-      
+
       // In spaced repetition mode, use the full enhanced logic
-      if (isUsingSpacedRepetition && enhancedWordInfo &&
-          enhancedWordInfo.wordType === 'group' &&
-          !enhancedWordInfo.isReviewWord) {
+      if (
+        isUsingSpacedRepetition &&
+        enhancedWordInfo &&
+        enhancedWordInfo.wordType === 'group' &&
+        !enhancedWordInfo.isReviewWord
+      ) {
         setShowLearningCard(shouldShowCard);
-      } 
+      }
       // In session mode, show learning card for truly new words only
       // FIXED: Also check XP directly to ensure 0 XP words always get learning cards
       else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordXP === 0)) {
         setShowLearningCard(true);
-      } 
+      }
       // Default case - no learning card
       else {
         setShowLearningCard(false);
@@ -450,7 +471,14 @@ export const useEnhancedGameState = ({
     } else {
       setShowLearningCard(false);
     }
-  }, [isUsingSpacedRepetition, isSessionActive, currentWord, wordLearningStatus, getCurrentWordInfo, wordProgress]);
+  }, [
+    isUsingSpacedRepetition,
+    isSessionActive,
+    currentWord,
+    wordLearningStatus,
+    getCurrentWordInfo,
+    wordProgress,
+  ]);
 
   // Clear stale sessions first, before any other initialization
   useEffect(() => {
@@ -477,22 +505,30 @@ export const useEnhancedGameState = ({
 
       // Only initialize session if one is actually active (user has started a session)
       // FIXED: Add sessionInitialized ref to prevent multiple initializations
-      if (!isUsingSpacedRepetition && isSessionActive && currentSession && !sessionInitializedRef.current) {
+      if (
+        !isUsingSpacedRepetition &&
+        isSessionActive &&
+        currentSession &&
+        !sessionInitializedRef.current
+      ) {
         sessionInitializedRef.current = true;
-        gameServices.sessionManager.initializeSession(
-          currentSession,
-          languageCode,
-          wordProgress,
-          sessionProgress,
-          currentModule || undefined // Pass current module for module-specific practice
-        ).then((success) => {
-          if (!success) {
+        gameServices.sessionManager
+          .initializeSession(
+            currentSession,
+            languageCode,
+            wordProgress,
+            sessionProgress,
+            currentModule || undefined // Pass current module for module-specific practice
+          )
+          .then(success => {
+            if (!success) {
+              dispatch(nextWord());
+            }
+          })
+          .catch(error => {
+            console.error(`Failed to initialize session:`, error);
             dispatch(nextWord());
-          }
-        }).catch((error) => {
-          console.error(`Failed to initialize session:`, error);
-          dispatch(nextWord());
-        });
+          });
       }
     }
   }, [dispatch, languageCode, moduleId, isSessionActive]); // Removed currentSession?.id to prevent re-runs
@@ -551,7 +587,7 @@ export const useEnhancedGameState = ({
     navigate,
     languageCode,
     isUsingSpacedRepetition,
-    forceCompleteSession
+    forceCompleteSession,
   ]);
 
   // Timer system
@@ -574,7 +610,14 @@ export const useEnhancedGameState = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSessionActive, sessionStartTime, wordStartTime, isTransitioning, currentSession?.id, dispatch]);
+  }, [
+    isSessionActive,
+    sessionStartTime,
+    wordStartTime,
+    isTransitioning,
+    currentSession?.id,
+    dispatch,
+  ]);
 
   return {
     gameState: {

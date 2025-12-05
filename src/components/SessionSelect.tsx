@@ -389,11 +389,11 @@ export const SessionSelect: React.FC<SessionSelectProps> = ({ languageCode, modu
 
   const handleSessionStart = (sessionId: string) => {
     dispatch(startSession(sessionId));
-    
+
     if (moduleId) {
       dispatch(setCurrentModule(moduleId));
     }
-    
+
     const route = moduleId ? `/game/${languageCode}/${moduleId}` : `/game/${languageCode}/session`;
     navigate(route);
   };

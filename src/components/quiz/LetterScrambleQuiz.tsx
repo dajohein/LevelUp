@@ -88,10 +88,10 @@ const AnswerLetter = styled.div<{
     props.isCorrect
       ? '#10b981'
       : props.isWrong
-      ? '#ef4444'
-      : props.isWrongPosition
-      ? '#f59e0b'
-      : props.theme.colors.primary};
+        ? '#ef4444'
+        : props.isWrongPosition
+          ? '#f59e0b'
+          : props.theme.colors.primary};
   color: white;
   border-radius: ${props => props.theme.borderRadius.sm};
   font-size: 1.2rem;
@@ -233,7 +233,7 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
     }
   `
       : props.variant === 'hint'
-      ? `
+        ? `
     background-color: rgba(245, 158, 11, 0.8);
     color: white;
     &:hover {
@@ -241,7 +241,7 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
       transform: translateY(-1px);
     }
   `
-      : `
+        : `
     background-color: ${props.theme.colors.primary};
     color: white;
     &:hover {
@@ -284,14 +284,13 @@ const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
     left: 0;
     width: 100%;
     height: 100%;
-    filter: ${props => 
-      props.filled 
-        ? 'none' 
-        : props.partial 
+    filter: ${props =>
+      props.filled
+        ? 'none'
+        : props.partial
           ? 'brightness(0.7) saturate(0.8)'
-          : 'grayscale(1) brightness(0.4)'
-    };
-    transform: ${props => props.filled || props.partial ? 'scale(1.1)' : 'scale(1)'};
+          : 'grayscale(1) brightness(0.4)'};
+    transform: ${props => (props.filled || props.partial ? 'scale(1.1)' : 'scale(1)')};
   }
 `;
 
@@ -304,12 +303,12 @@ const BrainContainer = styled.div`
 const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
   // Calculate progress within current level (0-100%)
   const progressInLevel = xp % 100;
-  
+
   // Calculate how many brains should be filled
   const brain1Filled = progressInLevel >= 33;
   const brain2Filled = progressInLevel >= 66;
   const brain3Filled = progressInLevel >= 99;
-  
+
   const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
   const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
   const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;

@@ -15,7 +15,7 @@ const QuickDashContainer = styled.div`
   border: 3px solid #ff4500;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -23,13 +23,17 @@ const QuickDashContainer = styled.div`
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
     animation: shimmer 2s linear infinite;
   }
-  
+
   @keyframes shimmer {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
   }
 `;
 
@@ -42,26 +46,22 @@ const DeepDiveContainer = styled.div`
 `;
 
 const StreakChallengeContainer = styled.div<{ streak: number }>`
-  background: ${props => 
-    props.streak > 10 
-      ? 'linear-gradient(45deg, #ffd700, #ffed4e)' 
-      : props.streak > 5 
-      ? 'linear-gradient(45deg, #ffa500, #ffd700)' 
-      : 'linear-gradient(45deg, #4CAF50, #8BC34A)'
-  };
+  background: ${props =>
+    props.streak > 10
+      ? 'linear-gradient(45deg, #ffd700, #ffed4e)'
+      : props.streak > 5
+        ? 'linear-gradient(45deg, #ffa500, #ffd700)'
+        : 'linear-gradient(45deg, #4CAF50, #8BC34A)'};
   border-radius: 15px;
   padding: 20px;
-  border: 3px solid ${props => 
-    props.streak > 10 
-      ? '#ffd700' 
-      : props.streak > 5 
-      ? '#ffa500' 
-      : '#4CAF50'
-  };
+  border: 3px solid
+    ${props => (props.streak > 10 ? '#ffd700' : props.streak > 5 ? '#ffa500' : '#4CAF50')};
   position: relative;
   transition: all 0.3s ease;
-  
-  ${props => props.streak > 10 && `
+
+  ${props =>
+    props.streak > 10 &&
+    `
     animation: goldenGlow 2s ease-in-out infinite alternate;
     
     @keyframes goldenGlow {
@@ -77,7 +77,7 @@ const PrecisionModeContainer = styled.div`
   padding: 20px;
   border: 3px solid #2196f3;
   position: relative;
-  
+
   &::after {
     content: '🎯';
     position: absolute;
@@ -94,7 +94,7 @@ const FillInTheBlankContainer = styled.div`
   padding: 20px;
   border: 3px solid #9c27b0;
   position: relative;
-  
+
   &::after {
     content: '📝';
     position: absolute;
@@ -112,8 +112,10 @@ const BossBattleContainer = styled.div<{ damage?: boolean }>`
   border: 3px solid #f44336;
   position: relative;
   transition: all 0.3s ease;
-  
-  ${props => props.damage && `
+
+  ${props =>
+    props.damage &&
+    `
     animation: damageFlash 0.5s ease-in-out;
     
     @keyframes damageFlash {
@@ -131,21 +133,22 @@ const StreakMultiplier = styled.div<{ streak: number }>`
   padding: 8px 12px;
   border-radius: 20px;
   font-weight: bold;
-  color: ${props => 
-    props.streak > 10 ? '#ffd700' : 
-    props.streak > 5 ? '#ffa500' : '#4CAF50'
-  };
+  color: ${props => (props.streak > 10 ? '#ffd700' : props.streak > 5 ? '#ffa500' : '#4CAF50')};
   font-size: 16px;
-  border: 2px solid ${props => 
-    props.streak > 10 ? '#ffd700' : 
-    props.streak > 5 ? '#ffa500' : '#4CAF50'
-  };
-  animation: ${props => props.streak > 0 ? 'streakBounce 0.6s ease-out' : 'none'};
-  
+  border: 2px solid
+    ${props => (props.streak > 10 ? '#ffd700' : props.streak > 5 ? '#ffa500' : '#4CAF50')};
+  animation: ${props => (props.streak > 0 ? 'streakBounce 0.6s ease-out' : 'none')};
+
   @keyframes streakBounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 `;
 
@@ -157,16 +160,13 @@ const ContextMeter = styled.div<{ contextualWords: number }>`
   padding: 8px 12px;
   border-radius: 20px;
   font-weight: bold;
-  color: ${props => 
-    props.contextualWords > 10 ? '#4CAF50' : 
-    props.contextualWords > 5 ? '#FF9800' : '#9c27b0'
-  };
+  color: ${props =>
+    props.contextualWords > 10 ? '#4CAF50' : props.contextualWords > 5 ? '#FF9800' : '#9c27b0'};
   font-size: 14px;
-  border: 2px solid ${props => 
-    props.contextualWords > 10 ? '#4CAF50' : 
-    props.contextualWords > 5 ? '#FF9800' : '#9c27b0'
-  };
-  
+  border: 2px solid
+    ${props =>
+      props.contextualWords > 10 ? '#4CAF50' : props.contextualWords > 5 ? '#FF9800' : '#9c27b0'};
+
   &::after {
     content: '${props => props.contextualWords} words';
   }
@@ -175,11 +175,12 @@ const ContextMeter = styled.div<{ contextualWords: number }>`
 const BossAvatar = styled.div<{ health: number }>`
   width: 80px;
   height: 80px;
-  background: ${props => 
-    props.health > 70 ? 'linear-gradient(45deg, #f44336, #d32f2f)' :
-    props.health > 30 ? 'linear-gradient(45deg, #ff9800, #f57c00)' :
-    'linear-gradient(45deg, #4caf50, #388e3c)'
-  };
+  background: ${props =>
+    props.health > 70
+      ? 'linear-gradient(45deg, #f44336, #d32f2f)'
+      : props.health > 30
+        ? 'linear-gradient(45deg, #ff9800, #f57c00)'
+        : 'linear-gradient(45deg, #4caf50, #388e3c)'};
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -188,13 +189,15 @@ const BossAvatar = styled.div<{ health: number }>`
   margin-right: 15px;
   border: 3px solid #fff;
   transition: all 0.3s ease;
-  
+
   &::after {
     content: '👹';
-    filter: ${props => props.health < 30 ? 'grayscale(1)' : 'none'};
+    filter: ${props => (props.health < 30 ? 'grayscale(1)' : 'none')};
   }
-  
-  ${props => props.health < 30 && `
+
+  ${props =>
+    props.health < 30 &&
+    `
     animation: defeat 2s ease-in-out infinite;
     
     @keyframes defeat {
@@ -239,21 +242,18 @@ const HealthBarBackground = styled.div`
 const HealthBarFill = styled.div<{ health: number }>`
   width: ${props => props.health}%;
   height: 100%;
-  background: ${props => 
-    props.health > 70 ? 'linear-gradient(90deg, #f44336, #d32f2f)' :
-    props.health > 30 ? 'linear-gradient(90deg, #ff9800, #f57c00)' :
-    'linear-gradient(90deg, #4caf50, #388e3c)'
-  };
+  background: ${props =>
+    props.health > 70
+      ? 'linear-gradient(90deg, #f44336, #d32f2f)'
+      : props.health > 30
+        ? 'linear-gradient(90deg, #ff9800, #f57c00)'
+        : 'linear-gradient(90deg, #4caf50, #388e3c)'};
   transition: all 0.5s ease;
   border-radius: 10px;
 `;
 
 const HealthText = styled.div<{ health: number }>`
-  color: ${props => 
-    props.health > 70 ? '#ffcdd2' :
-    props.health > 30 ? '#fff3e0' :
-    '#e8f5e8'
-  };
+  color: ${props => (props.health > 70 ? '#ffcdd2' : props.health > 30 ? '#fff3e0' : '#e8f5e8')};
   font-size: 12px;
   text-align: center;
   font-weight: bold;
@@ -266,11 +266,8 @@ const BossHealthBar = styled.div<{ health: number }>`
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 20px;
-  border: 2px solid ${props => 
-    props.health > 70 ? '#f44336' :
-    props.health > 30 ? '#ff9800' :
-    '#4caf50'
-  };
+  border: 2px solid
+    ${props => (props.health > 70 ? '#f44336' : props.health > 30 ? '#ff9800' : '#4caf50')};
 `;
 
 export interface QuizRendererProps {
@@ -279,18 +276,18 @@ export interface QuizRendererProps {
   quizMode: string;
   currentOptions: string[];
   wordProgress: { [key: string]: any };
-  
+
   // Enhanced game state
   isUsingSpacedRepetition: boolean;
   getCurrentWordInfo: () => any;
   showLearningCard: boolean;
   wordLearningStatus: { isTrulyNewWord: boolean; needsReinforcement: boolean };
-  
+
   // Session state
   currentSession: any;
   sessionProgress: any;
   getSessionStats: () => any;
-  
+
   // UI state
   isTransitioning: boolean;
   inputValue: string;
@@ -298,10 +295,10 @@ export interface QuizRendererProps {
   lastAnswerCorrect: boolean | null;
   lastSelectedAnswer: string;
   feedbackQuestionKey: string;
-  
+
   // Context
   contextForWord: any;
-  
+
   // Handlers
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
@@ -351,7 +348,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   // If quiz mode was changed and we need options for multiple-choice, generate them
   if (quizModeToUse === 'multiple-choice' && optionsToUse.length === 0) {
     // This shouldn't happen if services are working properly, but as a safety net:
-    console.warn(`⚠️ Multiple-choice mode selected but no options provided for word "${wordToUse.term}"`);
+    console.warn(
+      `⚠️ Multiple-choice mode selected but no options provided for word "${wordToUse.term}"`
+    );
     // For now, we'll let it render empty and the services should be fixed
   }
 
@@ -389,7 +388,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
-            sessionProgress={sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)}
+            sessionProgress={
+              sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)
+            }
             context={contextForWord}
           />
         ) : quizModeToUse === 'letter-scramble' ? (
@@ -447,28 +448,19 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
 
   switch (currentSession?.id) {
     case 'quick-dash':
-      return (
-        <QuickDashContainer>
-          {quizContent}
-        </QuickDashContainer>
-      );
+      return <QuickDashContainer>{quizContent}</QuickDashContainer>;
 
     case 'deep-dive':
-      return (
-        <DeepDiveContainer>
-          {quizContent}
-        </DeepDiveContainer>
-      );
+      return <DeepDiveContainer>{quizContent}</DeepDiveContainer>;
 
     case 'streak-challenge':
       return (
         <StreakChallengeContainer streak={sessionProgress.currentStreak}>
           <StreakMultiplier streak={sessionProgress.currentStreak}>
             {sessionProgress.currentStreak > 0
-              ? `x${Math.min(
-                  Math.pow(1.5, Math.min(sessionProgress.currentStreak, 20)),
-                  8
-                ).toFixed(1)}`
+              ? `x${Math.min(Math.pow(1.5, Math.min(sessionProgress.currentStreak, 20)), 8).toFixed(
+                  1
+                )}`
               : 'x1.0'}
           </StreakMultiplier>
           {quizContent}
@@ -476,11 +468,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
       );
 
     case 'precision-mode':
-      return (
-        <PrecisionModeContainer>
-          {quizContent}
-        </PrecisionModeContainer>
-      );
+      return <PrecisionModeContainer>{quizContent}</PrecisionModeContainer>;
 
     case 'fill-in-the-blank':
       return (

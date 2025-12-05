@@ -57,41 +57,48 @@ const Backdrop = styled.div<{ isOpen: boolean; isClosing: boolean }>`
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  
-  animation: ${props => props.isClosing ? fadeOut : fadeIn} 0.3s ease-out;
-  
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+
+  animation: ${props => (props.isClosing ? fadeOut : fadeIn)} 0.3s ease-out;
+
   @media (min-width: ${props => props.theme.breakpoints.tablet}) {
     align-items: center;
   }
 `;
 
-const ModalContent = styled.div<{ 
+const ModalContent = styled.div<{
   height: 'auto' | 'half' | 'full';
   fullScreen: boolean;
   isClosing: boolean;
   isMobile: boolean;
 }>`
   background: ${props => props.theme.colors.surface};
-  border-radius: ${props => props.isMobile ? '20px 20px 0 0' : '16px'};
+  border-radius: ${props => (props.isMobile ? '20px 20px 0 0' : '16px')};
   width: 100%;
-  max-width: ${props => props.isMobile ? '100%' : '500px'};
+  max-width: ${props => (props.isMobile ? '100%' : '500px')};
   max-height: ${props => {
     if (props.fullScreen) return '100vh';
     switch (props.height) {
-      case 'half': return '50vh';
-      case 'full': return '90vh';
-      default: return '80vh';
+      case 'half':
+        return '50vh';
+      case 'full':
+        return '90vh';
+      default:
+        return '80vh';
     }
   }};
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  
-  ${props => props.isMobile ? `
+
+  ${props =>
+    props.isMobile
+      ? `
     animation: ${props.isClosing ? slideDown : slideUp} 0.3s ease-out;
-  ` : `
+  `
+      : `
     animation: ${props.isClosing ? fadeOut : fadeIn} 0.3s ease-out;
   `}
 `;
@@ -103,7 +110,7 @@ const ModalHeader = styled.div`
   padding: ${props => props.theme.spacing.lg};
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.md};
   }
@@ -114,7 +121,7 @@ const ModalTitle = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     font-size: 1.1rem;
   }
@@ -134,7 +141,7 @@ const CloseButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.1);
     color: ${props => props.theme.colors.text};
@@ -145,7 +152,7 @@ const ModalBody = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: ${props => props.theme.spacing.lg};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.md};
   }
@@ -204,11 +211,7 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         {(title || showCloseButton) && (
           <ModalHeader>
             {title && <ModalTitle>{title}</ModalTitle>}
-            {showCloseButton && (
-              <CloseButton onClick={handleClose}>
-                ×
-              </CloseButton>
-            )}
+            {showCloseButton && <CloseButton onClick={handleClose}>×</CloseButton>}
           </ModalHeader>
         )}
         <ModalBody>{children}</ModalBody>

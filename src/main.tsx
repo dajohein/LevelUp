@@ -20,7 +20,7 @@ import './index.css';
 
 // Initialize the enhanced storage system with server-side support
 initializeStorage({
-  enableRemoteStorage: true
+  enableRemoteStorage: true,
 }).catch(error => {
   console.warn('Storage initialization failed, falling back to local storage:', error);
 });

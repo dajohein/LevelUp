@@ -19,7 +19,7 @@ export const BaseButton = styled.button<ButtonProps>`
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  
+
   /* Variant styles */
   ${props => {
     switch (props.variant) {
@@ -80,7 +80,7 @@ export const BaseButton = styled.button<ButtonProps>`
         `;
     }
   }}
-  
+
   /* Size styles */
   ${props => {
     switch (props.size) {
@@ -138,7 +138,7 @@ export const IconButton = styled.button<ButtonProps>`
   color: ${props => props.theme.colors.text};
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   ${props => {
     switch (props.size) {
       case 'sm':
@@ -161,12 +161,12 @@ export const IconButton = styled.button<ButtonProps>`
         `;
     }
   }}
-  
+
   &:hover {
     background: ${props => props.theme.colors.surfaceHover};
     transform: scale(1.1);
   }
-  
+
   &:active {
     transform: scale(0.95);
   }
@@ -182,7 +182,7 @@ export const FAB = styled(BaseButton)<ButtonProps>`
   border-radius: ${props => props.theme.borderRadius.full};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
@@ -194,16 +194,16 @@ export const ButtonGroup = styled.div`
   display: flex;
   border-radius: ${props => props.theme.borderRadius.md};
   overflow: hidden;
-  
+
   & > button {
     border-radius: 0;
     border-right: 1px solid ${props => props.theme.colors.border};
-    
+
     &:first-of-type {
       border-top-left-radius: ${props => props.theme.borderRadius.md};
       border-bottom-left-radius: ${props => props.theme.borderRadius.md};
     }
-    
+
     &:last-of-type {
       border-top-right-radius: ${props => props.theme.borderRadius.md};
       border-bottom-right-radius: ${props => props.theme.borderRadius.md};

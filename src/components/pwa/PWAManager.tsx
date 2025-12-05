@@ -41,14 +41,14 @@ const CompactButton = styled.button`
 `;
 
 const PWAMenu = styled.div<{ isOpen: boolean }>`
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  display: ${props => (props.isOpen ? 'flex' : 'none')};
   flex-direction: column;
   gap: 8px;
   margin-bottom: 8px;
 `;
 
 const InstallButton = styled.button`
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -77,7 +77,7 @@ export const PWAManager: React.FC = () => {
   const { isInstallable, isInstalled, installApp, updateAvailable, updateApp } = usePWA();
   const { isOnline } = useNetworkStatus();
   const { permission, requestPermission, subscribeToPush } = usePushNotifications();
-  
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleInstall = async () => {
@@ -117,22 +117,20 @@ export const PWAManager: React.FC = () => {
     <PWAContainer>
       <PWAMenu isOpen={isMenuOpen}>
         {isInstallable && !isInstalled && (
-          <InstallButton onClick={handleInstall}>
-            📱 Install App
-          </InstallButton>
+          <InstallButton onClick={handleInstall}>📱 Install App</InstallButton>
         )}
-        
+
         {updateAvailable && (
-          <InstallButton 
+          <InstallButton
             onClick={handleUpdate}
             style={{ background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)' }}
           >
             🔄 Update App
           </InstallButton>
         )}
-        
+
         {permission === 'default' && (
-          <InstallButton 
+          <InstallButton
             onClick={handleEnableNotifications}
             style={{ background: 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)' }}
           >
@@ -141,9 +139,9 @@ export const PWAManager: React.FC = () => {
         )}
       </PWAMenu>
 
-      <CompactButton 
+      <CompactButton
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        title={isMenuOpen ? "Close PWA Options" : "PWA Options"}
+        title={isMenuOpen ? 'Close PWA Options' : 'PWA Options'}
       >
         {getButtonIcon()}
       </CompactButton>

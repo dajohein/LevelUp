@@ -115,7 +115,7 @@ export const withRetry = async <T>(
         throw lastError;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
     }
   }
 

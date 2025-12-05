@@ -3,7 +3,6 @@
  * Extracted from Game.tsx to improve maintainability and testability.
  */
 export class GameModeHandler {
-  
   /**
    * Determine the current quiz mode to use based on enhanced word info or fallback
    */
@@ -23,13 +22,13 @@ export class GameModeHandler {
    */
   isUnidirectionalMode(quizMode: string): boolean {
     return [
-      'multiple-choice', 
-      'fill-in-the-blank', 
+      'multiple-choice',
+      'fill-in-the-blank',
       'letter-scramble',
       'open-answer',
       'contextual-analysis',
       'usage-example',
-      'synonym-antonym'
+      'synonym-antonym',
     ].includes(quizMode);
   }
 
@@ -39,22 +38,28 @@ export class GameModeHandler {
   getQuizQuestion(word: any, quizMode: string): string {
     // For enhanced quiz modes, provide context-specific prompts
     if (quizMode === 'contextual-analysis') {
-      const baseQuestion = this.isUnidirectionalMode(quizMode) 
-        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+      const baseQuestion = this.isUnidirectionalMode(quizMode)
+        ? word.direction === 'term-to-definition'
+          ? word.term
+          : word.definition
         : this.getQuestionWord(word);
       return `${baseQuestion} (analyze the context and meaning)`;
     } else if (quizMode === 'usage-example') {
-      const baseQuestion = this.isUnidirectionalMode(quizMode) 
-        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+      const baseQuestion = this.isUnidirectionalMode(quizMode)
+        ? word.direction === 'term-to-definition'
+          ? word.term
+          : word.definition
         : this.getQuestionWord(word);
       return `${baseQuestion} (provide translation and usage example)`;
     } else if (quizMode === 'synonym-antonym') {
-      const baseQuestion = this.isUnidirectionalMode(quizMode) 
-        ? (word.direction === 'term-to-definition' ? word.term : word.definition)
+      const baseQuestion = this.isUnidirectionalMode(quizMode)
+        ? word.direction === 'term-to-definition'
+          ? word.term
+          : word.definition
         : this.getQuestionWord(word);
       return `${baseQuestion} (translate and identify related concepts)`;
     }
-    
+
     if (this.isUnidirectionalMode(quizMode)) {
       // Unidirectional modes: Show the source language as the question
       // Use word direction to determine which field contains the source language
@@ -100,7 +105,7 @@ export class GameModeHandler {
    */
   getQuestionWord(word: any): string {
     if (!word) return '';
-    
+
     // Use word direction to determine question word
     const direction = word.direction || 'definition-to-term'; // default to old behavior
     return direction === 'definition-to-term' ? word.definition : word.term;
@@ -111,7 +116,7 @@ export class GameModeHandler {
    */
   getAnswerWord(word: any): string {
     if (!word) return '';
-    
+
     // Use word direction to determine answer word
     const direction = word.direction || 'definition-to-term'; // default to old behavior
     return direction === 'definition-to-term' ? word.term : word.definition;
@@ -127,7 +132,7 @@ export class GameModeHandler {
         // Skip simple string context for now (usually Dutch descriptions)
         return undefined;
       }
-      
+
       // Use structured context with German sentence and Dutch translation
       return {
         sentence: word.context.sentence || '', // German sentence as context
@@ -137,7 +142,7 @@ export class GameModeHandler {
 
     // Fallback: no context available
     return undefined;
-  }  /**
+  } /**
    * Validate quiz mode configuration for current session
    */
   validateQuizModeConfig(
@@ -165,19 +170,19 @@ export class GameModeHandler {
           errors.push('Multiple choice requires both term and dutch translation');
         }
         break;
-        
+
       case 'fill-in-the-blank':
         if (!currentWord.context) {
           suggestions.push('Fill-in-the-blank works best with context sentences');
         }
         break;
-        
+
       case 'letter-scramble':
         if (!currentWord.term || currentWord.term.length < 3) {
           errors.push('Letter scramble requires terms with at least 3 characters');
         }
         break;
-        
+
       case 'contextual-analysis':
       case 'usage-example':
         if (!currentWord.context) {
@@ -187,14 +192,17 @@ export class GameModeHandler {
     }
 
     // Session-specific validations
-    if (sessionId === 'deep-dive' && !['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizMode)) {
+    if (
+      sessionId === 'deep-dive' &&
+      !['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizMode)
+    ) {
       suggestions.push('Deep dive sessions work best with advanced quiz modes');
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      suggestions
+      suggestions,
     };
   }
 
@@ -208,7 +216,7 @@ export class GameModeHandler {
       'deep-dive': ['contextual-analysis', 'usage-example', 'synonym-antonym'],
       'streak-challenge': ['multiple-choice', 'fill-in-the-blank'],
       'boss-battle': ['multiple-choice', 'letter-scramble', 'fill-in-the-blank'],
-      'standard': ['multiple-choice', 'fill-in-the-blank', 'letter-scramble']
+      standard: ['multiple-choice', 'fill-in-the-blank', 'letter-scramble'],
     };
 
     return modeRecommendations[sessionId] || modeRecommendations['standard'];
@@ -219,12 +227,12 @@ export class GameModeHandler {
    */
   getQuizModeDifficulty(quizMode: string): number {
     const difficultyScores: Record<string, number> = {
-      'multiple-choice': 1,      // Easiest - recognition
-      'letter-scramble': 2,      // Easy - pattern recognition
-      'fill-in-the-blank': 3,    // Medium - recall with context
-      'contextual-analysis': 4,  // Hard - comprehension
-      'usage-example': 4,        // Hard - application
-      'synonym-antonym': 5       // Hardest - relational understanding
+      'multiple-choice': 1, // Easiest - recognition
+      'letter-scramble': 2, // Easy - pattern recognition
+      'fill-in-the-blank': 3, // Medium - recall with context
+      'contextual-analysis': 4, // Hard - comprehension
+      'usage-example': 4, // Hard - application
+      'synonym-antonym': 5, // Hardest - relational understanding
     };
 
     return difficultyScores[quizMode] || 3;
@@ -254,7 +262,7 @@ export class GameModeHandler {
       'fill-in-the-blank': { correct: 2500, incorrect: 4500 },
       'contextual-analysis': { correct: 3000, incorrect: 5000 },
       'usage-example': { correct: 3000, incorrect: 5000 },
-      'synonym-antonym': { correct: 2000, incorrect: 4000 }
+      'synonym-antonym': { correct: 2000, incorrect: 4000 },
     };
 
     const timing = baseTimings[quizMode] || baseTimings['multiple-choice'];

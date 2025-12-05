@@ -18,8 +18,10 @@ const MainContent = styled.main<{ hasMobileBottomNav: boolean }>`
   flex: 1;
   width: 100%;
   position: relative;
-  
-  ${props => props.hasMobileBottomNav && `
+
+  ${props =>
+    props.hasMobileBottomNav &&
+    `
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   `}
 `;
@@ -29,10 +31,7 @@ interface AppLayoutProps {
   showBottomNav?: boolean;
 }
 
-export const AppLayout: React.FC<AppLayoutProps> = ({ 
-  children, 
-  showBottomNav = true 
-}) => {
+export const AppLayout: React.FC<AppLayoutProps> = ({ children, showBottomNav = true }) => {
   const { isMobile } = useViewport();
   const shouldShowBottomNav = showBottomNav && isMobile;
   const [showStorageDebug, setShowStorageDebug] = useState(false);
@@ -54,16 +53,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     <LayoutContainer>
       {/* PWA Update notification - always on top */}
       <PWAUpdateNotification />
-      
-      <MainContent hasMobileBottomNav={shouldShowBottomNav}>
-        {children || <Outlet />}
-      </MainContent>
+
+      <MainContent hasMobileBottomNav={shouldShowBottomNav}>{children || <Outlet />}</MainContent>
       {shouldShowBottomNav && <MobileBottomNavigation />}
       {process.env.NODE_ENV === 'development' && (
-        <StorageDebug 
-          isVisible={showStorageDebug}
-          onClose={() => setShowStorageDebug(false)}
-        />
+        <StorageDebug isVisible={showStorageDebug} onClose={() => setShowStorageDebug(false)} />
       )}
     </LayoutContainer>
   );

@@ -34,7 +34,11 @@ const Title = styled.h1`
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: ${props => props.theme.spacing.sm};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.secondary});
+  background: linear-gradient(
+    135deg,
+    ${props => props.theme.colors.primary},
+    ${props => props.theme.colors.secondary}
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -101,7 +105,7 @@ const Modal = styled.div<{ isOpen: boolean }>`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  display: ${props => (props.isOpen ? 'flex' : 'none')};
   align-items: center;
   justify-content: center;
   z-index: 1000;
@@ -128,7 +132,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   color: ${props => props.theme.colors.textSecondary};
   z-index: 1;
-  
+
   &:hover {
     color: ${props => props.theme.colors.text};
   }
@@ -205,18 +209,10 @@ export const SettingsPage: React.FC = () => {
             Your Data
           </SectionTitle>
           <OptionsGrid>
-            <MobileButton
-              variant="secondary"
-              onClick={() => navigate('/profile')}
-              fullWidth
-            >
+            <MobileButton variant="secondary" onClick={() => navigate('/profile')} fullWidth>
               View Profile & Progress
             </MobileButton>
-            <MobileButton
-              variant="outline"
-              onClick={() => handleNavigation('/export')}
-              fullWidth
-            >
+            <MobileButton variant="outline" onClick={() => handleNavigation('/export')} fullWidth>
               Export Learning Data
             </MobileButton>
           </OptionsGrid>
@@ -235,11 +231,7 @@ export const SettingsPage: React.FC = () => {
             >
               Link Your Devices
             </MobileButton>
-            <MobileButton
-              variant="outline"
-              onClick={() => handleNavigation('/import')}
-              fullWidth
-            >
+            <MobileButton variant="outline" onClick={() => handleNavigation('/import')} fullWidth>
               Import from Device
             </MobileButton>
           </OptionsGrid>
@@ -258,22 +250,16 @@ export const SettingsPage: React.FC = () => {
                 disabled={isApplyingUpdate}
                 fullWidth
               >
-                {isApplyingUpdate ? 'Applying Update...' : `🚀 Apply Update (v${pendingUpdate.version})`}
+                {isApplyingUpdate
+                  ? 'Applying Update...'
+                  : `🚀 Apply Update (v${pendingUpdate.version})`}
               </MobileButton>
             ) : (
-              <MobileButton
-                variant="outline"
-                onClick={handleCheckForUpdates}
-                fullWidth
-              >
+              <MobileButton variant="outline" onClick={handleCheckForUpdates} fullWidth>
                 🔍 Check for Updates
               </MobileButton>
             )}
-            <MobileButton
-              variant="secondary"
-              onClick={() => window.location.reload()}
-              fullWidth
-            >
+            <MobileButton variant="secondary" onClick={() => window.location.reload()} fullWidth>
               🔄 Refresh App
             </MobileButton>
           </OptionsGrid>
@@ -285,11 +271,7 @@ export const SettingsPage: React.FC = () => {
             App Settings
           </SectionTitle>
           <OptionsGrid>
-            <MobileButton
-              variant="outline"
-              onClick={() => handleNavigation('/install')}
-              fullWidth
-            >
+            <MobileButton variant="outline" onClick={() => handleNavigation('/install')} fullWidth>
               Install as App
             </MobileButton>
           </OptionsGrid>
@@ -301,33 +283,21 @@ export const SettingsPage: React.FC = () => {
             Quick Actions
           </SectionTitle>
           <OptionsGrid>
-            <MobileButton
-              variant="primary"
-              onClick={() => navigate('/')}
-              fullWidth
-            >
+            <MobileButton variant="primary" onClick={() => navigate('/')} fullWidth>
               Start Learning
             </MobileButton>
-            <MobileButton
-              variant="secondary"
-              onClick={() => navigate('/profile')}
-              fullWidth
-            >
+            <MobileButton variant="secondary" onClick={() => navigate('/profile')} fullWidth>
               View All Progress
             </MobileButton>
           </OptionsGrid>
         </SectionCard>
 
-        <ComingSoon>
-          More settings and customization options coming soon! 🚀
-        </ComingSoon>
+        <ComingSoon>More settings and customization options coming soon! 🚀</ComingSoon>
       </Content>
 
       <Modal isOpen={showAccountLinking}>
         <ModalContent>
-          <CloseButton onClick={() => setShowAccountLinking(false)}>
-            ×
-          </CloseButton>
+          <CloseButton onClick={() => setShowAccountLinking(false)}>×</CloseButton>
           <AccountLinking />
         </ModalContent>
       </Modal>

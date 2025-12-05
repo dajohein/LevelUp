@@ -73,7 +73,7 @@ export const BackButton = styled.button`
     font-size: 0.8rem;
     min-width: ${props => props.theme.touchTarget.minimum};
     justify-content: center;
-    
+
     &::before {
       content: '';
     }
@@ -287,11 +287,12 @@ export const DropdownMenu = styled.div<{ isOpen: boolean }>`
   backdrop-filter: blur(12px);
   min-width: 200px;
   z-index: ${Z_INDEX.DROPDOWN};
-  transform: ${props => props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
-  opacity: ${props => props.isOpen ? 1 : 0};
-  visibility: ${props => props.isOpen ? 'visible' : 'hidden'};
+  transform: ${props =>
+    props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
+  opacity: ${props => (props.isOpen ? 1 : 0)};
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
   transition: all 0.2s ease;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     display: none; /* Use mobile navigation instead */
   }
@@ -310,21 +311,23 @@ export const DropdownItem = styled.button`
   align-items: center;
   gap: 12px;
   transition: background 0.2s ease;
-  
+
   &:first-of-type {
-    border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0 0;
+    border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0
+      0;
   }
-  
+
   &:last-of-type {
-    border-radius: 0 0 ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg};
+    border-radius: 0 0 ${props => props.theme.borderRadius.lg}
+      ${props => props.theme.borderRadius.lg};
   }
-  
+
   &:hover,
   &:focus-visible {
     background: rgba(76, 175, 80, 0.1);
     outline: none;
   }
-  
+
   &:focus-visible {
     box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.3);
   }

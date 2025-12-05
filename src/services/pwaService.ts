@@ -72,17 +72,17 @@ export const isPWAInstalled = (): boolean => {
   if ((window.navigator as any).standalone === true) {
     return true;
   }
-  
+
   // Check if running in standalone mode (Android)
   if (window.matchMedia('(display-mode: standalone)').matches) {
     return true;
   }
-  
+
   // Check if running in minimal-ui mode
   if (window.matchMedia('(display-mode: minimal-ui)').matches) {
     return true;
   }
-  
+
   return false;
 };
 
@@ -96,15 +96,15 @@ export const showInstallPrompt = async (deferredPrompt: any): Promise<boolean> =
   try {
     // Show the install prompt
     deferredPrompt.prompt();
-    
+
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     console.log(`User response to install prompt: ${outcome}`);
-    
+
     // Clear the deferred prompt
     deferredPrompt = null;
-    
+
     return outcome === 'accepted';
   } catch (error) {
     console.error('Error showing install prompt:', error);
@@ -116,9 +116,7 @@ export const showInstallPrompt = async (deferredPrompt: any): Promise<boolean> =
 export const clearAppCache = async (): Promise<void> => {
   if ('caches' in window) {
     const cacheNames = await caches.keys();
-    await Promise.all(
-      cacheNames.map(cacheName => caches.delete(cacheName))
-    );
+    await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
     console.log('All caches cleared');
   }
 };
@@ -141,7 +139,7 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 };
 
 export const showNotification = async (
-  title: string, 
+  title: string,
   options: NotificationOptions = {}
 ): Promise<void> => {
   if ('serviceWorker' in navigator && 'Notification' in window) {
@@ -222,7 +220,9 @@ export const getPWADisplayMode = (): string => {
 
 export const isRunningAsPWA = (): boolean => {
   const displayMode = getPWADisplayMode();
-  return displayMode === 'standalone' || displayMode === 'fullscreen' || displayMode === 'minimal-ui';
+  return (
+    displayMode === 'standalone' || displayMode === 'fullscreen' || displayMode === 'minimal-ui'
+  );
 };
 
 // A11y helpers for PWA
@@ -235,10 +235,10 @@ export const announceToScreenReader = (message: string): void => {
   announcement.style.width = '1px';
   announcement.style.height = '1px';
   announcement.style.overflow = 'hidden';
-  
+
   document.body.appendChild(announcement);
   announcement.textContent = message;
-  
+
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);

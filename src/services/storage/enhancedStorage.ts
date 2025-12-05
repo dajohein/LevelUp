@@ -1,6 +1,6 @@
 /**
  * Enhanced Storage Facade
- * 
+ *
  * Main entry point for the new storage system
  * Provides a unified interface that can work with both current localStorage and future backend
  */
@@ -45,7 +45,7 @@ class EnhancedStorageService {
 
   constructor(config: Partial<EnhancedStorageConfig> = {}) {
     this.config = { ...DEFAULT_ENHANCED_CONFIG, ...config };
-    
+
     if (this.config.debugMode) {
       logger.info('🚀 Enhanced Storage Service initialized with config:', this.config);
     }
@@ -54,14 +54,17 @@ class EnhancedStorageService {
   /**
    * Backend-ready word progress operations
    */
-  async saveWordProgress(languageCode: string, wordProgress: Record<string, WordProgress>): Promise<StorageResult<void>> {
+  async saveWordProgress(
+    languageCode: string,
+    wordProgress: Record<string, WordProgress>
+  ): Promise<StorageResult<void>> {
     const startTime = performance.now();
     this.analytics.operations++;
 
     try {
       // Set the current language for remote storage
       remoteStorage.setCurrentLanguage(languageCode);
-      
+
       const key = `word_progress_${languageCode}`;
       const options: StorageOptions = {
         compress: await this.shouldCompress(wordProgress),
@@ -74,12 +77,12 @@ class EnhancedStorageService {
       // Update cache on successful save (CRITICAL: Keep cache synchronized!)
       if (result.success && this.config.cacheLanguageData) {
         await smartCache.set(
-          key, 
-          wordProgress, 
+          key,
+          wordProgress,
           24 * 60 * 60 * 1000, // 24 hours
           [`word_progress_${languageCode}`]
         );
-        
+
         // Cache frequently accessed summary data
         await this.cacheLanguageSummary(languageCode, wordProgress);
       }
@@ -88,7 +91,9 @@ class EnhancedStorageService {
       this.analytics.totalTime += duration;
 
       if (this.config.debugMode) {
-        logger.debug(`💾 Saved word progress for ${languageCode} (${Math.round(duration)}ms, cached: ${this.config.cacheLanguageData})`);
+        logger.debug(
+          `💾 Saved word progress for ${languageCode} (${Math.round(duration)}ms, cached: ${this.config.cacheLanguageData})`
+        );
       }
 
       return result;
@@ -99,16 +104,18 @@ class EnhancedStorageService {
     }
   }
 
-  async loadWordProgress(languageCode: string): Promise<StorageResult<Record<string, WordProgress>>> {
+  async loadWordProgress(
+    languageCode: string
+  ): Promise<StorageResult<Record<string, WordProgress>>> {
     const startTime = performance.now();
     this.analytics.operations++;
 
     try {
       // Set the current language for remote storage
       remoteStorage.setCurrentLanguage(languageCode);
-      
+
       const key = `word_progress_${languageCode}`;
-      
+
       // First, try cache (CRITICAL: Actually use cache for reads!)
       if (this.config.cacheLanguageData) {
         const cached = await smartCache.get<Record<string, WordProgress>>(key);
@@ -116,32 +123,34 @@ class EnhancedStorageService {
           this.analytics.hits++;
           const duration = performance.now() - startTime;
           this.analytics.totalTime += duration;
-          
+
           if (this.config.debugMode) {
             const wordCount = Object.keys(cached).length;
-            logger.debug(`⚡ Cache hit: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`);
+            logger.debug(
+              `⚡ Cache hit: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`
+            );
           }
-          
+
           return { success: true, data: cached };
         }
       }
-      
+
       // Cache miss - load from storage
       const result = await asyncStorage.get<Record<string, WordProgress>>(key);
 
       // Update analytics - this is a cache miss if we got here
       if (result.success && result.data) {
         this.analytics.misses++;
-        
+
         // Cache the loaded data for future hits
         if (this.config.cacheLanguageData) {
           await smartCache.set(
-            key, 
-            result.data, 
+            key,
+            result.data,
             24 * 60 * 60 * 1000, // 24 hours
             [`word_progress_${languageCode}`]
           );
-          
+
           // Also cache summary data
           await this.cacheLanguageSummary(languageCode, result.data);
         }
@@ -154,7 +163,9 @@ class EnhancedStorageService {
 
       if (this.config.debugMode && result.success) {
         const wordCount = Object.keys(result.data || {}).length;
-        logger.debug(`📖 Storage load: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`);
+        logger.debug(
+          `📖 Storage load: ${wordCount} word progress entries for ${languageCode} (${Math.round(duration)}ms)`
+        );
       }
 
       return result;
@@ -168,11 +179,13 @@ class EnhancedStorageService {
 
   async clearWordProgress(languageCode: string): Promise<StorageResult<void>> {
     const key = `word_progress_${languageCode}`;
-    
+
     // Clear from all storage tiers and cache
     await asyncStorage.delete(key);
     await smartCache.invalidate(key);
-    await smartCache.invalidateByPattern(`word_progress_${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+    await smartCache.invalidateByPattern(
+      `word_progress_${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
+    );
 
     if (this.config.debugMode) {
       logger.debug(`🗑️ Cleared word progress for ${languageCode}`);
@@ -187,7 +200,7 @@ class EnhancedStorageService {
   async saveGameState(gameState: any): Promise<StorageResult<void>> {
     const options: StorageOptions = {
       priority: 'high', // Game state changes need immediate response
-      compress: false,  // Don't compress for speed
+      compress: false, // Don't compress for speed
       ttl: 60 * 60 * 1000, // 1 hour
     };
 
@@ -254,9 +267,11 @@ class EnhancedStorageService {
   /**
    * Batch operations for efficiency
    */
-  async saveMultipleLanguageProgress(progressData: Record<string, Record<string, WordProgress>>): Promise<StorageResult<void>> {
+  async saveMultipleLanguageProgress(
+    progressData: Record<string, Record<string, WordProgress>>
+  ): Promise<StorageResult<void>> {
     const batchData: Record<string, Record<string, WordProgress>> = {};
-    
+
     for (const [languageCode, progress] of Object.entries(progressData)) {
       batchData[`word_progress_${languageCode}`] = progress;
     }
@@ -269,19 +284,21 @@ class EnhancedStorageService {
     return await asyncStorage.setBatch(batchData, options);
   }
 
-  async loadMultipleLanguageProgress(languageCodes: string[]): Promise<StorageResult<Record<string, Record<string, WordProgress>>>> {
+  async loadMultipleLanguageProgress(
+    languageCodes: string[]
+  ): Promise<StorageResult<Record<string, Record<string, WordProgress>>>> {
     const keys = languageCodes.map(code => `word_progress_${code}`);
     const result = await asyncStorage.getBatch<Record<string, WordProgress>>(keys);
-    
+
     if (result.success && result.data) {
       // Transform keys back to language codes
       const transformed: Record<string, Record<string, WordProgress>> = {};
-      
+
       for (const [key, progress] of Object.entries(result.data)) {
         const languageCode = key.replace('word_progress_', '');
         transformed[languageCode] = progress;
       }
-      
+
       return { success: true, data: transformed };
     }
 
@@ -302,15 +319,17 @@ class EnhancedStorageService {
 
     // Cache warming handled by smartCache
     await smartCache.warmCache(keys);
-    
+
     if (this.config.debugMode) {
       logger.debug(`🔥 Warmed cache for ${languageCode}`);
     }
   }
 
   async invalidateLanguageCache(languageCode: string): Promise<void> {
-    await smartCache.invalidateByPattern(`.*${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`);
-    
+    await smartCache.invalidateByPattern(
+      `.*${languageCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`
+    );
+
     if (this.config.debugMode) {
       logger.debug(`🔄 Invalidated cache for ${languageCode}`);
     }
@@ -342,11 +361,11 @@ class EnhancedStorageService {
     };
 
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
+
     if (pendingOperations > 100 || health.cache.hitRate < 0.7) {
       overallStatus = 'degraded';
     }
-    
+
     if (pendingOperations > 500 || healthResult.data?.status === 'unhealthy') {
       overallStatus = 'unhealthy';
     }
@@ -383,7 +402,7 @@ class EnhancedStorageService {
       }
 
       const allData = await asyncStorage.getBatch(allKeys.data);
-      
+
       if (allData.success) {
         const exportData = {
           version: '2.0.0',
@@ -408,10 +427,10 @@ class EnhancedStorageService {
   async performMaintenance(): Promise<void> {
     // Flush pending operations
     await asyncStorage.flush();
-    
+
     // Clean up expired cache entries
     // (handled automatically by cache service)
-    
+
     // Log maintenance completion
     if (this.config.debugMode) {
       const stats = await this.getStorageStats();
@@ -423,14 +442,17 @@ class EnhancedStorageService {
 
   private async shouldCompress(data: any): Promise<boolean> {
     if (!this.config.enableCompression) return false;
-    
+
     const dataSize = JSON.stringify(data).length;
     if (dataSize < this.config.compressionThreshold) return false;
-    
+
     return await compressionService.isCompressionWorthwhile(data);
   }
 
-  private async cacheLanguageSummary(languageCode: string, wordProgress: Record<string, WordProgress>): Promise<void> {
+  private async cacheLanguageSummary(
+    languageCode: string,
+    wordProgress: Record<string, WordProgress>
+  ): Promise<void> {
     const summary = {
       totalWords: Object.keys(wordProgress).length,
       practicedWords: Object.values(wordProgress).filter(p => p.timesCorrect > 0).length,
@@ -439,8 +461,8 @@ class EnhancedStorageService {
     };
 
     await smartCache.set(
-      `summary_${languageCode}`, 
-      summary, 
+      `summary_${languageCode}`,
+      summary,
       60 * 60 * 1000, // 1 hour
       [`word_progress_${languageCode}`]
     );
@@ -570,15 +592,20 @@ class EnhancedStorageService {
   /**
    * Save analytics events
    */
-  async saveAnalyticsEvents(events: any[], options: StorageOptions = {}): Promise<StorageResult<void>> {
+  async saveAnalyticsEvents(
+    events: any[],
+    options: StorageOptions = {}
+  ): Promise<StorageResult<void>> {
     const startTime = Date.now();
-    
+
     try {
       // Store events with compression if enabled
       const key = `analytics_events_${Date.now()}`;
       const result = await asyncStorage.set(key, events, {
         ...options,
-        compress: this.config.enableCompression && JSON.stringify(events).length > this.config.compressionThreshold
+        compress:
+          this.config.enableCompression &&
+          JSON.stringify(events).length > this.config.compressionThreshold,
       });
 
       const duration = Date.now() - startTime;
@@ -600,13 +627,13 @@ class EnhancedStorageService {
    */
   async loadAnalyticsEvents(query: any = {}): Promise<any[]> {
     const startTime = Date.now();
-    
+
     try {
       // For Phase 1, load from cache/storage
       // In Phase 2 with backend, this would query the API
       const cacheKey = `analytics_query_${JSON.stringify(query)}`;
       const cached = await smartCache.get(cacheKey);
-      
+
       if (cached) {
         const duration = Date.now() - startTime;
         this.analytics.operations++;
@@ -618,7 +645,7 @@ class EnhancedStorageService {
       // Fallback to loading recent events from storage
       const recentEvents = await this.loadRecentAnalyticsEvents();
       await smartCache.set(cacheKey, recentEvents, 5 * 60 * 1000); // 5 minute cache
-      
+
       const duration = Date.now() - startTime;
       this.analytics.operations++;
       this.analytics.misses++;
@@ -635,16 +662,16 @@ class EnhancedStorageService {
    */
   async saveAnalyticsModel(type: string, model: any): Promise<StorageResult<void>> {
     const startTime = Date.now();
-    
+
     try {
       const key = `analytics_model_${type}`;
       const result = await asyncStorage.set(key, model, {
-        compress: this.config.enableCompression
+        compress: this.config.enableCompression,
       });
 
       // Invalidate model cache
       await smartCache.invalidateByPattern(`models_${type}`);
-      
+
       const duration = Date.now() - startTime;
       this.analytics.operations++;
       this.analytics.totalTime += duration;
@@ -664,7 +691,7 @@ class EnhancedStorageService {
    */
   async loadAnalyticsModels(): Promise<Record<string, any> | null> {
     const startTime = Date.now();
-    
+
     try {
       // Check cache first
       const cached = await smartCache.get('analytics_models_all');
@@ -678,8 +705,14 @@ class EnhancedStorageService {
 
       // Load individual models - in real implementation, this would be more efficient
       const models: Record<string, any> = {};
-      const modelTypes = ['PERFORMANCE_FORECAST', 'OPTIMAL_DIFFICULTY', 'SESSION_LENGTH', 'CONTENT_RECOMMENDATION', 'OPTIMAL_TIME'];
-      
+      const modelTypes = [
+        'PERFORMANCE_FORECAST',
+        'OPTIMAL_DIFFICULTY',
+        'SESSION_LENGTH',
+        'CONTENT_RECOMMENDATION',
+        'OPTIMAL_TIME',
+      ];
+
       for (const type of modelTypes) {
         const key = `analytics_model_${type}`;
         const result = await asyncStorage.get(key);
@@ -690,7 +723,7 @@ class EnhancedStorageService {
 
       // Cache the combined models
       await smartCache.set('analytics_models_all', models, 30 * 60 * 1000); // 30 minutes
-      
+
       const duration = Date.now() - startTime;
       this.analytics.operations++;
       this.analytics.misses++;
@@ -721,17 +754,17 @@ class EnhancedStorageService {
    */
   async saveRealtimeMetrics(sessionId: string, metrics: any): Promise<StorageResult<void>> {
     const startTime = Date.now();
-    
+
     try {
       const key = `realtime_metrics_${sessionId}`;
       const result = await asyncStorage.set(key, metrics, {
         compress: false, // Real-time data shouldn't be compressed for speed
-        ttl: 24 * 60 * 60 * 1000 // 24 hours
+        ttl: 24 * 60 * 60 * 1000, // 24 hours
       });
 
       // Update cache
       await smartCache.set(key, metrics, 60 * 1000); // 1 minute cache for real-time
-      
+
       const duration = Date.now() - startTime;
       this.analytics.operations++;
       this.analytics.totalTime += duration;
@@ -751,10 +784,10 @@ class EnhancedStorageService {
    */
   async loadRealtimeMetrics(sessionId: string): Promise<any | null> {
     const startTime = Date.now();
-    
+
     try {
       const key = `realtime_metrics_${sessionId}`;
-      
+
       // Check cache first
       const cached = await smartCache.get(key);
       if (cached) {
@@ -790,11 +823,17 @@ class EnhancedStorageService {
   async getStorageAnalytics(): Promise<StorageResult<any>> {
     try {
       // Collect comprehensive storage metrics
-      const cacheMetrics = { hitRate: 0, missRate: 0, totalRequests: 0, averageResponseTime: 0, memoryUsage: 0 }; // Placeholder until cache.getMetrics() is implemented
+      const cacheMetrics = {
+        hitRate: 0,
+        missRate: 0,
+        totalRequests: 0,
+        averageResponseTime: 0,
+        memoryUsage: 0,
+      }; // Placeholder until cache.getMetrics() is implemented
       const compressionStats = await this.getCompressionStats();
       const tierAnalysis = {}; // Placeholder until tieredStorage integration
       const usageStats = await this.getUsageStatistics();
-      
+
       const analytics = {
         // Cache performance
         cache: {
@@ -802,53 +841,60 @@ class EnhancedStorageService {
           missRate: cacheMetrics.missRate || 0,
           totalRequests: cacheMetrics.totalRequests || 0,
           averageResponseTime: cacheMetrics.averageResponseTime || 0,
-          memoryUsage: cacheMetrics.memoryUsage || 0
+          memoryUsage: cacheMetrics.memoryUsage || 0,
         },
-        
+
         // Internal analytics
         internal: {
           operations: this.analytics.operations,
           hits: this.analytics.hits,
           misses: this.analytics.misses,
           totalTime: this.analytics.totalTime,
-          averageTime: this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0,
-          hitRate: this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0
+          averageTime:
+            this.analytics.operations > 0
+              ? this.analytics.totalTime / this.analytics.operations
+              : 0,
+          hitRate:
+            this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0,
         },
-        
+
         // Compression efficiency
         compression: compressionStats,
-        
+
         // Storage tier distribution
         tiers: tierAnalysis,
-        
+
         // Usage patterns
         usage: usageStats,
-        
+
         // Overall performance
         performance: {
           totalSize: await this.getTotalStorageSize(),
           itemCount: await this.getTotalItemCount(),
-          averageOperationTime: this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0,
-          errorRate: 0 // Will be calculated from error tracking
+          averageOperationTime:
+            this.analytics.operations > 0
+              ? this.analytics.totalTime / this.analytics.operations
+              : 0,
+          errorRate: 0, // Will be calculated from error tracking
         },
-        
+
         // Health indicators
         health: {
           score: await this.calculateHealthScore(),
           recommendations: await this.generateOptimizationRecommendations(),
-          alerts: await this.getHealthAlerts()
+          alerts: await this.getHealthAlerts(),
         },
-        
-        lastAnalyzed: Date.now()
+
+        lastAnalyzed: Date.now(),
       };
-      
-      logger.info('📊 Storage analytics completed', { 
+
+      logger.info('📊 Storage analytics completed', {
         cacheHitRate: analytics.cache.hitRate,
         internalHitRate: analytics.internal.hitRate,
         operations: analytics.internal.operations,
-        healthScore: analytics.health.score
+        healthScore: analytics.health.score,
       });
-      
+
       return { success: true, data: analytics };
     } catch (error) {
       logger.error('Storage analytics failed', error);
@@ -866,7 +912,7 @@ class EnhancedStorageService {
         ratio: 0.7, // Estimate - would be calculated from actual data
         spaceSaved: '70%',
         averageCompressionTime: 5,
-        averageDecompressionTime: 3
+        averageDecompressionTime: 3,
       };
     } catch (error) {
       return { ratio: 0, spaceSaved: '0%', averageCompressionTime: 0, averageDecompressionTime: 0 };
@@ -877,17 +923,24 @@ class EnhancedStorageService {
     try {
       const allKeys = await asyncStorage.getKeys('*');
       const keyCount = allKeys.success ? allKeys.data?.length || 0 : 0;
-      
+
       return {
         totalKeys: keyCount,
         progressKeys: await this.countKeysWithPrefix('word_progress_'),
         analyticsKeys: await this.countKeysWithPrefix('analytics_'),
         sessionKeys: await this.countKeysWithPrefix('session_'),
         cacheKeys: await this.countKeysWithPrefix('cache_'),
-        modelKeys: await this.countKeysWithPrefix('analytics_model_')
+        modelKeys: await this.countKeysWithPrefix('analytics_model_'),
       };
     } catch (error) {
-      return { totalKeys: 0, progressKeys: 0, analyticsKeys: 0, sessionKeys: 0, cacheKeys: 0, modelKeys: 0 };
+      return {
+        totalKeys: 0,
+        progressKeys: 0,
+        analyticsKeys: 0,
+        sessionKeys: 0,
+        cacheKeys: 0,
+        modelKeys: 0,
+      };
     }
   }
 
@@ -905,15 +958,16 @@ class EnhancedStorageService {
       // Estimate total storage size
       const allKeys = await asyncStorage.getKeys('*');
       if (!allKeys.success || !allKeys.data) return 0;
-      
+
       let totalSize = 0;
-      for (const key of allKeys.data.slice(0, 10)) { // Sample first 10 keys
+      for (const key of allKeys.data.slice(0, 10)) {
+        // Sample first 10 keys
         const data = await asyncStorage.get(key);
         if (data.success) {
           totalSize += JSON.stringify(data.data).length;
         }
       }
-      
+
       // Extrapolate total size
       return Math.round((totalSize / Math.min(10, allKeys.data.length)) * allKeys.data.length);
     } catch (error) {
@@ -932,13 +986,15 @@ class EnhancedStorageService {
 
   private async calculateHealthScore(): Promise<number> {
     try {
-      const hitRate = this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
-      const avgTime = this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
-      
+      const hitRate =
+        this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
+      const avgTime =
+        this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
+
       // Health score based on hit rate (0-50) and performance (0-50)
       const hitRateScore = hitRate * 50;
-      const performanceScore = Math.max(0, 50 - (avgTime / 10)); // Lower time = higher score
-      
+      const performanceScore = Math.max(0, 50 - avgTime / 10); // Lower time = higher score
+
       return Math.round(hitRateScore + performanceScore);
     } catch (error) {
       return 0;
@@ -947,32 +1003,34 @@ class EnhancedStorageService {
 
   private async generateOptimizationRecommendations(): Promise<string[]> {
     const recommendations: string[] = [];
-    
+
     try {
-      const hitRate = this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
-      const avgTime = this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
-      
+      const hitRate =
+        this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
+      const avgTime =
+        this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
+
       if (hitRate < 0.7) {
         recommendations.push('Consider increasing cache size or adjusting cache TTL');
       }
-      
+
       if (avgTime > 100) {
         recommendations.push('Storage operations are slow - consider enabling compression');
       }
-      
+
       if (this.analytics.operations > 1000) {
         recommendations.push('High operation count - consider batch operations');
       }
-      
+
       const itemCount = await this.getTotalItemCount();
       if (itemCount > 10000) {
         recommendations.push('Large item count - consider data archival or cleanup');
       }
-      
+
       if (recommendations.length === 0) {
         recommendations.push('Storage system is performing optimally');
       }
-      
+
       return recommendations;
     } catch (error) {
       return ['Unable to generate recommendations due to analysis error'];
@@ -981,24 +1039,26 @@ class EnhancedStorageService {
 
   private async getHealthAlerts(): Promise<string[]> {
     const alerts: string[] = [];
-    
+
     try {
-      const hitRate = this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
-      const avgTime = this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
-      
+      const hitRate =
+        this.analytics.operations > 0 ? this.analytics.hits / this.analytics.operations : 0;
+      const avgTime =
+        this.analytics.operations > 0 ? this.analytics.totalTime / this.analytics.operations : 0;
+
       if (hitRate < 0.5) {
         alerts.push('LOW_CACHE_HIT_RATE: Cache hit rate below 50%');
       }
-      
+
       if (avgTime > 200) {
         alerts.push('SLOW_OPERATIONS: Storage operations averaging over 200ms');
       }
-      
+
       const itemCount = await this.getTotalItemCount();
       if (itemCount > 50000) {
         alerts.push('HIGH_ITEM_COUNT: Storage contains over 50,000 items');
       }
-      
+
       return alerts;
     } catch (error) {
       return ['ANALYSIS_ERROR: Unable to perform health check'];

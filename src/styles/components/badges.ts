@@ -17,7 +17,7 @@ export const Badge = styled.span<{
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: ${transitions.default};
-  
+
   /* Size variants */
   ${props => {
     switch (props.size || 'md') {
@@ -44,7 +44,7 @@ export const Badge = styled.span<{
         `;
     }
   }}
-  
+
   /* Color variants */
   ${props => {
     const variant = props.variant || 'default';
@@ -84,14 +84,16 @@ export const Badge = styled.span<{
   }}
   
   /* Interactive states */
-  ${props => props.interactive && css`
-    cursor: pointer;
-    ${hover.scale}
-    
-    &:active {
-      transform: scale(0.95);
-    }
-  `}
+  ${props =>
+    props.interactive &&
+    css`
+      cursor: pointer;
+      ${hover.scale}
+
+      &:active {
+        transform: scale(0.95);
+      }
+    `}
 `;
 
 // Difficulty Badge - matches ModuleOverview.tsx
@@ -166,44 +168,46 @@ export const AchievementBadge = styled.div<{ earned: boolean; color: string }>`
 
 // Status Badge with pulse animation
 export const StatusBadge = styled(Badge)<{ active?: boolean }>`
-  ${props => props.active && css`
-    background: #4caf50;
-    color: white;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: inherit;
-      animation: pulse 2s infinite;
-      background: inherit;
-      z-index: -1;
-    }
-    
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        opacity: 1;
+  ${props =>
+    props.active &&
+    css`
+      background: #4caf50;
+      color: white;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: inherit;
+        animation: pulse 2s infinite;
+        background: inherit;
+        z-index: -1;
       }
-      50% {
-        transform: scale(1.2);
-        opacity: 0.7;
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-  `}
+    `}
 `;
 
 // Pulsing Badge with glow effect
 export const PulsingBadge = styled(Badge)`
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -216,13 +220,14 @@ export const PulsingBadge = styled(Badge)`
     animation: pulseGlow 2s ease-in-out infinite;
     z-index: -1;
   }
-  
+
   @keyframes pulseGlow {
-    0%, 100% { 
+    0%,
+    100% {
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
       transform: scale(1);
     }
-    50% { 
+    50% {
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
       transform: scale(1.05);
     }
@@ -237,19 +242,24 @@ export const ActivityIndicator = styled.div<{ active: boolean; positioned?: bool
   background: ${props => (props.active ? '#4caf50' : 'rgba(255, 255, 255, 0.3)')};
   box-shadow: ${props => (props.active ? '0 0 8px rgba(76, 175, 80, 0.6)' : 'none')};
   transition: all 0.3s ease;
-  
-  ${props => props.positioned && css`
-    position: absolute;
-    top: 12px;
-    right: 12px;
-  `}
-  
-  ${props => props.active && css`
-    animation: activityPulse 2s infinite;
-  `}
+
+  ${props =>
+    props.positioned &&
+    css`
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    `}
+
+  ${props =>
+    props.active &&
+    css`
+      animation: activityPulse 2s infinite;
+    `}
   
   @keyframes activityPulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
       transform: scale(1);
     }
@@ -261,7 +271,7 @@ export const ActivityIndicator = styled.div<{ active: boolean; positioned?: bool
 `;
 
 // Badge Group container
-export const BadgeGroup = styled.div<{ 
+export const BadgeGroup = styled.div<{
   spacing?: keyof typeof theme.spacing;
   wrap?: boolean;
 }>`
@@ -271,5 +281,5 @@ export const BadgeGroup = styled.div<{
     return props.theme.spacing[spacingKey];
   }};
   align-items: center;
-  flex-wrap: ${props => props.wrap ? 'wrap' : 'nowrap'};
+  flex-wrap: ${props => (props.wrap ? 'wrap' : 'nowrap')};
 `;

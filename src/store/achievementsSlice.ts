@@ -48,13 +48,13 @@ const initialAchievements: Achievement[] = [
 const loadPersistedAchievements = (): Partial<AchievementsState> => {
   try {
     const savedData = achievementsStorage.load();
-    
+
     // Update achievements with unlocked timestamps
     const updatedAchievements = initialAchievements.map(achievement => {
       if (savedData.unlockedAchievements.includes(achievement.id)) {
         return {
           ...achievement,
-          unlockedAt: achievement.unlockedAt || new Date().toISOString()
+          unlockedAt: achievement.unlockedAt || new Date().toISOString(),
         };
       }
       return achievement;

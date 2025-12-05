@@ -1,26 +1,23 @@
 /**
  * Precision Mode Challenge Service - AI Enhanced
- * 
+ *
  * Implements zero-mistake learning with AI assistance for error prevention
  * and cognitive load management in high-stakes scenarios.
  */
 
 import { Word } from './wordService';
 import { WordProgress } from '../store/types';
-import { 
-  challengeAIIntegrator, 
-  ChallengeAIContext
-} from './challengeAIIntegrator';
+import { challengeAIIntegrator, ChallengeAIContext } from './challengeAIIntegrator';
 import { logger } from './logger';
 import { userLearningProfileStorage } from './storage/userLearningProfile';
 import { selectWordForChallenge } from './wordSelectionManager';
 import { selectQuizMode } from './quizModeSelectionUtils';
 import { PrecisionModeSessionData } from '../types/challengeTypes';
-import { 
-  calculateErrorRisk, 
-  adjustStrategyForRisk, 
+import {
+  calculateErrorRisk,
+  adjustStrategyForRisk,
   generateHints,
-  generateSupport
+  generateSupport,
 } from './challengeServiceUtils';
 
 interface PrecisionModeState {
@@ -62,7 +59,7 @@ class PrecisionModeService {
    * Initialize Precision Mode challenge
    */
   async initializePrecisionMode(
-    languageCode: string, 
+    languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
     targetWords: number = 15,
     _allWords?: Word[], // Unused - centralized word selection handles this
@@ -73,11 +70,14 @@ class PrecisionModeService {
 
     // Prevent re-initialization if already active with same session
     if (this.state && !this.state.sessionFailed && this.state.languageCode === languageCode) {
-      logger.warn('Precision Mode already initialized for same language - skipping re-initialization', {
-        currentSessionId: this.state.sessionId,
-        newSessionId: sessionId,
-        currentLanguage: this.state.languageCode
-      });
+      logger.warn(
+        'Precision Mode already initialized for same language - skipping re-initialization',
+        {
+          currentSessionId: this.state.sessionId,
+          newSessionId: sessionId,
+          currentLanguage: this.state.languageCode,
+        }
+      );
       return;
     }
 
@@ -85,7 +85,7 @@ class PrecisionModeService {
       sessionId,
       languageCode,
       targetWords,
-      previousState: this.state ? 'existed' : 'none'
+      previousState: this.state ? 'existed' : 'none',
     });
 
     this.state = {
@@ -105,11 +105,13 @@ class PrecisionModeService {
       currentStrategy: {
         pacing: 8.0, // Start with 8 seconds per word
         quizMode: 'multiple-choice', // Start with easier mode
-        cognitiveLoadLevel: 'low'
-      }
+        cognitiveLoadLevel: 'low',
+      },
     };
 
-    logger.debug(`🎯 Precision Mode initialized with session ID: ${sessionId}, target: ${targetWords} words`);
+    logger.debug(
+      `🎯 Precision Mode initialized with session ID: ${sessionId}, target: ${targetWords} words`
+    );
   }
 
   /**
@@ -137,7 +139,7 @@ class PrecisionModeService {
 
     // Determine difficulty based on precision requirements and error risk
     let difficulty: 'easy' | 'medium' | 'hard';
-    
+
     // Precision mode prioritizes safety over challenge
     if (errorRisk > 0.5 || errorCount > 0) {
       difficulty = 'easy'; // Play it safe after errors
@@ -149,7 +151,9 @@ class PrecisionModeService {
       difficulty = 'easy'; // Generally stay safe in precision mode
     }
 
-    logger.debug(`🎯 Precision Mode word ${currentProgress + 1}/${targetWords}, difficulty: ${difficulty}, errorRisk: ${errorRisk}`);
+    logger.debug(
+      `🎯 Precision Mode word ${currentProgress + 1}/${targetWords}, difficulty: ${difficulty}, errorRisk: ${errorRisk}`
+    );
 
     // Use centralized word selection
     const selectionResult = selectWordForChallenge(
@@ -177,7 +181,7 @@ class PrecisionModeService {
       word: selectedWord,
       wordProgress,
       context: 'normal', // Precision mode uses normal context, AI will handle optimization
-      allowOpenAnswer: true
+      allowOpenAnswer: true,
     });
 
     // AI-enhanced word selection for error prevention
@@ -189,13 +193,13 @@ class PrecisionModeService {
           targetWords: targetWords,
           consecutiveCorrect: 0,
           consecutiveIncorrect: 0,
-          recentAccuracy: currentProgress > 0 ? 1.0 - (errorCount / currentProgress) : 1.0,
+          recentAccuracy: currentProgress > 0 ? 1.0 - errorCount / currentProgress : 1.0,
           sessionDuration: (Date.now() - this.state.startTime) / 1000,
-          accuracy: currentProgress > 0 ? 1.0 - (errorCount / currentProgress) : 1.0,
-          timeElapsed: (Date.now() - this.state.startTime) / 1000
+          accuracy: currentProgress > 0 ? 1.0 - errorCount / currentProgress : 1.0,
+          timeElapsed: (Date.now() - this.state.startTime) / 1000,
         },
         userState: {
-          recentPerformance: []
+          recentPerformance: [],
         },
         challengeContext: {
           currentDifficulty: 50,
@@ -203,8 +207,8 @@ class PrecisionModeService {
           perfectAccuracyRequired: true,
           currentErrorCount: errorCount,
           isEarlyPhase: currentProgress < 3,
-          isFinalPhase: currentProgress > targetWords * 0.8 // Final 20%
-        }
+          isFinalPhase: currentProgress > targetWords * 0.8, // Final 20%
+        },
       };
 
       try {
@@ -218,7 +222,12 @@ class PrecisionModeService {
         if (aiResult.interventionNeeded) {
           // AI can recommend a different word, but we'll use the centrally selected one
           // and just adjust the quiz mode and hints
-          if (aiResult.aiRecommendedMode && ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(aiResult.aiRecommendedMode as any)) {
+          if (
+            aiResult.aiRecommendedMode &&
+            ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(
+              aiResult.aiRecommendedMode as any
+            )
+          ) {
             quizMode = aiResult.aiRecommendedMode as PrecisionModeResult['quizMode'];
           }
           aiEnhanced = true;
@@ -226,16 +235,18 @@ class PrecisionModeService {
             word: selectedWord,
             quizMode,
             context: 'precision',
-            errorRisk
+            errorRisk,
           });
           confidenceBoost = generateSupport({
             context: 'precision',
-            errorRisk
+            errorRisk,
           });
           reasoning = aiResult.reasoning || [];
-          
+
           // Record recovery strategy
-          this.state.recoveryStrategies.push(`error-prevention-${errorRisk > 0.5 ? 'high' : 'moderate'}`);
+          this.state.recoveryStrategies.push(
+            `error-prevention-${errorRisk > 0.5 ? 'high' : 'moderate'}`
+          );
         }
       } catch (error) {
         logger.warn('AI enhancement failed for Precision Mode, using baseline approach', { error });
@@ -244,11 +255,13 @@ class PrecisionModeService {
 
     // Track word usage
     this.state.usedWordIds.add(selectedWord.id);
-    
+
     // NOTE: Options are now generated by the adapter for proper module scoping
     // const options = this.generateOptions(selectedWord, quizMode); // REMOVED
 
-    logger.debug(`🎯 Precision Mode word selected: ${selectedWord.term} (${quizMode}, AI: ${aiEnhanced}, Risk: ${errorRisk.toFixed(2)})`);
+    logger.debug(
+      `🎯 Precision Mode word selected: ${selectedWord.term} (${quizMode}, AI: ${aiEnhanced}, Risk: ${errorRisk.toFixed(2)})`
+    );
 
     return {
       word: selectedWord,
@@ -258,45 +271,50 @@ class PrecisionModeService {
       confidenceBoost: confidenceBoost.length > 0 ? confidenceBoost : undefined,
       errorPreventionHints: errorPreventionHints.length > 0 ? errorPreventionHints : undefined,
       optimalPacing: this.state.currentStrategy.pacing,
-      reasoning: reasoning.length > 0 ? reasoning : undefined
+      reasoning: reasoning.length > 0 ? reasoning : undefined,
     };
   }
 
   /**
    * Record word completion and check for session failure
    */
-  recordWordCompletion(wordId: string, correct: boolean, timeSpent: number, errorType?: string): boolean {
+  recordWordCompletion(
+    wordId: string,
+    correct: boolean,
+    timeSpent: number,
+    errorType?: string
+  ): boolean {
     if (!this.state) return false;
 
     this.state.wordTimings.push({
       wordId,
       timeSpent,
-      correct
+      correct,
     });
 
     if (!correct) {
       this.state.errorCount++;
       this.state.sessionFailed = true; // Precision Mode fails on first error
-      
+
       // Record error pattern
       this.state.errorPatterns.push({
         wordNumber: this.state.currentWordIndex + 1,
         errorType: errorType || 'unknown',
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-      
+
       logger.warn('Precision Mode session failed due to error', {
         wordId,
         wordNumber: this.state.currentWordIndex + 1,
-        errorType
+        errorType,
       });
-      
+
       return false; // Session failed
     }
 
     this.state.currentWordIndex++;
     logger.debug(`Precision Mode word completed: ${wordId}, time: ${timeSpent}s`);
-    
+
     return true; // Session continues
   }
 
@@ -319,8 +337,11 @@ class PrecisionModeService {
     }
 
     try {
-      const avgTimePerWord = this.state.wordTimings.length > 0 ? 
-        this.state.wordTimings.reduce((sum, timing) => sum + timing.timeSpent, 0) / this.state.wordTimings.length : 0;
+      const avgTimePerWord =
+        this.state.wordTimings.length > 0
+          ? this.state.wordTimings.reduce((sum, timing) => sum + timing.timeSpent, 0) /
+            this.state.wordTimings.length
+          : 0;
 
       const failurePoint = this.state.sessionFailed ? this.state.currentWordIndex + 1 : 0;
       const errorTypes = this.state.errorPatterns.map(pattern => pattern.errorType);
@@ -334,16 +355,17 @@ class PrecisionModeService {
         errorTypes,
         quizModeUsed: this.state.currentStrategy.quizMode,
         cognitiveLoadStrategy: this.state.currentStrategy.cognitiveLoadLevel,
-        mistakeDetails: this.state.errorPatterns.length > 0 ? this.state.errorPatterns[0] : undefined
+        mistakeDetails:
+          this.state.errorPatterns.length > 0 ? this.state.errorPatterns[0] : undefined,
       };
 
       await userLearningProfileStorage.updatePrecisionModeData(userId, storageData);
-      
+
       logger.info('Precision Mode performance saved', {
         userId,
         completed: sessionData.completed,
         failurePoint,
-        wasAIEnhanced: sessionData.wasAIEnhanced
+        wasAIEnhanced: sessionData.wasAIEnhanced,
       });
     } catch (error) {
       logger.error('Failed to save Precision Mode performance', { userId, error });

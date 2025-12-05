@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
+import {
   // Layout
   Container,
   ResponsiveGrid,
   FlexContainer,
-  
+
   // Typography
   Heading1,
   Heading2,
   BodyText,
-  
+
   // Components
   Card,
   CardHeader,
@@ -20,29 +20,27 @@ import {
   StatCard,
   ProgressBar,
   Alert,
-  
+
   // Forms
   Form,
   FieldGroup,
   Label,
   Input,
   Select,
-  
+
   // Responsive utilities
   ShowOnMobile,
   HideOnMobile,
-  
+
   // Theme
-  theme
+  theme,
 } from '@/components/ui';
 
 interface ComponentShowcaseProps {
   onLanguageSelect?: (language: string) => void;
 }
 
-export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
-  onLanguageSelect
-}) => {
+export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({ onLanguageSelect }) => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [formData, setFormData] = useState({ name: '', level: '' });
   const [showAlert, setShowAlert] = useState(false);
@@ -91,11 +89,8 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
             <CardTitle>Choose Your Language</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveGrid 
-              columns={{ mobile: 1, tablet: 2, desktop: 3 }}
-              gap="md"
-            >
-              {languages.map((lang) => (
+            <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
+              {languages.map(lang => (
                 <LanguageCard
                   key={lang.code}
                   selected={selectedLanguage === lang.code}
@@ -109,11 +104,15 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
                   <BodyText center size="small" color={theme.colors.textSecondary}>
                     {lang.progress}% Complete
                   </BodyText>
-                  <ProgressBar 
-                    value={lang.progress} 
+                  <ProgressBar
+                    value={lang.progress}
                     height="6px"
                     animated
-                    color={selectedLanguage === lang.code ? theme.colors.primary : theme.colors.textSecondary}
+                    color={
+                      selectedLanguage === lang.code
+                        ? theme.colors.primary
+                        : theme.colors.textSecondary
+                    }
                   />
                 </LanguageCard>
               ))}
@@ -127,10 +126,7 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
             <CardTitle>Your Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveGrid 
-              columns={{ mobile: 2, tablet: 4, desktop: 4 }}
-              gap="md"
-            >
+            <ResponsiveGrid columns={{ mobile: 2, tablet: 4, desktop: 4 }} gap="md">
               {stats.map((stat, index) => (
                 <StatCard key={index} highlight={stat.highlight}>
                   <Heading2>{stat.value}</Heading2>
@@ -149,7 +145,7 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
             <CardTitle>User Preferences</CardTitle>
           </CardHeader>
           <CardContent>
-            <Form onSubmit={(e) => e.preventDefault()}>
+            <Form onSubmit={e => e.preventDefault()}>
               <ResponsiveGrid columns={{ mobile: 1, tablet: 2 }} gap="md">
                 <FieldGroup>
                   <Label required>Display Name</Label>
@@ -157,15 +153,15 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
                     type="text"
                     placeholder="Enter your name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                   />
                 </FieldGroup>
-                
+
                 <FieldGroup>
                   <Label>Current Level</Label>
                   <Select
                     value={formData.level}
-                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                    onChange={e => setFormData({ ...formData, level: e.target.value })}
                   >
                     <option value="">Select level</option>
                     <option value="beginner">Beginner</option>
@@ -174,7 +170,7 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
                   </Select>
                 </FieldGroup>
               </ResponsiveGrid>
-              
+
               <FlexContainer justify="end" gap="sm">
                 <BaseButton variant="outline" type="button">
                   Cancel
@@ -191,17 +187,13 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
         <Card variant="outlined">
           <CardContent>
             <ShowOnMobile>
-              <Alert variant="info">
-                📱 This message only appears on mobile devices
-              </Alert>
+              <Alert variant="info">📱 This message only appears on mobile devices</Alert>
             </ShowOnMobile>
-            
+
             <HideOnMobile>
-              <Alert variant="info">
-                💻 This message is hidden on mobile devices
-              </Alert>
+              <Alert variant="info">💻 This message is hidden on mobile devices</Alert>
             </HideOnMobile>
-            
+
             <BodyText center>
               Resize your browser window to see responsive behavior in action!
             </BodyText>
@@ -226,15 +218,23 @@ export const ComponentShowcase: React.FC<ComponentShowcaseProps> = ({
                   <BaseButton variant="danger">Danger</BaseButton>
                 </FlexContainer>
               </div>
-              
+
               {/* Button sizes */}
               <div>
                 <BodyText weight={500}>Sizes:</BodyText>
                 <FlexContainer gap="sm" wrap>
-                  <BaseButton variant="primary" size="sm">Small</BaseButton>
-                  <BaseButton variant="primary" size="md">Medium</BaseButton>
-                  <BaseButton variant="primary" size="lg">Large</BaseButton>
-                  <BaseButton variant="primary" size="xl">Extra Large</BaseButton>
+                  <BaseButton variant="primary" size="sm">
+                    Small
+                  </BaseButton>
+                  <BaseButton variant="primary" size="md">
+                    Medium
+                  </BaseButton>
+                  <BaseButton variant="primary" size="lg">
+                    Large
+                  </BaseButton>
+                  <BaseButton variant="primary" size="xl">
+                    Extra Large
+                  </BaseButton>
                 </FlexContainer>
               </div>
             </FlexContainer>

@@ -17,7 +17,7 @@ import {
   // LearningMetrics,
   LearningRecommendation,
   RealTimeMetrics,
-  PredictionContext
+  PredictionContext,
 } from '../analytics/interfaces';
 import { /* enhancedStorage, */ EnhancedStorageService } from '../storage/enhancedStorage';
 import { userLearningProfileStorage } from '../storage/userLearningProfile';
@@ -94,7 +94,7 @@ export class AILearningCoach {
   private readonly MIN_ANALYSIS_EVENTS = 10;
   private readonly MOMENTUM_WINDOW = 3600000; // 1 hour
   private readonly COGNITIVE_LOAD_WINDOW = 600000; // 10 minutes
-  
+
   constructor(
     private _enhancedStorage: EnhancedStorageService,
     private _patternRecognizer: PatternRecognizer,
@@ -105,8 +105,8 @@ export class AILearningCoach {
    * Comprehensive learning analysis and coaching
    */
   async analyzeLearningBehavior(
-    userId: string, 
-    languageCode: string, 
+    userId: string,
+    languageCode: string,
     sessionEvents: AnalyticsEvent[]
   ): Promise<LearningCoachInsight[]> {
     try {
@@ -127,22 +127,24 @@ export class AILearningCoach {
       const personality = await this.inferLearningPersonality(allEvents);
 
       // Generate insights based on behavioral patterns
-      insights.push(...await this.generateMomentumInsights(momentum, personality));
+      insights.push(...(await this.generateMomentumInsights(momentum, personality)));
       insights.push(...this.generateCognitiveLoadInsights(cognitiveLoad, personality));
-      insights.push(...await this.generateMotivationInsights(motivation, personality));
-      insights.push(...await this.generatePersonalizedRecommendations(userId, languageCode, {
-        momentum,
-        cognitiveLoad,
-        motivation,
-        personality
-      }));
+      insights.push(...(await this.generateMotivationInsights(motivation, personality)));
+      insights.push(
+        ...(await this.generatePersonalizedRecommendations(userId, languageCode, {
+          momentum,
+          cognitiveLoad,
+          motivation,
+          personality,
+        }))
+      );
 
       // Predictive insights
       const context: PredictionContext = {
         userId,
         sessionTime: Date.now(),
         timeOfDay: new Date().getHours(),
-        dayOfWeek: new Date().getDay()
+        dayOfWeek: new Date().getDay(),
       };
 
       const predictions = await this.predictiveAnalytics.generatePredictions(userId, context);
@@ -155,13 +157,18 @@ export class AILearningCoach {
       const finalInsights = this.prioritizeInsights(insights);
 
       // Save learning profile to storage
-      await this.saveLearningProfile(userId, languageCode, {
-        personality,
-        momentum,
-        cognitiveLoad,
-        motivation,
-        insights: finalInsights
-      }, sessionEvents);
+      await this.saveLearningProfile(
+        userId,
+        languageCode,
+        {
+          personality,
+          momentum,
+          cognitiveLoad,
+          motivation,
+          insights: finalInsights,
+        },
+        sessionEvents
+      );
 
       return finalInsights;
     } catch (error) {
@@ -176,9 +183,9 @@ export class AILearningCoach {
   async shouldIntervene(
     currentMetrics: RealTimeMetrics,
     sessionDuration: number
-  ): Promise<{shouldIntervene: boolean; intervention?: SmartRecommendation}> {
+  ): Promise<{ shouldIntervene: boolean; intervention?: SmartRecommendation }> {
     const cognitiveLoad = this.analyzeCognitiveLoad([]);
-    
+
     // Critical interventions
     if (cognitiveLoad.level === 'overloaded') {
       return {
@@ -189,7 +196,10 @@ export class AILearningCoach {
           urgency: 'critical',
           action: 'immediate_break',
           value: 300000, // 5 minutes
-          reasoning: ['Cognitive overload detected', 'Immediate break recommended to prevent burnout'],
+          reasoning: [
+            'Cognitive overload detected',
+            'Immediate break recommended to prevent burnout',
+          ],
           confidence: 0.9,
           expectedImprovement: 0.25,
           behavioralContext: ['High response time variance', 'Increasing error rate'],
@@ -197,14 +207,14 @@ export class AILearningCoach {
           implementation: {
             immediate: ['Take a 5-minute break', 'Do light stretching or breathing exercises'],
             shortTerm: ['Return with easier content', 'Focus on review rather than new material'],
-            longTerm: ['Consider shorter session lengths', 'Monitor stress levels']
+            longTerm: ['Consider shorter session lengths', 'Monitor stress levels'],
           },
           expectedOutcome: {
             performanceImprovement: 0.2,
             engagementBoost: 0.15,
-            retentionIncrease: 0.1
-          }
-        }
+            retentionIncrease: 0.1,
+          },
+        },
       };
     }
 
@@ -226,14 +236,14 @@ export class AILearningCoach {
           implementation: {
             immediate: ['Complete current word set', 'End session with a success'],
             shortTerm: ['Plan shorter sessions', 'Focus on quality over quantity'],
-            longTerm: ['Establish optimal session rhythm', 'Track energy levels']
+            longTerm: ['Establish optimal session rhythm', 'Track energy levels'],
           },
           expectedOutcome: {
             performanceImprovement: 0.1,
             engagementBoost: 0.2,
-            retentionIncrease: 0.15
-          }
-        }
+            retentionIncrease: 0.15,
+          },
+        },
       };
     }
 
@@ -257,23 +267,23 @@ export class AILearningCoach {
     const personality = await this.inferLearningPersonality(
       await this.getRecentLearningHistory(userId, languageCode)
     );
-    
+
     const momentum = await this.analyzeLearningMomentum(
       await this.getRecentLearningHistory(userId, languageCode)
     );
 
     // AI-driven content selection
     const nextWords = await this.selectOptimalWords(userId, languageCode, personality, momentum);
-    
+
     // Dynamic difficulty adjustment
     const difficulty = this.calculateOptimalDifficulty(momentum, personality, currentProgress);
-    
+
     // Session planning
     const estimatedDuration = this.estimateOptimalSessionDuration(personality, momentum);
-    
+
     // Learning focus areas
     const learningFocus = this.identifyLearningFocus(personality, currentProgress);
-    
+
     // Personalized strategy
     const personalizedStrategy = this.generateLearningStrategy(personality, momentum);
 
@@ -282,7 +292,7 @@ export class AILearningCoach {
       difficulty,
       estimatedDuration,
       learningFocus,
-      personalizedStrategy
+      personalizedStrategy,
     };
   }
 
@@ -295,27 +305,23 @@ export class AILearningCoach {
         acceleration: 0,
         direction: 'improving',
         confidence: 0.3,
-        sustainabilityScore: 0.5
+        sustainabilityScore: 0.5,
       };
     }
 
-    const recentWindow = events.filter(e => 
-      Date.now() - e.timestamp <= this.MOMENTUM_WINDOW
-    );
+    const recentWindow = events.filter(e => Date.now() - e.timestamp <= this.MOMENTUM_WINDOW);
 
-    const successEvents = recentWindow.filter(e => 
-      e.type === AnalyticsEventType.WORD_SUCCESS
-    );
+    const successEvents = recentWindow.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS);
 
     // Calculate velocity (words per hour)
     const timeSpanHours = this.MOMENTUM_WINDOW / (1000 * 60 * 60);
     const velocity = successEvents.length / timeSpanHours;
 
     // Calculate acceleration (change in learning rate)
-    const midPoint = Date.now() - (this.MOMENTUM_WINDOW / 2);
+    const midPoint = Date.now() - this.MOMENTUM_WINDOW / 2;
     const earlierSuccesses = successEvents.filter(e => e.timestamp < midPoint).length;
     const laterSuccesses = successEvents.filter(e => e.timestamp >= midPoint).length;
-    
+
     const earlierRate = earlierSuccesses / (timeSpanHours / 2);
     const laterRate = laterSuccesses / (timeSpanHours / 2);
     const acceleration = laterRate - earlierRate;
@@ -329,20 +335,20 @@ export class AILearningCoach {
     // Calculate sustainability
     const avgResponseTime = this.calculateAverageResponseTime(recentWindow);
     const errorRate = this.calculateErrorRate(recentWindow);
-    const sustainabilityScore = Math.max(0, 1 - (errorRate * 2) - (avgResponseTime / 10000));
+    const sustainabilityScore = Math.max(0, 1 - errorRate * 2 - avgResponseTime / 10000);
 
     return {
       velocity,
       acceleration,
       direction,
       confidence: Math.min(1, events.length / 20),
-      sustainabilityScore
+      sustainabilityScore,
     };
   }
 
   private analyzeCognitiveLoad(sessionEvents: AnalyticsEvent[]): CognitiveLoad {
-    const recentEvents = sessionEvents.filter(e => 
-      Date.now() - e.timestamp <= this.COGNITIVE_LOAD_WINDOW
+    const recentEvents = sessionEvents.filter(
+      e => Date.now() - e.timestamp <= this.COGNITIVE_LOAD_WINDOW
     );
 
     if (recentEvents.length < 3) {
@@ -353,7 +359,7 @@ export class AILearningCoach {
         indicators: ['Insufficient data'],
         responseTimeVariance: 0,
         errorPatterns: [],
-        recommendedAction: 'continue'
+        recommendedAction: 'continue',
       };
     }
 
@@ -368,16 +374,16 @@ export class AILearningCoach {
     const indicators: string[] = [];
     let level: CognitiveLoad['level'];
     let recommendedAction: CognitiveLoad['recommendedAction'];
-    
+
     // Calculate overall cognitive load score (0-1)
     let overallLoad = 0;
     overallLoad += Math.min(responseTimeVariance / 1000, 0.3); // Response time variance contribution
     overallLoad += Math.min(errorRate, 0.4); // Error rate contribution
     overallLoad += Math.min(avgResponseTime / 5000, 0.3); // Average response time contribution
-    
+
     // Calculate attention fatigue based on session length and performance
-    const sessionDuration = recentEvents.length > 0 ? 
-      (Date.now() - recentEvents[0].timestamp) / 60000 : 0; // minutes
+    const sessionDuration =
+      recentEvents.length > 0 ? (Date.now() - recentEvents[0].timestamp) / 60000 : 0; // minutes
     let attentionFatigue = Math.min(sessionDuration / 30, 1.0); // Increases over 30 minutes
     attentionFatigue += Math.min(errorRate * 2, 0.5); // Errors increase fatigue
 
@@ -418,7 +424,7 @@ export class AILearningCoach {
       indicators,
       responseTimeVariance,
       errorPatterns: this.identifyErrorPatterns(recentEvents),
-      recommendedAction
+      recommendedAction,
     };
   }
 
@@ -426,17 +432,19 @@ export class AILearningCoach {
     // Analyze session frequency and duration for intrinsic motivation
     const sessionStarts = events.filter(e => e.type === AnalyticsEventType.SESSION_START);
     const avgSessionGap = this.calculateAverageSessionGap(sessionStarts);
-    const intrinsicMotivation = Math.max(0, 1 - (avgSessionGap / (24 * 60 * 60 * 1000))); // Daily sessions = high intrinsic
+    const intrinsicMotivation = Math.max(0, 1 - avgSessionGap / (24 * 60 * 60 * 1000)); // Daily sessions = high intrinsic
 
     // Analyze achievement-seeking for extrinsic motivation
-    const achievementEvents = events.filter(e => e.type === AnalyticsEventType.ACHIEVEMENT_UNLOCKED);
+    const achievementEvents = events.filter(
+      e => e.type === AnalyticsEventType.ACHIEVEMENT_UNLOCKED
+    );
     const extrinsicMotivation = Math.min(1, achievementEvents.length / 10);
 
     // Challenge-seeking behavior
     const difficultyChanges = events.filter(e => e.data.difficultyChange);
-    const challengeSeekingBehavior = difficultyChanges.filter(e => 
-      e.data.difficultyChange > 0
-    ).length / Math.max(1, difficultyChanges.length);
+    const challengeSeekingBehavior =
+      difficultyChanges.filter(e => e.data.difficultyChange > 0).length /
+      Math.max(1, difficultyChanges.length);
 
     // Persistence analysis
     const quitEvents = events.filter(e => e.type === AnalyticsEventType.SESSION_END);
@@ -446,7 +454,7 @@ export class AILearningCoach {
     // Current motivation state
     const recentPerformance = this.calculateRecentPerformance(events);
     let currentState: MotivationProfile['currentState'];
-    
+
     if (recentPerformance > 0.8 && persistenceLevel > 0.8) currentState = 'motivated';
     else if (recentPerformance < 0.4 || persistenceLevel < 0.4) currentState = 'frustrated';
     else if (intrinsicMotivation < 0.3) currentState = 'disengaged';
@@ -476,7 +484,7 @@ export class AILearningCoach {
       persistenceLevel,
       currentState,
       triggers: this.identifyMotivationTriggers(events),
-      motivationType
+      motivationType,
     };
   }
 
@@ -487,23 +495,27 @@ export class AILearningCoach {
 
     // Processing speed from response time patterns
     const avgResponseTime = this.calculateAverageResponseTime(events);
-    const processingSpeed = avgResponseTime < 2000 ? 'fast' : 
-                          avgResponseTime < 4000 ? 'moderate' : 'deliberate';
+    const processingSpeed =
+      avgResponseTime < 2000 ? 'fast' : avgResponseTime < 4000 ? 'moderate' : 'deliberate';
 
     // Error tolerance from retry patterns
     const retryEvents = events.filter(e => e.data.isRetry);
-    const errorTolerance = retryEvents.length > events.length * 0.3 ? 'high' :
-                          retryEvents.length > events.length * 0.1 ? 'moderate' : 'low';
+    const errorTolerance =
+      retryEvents.length > events.length * 0.3
+        ? 'high'
+        : retryEvents.length > events.length * 0.1
+          ? 'moderate'
+          : 'low';
 
     // Challenge preference from difficulty progression
     const difficultyProgression = this.analyzeDifficultyProgression(events);
-    const challengePreference = difficultyProgression > 0.1 ? 'steep' :
-                              difficultyProgression > 0.05 ? 'moderate' : 'gradual';
+    const challengePreference =
+      difficultyProgression > 0.1 ? 'steep' : difficultyProgression > 0.05 ? 'moderate' : 'gradual';
 
     // Session length preference
     const avgSessionLength = this.calculateAverageSessionLength(events);
-    const sessionLengthPreference = avgSessionLength > 1800000 ? 'long' :
-                                  avgSessionLength > 900000 ? 'medium' : 'short';
+    const sessionLengthPreference =
+      avgSessionLength > 1800000 ? 'long' : avgSessionLength > 900000 ? 'medium' : 'short';
 
     return {
       learningStyle,
@@ -511,7 +523,7 @@ export class AILearningCoach {
       errorTolerance,
       challengePreference,
       feedbackPreference: 'immediate', // Default for language learning
-      sessionLengthPreference
+      sessionLengthPreference,
     };
   }
 
@@ -524,38 +536,46 @@ export class AILearningCoach {
   }
 
   private calculateAverageResponseTime(events: AnalyticsEvent[]): number {
-    const responseTimes = events
-      .filter(e => e.data.responseTime)
-      .map(e => e.data.responseTime);
-    
-    return responseTimes.length > 0 ? 
-      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+    const responseTimes = events.filter(e => e.data.responseTime).map(e => e.data.responseTime);
+
+    return responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0;
   }
 
   private calculateErrorRate(events: AnalyticsEvent[]): number {
     const attempts = events.filter(e => e.type === AnalyticsEventType.WORD_ATTEMPT).length;
     const successes = events.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length;
-    return attempts > 0 ? 1 - (successes / attempts) : 0;
+    return attempts > 0 ? 1 - successes / attempts : 0;
   }
 
-  private async getRecentLearningHistory(userId: string, languageCode: string): Promise<AnalyticsEvent[]> {
+  private async getRecentLearningHistory(
+    userId: string,
+    languageCode: string
+  ): Promise<AnalyticsEvent[]> {
     // Implement based on your storage system
     return [];
   }
 
   // Additional helper methods would continue here...
   private generateInitialGuidance(languageCode: string): LearningCoachInsight[] {
-    return [{
-      type: 'pattern',
-      severity: 'info',
-      message: 'Welcome to AI-Powered Learning! I\'m analyzing your learning patterns to provide personalized guidance.',
-      recommendations: [],
-      urgency: 'low',
-      confidence: 1.0
-    }];
+    return [
+      {
+        type: 'pattern',
+        severity: 'info',
+        message:
+          "Welcome to AI-Powered Learning! I'm analyzing your learning patterns to provide personalized guidance.",
+        recommendations: [],
+        urgency: 'low',
+        confidence: 1.0,
+      },
+    ];
   }
 
-  private async generateMomentumInsights(momentum: LearningMomentum, personality: LearningPersonality): Promise<LearningCoachInsight[]> {
+  private async generateMomentumInsights(
+    momentum: LearningMomentum,
+    personality: LearningPersonality
+  ): Promise<LearningCoachInsight[]> {
     const insights: LearningCoachInsight[] = [];
 
     // High momentum insights
@@ -564,34 +584,40 @@ export class AILearningCoach {
         type: 'achievement',
         severity: 'success',
         message: `Excellent Learning Momentum! 🚀 You're learning at ${momentum.velocity.toFixed(1)} words per hour with strong acceleration.`,
-        recommendations: [{
-          type: 'momentum_optimization',
-          priority: 'medium',
-          action: 'increase_challenge',
-          value: 1.2,
-          reasoning: [
-            'Your high momentum suggests you can handle more challenge',
-            'Increasing difficulty will maintain engagement',
-            'Strike while the iron is hot!'
-          ],
-          confidence: 0.85,
-          expectedImprovement: 0.15,
-          behavioralContext: ['High learning velocity', 'Strong acceleration', 'Sustainable pace'],
-          personalityAlignment: personality.challengePreference === 'steep' ? 0.9 : 0.7,
-          urgency: 'medium',
-          implementation: {
-            immediate: ['Increase word difficulty by 20%', 'Introduce more complex grammar'],
-            shortTerm: ['Gradually expand vocabulary range', 'Add challenging quiz modes'],
-            longTerm: ['Set ambitious learning milestones', 'Explore advanced content']
+        recommendations: [
+          {
+            type: 'momentum_optimization',
+            priority: 'medium',
+            action: 'increase_challenge',
+            value: 1.2,
+            reasoning: [
+              'Your high momentum suggests you can handle more challenge',
+              'Increasing difficulty will maintain engagement',
+              'Strike while the iron is hot!',
+            ],
+            confidence: 0.85,
+            expectedImprovement: 0.15,
+            behavioralContext: [
+              'High learning velocity',
+              'Strong acceleration',
+              'Sustainable pace',
+            ],
+            personalityAlignment: personality.challengePreference === 'steep' ? 0.9 : 0.7,
+            urgency: 'medium',
+            implementation: {
+              immediate: ['Increase word difficulty by 20%', 'Introduce more complex grammar'],
+              shortTerm: ['Gradually expand vocabulary range', 'Add challenging quiz modes'],
+              longTerm: ['Set ambitious learning milestones', 'Explore advanced content'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.15,
+              engagementBoost: 0.2,
+              retentionIncrease: 0.1,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.15,
-            engagementBoost: 0.2,
-            retentionIncrease: 0.1
-          }
-        }],
+        ],
         urgency: 'medium',
-        confidence: momentum.confidence
+        confidence: momentum.confidence,
       });
     }
 
@@ -602,34 +628,40 @@ export class AILearningCoach {
         type: 'intervention',
         severity: urgency === 'high' ? 'warning' : 'info',
         message: `Learning Momentum Declining ⚠️ Your pace has decreased by ${Math.abs(momentum.acceleration).toFixed(1)} words/hour. Let's get back on track!`,
-        recommendations: [{
-          type: 'momentum_recovery',
-          priority: urgency,
-          action: 'adjust_strategy',
-          value: 'confidence_building',
-          reasoning: [
-            'Reviewing easier content can rebuild confidence',
-            'Small wins will restart your momentum',
-            'Consider adjusting your learning environment'
-          ],
-          confidence: 0.75,
-          expectedImprovement: 0.2,
-          behavioralContext: ['Declining learning pace', 'Negative acceleration', 'Potential frustration'],
-          personalityAlignment: personality.errorTolerance === 'low' ? 0.9 : 0.7,
-          urgency: urgency,
-          implementation: {
-            immediate: ['Switch to easier content', 'Focus on review rather than new material'],
-            shortTerm: ['Rebuild confidence with familiar topics', 'Adjust session length'],
-            longTerm: ['Reassess learning goals', 'Consider environmental factors']
+        recommendations: [
+          {
+            type: 'momentum_recovery',
+            priority: urgency,
+            action: 'adjust_strategy',
+            value: 'confidence_building',
+            reasoning: [
+              'Reviewing easier content can rebuild confidence',
+              'Small wins will restart your momentum',
+              'Consider adjusting your learning environment',
+            ],
+            confidence: 0.75,
+            expectedImprovement: 0.2,
+            behavioralContext: [
+              'Declining learning pace',
+              'Negative acceleration',
+              'Potential frustration',
+            ],
+            personalityAlignment: personality.errorTolerance === 'low' ? 0.9 : 0.7,
+            urgency: urgency,
+            implementation: {
+              immediate: ['Switch to easier content', 'Focus on review rather than new material'],
+              shortTerm: ['Rebuild confidence with familiar topics', 'Adjust session length'],
+              longTerm: ['Reassess learning goals', 'Consider environmental factors'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.2,
+              engagementBoost: 0.25,
+              retentionIncrease: 0.15,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.2,
-            engagementBoost: 0.25,
-            retentionIncrease: 0.15
-          }
-        }],
+        ],
         urgency: urgency,
-        confidence: momentum.confidence
+        confidence: momentum.confidence,
       });
     }
 
@@ -638,42 +670,48 @@ export class AILearningCoach {
       insights.push({
         type: 'prediction',
         severity: 'warning',
-        message: 'Pace May Not Be Sustainable - While your current pace is impressive, sustainability metrics suggest potential burnout risk.',
-        recommendations: [{
-          type: 'pace_adjustment',
-          priority: 'medium',
-          action: 'moderate_pace',
-          value: 0.8,
-          reasoning: [
-            'Moderate your pace to maintain long-term progress',
-            'Focus on quality over quantity',
-            'Building consistent habits is more valuable than sprints'
-          ],
-          confidence: 0.7,
-          expectedImprovement: 0.1,
-          behavioralContext: ['High velocity', 'Low sustainability score', 'Burnout risk'],
-          personalityAlignment: personality.sessionLengthPreference === 'long' ? 0.9 : 0.6,
-          urgency: 'medium',
-          implementation: {
-            immediate: ['Reduce session length by 20%', 'Take more frequent breaks'],
-            shortTerm: ['Focus on consistency over intensity', 'Monitor energy levels'],
-            longTerm: ['Establish sustainable learning rhythm', 'Build long-term habits']
+        message:
+          'Pace May Not Be Sustainable - While your current pace is impressive, sustainability metrics suggest potential burnout risk.',
+        recommendations: [
+          {
+            type: 'pace_adjustment',
+            priority: 'medium',
+            action: 'moderate_pace',
+            value: 0.8,
+            reasoning: [
+              'Moderate your pace to maintain long-term progress',
+              'Focus on quality over quantity',
+              'Building consistent habits is more valuable than sprints',
+            ],
+            confidence: 0.7,
+            expectedImprovement: 0.1,
+            behavioralContext: ['High velocity', 'Low sustainability score', 'Burnout risk'],
+            personalityAlignment: personality.sessionLengthPreference === 'long' ? 0.9 : 0.6,
+            urgency: 'medium',
+            implementation: {
+              immediate: ['Reduce session length by 20%', 'Take more frequent breaks'],
+              shortTerm: ['Focus on consistency over intensity', 'Monitor energy levels'],
+              longTerm: ['Establish sustainable learning rhythm', 'Build long-term habits'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.1,
+              engagementBoost: 0.05,
+              retentionIncrease: 0.2,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.1,
-            engagementBoost: 0.05,
-            retentionIncrease: 0.2
-          }
-        }],
+        ],
         urgency: 'medium',
-        confidence: 1 - momentum.sustainabilityScore
+        confidence: 1 - momentum.sustainabilityScore,
       });
     }
 
     return insights;
   }
 
-  private generateCognitiveLoadInsights(cognitiveLoad: CognitiveLoad, personality: LearningPersonality): LearningCoachInsight[] {
+  private generateCognitiveLoadInsights(
+    cognitiveLoad: CognitiveLoad,
+    personality: LearningPersonality
+  ): LearningCoachInsight[] {
     const insights: LearningCoachInsight[] = [];
 
     // High cognitive load warning
@@ -682,41 +720,46 @@ export class AILearningCoach {
         type: 'intervention',
         severity: 'critical',
         message: 'High cognitive load detected - consider taking a break',
-        recommendations: [{
-          type: 'session_management',
-          priority: 'high',
-          action: 'take_break',
-          value: 1.0,
-          reasoning: [
-            'Your cognitive load is currently very high',
-            'Taking breaks improves retention and prevents burnout',
-            'Short breaks can actually improve learning efficiency'
-          ],
-          confidence: 0.9,
-          expectedImprovement: 0.3,
-          behavioralContext: [`Cognitive load: ${(cognitiveLoad.overallLoad * 100).toFixed(0)}%`],
-          personalityAlignment: personality.sessionLengthPreference === 'short' ? 0.9 : 0.7,
-          urgency: 'high',
-          implementation: {
-            immediate: ['Take a 5-10 minute break', 'Step away from the screen'],
-            shortTerm: ['Return with easier content', 'Reduce session intensity'],
-            longTerm: ['Monitor cognitive load patterns', 'Adjust learning schedule']
+        recommendations: [
+          {
+            type: 'session_management',
+            priority: 'high',
+            action: 'take_break',
+            value: 1.0,
+            reasoning: [
+              'Your cognitive load is currently very high',
+              'Taking breaks improves retention and prevents burnout',
+              'Short breaks can actually improve learning efficiency',
+            ],
+            confidence: 0.9,
+            expectedImprovement: 0.3,
+            behavioralContext: [`Cognitive load: ${(cognitiveLoad.overallLoad * 100).toFixed(0)}%`],
+            personalityAlignment: personality.sessionLengthPreference === 'short' ? 0.9 : 0.7,
+            urgency: 'high',
+            implementation: {
+              immediate: ['Take a 5-10 minute break', 'Step away from the screen'],
+              shortTerm: ['Return with easier content', 'Reduce session intensity'],
+              longTerm: ['Monitor cognitive load patterns', 'Adjust learning schedule'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.2,
+              engagementBoost: 0.1,
+              retentionIncrease: 0.3,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.2,
-            engagementBoost: 0.1,
-            retentionIncrease: 0.3
-          }
-        }],
+        ],
         urgency: 'high',
-        confidence: 0.9
+        confidence: 0.9,
       });
     }
 
     return insights;
   }
 
-  private async generateMotivationInsights(motivation: MotivationProfile, personality: LearningPersonality): Promise<LearningCoachInsight[]> {
+  private async generateMotivationInsights(
+    motivation: MotivationProfile,
+    personality: LearningPersonality
+  ): Promise<LearningCoachInsight[]> {
     const insights: LearningCoachInsight[] = [];
 
     // Low motivation warning
@@ -724,42 +767,48 @@ export class AILearningCoach {
       insights.push({
         type: 'intervention',
         severity: 'warning',
-        message: 'Low motivation detected - let\'s re-energize your learning!',
-        recommendations: [{
-          type: 'motivation_boost',
-          priority: 'high',
-          action: 'gamification_increase',
-          value: 0.8,
-          reasoning: [
-            'Your motivation appears to be declining',
-            'Gamification elements can help re-engage you',
-            'Achievement unlocks provide positive reinforcement'
-          ],
-          confidence: 0.8,
-          expectedImprovement: 0.4,
-          behavioralContext: [`Motivation level: ${(motivation.currentLevel * 100).toFixed(0)}%`],
-          personalityAlignment: personality.challengePreference === 'gradual' ? 0.9 : 0.7,
-          urgency: 'high',
-          implementation: {
-            immediate: ['Focus on achievable goals', 'Celebrate small wins'],
-            shortTerm: ['Set milestone rewards', 'Track visible progress'],
-            longTerm: ['Establish motivation maintenance routine', 'Build intrinsic motivation']
+        message: "Low motivation detected - let's re-energize your learning!",
+        recommendations: [
+          {
+            type: 'motivation_boost',
+            priority: 'high',
+            action: 'gamification_increase',
+            value: 0.8,
+            reasoning: [
+              'Your motivation appears to be declining',
+              'Gamification elements can help re-engage you',
+              'Achievement unlocks provide positive reinforcement',
+            ],
+            confidence: 0.8,
+            expectedImprovement: 0.4,
+            behavioralContext: [`Motivation level: ${(motivation.currentLevel * 100).toFixed(0)}%`],
+            personalityAlignment: personality.challengePreference === 'gradual' ? 0.9 : 0.7,
+            urgency: 'high',
+            implementation: {
+              immediate: ['Focus on achievable goals', 'Celebrate small wins'],
+              shortTerm: ['Set milestone rewards', 'Track visible progress'],
+              longTerm: ['Establish motivation maintenance routine', 'Build intrinsic motivation'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.2,
+              engagementBoost: 0.4,
+              retentionIncrease: 0.1,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.2,
-            engagementBoost: 0.4,
-            retentionIncrease: 0.1
-          }
-        }],
+        ],
         urgency: 'high',
-        confidence: 0.8
+        confidence: 0.8,
       });
     }
 
     return insights;
   }
 
-  private async generatePersonalizedRecommendations(userId: string, languageCode: string, context: any): Promise<LearningCoachInsight[]> {
+  private async generatePersonalizedRecommendations(
+    userId: string,
+    languageCode: string,
+    context: any
+  ): Promise<LearningCoachInsight[]> {
     const insights: LearningCoachInsight[] = [];
 
     // Performance-based recommendations
@@ -768,41 +817,46 @@ export class AILearningCoach {
         type: 'prediction',
         severity: 'info',
         message: 'Recent performance suggests we should adjust difficulty',
-        recommendations: [{
-          type: 'difficulty_adjustment',
-          priority: 'high',
-          action: 'reduce_difficulty',
-          value: 0.5,
-          reasoning: [
-            `Recent accuracy is ${(context.recentAccuracy * 100).toFixed(0)}%`,
-            'Optimal learning occurs at 70-80% accuracy',
-            'Reducing difficulty will improve confidence and retention'
-          ],
-          confidence: 0.85,
-          expectedImprovement: 0.3,
-          behavioralContext: [`Recent accuracy: ${(context.recentAccuracy * 100).toFixed(0)}%`],
-          personalityAlignment: 0.8,
-          urgency: 'medium',
-          implementation: {
-            immediate: ['Focus on review content', 'Use easier vocabulary'],
-            shortTerm: ['Gradually reintroduce difficulty', 'Monitor confidence levels'],
-            longTerm: ['Build solid foundation', 'Establish success patterns']
+        recommendations: [
+          {
+            type: 'difficulty_adjustment',
+            priority: 'high',
+            action: 'reduce_difficulty',
+            value: 0.5,
+            reasoning: [
+              `Recent accuracy is ${(context.recentAccuracy * 100).toFixed(0)}%`,
+              'Optimal learning occurs at 70-80% accuracy',
+              'Reducing difficulty will improve confidence and retention',
+            ],
+            confidence: 0.85,
+            expectedImprovement: 0.3,
+            behavioralContext: [`Recent accuracy: ${(context.recentAccuracy * 100).toFixed(0)}%`],
+            personalityAlignment: 0.8,
+            urgency: 'medium',
+            implementation: {
+              immediate: ['Focus on review content', 'Use easier vocabulary'],
+              shortTerm: ['Gradually reintroduce difficulty', 'Monitor confidence levels'],
+              longTerm: ['Build solid foundation', 'Establish success patterns'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.3,
+              engagementBoost: 0.15,
+              retentionIncrease: 0.2,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.3,
-            engagementBoost: 0.15,
-            retentionIncrease: 0.2
-          }
-        }],
+        ],
         urgency: 'medium',
-        confidence: 0.85
+        confidence: 0.85,
       });
     }
 
     return insights;
   }
 
-  private convertPredictionsToInsights(predictions: any[], personality: LearningPersonality): LearningCoachInsight[] {
+  private convertPredictionsToInsights(
+    predictions: any[],
+    personality: LearningPersonality
+  ): LearningCoachInsight[] {
     const insights: LearningCoachInsight[] = [];
 
     for (const prediction of predictions) {
@@ -811,34 +865,36 @@ export class AILearningCoach {
           type: 'prediction',
           severity: 'warning',
           message: 'High risk of discontinuing learning detected',
-          recommendations: [{
-            type: 'engagement_recovery',
-            priority: 'high',
-            action: 'intervention_program',
-            value: 0.9,
-            reasoning: [
-              'Predictive model indicates high churn risk',
-              'Immediate intervention can prevent learning discontinuation',
-              'Personalized support improves retention rates'
-            ],
-            confidence: prediction.confidence || 0.8,
-            expectedImprovement: 0.5,
-            behavioralContext: [`Churn risk: ${(prediction.risk * 100).toFixed(0)}%`],
-            personalityAlignment: personality.challengePreference === 'gradual' ? 0.9 : 0.7,
-            urgency: 'high',
-            implementation: {
-              immediate: ['Provide encouragement', 'Reduce learning pressure'],
-              shortTerm: ['Adjust goals and expectations', 'Increase positive feedback'],
-              longTerm: ['Build sustainable learning habits', 'Maintain engagement']
+          recommendations: [
+            {
+              type: 'engagement_recovery',
+              priority: 'high',
+              action: 'intervention_program',
+              value: 0.9,
+              reasoning: [
+                'Predictive model indicates high churn risk',
+                'Immediate intervention can prevent learning discontinuation',
+                'Personalized support improves retention rates',
+              ],
+              confidence: prediction.confidence || 0.8,
+              expectedImprovement: 0.5,
+              behavioralContext: [`Churn risk: ${(prediction.risk * 100).toFixed(0)}%`],
+              personalityAlignment: personality.challengePreference === 'gradual' ? 0.9 : 0.7,
+              urgency: 'high',
+              implementation: {
+                immediate: ['Provide encouragement', 'Reduce learning pressure'],
+                shortTerm: ['Adjust goals and expectations', 'Increase positive feedback'],
+                longTerm: ['Build sustainable learning habits', 'Maintain engagement'],
+              },
+              expectedOutcome: {
+                performanceImprovement: 0.1,
+                engagementBoost: 0.5,
+                retentionIncrease: 0.6,
+              },
             },
-            expectedOutcome: {
-              performanceImprovement: 0.1,
-              engagementBoost: 0.5,
-              retentionIncrease: 0.6
-            }
-          }],
+          ],
           urgency: 'high',
-          confidence: prediction.confidence || 0.8
+          confidence: prediction.confidence || 0.8,
         });
       }
     }
@@ -846,13 +902,16 @@ export class AILearningCoach {
     return insights;
   }
 
-  private async assessLearningRisks(events: AnalyticsEvent[], motivation: MotivationProfile): Promise<LearningCoachInsight[]> {
+  private async assessLearningRisks(
+    events: AnalyticsEvent[],
+    motivation: MotivationProfile
+  ): Promise<LearningCoachInsight[]> {
     const insights: LearningCoachInsight[] = [];
 
     // Simple error pattern analysis
-    const recentErrors = events.filter(e => 
-      e.type === AnalyticsEventType.WORD_FAILURE && 
-      Date.now() - e.timestamp < 24 * 60 * 60 * 1000
+    const recentErrors = events.filter(
+      e =>
+        e.type === AnalyticsEventType.WORD_FAILURE && Date.now() - e.timestamp < 24 * 60 * 60 * 1000
     );
 
     if (recentErrors.length > 10) {
@@ -860,34 +919,36 @@ export class AILearningCoach {
         type: 'intervention',
         severity: 'warning',
         message: 'High error rate may lead to frustration',
-        recommendations: [{
-          type: 'difficulty_adjustment',
-          priority: 'high',
-          action: 'reduce_difficulty',
-          value: 0.4,
-          reasoning: [
-            `Many errors in the last 24 hours: ${recentErrors.length}`,
-            'High error rates can lead to frustration',
-            'Temporary difficulty reduction helps rebuild confidence'
-          ],
-          confidence: 0.8,
-          expectedImprovement: 0.4,
-          behavioralContext: [`Recent errors: ${recentErrors.length}`],
-          personalityAlignment: motivation.currentLevel < 0.5 ? 0.9 : 0.7,
-          urgency: 'high',
-          implementation: {
-            immediate: ['Switch to review mode', 'Focus on familiar content'],
-            shortTerm: ['Gradually reintroduce new content', 'Monitor confidence'],
-            longTerm: ['Build systematic progression', 'Prevent future frustration']
+        recommendations: [
+          {
+            type: 'difficulty_adjustment',
+            priority: 'high',
+            action: 'reduce_difficulty',
+            value: 0.4,
+            reasoning: [
+              `Many errors in the last 24 hours: ${recentErrors.length}`,
+              'High error rates can lead to frustration',
+              'Temporary difficulty reduction helps rebuild confidence',
+            ],
+            confidence: 0.8,
+            expectedImprovement: 0.4,
+            behavioralContext: [`Recent errors: ${recentErrors.length}`],
+            personalityAlignment: motivation.currentLevel < 0.5 ? 0.9 : 0.7,
+            urgency: 'high',
+            implementation: {
+              immediate: ['Switch to review mode', 'Focus on familiar content'],
+              shortTerm: ['Gradually reintroduce new content', 'Monitor confidence'],
+              longTerm: ['Build systematic progression', 'Prevent future frustration'],
+            },
+            expectedOutcome: {
+              performanceImprovement: 0.3,
+              engagementBoost: 0.2,
+              retentionIncrease: 0.4,
+            },
           },
-          expectedOutcome: {
-            performanceImprovement: 0.3,
-            engagementBoost: 0.2,
-            retentionIncrease: 0.4
-          }
-        }],
+        ],
         urgency: 'high',
-        confidence: 0.8
+        confidence: 0.8,
       });
     }
 
@@ -906,39 +967,39 @@ export class AILearningCoach {
   private identifyErrorPatterns(events: AnalyticsEvent[]): string[] {
     const patterns: string[] = [];
     const errorEvents = events.filter(e => e.data.accuracy === false);
-    
+
     if (errorEvents.length > 5) {
       patterns.push('High error frequency');
     }
-    
+
     return patterns;
   }
 
   private calculateAverageSessionGap(sessionStarts: AnalyticsEvent[]): number {
     if (sessionStarts.length < 2) return 0;
-    
+
     const gaps = [];
     for (let i = 1; i < sessionStarts.length; i++) {
-      gaps.push(sessionStarts[i].timestamp - sessionStarts[i-1].timestamp);
+      gaps.push(sessionStarts[i].timestamp - sessionStarts[i - 1].timestamp);
     }
-    
+
     return gaps.reduce((a, b) => a + b, 0) / gaps.length;
   }
 
   private calculateRecentPerformance(events: AnalyticsEvent[]): number {
     if (events.length === 0) return 0.5;
-    
+
     const correctAnswers = events.filter(e => e.data.accuracy === true).length;
     return correctAnswers / events.length;
   }
 
   private identifyMotivationTriggers(events: AnalyticsEvent[]): string[] {
     const triggers: string[] = [];
-    
+
     // Simple pattern detection
     const streaks = events.filter(e => e.data.streak && e.data.streak > 5);
     if (streaks.length > 0) triggers.push('Achievement streaks');
-    
+
     return triggers;
   }
 
@@ -946,13 +1007,13 @@ export class AILearningCoach {
     return {
       visual: 0.6,
       auditory: 0.3,
-      kinesthetic: 0.1
+      kinesthetic: 0.1,
     };
   }
 
   private determineDominantModality(preferences: any): LearningPersonality['learningStyle'] {
     const maxPref = Math.max(preferences.visual, preferences.auditory, preferences.kinesthetic);
-    
+
     if (preferences.visual === maxPref) return 'visual';
     if (preferences.auditory === maxPref) return 'auditory';
     return 'kinesthetic';
@@ -968,34 +1029,46 @@ export class AILearningCoach {
     return sessionStarts.length > 0 ? 25 : 20; // Default to 25 minutes
   }
 
-  private async selectOptimalWords(userId: string, languageCode: string, personality: LearningPersonality, momentum: LearningMomentum): Promise<string[]> {
+  private async selectOptimalWords(
+    userId: string,
+    languageCode: string,
+    personality: LearningPersonality,
+    momentum: LearningMomentum
+  ): Promise<string[]> {
     // Simple implementation - could integrate with existing word service
     return ['example', 'word', 'list'];
   }
 
-  private calculateOptimalDifficulty(momentum: LearningMomentum, personality: LearningPersonality, currentProgress: any): number {
+  private calculateOptimalDifficulty(
+    momentum: LearningMomentum,
+    personality: LearningPersonality,
+    currentProgress: any
+  ): number {
     let baseDifficulty = 0.7;
-    
+
     // Adjust based on momentum
     if (momentum.direction === 'improving') baseDifficulty += 0.1;
     if (momentum.direction === 'declining') baseDifficulty -= 0.1;
-    
+
     // Adjust based on personality
     if (personality.challengePreference === 'steep') baseDifficulty += 0.1;
     if (personality.challengePreference === 'gradual') baseDifficulty -= 0.1;
-    
+
     return Math.max(0.3, Math.min(0.9, baseDifficulty));
   }
 
-  private estimateOptimalSessionDuration(personality: LearningPersonality, momentum: LearningMomentum): number {
+  private estimateOptimalSessionDuration(
+    personality: LearningPersonality,
+    momentum: LearningMomentum
+  ): number {
     let baseDuration = 25; // Default 25 minutes
-    
+
     if (personality.sessionLengthPreference === 'short') baseDuration = 15;
     if (personality.sessionLengthPreference === 'long') baseDuration = 40;
-    
+
     // Adjust based on momentum
     if (momentum.sustainabilityScore < 0.5) baseDuration *= 0.8;
-    
+
     return baseDuration;
   }
 
@@ -1004,7 +1077,10 @@ export class AILearningCoach {
     return [];
   }
 
-  private generateLearningStrategy(personality: LearningPersonality, momentum: LearningMomentum): string {
+  private generateLearningStrategy(
+    personality: LearningPersonality,
+    momentum: LearningMomentum
+  ): string {
     // Implementation for learning strategy generation
     return '';
   }
@@ -1044,7 +1120,7 @@ export class AILearningCoach {
           strengthAreas: [],
           improvementAreas: [],
           insights: [],
-          lastAssessment: new Date()
+          lastAssessment: new Date(),
         };
       }
       profile.languageProfiles[languageCode].insights = profileData.insights;
@@ -1082,7 +1158,7 @@ export class AILearningCoach {
         sessionDuration: 0,
         wordsAttempted: 0,
         accuracy: 0,
-        averageResponseTime: 0
+        averageResponseTime: 0,
       };
     }
 
@@ -1091,32 +1167,29 @@ export class AILearningCoach {
     const sessionDuration = Math.max(...timestamps) - Math.min(...timestamps);
 
     // Calculate words attempted
-    const wordsAttempted = sessionEvents.filter(e => 
-      e.type === AnalyticsEventType.WORD_ATTEMPT
+    const wordsAttempted = sessionEvents.filter(
+      e => e.type === AnalyticsEventType.WORD_ATTEMPT
     ).length;
 
     // Calculate accuracy
-    const successes = sessionEvents.filter(e => 
-      e.type === AnalyticsEventType.WORD_SUCCESS
-    ).length;
-    const failures = sessionEvents.filter(e => 
-      e.type === AnalyticsEventType.WORD_FAILURE
-    ).length;
-    const accuracy = (successes + failures) > 0 ? successes / (successes + failures) : 0;
+    const successes = sessionEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length;
+    const failures = sessionEvents.filter(e => e.type === AnalyticsEventType.WORD_FAILURE).length;
+    const accuracy = successes + failures > 0 ? successes / (successes + failures) : 0;
 
     // Calculate average response time
     const responseTimes = sessionEvents
       .filter(e => e.data?.responseTime)
       .map(e => e.data.responseTime);
-    const averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-      : 0;
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     return {
       sessionDuration,
       wordsAttempted,
       accuracy,
-      averageResponseTime
+      averageResponseTime,
     };
   }
 
@@ -1126,7 +1199,7 @@ export class AILearningCoach {
   async loadLearningProfile(userId: string, languageCode: string) {
     try {
       const profile = await userLearningProfileStorage.loadProfile(userId);
-      
+
       if (profile) {
         logger.debug(`🧠 Loaded learning profile for user ${userId}`);
         return {
@@ -1134,10 +1207,10 @@ export class AILearningCoach {
           momentum: profile.momentum,
           cognitiveLoad: profile.cognitiveLoad,
           motivation: profile.motivation,
-          languageInsights: profile.languageProfiles[languageCode]?.insights || []
+          languageInsights: profile.languageProfiles[languageCode]?.insights || [],
         };
       }
-      
+
       return null;
     } catch (error) {
       logger.error('Error loading learning profile:', error);
@@ -1157,9 +1230,11 @@ export class AILearningCoach {
       return {
         totalSessions: profile.metadata.totalSessionsAnalyzed,
         confidenceScore: profile.metadata.confidenceScore,
-        profileAge: Math.floor((Date.now() - profile.metadata.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+        profileAge: Math.floor(
+          (Date.now() - profile.metadata.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        ),
         lastUpdated: profile.metadata.lastUpdated,
-        languageCount: Object.keys(profile.languageProfiles).length
+        languageCount: Object.keys(profile.languageProfiles).length,
       };
     } catch (error) {
       logger.error('Error loading profile analytics:', error);

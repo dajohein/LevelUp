@@ -14,14 +14,16 @@ export const Container = styled.div<{
     const paddingKey = props.padding || 'md';
     return props.theme.spacing[paddingKey];
   }};
-  
-  ${props => props.center && `
+
+  ${props =>
+    props.center &&
+    `
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   `}
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.sm};
   }
@@ -42,7 +44,8 @@ export const Section = styled.section<{
 
 // Flex containers
 export const FlexContainer = styled('div', {
-  shouldForwardProp: (prop: string) => !['direction', 'align', 'justify', 'gap', 'wrap'].includes(prop),
+  shouldForwardProp: (prop: string) =>
+    !['direction', 'align', 'justify', 'gap', 'wrap'].includes(prop),
 })<{
   direction?: 'row' | 'column';
   align?: 'start' | 'center' | 'end' | 'stretch';
@@ -54,23 +57,29 @@ export const FlexContainer = styled('div', {
   flex-direction: ${props => props.direction || 'row'};
   align-items: ${props => {
     switch (props.align) {
-      case 'start': return 'flex-start';
-      case 'end': return 'flex-end';
-      default: return props.align || 'center';
+      case 'start':
+        return 'flex-start';
+      case 'end':
+        return 'flex-end';
+      default:
+        return props.align || 'center';
     }
   }};
   justify-content: ${props => {
     switch (props.justify) {
-      case 'start': return 'flex-start';
-      case 'end': return 'flex-end';
-      default: return props.justify || 'center';
+      case 'start':
+        return 'flex-start';
+      case 'end':
+        return 'flex-end';
+      default:
+        return props.justify || 'center';
     }
   }};
   gap: ${props => {
     const gapKey = props.gap || 'md';
     return props.theme.spacing[gapKey];
   }};
-  flex-wrap: ${props => props.wrap ? 'wrap' : 'nowrap'};
+  flex-wrap: ${props => (props.wrap ? 'wrap' : 'nowrap')};
 `;
 
 // Grid containers
@@ -82,16 +91,15 @@ export const GridContainer = styled('div', {
   minColumnWidth?: string;
 }>`
   display: grid;
-  grid-template-columns: ${props => 
-    props.minColumnWidth 
+  grid-template-columns: ${props =>
+    props.minColumnWidth
       ? `repeat(auto-fit, minmax(${props.minColumnWidth}, 1fr))`
-      : `repeat(${props.columns || 2}, 1fr)`
-  };
+      : `repeat(${props.columns || 2}, 1fr)`};
   gap: ${props => {
     const gapKey = props.gap || 'md';
     return props.theme.spacing[gapKey];
   }};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
@@ -107,7 +115,7 @@ export const ContentWrapper = styled.div<{
     const size = props.size || 'md';
     return props.theme.spacing[size];
   }};
-  
+
   @media (min-width: ${props => props.theme.breakpoints.tablet}) {
     max-width: 800px;
     margin: 0 auto;
@@ -122,7 +130,7 @@ export const Spacer = styled.div<{
     const size = props.size || 'md';
     return props.theme.spacing[size];
   }};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     height: ${props => props.theme.spacing.sm};
   }
@@ -137,7 +145,7 @@ export const CenteredContent = styled.div`
   text-align: center;
   min-height: 50vh;
   padding: ${props => props.theme.spacing.xl};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     padding: ${props => props.theme.spacing.lg};
     min-height: 40vh;
@@ -149,7 +157,7 @@ export const TwoColumnLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${props => props.theme.spacing.xl};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing.lg};
@@ -160,7 +168,7 @@ export const TwoColumnLayout = styled.div`
 export const SidebarLayout = styled.div`
   display: flex;
   gap: ${props => props.theme.spacing.xl};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     flex-direction: column;
     gap: ${props => props.theme.spacing.lg};
@@ -169,7 +177,7 @@ export const SidebarLayout = styled.div`
 
 export const LayoutSidebar = styled.aside<{ width?: string }>`
   flex: 0 0 ${props => props.width || '300px'};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     flex: none;
     width: 100%;
@@ -199,8 +207,10 @@ export const ScrollContainer = styled.div<{
 }>`
   max-height: ${props => props.maxHeight || '400px'};
   overflow-y: auto;
-  
-  ${props => props.hideScrollbar && `
+
+  ${props =>
+    props.hideScrollbar &&
+    `
     scrollbar-width: none;
     -ms-overflow-style: none;
     
@@ -219,8 +229,8 @@ export const ImageContainer = styled.div<{
   width: 100%;
   aspect-ratio: ${props => props.aspectRatio || '16/9'};
   overflow: hidden;
-  border-radius: ${props => props.borderRadius ? props.theme.borderRadius.md : '0'};
-  
+  border-radius: ${props => (props.borderRadius ? props.theme.borderRadius.md : '0')};
+
   img {
     width: 100%;
     height: 100%;

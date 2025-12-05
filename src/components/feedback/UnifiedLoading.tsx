@@ -26,9 +26,9 @@ const LoadingContainer = styled.div<{ minHeight?: string; fullScreen?: boolean }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: ${props => props.fullScreen ? '100vh' : props.minHeight || '200px'};
+  min-height: ${props => (props.fullScreen ? '100vh' : props.minHeight || '200px')};
   padding: ${props => props.theme.spacing.lg};
-  background: ${props => props.fullScreen ? props.theme.colors.background : 'transparent'};
+  background: ${props => (props.fullScreen ? props.theme.colors.background : 'transparent')};
 `;
 
 // Container specifically for skeleton layouts (no centering, natural flow)
@@ -43,7 +43,7 @@ const SpinnerBase = styled.div<{ size: 'sm' | 'md' | 'lg' }>`
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
   margin-bottom: ${props => props.theme.spacing.md};
-  
+
   ${props => {
     switch (props.size) {
       case 'sm':
@@ -84,9 +84,9 @@ const SkeletonBase = styled.div`
     ${props => props.theme.colors.surface} 100%
   );
   background-size: 1200px 100%;
-  animation: ${shimmer} 3.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  animation: ${shimmer} 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   border-radius: 6px;
-  
+
   @media (prefers-reduced-motion: reduce) {
     animation: none;
     background: ${props => props.theme.colors.surface};
@@ -115,12 +115,10 @@ const SkeletonCircle = styled(SkeletonBase)<{ size?: string }>`
 
 // Loading text with proper hierarchy
 const LoadingText = styled.p<{ variant?: 'primary' | 'secondary' }>`
-  color: ${props => props.variant === 'secondary' 
-    ? props.theme.colors.textSecondary 
-    : props.theme.colors.text
-  };
-  font-size: ${props => props.variant === 'secondary' ? '0.9rem' : '1rem'};
-  font-weight: ${props => props.variant === 'secondary' ? 400 : 500};
+  color: ${props =>
+    props.variant === 'secondary' ? props.theme.colors.textSecondary : props.theme.colors.text};
+  font-size: ${props => (props.variant === 'secondary' ? '0.9rem' : '1rem')};
+  font-weight: ${props => (props.variant === 'secondary' ? 400 : 500)};
   margin: 0;
   text-align: center;
 `;
@@ -146,20 +144,24 @@ const ProgressContainer = styled.div`
 
 const ProgressBar = styled.div<{ progress: number; indeterminate?: boolean }>`
   height: 100%;
-  background: linear-gradient(90deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.secondary});
+  background: linear-gradient(
+    90deg,
+    ${props => props.theme.colors.primary},
+    ${props => props.theme.colors.secondary}
+  );
   border-radius: 2px;
   transition: width 0.3s ease;
-  
-  ${props => props.indeterminate 
-    ? `
+
+  ${props =>
+    props.indeterminate
+      ? `
       width: 30%;
       animation: ${keyframes`
         0% { transform: translateX(-100%); }
         100% { transform: translateX(400%); }
       `} 1.5s ease-in-out infinite;
     `
-    : `width: ${props.progress}%;`
-  }
+      : `width: ${props.progress}%;`}
 `;
 
 // Main loading component types
@@ -195,17 +197,18 @@ export const UnifiedLoading: React.FC<UnifiedLoadingProps> = ({
   minHeight,
   progress,
   indeterminate = true,
-  className
+  className,
 }) => {
   const renderContent = () => {
     switch (variant) {
       case 'minimal':
         return (
           <LoadingText>
-            {text}<LoadingDots />
+            {text}
+            <LoadingDots />
           </LoadingText>
         );
-      
+
       case 'inline':
         return (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -213,10 +216,10 @@ export const UnifiedLoading: React.FC<UnifiedLoadingProps> = ({
             <LoadingText variant="secondary">{text}</LoadingText>
           </div>
         );
-      
+
       case 'skeleton':
         return null; // Handled by SkeletonLayout component
-      
+
       default: // spinner
         return (
           <>
@@ -238,29 +241,25 @@ export const UnifiedLoading: React.FC<UnifiedLoadingProps> = ({
   }
 
   if (variant === 'minimal') {
-    return <div className={className} style={{ padding: '8px' }}>{renderContent()}</div>;
+    return (
+      <div className={className} style={{ padding: '8px' }}>
+        {renderContent()}
+      </div>
+    );
   }
 
   return (
-    <LoadingContainer 
-      fullScreen={fullScreen} 
-      minHeight={minHeight}
-      className={className}
-    >
+    <LoadingContainer fullScreen={fullScreen} minHeight={minHeight} className={className}>
       {renderContent()}
     </LoadingContainer>
   );
 };
 
 // Skeleton layout component for complex layouts
-export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ 
-  type, 
-  count = 1,
-  className 
-}) => {
+export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ type, count = 1, className }) => {
   // Use a key that changes to force re-sync all animations
   const [syncKey, setSyncKey] = React.useState(0);
-  
+
   React.useEffect(() => {
     // Force a re-sync every time the component mounts or updates
     setSyncKey(prev => prev + 1);
@@ -277,10 +276,17 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({
             <SkeletonLine height="14px" width="50%" />
           </div>
         );
-      
+
       case 'list':
         return (
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', padding: '8px 0' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '12px',
+              padding: '8px 0',
+            }}
+          >
             <SkeletonCircle size="32px" />
             <div style={{ flex: 1, marginLeft: '12px' }}>
               <SkeletonLine height="16px" width="60%" />
@@ -288,7 +294,7 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({
             </div>
           </div>
         );
-      
+
       case 'profile':
         return (
           <div style={{ textAlign: 'center', maxWidth: '300px', margin: '0 auto' }}>
@@ -300,19 +306,26 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({
             <SkeletonCard height="40px" />
           </div>
         );
-      
+
       case 'game':
         return (
           <div style={{ maxWidth: '600px' }}>
             <SkeletonLine height="28px" width="50%" />
             <SkeletonCard height="120px" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
+                marginTop: '16px',
+              }}
+            >
               <SkeletonCard height="40px" />
               <SkeletonCard height="40px" />
             </div>
           </div>
         );
-      
+
       case 'form':
         return (
           <div style={{ maxWidth: '400px' }}>
@@ -325,7 +338,7 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({
             <SkeletonCard height="40px" style={{ marginTop: '16px' }} />
           </div>
         );
-      
+
       default:
         return <SkeletonCard />;
     }
@@ -385,7 +398,7 @@ export const useLoadingState = (initialLoading = false) => {
     startLoading,
     stopLoading,
     setLoadingError,
-    updateProgress
+    updateProgress,
   };
 };
 
@@ -405,12 +418,10 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
 }) => (
   <button {...props} disabled={disabled || isLoading}>
     {isLoading ? (
-      <UnifiedLoading 
-        variant="inline" 
-        size="sm" 
-        text={loadingText || 'Loading'} 
-      />
-    ) : children}
+      <UnifiedLoading variant="inline" size="sm" text={loadingText || 'Loading'} />
+    ) : (
+      children
+    )}
   </button>
 );
 
@@ -421,19 +432,15 @@ interface LazyWrapperProps {
   loadingText?: string;
 }
 
-export const LazyWrapper: React.FC<LazyWrapperProps> = ({ 
-  children, 
+export const LazyWrapper: React.FC<LazyWrapperProps> = ({
+  children,
   fallback: Fallback = ({ text = 'Loading...' }) => (
     <LoadingContainer style={{ minHeight: '300px' }}>
       <SpinnerBase size="md" />
       <LoadingText>{text}</LoadingText>
     </LoadingContainer>
   ),
-  loadingText = 'Loading component...'
-}) => (
-  <Suspense fallback={<Fallback text={loadingText} />}>
-    {children}
-  </Suspense>
-);
+  loadingText = 'Loading component...',
+}) => <Suspense fallback={<Fallback text={loadingText} />}>{children}</Suspense>;
 
 export default UnifiedLoading;

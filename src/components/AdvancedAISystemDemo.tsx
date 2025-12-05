@@ -1,6 +1,6 @@
 /**
  * Advanced AI System Demo
- * 
+ *
  * Comprehensive demo showcasing all advanced AI features
  * Uses emotion/styled instead of MUI for compatibility
  */
@@ -9,12 +9,9 @@ import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useAILearning } from '../hooks/useAILearning';
 
-import { 
-  adaptiveLearningEngine
-} from '../services';
+import { adaptiveLearningEngine } from '../services';
 import { BaseButton, Card } from './ui';
 import { theme } from '../styles/theme';
-
 
 const DemoContainer = styled.div`
   max-width: 1200px;
@@ -99,16 +96,18 @@ const StatusBadge = styled.span<{ status: 'active' | 'processing' | 'success' }>
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  background: ${props => 
-    props.status === 'active' ? 'rgba(59, 130, 246, 0.2)' :
-    props.status === 'processing' ? 'rgba(251, 191, 36, 0.2)' :
-    'rgba(34, 197, 94, 0.2)'
-  };
-  color: ${props => 
-    props.status === 'active' ? theme.colors.primary :
-    props.status === 'processing' ? '#f59e0b' :
-    theme.colors.success
-  };
+  background: ${props =>
+    props.status === 'active'
+      ? 'rgba(59, 130, 246, 0.2)'
+      : props.status === 'processing'
+        ? 'rgba(251, 191, 36, 0.2)'
+        : 'rgba(34, 197, 94, 0.2)'};
+  color: ${props =>
+    props.status === 'active'
+      ? theme.colors.primary
+      : props.status === 'processing'
+        ? '#f59e0b'
+        : theme.colors.success};
 `;
 
 const ProgressBar = styled.div<{ progress: number }>`
@@ -118,7 +117,7 @@ const ProgressBar = styled.div<{ progress: number }>`
   border-radius: 4px;
   overflow: hidden;
   margin: 0.5rem 0;
-  
+
   &::after {
     content: '';
     display: block;
@@ -133,7 +132,7 @@ const ActionButton = styled(BaseButton)`
   margin: 0.5rem 0.5rem 0.5rem 0;
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, ${theme.colors.primary}, #8b5cf6);
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
@@ -149,8 +148,8 @@ const CodeBlock = styled.pre`
   border: 1px solid ${theme.colors.border};
 `;
 
-export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({ 
-  languageCode = 'de' 
+export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
+  languageCode = 'de',
 }) => {
   const [demoState, setDemoState] = useState({
     isRunning: false,
@@ -160,23 +159,21 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
       confidence: 87.5,
       engagement: 78,
       learningVelocity: 85,
-      masteryTrend: 92
+      masteryTrend: 92,
     },
     predictions: null as any,
     userProfile: {
       learningStyle: 'visual-quick',
       cognitiveCapacity: 0.8,
       preferredDifficulty: 0.6,
-      attentionSpan: 18
+      attentionSpan: 18,
     },
     recommendations: [
       'Increase difficulty by 10% for optimal challenge',
       'Focus on verb conjugations next session',
-      'Take a 5-minute break for better retention'
-    ]
+      'Take a 5-minute break for better retention',
+    ],
   });
-
-
 
   // Learning Profile Hook - removed for simplicity
   // Profile functionality now integrated directly into UserProfile component
@@ -184,7 +181,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
   // AI Learning Hook
   const [aiLearningState] = useAILearning({
     userId: 'demo-user',
-    enableAI: true
+    enableAI: true,
   });
 
   useEffect(() => {
@@ -198,15 +195,15 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
 
   const runAdaptiveLearningDemo = async () => {
     setDemoState(prev => ({ ...prev, currentDemo: 'adaptive' }));
-    
+
     try {
       // Demonstrate adaptive learning decision with proper parameters
-      const mockWord = { 
-        id: 'demo-word', 
-        term: 'Haus', 
+      const mockWord = {
+        id: 'demo-word',
+        term: 'Haus',
         definition: 'House',
-        german: 'Haus', 
-        english: 'House' 
+        german: 'Haus',
+        english: 'House',
       };
       const decision = await adaptiveLearningEngine.selectOptimalQuizMode(
         {
@@ -214,7 +211,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
           recentPerformance: [0.8, 0.7, 0.75, 0.9],
           difficultyLevel: 0.6,
           sessionProgress: 0.4,
-          timeSpent: 300
+          timeSpent: 300,
         },
         mockWord,
         0.7, // mastery level
@@ -222,15 +219,15 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
       );
 
       console.log('Adaptive Learning Decision:', decision);
-      
+
       // Update demo state with realistic results
       setDemoState(prev => ({
         ...prev,
         aiMetrics: {
           ...prev.aiMetrics,
           confidence: 89.3,
-          engagement: 82
-        }
+          engagement: 82,
+        },
       }));
     } catch (error) {
       console.log('Demo mode - showing simulated adaptive learning results');
@@ -239,40 +236,40 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
 
   const runMLPredictionDemo = async () => {
     setDemoState(prev => ({ ...prev, currentDemo: 'ml-prediction' }));
-    
+
     // Simulate ML predictions with realistic results
     setDemoState(prev => ({
       ...prev,
       aiMetrics: {
         ...prev.aiMetrics,
         churnRisk: 12.8,
-        confidence: 91.2
+        confidence: 91.2,
       },
       predictions: {
         breakthrough: {
           probability: 0.73,
           estimatedSessions: 3,
-          reasoning: ['High engagement pattern', 'Consistent improvement trend']
-        }
-      }
+          reasoning: ['High engagement pattern', 'Consistent improvement trend'],
+        },
+      },
     }));
-    
+
     console.log('ML Prediction Demo completed');
   };
 
   const runPatternRecognitionDemo = async () => {
     setDemoState(prev => ({ ...prev, currentDemo: 'pattern-recognition' }));
-    
+
     // Simulate pattern recognition results
     console.log('Pattern Recognition Demo: Skill transfer patterns detected');
-    
+
     setDemoState(prev => ({
       ...prev,
       recommendations: [
         ...prev.recommendations,
         'Strong pattern in noun-verb association detected',
-        'Recommend focusing on sentence structure next'
-      ]
+        'Recommend focusing on sentence structure next',
+      ],
     }));
   };
 
@@ -311,7 +308,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
           ) : (
             <div>Loading AI metrics...</div>
           )}
-          
+
           <ProgressBar progress={demoState.aiMetrics?.masteryTrend || 0} />
           <div>Mastery Trend: {demoState.aiMetrics?.masteryTrend || 0}%</div>
         </DemoCard>
@@ -320,17 +317,20 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         <DemoCard>
           <DemoTitle>⚡ Adaptive Learning Engine</DemoTitle>
           <DemoSection>
-            <div>Current Mode: <strong>{aiLearningState.quizMode}</strong></div>
-            <div>AI Enabled: <StatusBadge status={aiLearningState.isAIEnabled ? 'success' : 'processing'}>
-              {aiLearningState.isAIEnabled ? 'Yes' : 'No'}
-            </StatusBadge></div>
+            <div>
+              Current Mode: <strong>{aiLearningState.quizMode}</strong>
+            </div>
+            <div>
+              AI Enabled:{' '}
+              <StatusBadge status={aiLearningState.isAIEnabled ? 'success' : 'processing'}>
+                {aiLearningState.isAIEnabled ? 'Yes' : 'No'}
+              </StatusBadge>
+            </div>
             <div>Session Progress: {Math.round(aiLearningState.progress)}%</div>
-            
-            <ActionButton onClick={runAdaptiveLearningDemo}>
-              Run Adaptive Demo
-            </ActionButton>
+
+            <ActionButton onClick={runAdaptiveLearningDemo}>Run Adaptive Demo</ActionButton>
           </DemoSection>
-          
+
           {aiLearningState.aiRecommendations.length > 0 && (
             <DemoSection>
               <strong>AI Recommendations:</strong>
@@ -349,23 +349,25 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         <DemoCard>
           <DemoTitle>🎯 ML Predictions & Analytics</DemoTitle>
           <DemoSection>
-            <div>Churn Risk: <strong>{demoState.aiMetrics?.churnRisk.toFixed(1)}%</strong></div>
-            <div>Confidence: <strong>{demoState.aiMetrics?.confidence.toFixed(1)}%</strong></div>
-            
-            <ActionButton onClick={runMLPredictionDemo}>
-              Generate Predictions
-            </ActionButton>
+            <div>
+              Churn Risk: <strong>{demoState.aiMetrics?.churnRisk.toFixed(1)}%</strong>
+            </div>
+            <div>
+              Confidence: <strong>{demoState.aiMetrics?.confidence.toFixed(1)}%</strong>
+            </div>
+
+            <ActionButton onClick={runMLPredictionDemo}>Generate Predictions</ActionButton>
           </DemoSection>
-          
+
           {demoState.predictions?.churn && (
             <DemoSection>
               <strong>Churn Prevention:</strong>
               <RecommendationList>
-                {demoState.predictions.churn.recommendations?.slice(0, 2).map((rec: any, index: number) => (
-                  <RecommendationItem key={index}>
-                    {rec.description || rec}
-                  </RecommendationItem>
-                ))}
+                {demoState.predictions.churn.recommendations
+                  ?.slice(0, 2)
+                  .map((rec: any, index: number) => (
+                    <RecommendationItem key={index}>{rec.description || rec}</RecommendationItem>
+                  ))}
               </RecommendationList>
             </DemoSection>
           )}
@@ -375,14 +377,16 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         <DemoCard>
           <DemoTitle>🔍 Pattern Recognition</DemoTitle>
           <DemoSection>
-            <div>Skill Transfer Detection: <StatusBadge status="active">Active</StatusBadge></div>
-            <div>Learning Patterns: <StatusBadge status="success">Identified</StatusBadge></div>
-            
-            <ActionButton onClick={runPatternRecognitionDemo}>
-              Analyze Patterns
-            </ActionButton>
+            <div>
+              Skill Transfer Detection: <StatusBadge status="active">Active</StatusBadge>
+            </div>
+            <div>
+              Learning Patterns: <StatusBadge status="success">Identified</StatusBadge>
+            </div>
+
+            <ActionButton onClick={runPatternRecognitionDemo}>Analyze Patterns</ActionButton>
           </DemoSection>
-          
+
           <DemoSection>
             <strong>Detected Patterns:</strong>
             <ul>
@@ -397,21 +401,30 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         <DemoCard>
           <DemoTitle>🎓 AI Learning Coach</DemoTitle>
           <DemoSection>
-            <div>Coaching Mode: <StatusBadge status="active">Adaptive</StatusBadge></div>
-            <div>Intervention Ready: <StatusBadge status={aiLearningState.shouldShowIntervention ? 'success' : 'processing'}>
-              {aiLearningState.shouldShowIntervention ? 'Yes' : 'No'}
-            </StatusBadge></div>
+            <div>
+              Coaching Mode: <StatusBadge status="active">Adaptive</StatusBadge>
+            </div>
+            <div>
+              Intervention Ready:{' '}
+              <StatusBadge
+                status={aiLearningState.shouldShowIntervention ? 'success' : 'processing'}
+              >
+                {aiLearningState.shouldShowIntervention ? 'Yes' : 'No'}
+              </StatusBadge>
+            </div>
           </DemoSection>
-          
+
           {aiLearningState.interventionMessage && (
             <DemoSection>
               <strong>Current Intervention:</strong>
-              <div style={{ 
-                background: 'rgba(34, 197, 94, 0.1)', 
-                padding: '1rem', 
-                borderRadius: '6px',
-                margin: '0.5rem 0'
-              }}>
+              <div
+                style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  padding: '1rem',
+                  borderRadius: '6px',
+                  margin: '0.5rem 0',
+                }}
+              >
                 {aiLearningState.interventionMessage}
               </div>
             </DemoSection>
@@ -420,13 +433,13 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
           <DemoSection>
             <strong>Coach Recommendations:</strong>
             <RecommendationList>
-              <RecommendationItem>Increase difficulty by 10% for optimal challenge</RecommendationItem>
+              <RecommendationItem>
+                Increase difficulty by 10% for optimal challenge
+              </RecommendationItem>
               <RecommendationItem>Focus on verb conjugations next session</RecommendationItem>
               <RecommendationItem>Take a 5-minute break for better retention</RecommendationItem>
             </RecommendationList>
           </DemoSection>
-
-
         </DemoCard>
 
         {/* Technical Implementation */}
@@ -442,11 +455,11 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
               <li>✅ Churn Prevention</li>
             </ul>
           </DemoSection>
-          
+
           <DemoSection>
             <strong>Sample Code:</strong>
             <CodeBlock>
-{`// AI-Enhanced Learning Decision
+              {`// AI-Enhanced Learning Decision
 const decision = await adaptiveLearningEngine
   .selectOptimalQuizMode(userId, languageCode, context);
 
@@ -462,17 +475,31 @@ const patterns = await patternRecognizer
         </DemoCard>
       </DemoGrid>
 
-
-
       <DemoSection>
         <h3>🎯 Next Steps</h3>
-        <p>This advanced AI system is now fully integrated and ready for production use. The system provides:</p>
+        <p>
+          This advanced AI system is now fully integrated and ready for production use. The system
+          provides:
+        </p>
         <ul>
-          <li><strong>Real-time Adaptation:</strong> Dynamic difficulty adjustment and quiz mode selection</li>
-          <li><strong>Predictive Analytics:</strong> Churn prevention and breakthrough timing predictions</li>
-          <li><strong>Pattern Recognition:</strong> Skill transfer detection and learning optimization</li>
-          <li><strong>Learning Profile Storage:</strong> Persistent AI-driven personality and motivation tracking</li>
-          <li><strong>Intelligent Coaching:</strong> Personalized interventions and recommendations</li>
+          <li>
+            <strong>Real-time Adaptation:</strong> Dynamic difficulty adjustment and quiz mode
+            selection
+          </li>
+          <li>
+            <strong>Predictive Analytics:</strong> Churn prevention and breakthrough timing
+            predictions
+          </li>
+          <li>
+            <strong>Pattern Recognition:</strong> Skill transfer detection and learning optimization
+          </li>
+          <li>
+            <strong>Learning Profile Storage:</strong> Persistent AI-driven personality and
+            motivation tracking
+          </li>
+          <li>
+            <strong>Intelligent Coaching:</strong> Personalized interventions and recommendations
+          </li>
         </ul>
       </DemoSection>
     </DemoContainer>

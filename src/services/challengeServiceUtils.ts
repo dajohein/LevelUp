@@ -1,9 +1,9 @@
 /**
  * Challenge Service Utilities - Shared Functions
- * 
+ *
  * Centralized utilities for common challenge service operations to eliminate
  * code duplication and ensure consistent behavior across all challenge modes.
- * 
+ *
  * Features:
  * - Difficulty calculation based on word mastery
  * - Time allocation strategies for different challenge types
@@ -24,10 +24,10 @@ import { calculateMasteryDecay } from './masteryService';
  */
 export function calculateWordDifficulty(word: Word, progress?: WordProgress): number {
   let difficulty = word.level || 3; // Default to medium
-  
+
   if (progress) {
     const mastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
-    
+
     // Adjust based on mastery - using consistent thresholds
     if (mastery > 75) {
       difficulty = Math.max(1, difficulty - 1);
@@ -43,17 +43,17 @@ export function calculateWordDifficulty(word: Word, progress?: WordProgress): nu
  * Calculate error risk based on session progress and context
  */
 export function calculateErrorRisk(
-  currentProgress: number, 
+  currentProgress: number,
   errorCount: number,
   sessionType: 'precision' | 'streak' | 'speed' | 'depth' = 'precision'
 ): number {
   if (currentProgress === 0) return 0.1; // Low initial risk
-  
+
   // Base risk factors
   const fatigueRisk = Math.min(0.3, currentProgress * 0.02); // 2% per word completed
   const pressureRisk = errorCount > 0 ? 0.5 : 0; // Any error creates pressure
   const progressRisk = currentProgress > 10 ? 0.2 : 0; // Higher risk in later stages
-  
+
   // Session-type specific adjustments
   let sessionMultiplier = 1.0;
   switch (sessionType) {
@@ -70,7 +70,7 @@ export function calculateErrorRisk(
       sessionMultiplier = 0.9; // Slightly lower risk for deep learning
       break;
   }
-  
+
   return Math.min(0.8, (fatigueRisk + pressureRisk + progressRisk) * sessionMultiplier);
 }
 
@@ -99,9 +99,9 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 15,
         complexityMultiplier: 1.0,
         wordLengthBonus: 1,
-        difficultyBonus: 2
+        difficultyBonus: 2,
       };
-    
+
     case 'quick-dash':
       return {
         baseTime: 25,
@@ -109,9 +109,9 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 45,
         complexityMultiplier: 1.1,
         wordLengthBonus: 2,
-        difficultyBonus: 3
+        difficultyBonus: 3,
       };
-    
+
     case 'deep-dive':
       return {
         baseTime: 45,
@@ -119,9 +119,9 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 120,
         complexityMultiplier: 1.5,
         wordLengthBonus: 5,
-        difficultyBonus: 10
+        difficultyBonus: 10,
       };
-    
+
     case 'fill-in-blank':
       return {
         baseTime: 30,
@@ -129,9 +129,9 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 90,
         complexityMultiplier: 1.3,
         wordLengthBonus: 3,
-        difficultyBonus: 5
+        difficultyBonus: 5,
       };
-    
+
     case 'streak-challenge':
       return {
         baseTime: 20,
@@ -139,9 +139,9 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 40,
         complexityMultiplier: 1.2,
         wordLengthBonus: 2,
-        difficultyBonus: 4
+        difficultyBonus: 4,
       };
-    
+
     default:
       return {
         baseTime: 30,
@@ -149,7 +149,7 @@ export function getChallengeTimeProfile(challengeType: string): ChallengeTimePro
         maxTime: 60,
         complexityMultiplier: 1.2,
         wordLengthBonus: 3,
-        difficultyBonus: 5
+        difficultyBonus: 5,
       };
   }
 }
@@ -165,7 +165,7 @@ export function calculateTimeAllocation(
 ): number {
   const profile = getChallengeTimeProfile(challengeType);
   let timeAllocation = profile.baseTime;
-  
+
   // Quiz mode adjustments
   if (quizMode) {
     switch (quizMode) {
@@ -192,21 +192,21 @@ export function calculateTimeAllocation(
         break;
     }
   }
-  
+
   // Word complexity adjustments
   if (word.term && word.term.length > 8) {
     timeAllocation += profile.wordLengthBonus;
   }
-  
+
   if (difficulty && difficulty >= 4) {
     timeAllocation += profile.difficultyBonus;
   } else if (word.level && word.level >= 4) {
     timeAllocation += profile.difficultyBonus;
   }
-  
+
   // Complexity multiplier
   timeAllocation *= profile.complexityMultiplier;
-  
+
   return Math.max(profile.minTime, Math.min(profile.maxTime, Math.round(timeAllocation)));
 }
 
@@ -219,10 +219,10 @@ export function calculateAdaptiveTimeAllocation(
   challengeType: string
 ): number {
   if (wordsRemaining <= 0) return timeRemaining;
-  
+
   const profile = getChallengeTimeProfile(challengeType);
   const baseTime = timeRemaining / wordsRemaining;
-  
+
   return Math.max(profile.minTime, Math.min(profile.maxTime, baseTime));
 }
 
@@ -247,14 +247,14 @@ export function adjustStrategyForRisk(
 ): ChallengeStrategy {
   // Get time profile for baseline pacing
   const timeProfile = getChallengeTimeProfile(`${sessionType}-mode`);
-  
+
   let strategy: ChallengeStrategy = {
     pacing: currentStrategy.pacing || timeProfile.baseTime,
     quizMode: currentStrategy.quizMode || 'multiple-choice',
     cognitiveLoadLevel: currentStrategy.cognitiveLoadLevel || 'moderate',
-    difficultyAdjustment: currentStrategy.difficultyAdjustment || 'same'
+    difficultyAdjustment: currentStrategy.difficultyAdjustment || 'same',
   };
-  
+
   // High risk adjustments
   if (errorRisk > 0.5) {
     strategy.pacing = Math.max(strategy.pacing, timeProfile.baseTime * 1.5);
@@ -262,7 +262,7 @@ export function adjustStrategyForRisk(
     strategy.quizMode = 'multiple-choice'; // Easiest mode
     strategy.difficultyAdjustment = 'easier';
   }
-  // Moderate risk adjustments  
+  // Moderate risk adjustments
   else if (errorRisk > 0.3) {
     strategy.pacing = Math.max(strategy.pacing, timeProfile.baseTime * 1.25);
     strategy.cognitiveLoadLevel = 'low';
@@ -275,7 +275,7 @@ export function adjustStrategyForRisk(
       strategy.difficultyAdjustment = 'same'; // Allow normal difficulty
     }
   }
-  
+
   return strategy;
 }
 
@@ -300,7 +300,7 @@ export function generateHints(options: {
   switch (quizMode) {
     case 'multiple-choice':
       hints.push('Read all options carefully before choosing');
-      hints.push('Eliminate options that don\'t make sense');
+      hints.push("Eliminate options that don't make sense");
       break;
     case 'letter-scramble':
       hints.push('Look for familiar letter patterns');
@@ -346,21 +346,21 @@ export function generateSupport(options: {
   const support: string[] = [];
 
   // Base encouragement
-  support.push('You\'re doing great - keep going!');
+  support.push("You're doing great - keep going!");
 
   // Context-specific encouragement
   switch (context) {
     case 'precision':
       support.push('Precision builds mastery - every detail matters');
       if (errorRisk > 0.5) {
-        support.push('Stay calm and confident - you\'ve got this');
+        support.push("Stay calm and confident - you've got this");
       }
       break;
     case 'speed':
       support.push('Quick thinking develops fluency');
       break;
     case 'boss-battle':
-      support.push('Challenge yourself - you\'re stronger than you think');
+      support.push("Challenge yourself - you're stronger than you think");
       break;
     case 'streak':
       support.push('Building momentum with each correct answer');
@@ -371,7 +371,7 @@ export function generateSupport(options: {
 
   // Challenge phase encouragement
   if (challengePhase === 'late') {
-    support.push('Strong finish - you\'re almost there');
+    support.push("Strong finish - you're almost there");
   }
 
   return support;
@@ -386,33 +386,40 @@ export function generateSupport(options: {
  */
 export function getComplexityMultiplier(complexity: 'simple' | 'moderate' | 'complex'): number {
   switch (complexity) {
-    case 'simple': return 1.0;
-    case 'moderate': return 1.3;
-    case 'complex': return 1.6;
-    default: return 1.0;
+    case 'simple':
+      return 1.0;
+    case 'moderate':
+      return 1.3;
+    case 'complex':
+      return 1.6;
+    default:
+      return 1.0;
   }
 }
 
 /**
  * Determine word complexity based on various factors
  */
-export function determineWordComplexity(word: Word, progress?: WordProgress): 'simple' | 'moderate' | 'complex' {
+export function determineWordComplexity(
+  word: Word,
+  progress?: WordProgress
+): 'simple' | 'moderate' | 'complex' {
   let complexityScore = 0;
-  
+
   // Word length factor
   if (word.term.length > 10) {
     complexityScore += 2;
   } else if (word.term.length > 7) {
     complexityScore += 1;
   }
-  
+
   // Difficulty level factor
   if (word.level && word.level >= 4) {
     complexityScore += 2;
   } else if (word.level && word.level >= 3) {
     complexityScore += 1;
   }
-  
+
   // Mastery factor (low mastery = higher complexity for user)
   if (progress) {
     const mastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
@@ -422,7 +429,7 @@ export function determineWordComplexity(word: Word, progress?: WordProgress): 's
       complexityScore += 1;
     }
   }
-  
+
   // Return complexity level
   if (complexityScore >= 4) {
     return 'complex';

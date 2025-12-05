@@ -1,6 +1,6 @@
 /**
  * Challenge Types - Centralized type definitions for challenge sessions
- * 
+ *
  * These types are shared across storage, services, and examples to ensure
  * consistency and prevent type drift between different layers.
  */
@@ -133,4 +133,8 @@ export type QuizMode = 'multiple-choice' | 'letter-scramble' | 'open-answer' | '
 /**
  * AI intervention types for learning support
  */
-export type AIInterventionType = 'quiz-mode-easier' | 'quiz-mode-harder' | 'cognitive-load-support' | 'momentum-boost';
+export type AIInterventionType =
+  | 'quiz-mode-easier'
+  | 'quiz-mode-harder'
+  | 'cognitive-load-support'
+  | 'momentum-boost';

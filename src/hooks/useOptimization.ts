@@ -15,18 +15,21 @@ export const useOptimizedWordProgress = (languageCode: string) => {
   const [error, setError] = useState<string | null>(null);
 
   // Save progress via Redux dispatch (no direct storage calls)
-  const saveProgress = useCallback(async (progress: typeof wordProgress) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // Use proper Redux action creator for full progress replacement
-      dispatch(updateWordProgress(progress));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save progress');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dispatch]);
+  const saveProgress = useCallback(
+    async (progress: typeof wordProgress) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        // Use proper Redux action creator for full progress replacement
+        dispatch(updateWordProgress(progress));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save progress');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [dispatch]
+  );
 
   const loadProgress = useCallback(async () => {
     try {
@@ -47,28 +50,30 @@ export const useOptimizedWordProgress = (languageCode: string) => {
     saveProgress,
     loadProgress,
     isLoading,
-    error
+    error,
   };
 };
 
 /**
  * Custom hook for language-specific progress calculations with memoization
  */
-export const useLanguageProgress = (languageCode: string): LanguageProgress & { isLoading: boolean } => {
+export const useLanguageProgress = (
+  languageCode: string
+): LanguageProgress & { isLoading: boolean } => {
   const [progress, setProgress] = useState<LanguageProgress>({
     totalWords: 0,
     practicedWords: 0,
     averageMastery: 0,
     completedModules: 0,
     totalModules: 0,
-    recentActivity: false
+    recentActivity: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 
   // Memoize the calculation to avoid unnecessary recalculations
   const memoizedProgress = useMemo(() => {
     if (!languageCode) return progress;
-    
+
     try {
       return calculateLanguageProgress(languageCode);
     } catch (error) {
@@ -80,13 +85,13 @@ export const useLanguageProgress = (languageCode: string): LanguageProgress & { 
   useEffect(() => {
     if (languageCode) {
       setIsLoading(true);
-      
+
       // Use requestIdleCallback for better performance if available
       const callback = () => {
         setProgress(memoizedProgress);
         setIsLoading(false);
       };
-      
+
       if (window.requestIdleCallback) {
         const handle = window.requestIdleCallback(callback);
         return () => window.cancelIdleCallback(handle);
@@ -111,9 +116,9 @@ export const useBreakpoints = () => {
     const updateBreakpoint = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       setScreenSize({ width, height });
-      
+
       if (width < 768) {
         setBreakpoint('mobile');
       } else if (width < 1024) {
@@ -125,7 +130,7 @@ export const useBreakpoints = () => {
 
     // Initial calculation
     updateBreakpoint();
-    
+
     // Debounce resize events to improve performance
     let timeoutId: NodeJS.Timeout;
     const debouncedResize = () => {
@@ -134,7 +139,7 @@ export const useBreakpoints = () => {
     };
 
     window.addEventListener('resize', debouncedResize);
-    
+
     return () => {
       window.removeEventListener('resize', debouncedResize);
       clearTimeout(timeoutId);
@@ -146,18 +151,14 @@ export const useBreakpoints = () => {
     screenSize,
     isMobile: breakpoint === 'mobile',
     isTablet: breakpoint === 'tablet',
-    isDesktop: breakpoint === 'desktop'
+    isDesktop: breakpoint === 'desktop',
   };
 };
 
 /**
  * Custom hook for optimized local storage with debouncing and error handling
  */
-export const useDebouncedStorage = <T>(
-  key: string, 
-  defaultValue: T, 
-  delay: number = 1000
-) => {
+export const useDebouncedStorage = <T>(key: string, defaultValue: T, delay: number = 1000) => {
   const [value, setValue] = useState<T>(() => {
     try {
       const item = localStorage.getItem(key);
@@ -195,36 +196,36 @@ export const usePerformanceMonitor = () => {
   const [metrics, setMetrics] = useState({
     renderTime: 0,
     memoryUsage: 0,
-    loadTime: 0
+    loadTime: 0,
   });
 
   useEffect(() => {
     // Monitor render performance
     const startTime = performance.now();
-    
+
     const updateMetrics = () => {
       const renderTime = performance.now() - startTime;
-      
+
       // Get memory usage if available
-      const memoryUsage = (performance as any).memory 
-        ? (performance as any).memory.usedJSHeapSize / 1024 / 1024 
+      const memoryUsage = (performance as any).memory
+        ? (performance as any).memory.usedJSHeapSize / 1024 / 1024
         : 0;
 
       // Get navigation timing if available
-      const loadTime = performance.timing 
+      const loadTime = performance.timing
         ? performance.timing.loadEventEnd - performance.timing.navigationStart
         : 0;
 
       setMetrics({
         renderTime: Math.round(renderTime * 100) / 100,
         memoryUsage: Math.round(memoryUsage * 100) / 100,
-        loadTime
+        loadTime,
       });
     };
 
     // Update metrics after a short delay
     const timer = setTimeout(updateMetrics, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 

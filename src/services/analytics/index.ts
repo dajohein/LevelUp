@@ -1,6 +1,6 @@
 /**
  * Phase 2: Analytics Enhancement - Main Export
- * 
+ *
  * Enhanced analytics system with predictive capabilities
  * Built on Phase 1 enhanced storage foundation
  */
@@ -23,7 +23,7 @@ export const DEFAULT_ANALYTICS_CONFIG = {
   enabled: true,
   realTimeUpdates: true,
   batchSize: 50,
-  flushInterval: 5000,      // 5 seconds
+  flushInterval: 5000, // 5 seconds
   retentionDays: 90,
   anonymizeData: true,
   enablePredictions: true,
@@ -41,13 +41,13 @@ export const DEFAULT_ANALYTICS_CONFIG = {
 
 /**
  * Initialize Enhanced Analytics
- * 
+ *
  * @param storage Enhanced storage service instance
  * @param config Optional configuration overrides
  * @returns Configured analytics service
  */
 export function createAnalyticsService(
-  storage: any, 
+  storage: any,
   config: Partial<typeof DEFAULT_ANALYTICS_CONFIG> = {}
 ) {
   const finalConfig = { ...DEFAULT_ANALYTICS_CONFIG, ...config };
@@ -57,9 +57,9 @@ export function createAnalyticsService(
 
 /**
  * Phase 2 Features Summary:
- * 
+ *
  * ✅ Real-time Analytics Collection
- * ✅ Behavioral Pattern Recognition  
+ * ✅ Behavioral Pattern Recognition
  * ✅ Predictive Learning Analytics
  * ✅ Performance Optimization Recommendations
  * ✅ Intelligent Caching & Storage

@@ -33,7 +33,7 @@ export const MobileButton = styled.button<MobileButtonProps>`
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  
+
   /* Size variants */
   ${props => {
     switch (props.size) {
@@ -125,7 +125,9 @@ export const MobileButton = styled.button<MobileButtonProps>`
   }
 
   /* Loading state */
-  ${props => props.isLoading && `
+  ${props =>
+    props.isLoading &&
+    `
     pointer-events: none;
     
     &::after {
@@ -159,7 +161,9 @@ export const MobileButton = styled.button<MobileButtonProps>`
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.5);
     transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    transition:
+      width 0.6s,
+      height 0.6s;
   }
 
   &:active:not(:disabled)::before {
@@ -201,11 +205,11 @@ export const MobileButton = styled.button<MobileButtonProps>`
   @media (prefers-reduced-motion: reduce) {
     transition: none;
     animation: none;
-    
+
     &:hover {
       transform: none;
     }
-    
+
     &::before {
       display: none;
     }
@@ -214,9 +218,9 @@ export const MobileButton = styled.button<MobileButtonProps>`
 
 export const ButtonGroup = styled.div<{ orientation?: 'horizontal' | 'vertical' }>`
   display: flex;
-  flex-direction: ${props => props.orientation === 'vertical' ? 'column' : 'row'};
+  flex-direction: ${props => (props.orientation === 'vertical' ? 'column' : 'row')};
   gap: ${props => props.theme.spacing.sm};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     flex-direction: column;
     gap: ${props => props.theme.spacing.xs};

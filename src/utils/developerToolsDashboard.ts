@@ -1,6 +1,6 @@
 /**
  * LevelUp Developer Tools Dashboard
- * 
+ *
  * Centralized interface for all development, testing, and debugging utilities.
  * Consolidates scattered window.* functions into a unified, discoverable API.
  */
@@ -10,7 +10,11 @@ import { testSaveOptimization } from './testSaveOptimization';
 import { testAllGameServicesPerformance } from './testAllGameServicesPerformance';
 import { testImmediateImprovements } from './testImmediateImprovements';
 import { testPerformanceFix } from './testPerformanceFix';
-import { enablePerformanceTracking, disablePerformanceTracking, analyzePerformance } from './advancedPerformanceAnalyzer';
+import {
+  enablePerformanceTracking,
+  disablePerformanceTracking,
+  analyzePerformance,
+} from './advancedPerformanceAnalyzer';
 import { getDevCacheStats, clearDevCaches } from './developmentCacheManager';
 import { runWordRepetitionTests } from './testWordRepetitionFix';
 
@@ -74,7 +78,7 @@ class LevelUpDeveloperTools {
         return {
           activeSessions,
           totalWordsTracked,
-          sessionsDetail
+          sessionsDetail,
         };
       },
       testCentralizedSelection: () => {
@@ -82,33 +86,37 @@ class LevelUpDeveloperTools {
         // Create test session
         const sessionId = 'test-centralized-selection';
         wordSelectionManager.createSession(sessionId, 8);
-        
+
         // Test selection
-        const result = wordSelectionManager.selectWord({
-          languageCode: 'es',
-          prioritizeStruggling: true,
-          difficulty: 'adaptive'
-        }, {}, sessionId);
-        
+        const result = wordSelectionManager.selectWord(
+          {
+            languageCode: 'es',
+            prioritizeStruggling: true,
+            difficulty: 'adaptive',
+          },
+          {},
+          sessionId
+        );
+
         console.log('✅ Centralized selection result:', result);
         return result;
       },
       cleanupOldSessions: () => {
         wordSelectionManager.cleanupOldSessions();
         console.log('🗑️ Cleaned up old word selection sessions');
-      }
+      },
     },
 
     // Comprehensive testing
     runAllTests: async () => {
       console.log('🧪 Running comprehensive test suite...');
-      
+
       const results = {
         saveOptimization: await testSaveOptimization(),
         gameServices: await testAllGameServicesPerformance(),
         immediateImprovements: await testImmediateImprovements(),
         performanceFix: await testPerformanceFix(),
-        wordRepetition: runWordRepetitionTests()
+        wordRepetition: runWordRepetitionTests(),
       };
 
       const totalTests = Object.values(results).reduce((sum, result) => {
@@ -117,7 +125,7 @@ class LevelUpDeveloperTools {
         }
         return sum + 1;
       }, 0);
-      
+
       const passedTests = Object.values(results).reduce((sum, result) => {
         if (result && typeof result === 'object') {
           if ('testsPassed' in result) {
@@ -130,14 +138,14 @@ class LevelUpDeveloperTools {
       }, 0);
 
       console.log(`✅ Test Suite Complete: ${passedTests}/${totalTests} passed`);
-      
+
       return {
         success: passedTests === totalTests,
         testsPassed: passedTests,
         testsTotal: totalTests,
-        details: results
+        details: results,
       };
-    }
+    },
   };
 
   /**
@@ -147,16 +155,16 @@ class LevelUpDeveloperTools {
     enable: () => enablePerformanceTracking(),
     disable: () => disablePerformanceTracking(),
     getReport: () => analyzePerformance(),
-    
+
     analyzeMemory: () => {
       try {
         const memory = (performance as any).memory;
         if (memory) {
           return {
             used: (memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
-            allocated: (memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + ' MB', 
+            allocated: (memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
             limit: (memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2) + ' MB',
-            usage: ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(1) + '%'
+            usage: ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(1) + '%',
           };
         }
         return { error: 'Memory API not available' };
@@ -188,8 +196,8 @@ class LevelUpDeveloperTools {
       enable: () => clearDevCaches(),
       disable: () => clearDevCaches(),
       clear: () => clearDevCaches(),
-      stats: () => getDevCacheStats()
-    }
+      stats: () => getDevCacheStats(),
+    },
   };
 
   /**
@@ -197,19 +205,19 @@ class LevelUpDeveloperTools {
    */
   storage = {
     getAnalytics: () => enhancedStorage.getStorageAnalytics(),
-    
+
     exportUserData: async (languageCode?: string) => {
       try {
         const analytics = await enhancedStorage.getStorageAnalytics();
-        const wordProgress = languageCode 
+        const wordProgress = languageCode
           ? await enhancedStorage.loadWordProgress(languageCode)
           : undefined;
-        
+
         return {
           analytics: analytics.data,
           wordProgress,
           timestamp: new Date().toISOString(),
-          version: '1.0.0'
+          version: '1.0.0',
         };
       } catch (error) {
         console.error('Failed to export user data:', error);
@@ -223,7 +231,7 @@ class LevelUpDeveloperTools {
         return {
           healthy: analytics.success && analytics.data.health.score > 50,
           score: analytics.data.health.score,
-          details: analytics.data
+          details: analytics.data,
         };
       } catch (error) {
         return { healthy: false, error: (error as Error).message };
@@ -237,7 +245,7 @@ class LevelUpDeveloperTools {
       }
       console.log('🗑️ Clearing all user data (this would reset progress)');
       // Implementation would go here in production
-    }
+    },
   };
 
   /**
@@ -258,15 +266,15 @@ class LevelUpDeveloperTools {
         const result: ChallengeResult = {
           success: true,
           score: 85,
-          timeMs: 1500
+          timeMs: 1500,
         };
-        
+
         // Update health cache
         this.serviceHealthCache.set(sessionId, {
           isHealthy: true,
           lastCheck: new Date(),
           errorCount: 0,
-          avgResponseTime: result.timeMs
+          avgResponseTime: result.timeMs,
         });
 
         return { success: true, result };
@@ -278,27 +286,27 @@ class LevelUpDeveloperTools {
     benchmarkServices: async () => {
       const services = this.gameServices.listServices();
       const results: Record<string, any> = {};
-      
+
       for (const service of services) {
         try {
           const start = performance.now();
           await this.gameServices.testService(service);
           const end = performance.now();
-          
+
           results[service] = {
             responseTime: Math.round(end - start),
-            status: 'healthy'
+            status: 'healthy',
           };
         } catch (error) {
           results[service] = {
             status: 'error',
-            error: (error as Error).message
+            error: (error as Error).message,
           };
         }
       }
-      
+
       return results;
-    }
+    },
   };
 
   /**
@@ -329,7 +337,7 @@ class LevelUpDeveloperTools {
 
     simulateError: (type: 'storage' | 'network' | 'component' = 'storage') => {
       console.log(`🚨 Simulating ${type} error for testing...`);
-      
+
       switch (type) {
         case 'storage':
           throw new Error('Simulated storage error');
@@ -338,7 +346,7 @@ class LevelUpDeveloperTools {
         case 'component':
           throw new Error('Simulated component error');
       }
-    }
+    },
   };
 
   /**
@@ -347,17 +355,19 @@ class LevelUpDeveloperTools {
   help = {
     list: () => {
       const functions: Record<string, string> = {};
-      
+
       // Collect all available functions
       Object.keys(this.testing).forEach(key => {
         if (key !== 'migration') {
-          functions[`testing.${key}`] = typeof (this.testing as any)[key] === 'function' ? 'function' : 'object';
+          functions[`testing.${key}`] =
+            typeof (this.testing as any)[key] === 'function' ? 'function' : 'object';
         }
       });
 
       Object.keys(this.performance).forEach(key => {
         if (key !== 'cache') {
-          functions[`performance.${key}`] = typeof (this.performance as any)[key] === 'function' ? 'function' : 'object';
+          functions[`performance.${key}`] =
+            typeof (this.performance as any)[key] === 'function' ? 'function' : 'object';
         }
       });
 
@@ -423,10 +433,10 @@ class LevelUpDeveloperTools {
           'Performance monitoring',
           'Storage analytics',
           'Game service debugging',
-          'Error simulation'
-        ]
+          'Error simulation',
+        ],
       };
-    }
+    },
   };
 }
 
@@ -436,14 +446,14 @@ export const levelUpDevTools = new LevelUpDeveloperTools();
 // Set up global access
 if (typeof window !== 'undefined') {
   (window as any).LevelUpDev = levelUpDevTools;
-  
+
   // Backward compatibility - map old functions to new interface
   (window as any).testSaveOptimization = levelUpDevTools.testing.saveOptimization;
   (window as any).testAllGameServicesPerformance = levelUpDevTools.testing.gameServicesPerformance;
   (window as any).testImmediateImprovements = levelUpDevTools.testing.immediateImprovements;
   (window as any).testPerformanceFix = levelUpDevTools.testing.performanceFix;
   (window as any).enablePerformanceDebug = levelUpDevTools.performance.enable;
-  
+
   console.log('🛠️ LevelUp Developer Tools loaded');
   console.log('📖 Use window.LevelUpDev.help.quickStart() for usage guide');
 }

@@ -20,7 +20,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   font-size: 1.2rem;
   padding: ${props => props.theme.spacing.xs};
-  
+
   &:hover {
     opacity: 0.8;
   }

@@ -1,6 +1,6 @@
 /**
  * Storage System Initialization
- * 
+ *
  * Configures and initializes the complete storage system with server-side support
  */
 
@@ -41,10 +41,9 @@ class StorageInitializer {
 
       this.initialized = true;
       logger.info('✅ Storage system initialized successfully');
-
     } catch (error) {
       logger.error('❌ Failed to initialize storage system:', error);
-      
+
       // Fall back to local-only storage
       await this.initializeLocalFallback();
     }
@@ -71,10 +70,9 @@ class StorageInitializer {
       if (!healthResult.success || healthResult.data?.status === 'unhealthy') {
         throw new Error('Remote storage health check failed');
       }
-
     } catch (error) {
       logger.warn('Remote storage initialization failed:', error);
-      
+
       if (environmentConfig.enableLocalFallback) {
         logger.info('📱 Falling back to local storage only');
         this.remoteEnabled = false;
@@ -89,7 +87,7 @@ class StorageInitializer {
    */
   private async initializeLocalFallback(): Promise<void> {
     logger.warn('🔄 Initializing local storage fallback...');
-    
+
     this.initialized = true;
     this.remoteEnabled = false;
     logger.info('✅ Local storage fallback initialized');
@@ -137,7 +135,7 @@ class StorageInitializer {
     return {
       initialized: this.initialized,
       remoteEnabled: this.remoteEnabled,
-      analytics
+      analytics,
     };
   }
 
@@ -163,10 +161,10 @@ class StorageInitializer {
    */
   async shutdown(): Promise<void> {
     logger.info('🔄 Shutting down storage system...');
-    
+
     this.initialized = false;
     this.remoteEnabled = false;
-    
+
     logger.info('✅ Storage system shutdown complete');
   }
 }

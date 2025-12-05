@@ -10,12 +10,12 @@ import { testModuleScopedQuizGeneration } from './testModuleScopedQuiz';
 
 export async function testImmediateImprovements() {
   console.log('🧪 Testing Immediate Improvements...');
-  
+
   const results = {
     indexedDBIntegration: false,
     storageAnalytics: false,
     tieredStorage: false,
-    moduleScopedQuiz: false
+    moduleScopedQuiz: false,
   };
 
   try {
@@ -23,13 +23,13 @@ export async function testImmediateImprovements() {
     console.log('\n1️⃣ Testing IndexedDB Integration...');
     const testData = { test: 'IndexedDB integration', timestamp: Date.now() };
     const setResult = await indexedDBStorage.set('test_key', testData, 'test');
-    
+
     if (setResult.success) {
       const getResult = await indexedDBStorage.get('test_key');
       if (getResult.success && getResult.data) {
         console.log('✅ IndexedDB integration working');
         results.indexedDBIntegration = true;
-        
+
         // Cleanup test data
         await indexedDBStorage.delete('test_key');
       }
@@ -55,13 +55,13 @@ export async function testImmediateImprovements() {
     console.log('\n3️⃣ Testing Tiered Storage...');
     const tierTestData = { tier: 'test', data: 'tiered storage test' };
     const tierSetResult = await tieredStorage.setToTier('tier_test', tierTestData, 'indexedDB');
-    
+
     if (tierSetResult.success) {
       const tierGetResult = await tieredStorage.getFromTier('tier_test', 'indexedDB');
       if (tierGetResult.success) {
         console.log('✅ Tiered storage with IndexedDB working');
         results.tieredStorage = true;
-        
+
         // Cleanup
         await tieredStorage.delete('tier_test');
       }
@@ -79,7 +79,6 @@ export async function testImmediateImprovements() {
     } catch (error) {
       console.log('❌ Module-scoped quiz generation failed:', (error as Error).message);
     }
-
   } catch (error) {
     console.error('❌ Test execution failed:', error);
   }
@@ -88,9 +87,9 @@ export async function testImmediateImprovements() {
   console.log('\n🎯 Test Results Summary:');
   const passedTests = Object.values(results).filter(Boolean).length;
   const totalTests = Object.keys(results).length;
-  
+
   console.log('Passed: ' + passedTests + '/' + totalTests + ' tests');
-  
+
   Object.entries(results).forEach(([test, passed]) => {
     console.log('   ' + (passed ? '✅' : '❌') + ' ' + test);
   });

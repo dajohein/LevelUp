@@ -94,11 +94,13 @@ export const calculateProgressState = (
   userProgress: Record<string, any>,
   currentLanguageCode: string | null
 ) => {
-  const hasProgress = showUserProfile &&
+  const hasProgress =
+    showUserProfile &&
     ((isGlobalView && Object.keys(userProgress).length > 0) ||
       (!isGlobalView && currentLanguageCode && Object.keys(userProgress).length > 0));
 
-  const hasNoProgress = showUserProfile &&
+  const hasNoProgress =
+    showUserProfile &&
     ((isGlobalView && Object.keys(userProgress).length === 0) ||
       (!isGlobalView && (!Object.keys(userProgress).length || !currentLanguageCode)));
 

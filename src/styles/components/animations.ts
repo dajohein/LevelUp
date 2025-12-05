@@ -80,7 +80,7 @@ export const pulseAnimation = css`
 `;
 
 export const shimmerAnimation = css`
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   background-size: 800px 100%;
   animation: ${shimmer} 2s infinite;
 `;

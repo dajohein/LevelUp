@@ -100,9 +100,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('Uncaught error:', error, errorInfo);
-    
+
     this.setState({ errorInfo });
-    
+
     // Track error for analytics if AppError
     if (error instanceof AppError) {
       logger.warn(`${error.severity.toUpperCase()} error: ${error.code}`, error.context);
@@ -124,30 +124,36 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       const isAppError = this.state.error instanceof AppError;
-      const userMessage = isAppError 
-        ? (this.state.error as AppError).userMessage 
+      const userMessage = isAppError
+        ? (this.state.error as AppError).userMessage
         : 'An unexpected error occurred';
-      
+
       return (
         <ErrorContainer>
           <ErrorMessage>Oops! Something went wrong</ErrorMessage>
           <p>{userMessage || 'An unexpected error occurred'}</p>
-          
+
           {this.state.error && (
             <ErrorDetails>
               <ErrorSummary>Technical Details</ErrorSummary>
               <div>
-                <strong>Error:</strong> {this.state.error.message}<br/>
+                <strong>Error:</strong> {this.state.error.message}
+                <br />
                 {isAppError && (
-                  <><strong>Code:</strong> {(this.state.error as AppError).code}<br/></>
+                  <>
+                    <strong>Code:</strong> {(this.state.error as AppError).code}
+                    <br />
+                  </>
                 )}
                 {this.state.errorInfo && (
-                  <><strong>Component Stack:</strong> {this.state.errorInfo.componentStack}</>
+                  <>
+                    <strong>Component Stack:</strong> {this.state.errorInfo.componentStack}
+                  </>
                 )}
               </div>
             </ErrorDetails>
           )}
-          
+
           <ButtonGroup>
             <ReloadButton onClick={this.handleRetry}>Try Again</ReloadButton>
             <SecondaryButton onClick={this.handleGoHome}>Go Home</SecondaryButton>

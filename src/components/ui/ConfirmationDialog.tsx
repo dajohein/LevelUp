@@ -37,7 +37,7 @@ const slideIn = keyframes`
 `;
 
 const Overlay = styled.div<{ isOpen: boolean }>`
-  display: ${(props: { isOpen: boolean }) => props.isOpen ? 'block' : 'none'};
+  display: ${(props: { isOpen: boolean }) => (props.isOpen ? 'block' : 'none')};
   position: fixed;
   top: 0;
   left: 0;
@@ -55,7 +55,9 @@ const Dialog = styled.div`
   transform: translate(-50%, -50%);
   background: white;
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 400px;
   width: 90%;
   animation: ${slideIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -163,7 +165,9 @@ const LoadingSpinner = styled.div`
   animation: spin 1s linear infinite;
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -176,7 +180,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   destructive = false,
-  isLoading = false
+  isLoading = false,
 }) => {
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -198,9 +202,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Header>
           <Title>
             {destructive && (
-              <FaExclamationTriangle 
-                style={{ color: '#dc2626', fontSize: '18px' }} 
-              />
+              <FaExclamationTriangle style={{ color: '#dc2626', fontSize: '18px' }} />
             )}
             {title}
           </Title>
@@ -208,20 +210,16 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             <FaTimes />
           </CloseButton>
         </Header>
-        
+
         <Content>
           <Message>{message}</Message>
         </Content>
-        
+
         <Actions>
-          <Button 
-            variant="secondary" 
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
             {cancelText}
           </Button>
-          <Button 
+          <Button
             variant={destructive ? 'destructive' : 'primary'}
             onClick={handleConfirm}
             disabled={isLoading}

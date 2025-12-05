@@ -1,6 +1,6 @@
 /**
  * Account Linking Component
- * 
+ *
  * Allows users to link devices using account codes for cross-device sync
  */
 
@@ -70,13 +70,13 @@ const Input = styled.input`
   font-family: 'Monaco', 'Menlo', monospace;
   letter-spacing: 3px;
   text-transform: uppercase;
-  
+
   &:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
   }
-  
+
   &::placeholder {
     color: #95a5a6;
     text-transform: none;
@@ -90,7 +90,7 @@ const StatusMessage = styled.div<{ type: 'success' | 'error' | 'info' }>`
   border-radius: 8px;
   margin: 12px 0;
   font-weight: 500;
-  
+
   ${props => {
     switch (props.type) {
       case 'success':
@@ -129,7 +129,10 @@ export const AccountLinking: React.FC = () => {
   const [accountCode, setAccountCode] = useState('');
   const [linkCode, setLinkCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
   const [linkedDevices, setLinkedDevices] = useState(0);
   const [codeExpires, setCodeExpires] = useState<number | null>(null);
 
@@ -165,19 +168,19 @@ export const AccountLinking: React.FC = () => {
   const generateCode = async () => {
     setLoading(true);
     setMessage(null);
-    
+
     try {
       const result = await remoteStorage.generateAccountCode();
       setAccountCode(result.code);
       setCodeExpires(result.expires);
-      setMessage({ 
-        text: 'Secure account code generated! Share this 8-character code with your other device.', 
-        type: 'success' 
+      setMessage({
+        text: 'Secure account code generated! Share this 8-character code with your other device.',
+        type: 'success',
       });
     } catch (error) {
-      setMessage({ 
-        text: 'Failed to generate account code. Please try again.', 
-        type: 'error' 
+      setMessage({
+        text: 'Failed to generate account code. Please try again.',
+        type: 'error',
       });
       logger.error('Failed to generate account code:', error);
     } finally {
@@ -193,19 +196,19 @@ export const AccountLinking: React.FC = () => {
 
     setLoading(true);
     setMessage(null);
-    
+
     try {
       const result = await remoteStorage.linkDeviceWithCode(linkCode.trim());
       setLinkedDevices(result.linkedDevices);
       setLinkCode('');
-      setMessage({ 
-        text: `Success! This device is now linked. Total devices: ${result.linkedDevices}`, 
-        type: 'success' 
+      setMessage({
+        text: `Success! This device is now linked. Total devices: ${result.linkedDevices}`,
+        type: 'success',
       });
     } catch (error) {
-      setMessage({ 
-        text: 'Failed to link device. Check the code and try again.', 
-        type: 'error' 
+      setMessage({
+        text: 'Failed to link device. Check the code and try again.',
+        type: 'error',
       });
       logger.error('Failed to link device:', error);
     } finally {
@@ -217,7 +220,7 @@ export const AccountLinking: React.FC = () => {
     const remaining = Math.max(0, expires - Date.now());
     const minutes = Math.floor(remaining / (60 * 1000));
     const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
-    
+
     if (minutes > 0) {
       return `${minutes}m ${seconds}s`;
     }
@@ -227,20 +230,18 @@ export const AccountLinking: React.FC = () => {
   return (
     <Container>
       <Title>🔗 Link Your Devices</Title>
-      
+
       {linkedDevices > 1 && (
-        <DeviceInfo>
-          ✅ Account linked across {linkedDevices} devices
-        </DeviceInfo>
+        <DeviceInfo>✅ Account linked across {linkedDevices} devices</DeviceInfo>
       )}
 
       <Section>
         <SectionTitle>📱 Share Progress from This Device</SectionTitle>
         <Description>
-          Generate a secure code to link this device's progress with another device.
-          The code is valid for 1 hour and expires automatically.
+          Generate a secure code to link this device's progress with another device. The code is
+          valid for 1 hour and expires automatically.
         </Description>
-        
+
         {accountCode ? (
           <>
             <CodeDisplay>{accountCode}</CodeDisplay>
@@ -251,8 +252,8 @@ export const AccountLinking: React.FC = () => {
             )}
           </>
         ) : (
-          <LoadingButton 
-            onClick={generateCode} 
+          <LoadingButton
+            onClick={generateCode}
             isLoading={loading}
             loadingText="Generating..."
             style={{
@@ -266,7 +267,7 @@ export const AccountLinking: React.FC = () => {
               width: '100%',
               marginTop: '12px',
               background: '#3498db',
-              color: 'white'
+              color: 'white',
             }}
           >
             Generate Account Code
@@ -276,20 +277,18 @@ export const AccountLinking: React.FC = () => {
 
       <Section>
         <SectionTitle>💻 Link to Existing Account</SectionTitle>
-        <Description>
-          Enter an account code from another device to sync your progress.
-        </Description>
-        
+        <Description>Enter an account code from another device to sync your progress.</Description>
+
         <Input
           type="text"
           placeholder="Enter code (e.g., A3B7K9M2)"
           value={linkCode}
-          onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+          onChange={e => setLinkCode(e.target.value.toUpperCase())}
           maxLength={8}
         />
-        
-        <LoadingButton 
-          onClick={linkDevice} 
+
+        <LoadingButton
+          onClick={linkDevice}
           isLoading={loading}
           loadingText="Linking..."
           disabled={!linkCode.trim()}
@@ -304,18 +303,14 @@ export const AccountLinking: React.FC = () => {
             width: '100%',
             marginTop: '12px',
             background: '#ecf0f1',
-            color: '#34495e'
+            color: '#34495e',
           }}
         >
           Link This Device
         </LoadingButton>
       </Section>
 
-      {message && (
-        <StatusMessage type={message.type}>
-          {message.text}
-        </StatusMessage>
-      )}
+      {message && <StatusMessage type={message.type}>{message.text}</StatusMessage>}
     </Container>
   );
 };
