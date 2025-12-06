@@ -104,7 +104,7 @@ export const storageUtils = {
       // Save migration marker
       localStorage.setItem('storage_migration_completed', Date.now().toString());
     } catch (error) {
-      console.error('💥 Migration failed:', error);
+      logger.error('Migration failed', { error });
       throw error;
     }
   },
@@ -219,7 +219,7 @@ export const storageUtils = {
       console.log('📊 Storage breakdown:', breakdown);
       return breakdown;
     } catch (error) {
-      console.error('Failed to get storage breakdown:', error);
+      logger.error('Failed to get storage breakdown', { error });
       return {
         totalSize: 0,
         byLanguage: {},

@@ -7,6 +7,7 @@
 
 import { Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
+import { logger } from './logger';
 
 /**
  * Generate multiple choice options scoped to the same module as the word
@@ -106,7 +107,11 @@ export function generateModuleScopedOptions(
 
   // Final safety check: ensure we have exactly 4 options
   if (options.length !== 4) {
-    console.warn(`⚠️ Expected 4 options but got ${options.length} for word "${word.term}"`);
+    logger.warn('Option generation mismatch', { 
+      expected: 4, 
+      actual: options.length, 
+      word: word.term 
+    });
     // Emergency fallback: pad or trim to exactly 4
     while (options.length < 4) {
       options.push('Option ' + options.length); // Emergency placeholder

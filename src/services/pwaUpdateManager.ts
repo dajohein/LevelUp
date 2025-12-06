@@ -5,6 +5,8 @@
  * Notifies users when new versions are available
  */
 
+import { logger } from './logger';
+
 export interface UpdateInfo {
   version: string;
   cacheIdentifier: string;
@@ -61,11 +63,11 @@ class PWAUpdateManager {
           // Initial update check
           registration.update();
         } catch (error) {
-          console.error('❌ ServiceWorker registration failed:', error);
+          logger.error('ServiceWorker registration failed', { error });
         }
       });
     } else {
-      console.warn('⚠️ Service workers not supported');
+      logger.warn('Service workers not supported');
     }
   }
 
@@ -154,7 +156,7 @@ class PWAUpdateManager {
 
       return false;
     } catch (error) {
-      console.error('❌ Failed to apply update:', error);
+      logger.error('Failed to apply update', { error });
       return false;
     }
   }
@@ -174,7 +176,7 @@ class PWAUpdateManager {
       }
       return false;
     } catch (error) {
-      console.error('❌ Failed to check for updates:', error);
+      logger.error('Failed to check for updates', { error });
       return false;
     }
   }
@@ -196,7 +198,7 @@ class PWAUpdateManager {
         return JSON.parse(pending);
       }
     } catch (error) {
-      console.warn('Failed to parse pending update:', error);
+      logger.warn('Failed to parse pending update', { error });
     }
     return null;
   }
@@ -236,7 +238,7 @@ class PWAUpdateManager {
       }
       return false;
     } catch (error) {
-      console.error('❌ Failed to clear caches:', error);
+      logger.error('Failed to clear caches', { error });
       return false;
     }
   }
@@ -249,7 +251,7 @@ class PWAUpdateManager {
       try {
         callback(updateInfo);
       } catch (error) {
-        console.error('❌ Update callback error:', error);
+        logger.error('Update callback error', { error });
       }
     });
   }

@@ -15,6 +15,7 @@ import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
 import { developmentCacheManager } from './utils/developmentCacheManager';
 import { environmentConfig } from './config/environment';
+import { logger } from './services/logger';
 import './utils/developerToolsDashboard'; // Initialize developer tools globally
 import './index.css';
 
@@ -22,7 +23,7 @@ import './index.css';
 initializeStorage({
   enableRemoteStorage: true,
 }).catch(error => {
-  console.warn('Storage initialization failed, falling back to local storage:', error);
+  logger.warn('Storage initialization failed, falling back to local storage', { error });
 });
 
 // Initialize development cache busting

@@ -1,6 +1,7 @@
 // Utility functions to determine when directional learning features should be shown
 import { getModulesForLanguage } from '../services/moduleService';
 import { DirectionalAnalyticsService } from '../services/dataMigrationService';
+import { logger } from '../services/logger';
 
 /**
  * Check if a language uses directional learning
@@ -25,7 +26,7 @@ export const languageUsesDirectionalLearning = (languageCode: string): boolean =
 
     return false;
   } catch (error) {
-    console.warn(`Error checking directional learning for ${languageCode}:`, error);
+    logger.warn('Error checking directional learning', { languageCode, error });
     return false;
   }
 };
@@ -47,7 +48,7 @@ export const moduleUsesDirectionalLearning = (languageCode: string, moduleId: st
         word.direction === 'term-to-definition' || word.direction === 'definition-to-term'
     );
   } catch (error) {
-    console.warn(`Error checking directional learning for module ${moduleId}:`, error);
+    logger.warn('Error checking directional learning for module', { moduleId, error });
     return false;
   }
 };
@@ -71,7 +72,7 @@ export const userHasMeaningfulDirectionalData = (languageCode: string): boolean 
       languageUsesDirectionalLearning(languageCode)
     );
   } catch (error) {
-    console.warn(`Error checking meaningful directional data for ${languageCode}:`, error);
+    logger.warn('Error checking meaningful directional data', { languageCode, error });
     return false;
   }
 };

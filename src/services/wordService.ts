@@ -1,6 +1,7 @@
 // Import dependencies
 import { getWordsForModule, getAvailableLanguages } from './moduleService';
 import { DataIntegrityError } from '../utils/errorHandling';
+import { logger } from './logger';
 
 // Type definitions
 interface Context {
@@ -59,7 +60,7 @@ const getLanguageData = (languageCode: string): LanguageData | null => {
       languageCode,
       error,
     });
-    console.warn(dataError.userMessage, dataError.context);
+    logger.warn(dataError.userMessage || dataError.message, { context: dataError.context });
     return null;
   }
 };

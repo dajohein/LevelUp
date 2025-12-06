@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '../services/logger';
 
 // PWA installation and service worker management
 export const usePWA = () => {
@@ -64,7 +65,7 @@ export const usePWA = () => {
 
         console.log('Service Worker registered successfully');
       } catch (error) {
-        console.error('Service Worker registration failed:', error);
+        logger.error('Service Worker registration failed', { error });
       }
     }
   };
@@ -171,7 +172,7 @@ export const usePushNotifications = () => {
     const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
 
     if (!vapidKey) {
-      console.warn('VAPID key not configured. Push notifications require a VAPID key.');
+      logger.warn('VAPID key not configured for push notifications');
       // Still allow local notifications without push subscription
       return;
     }
@@ -184,7 +185,7 @@ export const usePushNotifications = () => {
       setSubscription(sub);
       console.log('Push subscription successful');
     } catch (error) {
-      console.error('Push subscription failed:', error);
+      logger.error('Push subscription failed', { error });
       // Gracefully handle the error - PWA still works without push notifications
     }
   };
@@ -207,7 +208,7 @@ export const useBackgroundSync = () => {
         setSyncStatus('syncing');
         console.log(`Background sync registered: ${tag}`);
       } catch (error) {
-        console.error('Background sync registration failed:', error);
+        logger.error('Background sync registration failed', { error, tag });
         setSyncStatus('error');
       }
     }

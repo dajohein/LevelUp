@@ -176,7 +176,7 @@ export const SettingsPage: React.FC = () => {
         window.location.reload();
       }
     } catch (error) {
-      console.error('Failed to apply pending update:', error);
+      logger.error('Failed to apply pending update', { error });
       setIsApplyingUpdate(false);
       // Fallback to manual reload
       window.location.reload();
@@ -190,7 +190,7 @@ export const SettingsPage: React.FC = () => {
       const pending = pwaUpdateManager.getPendingUpdate();
       setPendingUpdate(pending);
     } catch (error) {
-      console.error('Failed to check for updates:', error);
+      logger.error('Failed to check for updates', { error });
     }
   };
 

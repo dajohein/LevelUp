@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { wordProgressStorage } from '../services/storageService';
 import { calculateCurrentLevel, getLevelInfo, calculateLanguageXP } from '../services/levelService';
+import { logger } from '../services/logger';
 
 /**
  * Custom hook for navigation progress and level calculations
@@ -51,7 +52,7 @@ export const useNavigationProgress = (
         levelInfo = getLevelInfo(currentLevel);
       }
     } catch (error) {
-      console.warn('Failed to load user progress data:', error);
+      logger.warn('Failed to load user progress data', { error, currentLanguageCode });
       // Fallback to defaults already set above
     }
 
