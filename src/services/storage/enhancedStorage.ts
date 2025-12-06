@@ -42,6 +42,10 @@ class EnhancedStorageService {
     totalTime: 0,
     compressionSavings: 0,
   };
+  
+  // Analytics caching to prevent redundant heavy computations
+  private analyticsCache: { data: any; timestamp: number } | null = null;
+  private readonly ANALYTICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(config: Partial<EnhancedStorageConfig> = {}) {
     this.config = { ...DEFAULT_ENHANCED_CONFIG, ...config };
@@ -89,6 +93,9 @@ class EnhancedStorageService {
 
       const duration = performance.now() - startTime;
       this.analytics.totalTime += duration;
+
+      // Invalidate analytics cache after write operation
+      this.invalidateAnalyticsCache();
 
       if (this.config.debugMode) {
         logger.debug(
@@ -819,9 +826,20 @@ class EnhancedStorageService {
 
   /**
    * Get comprehensive storage analytics and insights
+   * Results are cached for 5 minutes to prevent redundant heavy computations
    */
   async getStorageAnalytics(): Promise<StorageResult<any>> {
     try {
+      // Check cache first to avoid redundant computation
+      const now = Date.now();
+      if (this.analyticsCache && now - this.analyticsCache.timestamp < this.ANALYTICS_CACHE_TTL) {
+        if (this.config.debugMode) {
+          logger.debug('📊 Returning cached analytics (age: ' + 
+            Math.round((now - this.analyticsCache.timestamp) / 1000) + 's)');
+        }
+        return { success: true, data: this.analyticsCache.data };
+      }
+      
       // Collect comprehensive storage metrics
       const cacheMetrics = {
         hitRate: 0,
@@ -894,6 +912,12 @@ class EnhancedStorageService {
         operations: analytics.internal.operations,
         healthScore: analytics.health.score,
       });
+
+      // Cache the computed analytics
+      this.analyticsCache = {
+        data: analytics,
+        timestamp: Date.now(),
+      };
 
       return { success: true, data: analytics };
     } catch (error) {
@@ -1066,11 +1090,23 @@ class EnhancedStorageService {
   }
 
   /**
+   * Invalidate analytics cache to force fresh computation
+   * Called automatically after significant storage operations
+   */
+  invalidateAnalyticsCache(): void {
+    this.analyticsCache = null;
+    if (this.config.debugMode) {
+      logger.debug('🗑️ Analytics cache invalidated');
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {
     asyncStorage.destroy();
     smartCache.destroy();
+    this.analyticsCache = null;
   }
 }
 

@@ -140,5 +140,54 @@ describe('enhancedStorage', () => {
       expect(analytics.data.health.score).toBeGreaterThanOrEqual(0);
       expect(analytics.data.health.score).toBeLessThanOrEqual(100);
     });
+
+    it('should cache analytics results for performance', async () => {
+      // First call computes analytics
+      const start1 = performance.now();
+      const result1 = await enhancedStorage.getStorageAnalytics();
+      const duration1 = performance.now() - start1;
+
+      // Second call should use cache and be faster
+      const start2 = performance.now();
+      const result2 = await enhancedStorage.getStorageAnalytics();
+      const duration2 = performance.now() - start2;
+
+      // Both should succeed
+      expect(result1.success).toBe(true);
+      expect(result2.success).toBe(true);
+
+      // Results should be identical (cached)
+      expect(result1.data.lastAnalyzed).toBe(result2.data.lastAnalyzed);
+
+      // Second call should be significantly faster (cached)
+      expect(duration2).toBeLessThan(duration1 * 0.5);
+    });
+
+    it('should invalidate cache after write operations', async () => {
+      // Get initial analytics
+      const analytics1 = await enhancedStorage.getStorageAnalytics();
+      const timestamp1 = analytics1.data.lastAnalyzed;
+
+      // Wait a bit to ensure timestamp would differ
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Perform write operation (should invalidate cache)
+      await enhancedStorage.saveWordProgress('de', {
+        'test:1': {
+          wordId: 'test:1',
+          xp: 5,
+          lastPracticed: new Date().toISOString(),
+          timesCorrect: 1,
+          timesIncorrect: 0
+        }
+      });
+
+      // Get analytics again (should be fresh, not cached)
+      const analytics2 = await enhancedStorage.getStorageAnalytics();
+      const timestamp2 = analytics2.data.lastAnalyzed;
+
+      // Timestamps should differ (new computation after cache invalidation)
+      expect(timestamp2).toBeGreaterThan(timestamp1);
+    });
   });
 });
