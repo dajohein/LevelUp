@@ -29,6 +29,11 @@ class PerformanceAnalyzer {
   private observers: Map<string, PerformanceObserver> = new Map();
   private storageOperationCount = 0;
   private startTime = performance.now();
+  
+  // Store original functions for restoration
+  private originalSetItem: typeof localStorage.setItem | null = null;
+  private originalGetItem: typeof localStorage.getItem | null = null;
+  private isStorageIntercepted = false;
 
   constructor() {
     // Only initialize observers and interception if explicitly enabled
@@ -76,10 +81,14 @@ class PerformanceAnalyzer {
   }
 
   private interceptStorageOperations() {
-    // Monitor localStorage operations
-    const originalSetItem = localStorage.setItem;
-    const originalGetItem = localStorage.getItem;
+    // Store originals only if not already intercepted
+    if (this.isStorageIntercepted) return;
+    
+    this.originalSetItem = localStorage.setItem;
+    this.originalGetItem = localStorage.getItem;
+    this.isStorageIntercepted = true;
 
+    // Monitor localStorage operations
     localStorage.setItem = (key: string, value: string) => {
       this.storageOperationCount++;
       this.metrics.storageOperations++;
@@ -95,12 +104,12 @@ class PerformanceAnalyzer {
         }
       }
 
-      return originalSetItem.call(localStorage, key, value);
+      return this.originalSetItem!.call(localStorage, key, value);
     };
 
     localStorage.getItem = (key: string) => {
       this.metrics.storageOperations++;
-      return originalGetItem.call(localStorage, key);
+      return this.originalGetItem!.call(localStorage, key);
     };
   }
 
@@ -219,11 +228,23 @@ class PerformanceAnalyzer {
   }
 
   /**
-   * Cleanup observers
+   * Cleanup observers and restore intercepted functions
    */
   cleanup() {
+    // Disconnect all performance observers
     this.observers.forEach(observer => observer.disconnect());
     this.observers.clear();
+    
+    // Restore original localStorage functions if they were intercepted
+    if (this.isStorageIntercepted && this.originalSetItem && this.originalGetItem) {
+      localStorage.setItem = this.originalSetItem;
+      localStorage.getItem = this.originalGetItem;
+      this.isStorageIntercepted = false;
+      this.originalSetItem = null;
+      this.originalGetItem = null;
+    }
+    
+    logger.debug('Performance analyzer cleaned up - observers disconnected and storage restored');
   }
 }
 
@@ -287,4 +308,18 @@ window.addEventListener('beforeunload', () => {
   performanceAnalyzer.cleanup();
 });
 
+// Cleanup on page hide (better for back/forward cache)
+window.addEventListener('pagehide', () => {
+  performanceAnalyzer.cleanup();
+});
+
+// Optional: Cleanup when tab becomes hidden (for long-running sessions)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !window.__ENABLE_PERFORMANCE_TRACKING__) {
+    // Clean up if tracking is disabled and tab is hidden
+    performanceAnalyzer.cleanup();
+  }
+});
+
 export default performanceAnalyzer;
+

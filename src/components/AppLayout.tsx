@@ -5,6 +5,7 @@ import { MobileBottomNavigation } from './mobile/MobileBottomNavigation';
 import { StorageDebug } from './debug/StorageDebug';
 import { PWAUpdateNotification } from './PWAUpdateNotification';
 import { useViewport } from '../hooks/useViewport';
+import { usePerformanceAnalyzer } from '../hooks/usePerformanceAnalyzer';
 
 const LayoutContainer = styled.div`
   min-height: 100vh;
@@ -35,6 +36,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, showBottomNav = 
   const { isMobile } = useViewport();
   const shouldShowBottomNav = showBottomNav && isMobile;
   const [showStorageDebug, setShowStorageDebug] = useState(false);
+  
+  // Ensure performance analyzer cleanup on unmount
+  usePerformanceAnalyzer();
 
   // Toggle storage debug with Ctrl+Shift+S
   useEffect(() => {
