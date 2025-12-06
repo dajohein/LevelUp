@@ -3,7 +3,6 @@ import gameReducer from '../../store/gameSlice';
 import sessionReducer from '../../store/sessionSlice';
 import achievementsReducer from '../../store/achievementsSlice';
 import { WordProgress } from '../../store/types';
-import type { StoreState } from '../../store/store';
 
 // Mock localStorage
 const localStorageMock = (() => {

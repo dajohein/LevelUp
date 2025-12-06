@@ -1,5 +1,3 @@
-import { configureStore } from '@reduxjs/toolkit';
-import gameReducer from '../../store/gameSlice';
 import { WordProgress } from '../../store/types';
 
 // Mock localStorage
@@ -25,14 +23,7 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('Analytics and Reporting', () => {
-  let store: ReturnType<typeof configureStore>;
-
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        game: gameReducer,
-      },
-    });
     localStorage.clear();
   });
 

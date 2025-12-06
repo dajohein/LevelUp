@@ -17,16 +17,52 @@ export class DataMigrationService {
    * Preserves all original data while adding directional tracking capabilities
    */
   static migrateLegacyWordProgress(legacy: LegacyWordProgress): WordProgress {
+    // Handle null/undefined input gracefully
+    if (!legacy || typeof legacy !== 'object') {
+      logger.warn('Invalid legacy progress data, creating default progress');
+      const now = new Date().toISOString();
+      return {
+        wordId: '',
+        xp: 0,
+        lastPracticed: now,
+        timesCorrect: 0,
+        timesIncorrect: 0,
+        totalXp: 0,
+        firstLearned: now,
+        version: 2,
+        directions: {
+          'term-to-definition': {
+            timesCorrect: 0,
+            timesIncorrect: 0,
+            xp: 0,
+            lastPracticed: now,
+            consecutiveCorrect: 0,
+            longestStreak: 0,
+          },
+          'definition-to-term': {
+            timesCorrect: 0,
+            timesIncorrect: 0,
+            xp: 0,
+            lastPracticed: now,
+            consecutiveCorrect: 0,
+            longestStreak: 0,
+          },
+        },
+        learningPhase: 'introduction',
+        tags: [],
+      };
+    }
+
     const enhanced: WordProgress = {
-      wordId: legacy.wordId,
-      xp: legacy.xp,
-      lastPracticed: legacy.lastPracticed,
-      timesCorrect: legacy.timesCorrect,
-      timesIncorrect: legacy.timesIncorrect,
+      wordId: legacy.wordId || '',
+      xp: legacy.xp || 0,
+      lastPracticed: legacy.lastPracticed || new Date().toISOString(),
+      timesCorrect: legacy.timesCorrect || 0,
+      timesIncorrect: legacy.timesIncorrect || 0,
 
       // Enhanced tracking fields
       totalXp: legacy.xp,
-      firstLearned: legacy.lastPracticed,
+      firstLearned: legacy.lastPracticed || new Date().toISOString(),
       version: 2,
 
       // Split existing progress between directions
@@ -489,3 +525,4 @@ export class DirectionalAnalyticsService {
     };
   }
 }
+

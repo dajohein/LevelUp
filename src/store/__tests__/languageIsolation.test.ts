@@ -337,16 +337,6 @@ describe('Language Data Isolation', () => {
 
   describe('Language Switch Safety', () => {
     it('should not carry over progress from previous language', () => {
-      const germanProgress: Record<string, WordProgress> = {
-        'de:word1': {
-          wordId: 'de:word1',
-          xp: 100,
-          lastPracticed: new Date().toISOString(),
-          timesCorrect: 20,
-          timesIncorrect: 2,
-        },
-      };
-
       const spanishProgress: Record<string, WordProgress> = {
         'es:word1': {
           wordId: 'es:word1',

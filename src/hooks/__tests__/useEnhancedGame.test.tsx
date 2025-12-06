@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useEnhancedGame } from '../useEnhancedGame';
@@ -46,26 +46,38 @@ const createTestStore = () => {
     },
     preloadedState: {
       game: {
-        language: 'de',
-        direction: 'de-to-en',
-        wordProgress: {},
         currentWord: null,
-        gameMode: 'regular',
-        isLoading: false,
-        streakCount: 0,
-        totalCorrect: 0,
-        totalIncorrect: 0,
+        currentOptions: [],
+        quizMode: 'multiple-choice',
+        score: 0,
+        isCorrect: null,
+        lives: 3,
+        language: 'de',
+        module: null,
+        streak: 0,
+        bestStreak: 0,
+        totalAttempts: 0,
+        correctAnswers: 0,
+        wordProgress: {},
       },
       session: {
+        currentLanguage: 'de',
         currentSession: null,
-        sessionHistory: [],
         progress: {
           wordsCompleted: 0,
           correctAnswers: 0,
           incorrectAnswers: 0,
           currentStreak: 0,
+          longestStreak: 0,
+          timeElapsed: 0,
+          hintsUsed: 0,
+          score: 0,
+          bonusPoints: 0,
         },
-        isLoading: false,
+        isSessionActive: false,
+        sessionStartTime: 0,
+        completedSessionsByLanguage: {},
+        weeklyChallengeBylanguage: {},
       },
     },
   });

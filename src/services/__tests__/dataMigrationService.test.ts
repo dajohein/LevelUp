@@ -217,23 +217,20 @@ describe('Data Migration Service', () => {
 
   describe('Error Handling', () => {
     it('should handle null input gracefully', () => {
-      expect(() => {
-        DataMigrationService.migrateLegacyWordProgress(null as any);
-      }).not.toThrow();
+      const result = DataMigrationService.migrateLegacyWordProgress(null as any);
+      expect(result).toBeDefined();
     });
 
     it('should handle undefined input gracefully', () => {
-      expect(() => {
-        DataMigrationService.migrateLegacyWordProgress(undefined as any);
-      }).not.toThrow();
+      const result = DataMigrationService.migrateLegacyWordProgress(undefined as any);
+      expect(result).toBeDefined();
     });
 
     it('should handle empty object input', () => {
       const empty: any = {};
       
-      expect(() => {
-        DataMigrationService.migrateLegacyWordProgress(empty);
-      }).not.toThrow();
+      const result = DataMigrationService.migrateLegacyWordProgress(empty);
+      expect(result).toBeDefined();
     });
   });
 });
