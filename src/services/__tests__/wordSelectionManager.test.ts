@@ -1,4 +1,4 @@
-import { WordSelectionManager } from '../wordSelectionManager';
+import { wordSelectionManager } from '../wordSelectionManager';
 
 // Mock dependencies to provide simple test data
 jest.mock('../wordService', () => ({
@@ -25,19 +25,13 @@ jest.mock('../masteryService', () => ({
   }),
 }));
 
-describe('WordSelectionManager', () => {
-  let manager: WordSelectionManager;
-
-  beforeEach(() => {
-    manager = WordSelectionManager.getInstance();
-  });
+describe('wordSelectionManager', () => {
+  const manager = wordSelectionManager;
 
   describe('Singleton Pattern', () => {
-    it('should return the same instance', () => {
-      const instance1 = WordSelectionManager.getInstance();
-      const instance2 = WordSelectionManager.getInstance();
-
-      expect(instance1).toBe(instance2);
+    it('should be a singleton instance', () => {
+      expect(manager).toBeDefined();
+      expect(typeof manager.createSession).toBe('function');
     });
   });
 

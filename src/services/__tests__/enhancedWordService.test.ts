@@ -173,10 +173,9 @@ describe('enhancedWordService', () => {
     });
 
     it('should refresh word groups', () => {
-      const result = enhancedWordService.refreshWordGroups('de', {});
-
-      // Should complete without error
-      expect(result).toBeDefined();
+      expect(() => {
+        enhancedWordService.refreshWordGroups('de', {});
+      }).not.toThrow();
     });
   });
 
