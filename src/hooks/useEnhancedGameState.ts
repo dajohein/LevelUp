@@ -22,6 +22,7 @@ import { useAudio } from '../features/audio/AudioContext';
 import { words } from '../services/wordService';
 import { gameServices } from '../services/game';
 import { challengeServiceManager } from '../services/challengeServiceManager';
+import { logger } from '../services/logger';
 
 export interface GameState {
   inputValue: string;
@@ -397,7 +398,7 @@ export const useEnhancedGameState = ({
           }
         }
       } catch (error) {
-        console.error(`Failed to get next word from ${currentSession?.id} service:`, error);
+        logger.error(`Failed to get next word from ${currentSession?.id} service:`, { sessionId: currentSession?.id, error });
         dispatch(nextWord());
       }
     },
@@ -526,7 +527,7 @@ export const useEnhancedGameState = ({
             }
           })
           .catch(error => {
-            console.error(`Failed to initialize session:`, error);
+            logger.error('Failed to initialize session', { error });
             dispatch(nextWord());
           });
       }

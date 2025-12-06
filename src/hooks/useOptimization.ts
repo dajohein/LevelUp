@@ -4,6 +4,7 @@ import { RootState } from '../store/store';
 import { updateWordProgress } from '../store/gameSlice';
 import { wordProgressStorage } from '../services/storageService';
 import { calculateLanguageProgress, LanguageProgress } from '../services/progressService';
+import { logger } from '../services/logger';
 
 /**
  * Custom hook for managing word progress with automatic persistence and optimized updates
@@ -77,7 +78,7 @@ export const useLanguageProgress = (
     try {
       return calculateLanguageProgress(languageCode);
     } catch (error) {
-      console.warn('Failed to calculate language progress:', error);
+      logger.warn('Failed to calculate language progress', { languageCode, error });
       return progress;
     }
   }, [languageCode, progress]);
@@ -164,7 +165,7 @@ export const useDebouncedStorage = <T>(key: string, defaultValue: T, delay = 100
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.warn(`Failed to load ${key} from localStorage:`, error);
+      logger.warn(`Failed to load ${key} from localStorage`, { key, error });
       return defaultValue;
     }
   });
@@ -182,7 +183,7 @@ export const useDebouncedStorage = <T>(key: string, defaultValue: T, delay = 100
     try {
       localStorage.setItem(key, JSON.stringify(debouncedValue));
     } catch (error) {
-      console.error(`Failed to save ${key} to localStorage:`, error);
+      logger.error(`Failed to save ${key} to localStorage`, { key, error });
     }
   }, [key, debouncedValue]);
 
@@ -261,7 +262,7 @@ export const useImagePreloader = (imageUrls: string[]) => {
       try {
         await Promise.all(imageUrls.map(preloadImage));
       } catch (error) {
-        console.warn('Some images failed to preload:', error);
+        logger.warn('Some images failed to preload', { imageCount: imageUrls.length, error });
       } finally {
         setLoading(false);
       }

@@ -7,6 +7,7 @@ import {
 } from '../../store/sessionSlice';
 import { setCurrentWord, nextWord } from '../../store/gameSlice';
 import { challengeServiceManager } from '../challengeServiceManager';
+import { logger } from '../logger';
 
 export interface SessionContext {
   languageCode: string;
@@ -191,7 +192,7 @@ export class GameSessionManager {
         this.dispatch(nextWord());
       }
     } catch (error) {
-      console.error(`Failed to get next word from ${currentSession?.id} service:`, error);
+      logger.error(`Failed to get next word from ${currentSession?.id} service:`, { sessionId: currentSession?.id, error });
       // Fallback only if we're still in the same session
       this.dispatch(nextWord());
     }
@@ -251,7 +252,7 @@ export class GameSessionManager {
 
       return false;
     } catch (error) {
-      console.error(`Failed to initialize ${currentSession?.id} service:`, error);
+      logger.error(`Failed to initialize ${currentSession?.id} service:`, { sessionId: currentSession?.id, error });
       return false;
     }
   }

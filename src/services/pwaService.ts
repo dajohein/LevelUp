@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 // PWA Registration and Service Worker Management
 export const registerPWA = async (): Promise<ServiceWorkerRegistration | null> => {
   if ('serviceWorker' in navigator) {
@@ -6,7 +8,7 @@ export const registerPWA = async (): Promise<ServiceWorkerRegistration | null> =
         scope: '/',
       });
 
-      console.log('ServiceWorker registration successful:', registration.scope);
+      logger.info('ServiceWorker registration successful', { scope: registration.scope });
 
       // Listen for updates
       registration.addEventListener('updatefound', () => {
@@ -28,7 +30,7 @@ export const registerPWA = async (): Promise<ServiceWorkerRegistration | null> =
 
       return registration;
     } catch (error) {
-      console.error('ServiceWorker registration failed:', error);
+      logger.error('ServiceWorker registration failed', { error });
       return null;
     }
   }

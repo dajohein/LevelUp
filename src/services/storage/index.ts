@@ -9,6 +9,8 @@
  * - Async operations with batching
  */
 
+import { logger } from '../logger';
+
 // Main storage service (recommended for most use cases)
 export { enhancedStorage, EnhancedStorageService } from './enhancedStorage';
 
@@ -92,7 +94,7 @@ export const storageUtils = {
               localStorage.removeItem(oldKey);
             }
           } catch (error) {
-            console.error(`❌ Failed to migrate ${oldKey}:`, error);
+            logger.error(`Failed to migrate ${oldKey}`, { key: oldKey, error });
           }
         }
       }
