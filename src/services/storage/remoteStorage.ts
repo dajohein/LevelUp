@@ -40,7 +40,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
   private config: RemoteStorageConfig;
   private userSession: RemoteUserSession | null = null;
   private isOnline = navigator.onLine;
-  private currentLanguage: string = 'en'; // Default language
+  private currentLanguage = 'en'; // Default language
 
   constructor(config: Partial<RemoteStorageConfig> = {}) {
     this.config = { ...DEFAULT_REMOTE_CONFIG, ...config };

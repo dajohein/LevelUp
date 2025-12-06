@@ -300,7 +300,7 @@ export class PredictiveAnalytics implements IPredictiveAnalytics {
     const regularization = 0.001;
     const epochs = 1000;
 
-    let weights = [...initialWeights];
+    const weights = [...initialWeights];
     let bias = 0;
 
     for (let epoch = 0; epoch < epochs; epoch++) {

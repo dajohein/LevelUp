@@ -35,7 +35,7 @@ export class EnhancedAnalyticsService {
   private realTimeMetrics: RealTimeMetrics | null = null;
   private currentPatterns: LearningPattern[] = [];
   private updateInterval?: NodeJS.Timeout;
-  private currentSessionId: string = `session_${Date.now()}`;
+  private currentSessionId = `session_${Date.now()}`;
 
   constructor(
     private storage: EnhancedStorageService,

@@ -72,7 +72,7 @@ class LearningCacheService {
   private wordGroupsCache: CachedWordGroups = {};
   private sessionHistory: SessionRecord[] = [];
   private analytics: LearningAnalytics = {};
-  private lastAnalyticsReload: number = 0;
+  private lastAnalyticsReload = 0;
   private readonly ANALYTICS_CACHE_DURATION = 30000; // 30 seconds
 
   constructor() {
@@ -128,7 +128,7 @@ class LearningCacheService {
     languageCode: string,
     words: Word[],
     wordProgress: { [key: string]: WordProgress },
-    forceRefresh: boolean = false
+    forceRefresh = false
   ): WordGroup[] {
     const cached = this.wordGroupsCache[languageCode];
     const now = new Date();
@@ -250,7 +250,7 @@ class LearningCacheService {
     languageCode: string,
     words: Word[],
     wordProgress: { [key: string]: WordProgress },
-    maxReviewWords: number = 3
+    maxReviewWords = 3
   ): LearningSession | null {
     const targetGroup = this.getNextLearningGroup(languageCode, words, wordProgress);
     if (!targetGroup) {
@@ -437,7 +437,7 @@ class LearningCacheService {
   /**
    * Get session history for a language
    */
-  getSessionHistory(languageCode: string, limit: number = 10): SessionRecord[] {
+  getSessionHistory(languageCode: string, limit = 10): SessionRecord[] {
     return this.sessionHistory
       .filter(session => session.languageCode === languageCode)
       .slice(0, limit);

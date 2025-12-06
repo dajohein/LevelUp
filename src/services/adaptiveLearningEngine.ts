@@ -163,7 +163,7 @@ export async function adjustSessionDifficulty(
 
     let difficultyAdjustment: 'increase' | 'decrease' | 'maintain' = 'maintain';
     let recommendedWordCount = currentWords.length;
-    let reasoning: string[] = [];
+    const reasoning: string[] = [];
 
     // AI-driven difficulty adjustment
     if (cognitiveLoad.level === 'overload') {

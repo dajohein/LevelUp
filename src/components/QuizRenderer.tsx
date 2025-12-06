@@ -332,7 +332,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
   const wordToUse = enhancedWordInfo?.word || currentWord;
   let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
-  let optionsToUse = enhancedWordInfo?.options || currentOptions || [];
+  const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
 
   // Session-specific quiz mode overrides
   if (currentSession?.id === 'fill-in-the-blank') {

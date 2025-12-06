@@ -429,7 +429,7 @@ export class TieredStorageService implements TieredStorageProvider {
     return { success: true };
   }
 
-  async evictFromTier(_tier: StorageTier, _count: number = 10): Promise<StorageResult<string[]>> {
+  async evictFromTier(_tier: StorageTier, _count = 10): Promise<StorageResult<string[]>> {
     // Implementation depends on tier-specific eviction logic
     return { success: true, data: [] };
   }

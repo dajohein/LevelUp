@@ -21,10 +21,10 @@ interface PendingChange {
 class BackgroundAutoSave {
   private config: AutoSaveConfig;
   private pendingChanges: Map<string, PendingChange> = new Map();
-  private lastActionTime: number = 0;
+  private lastActionTime = 0;
   private autoSaveTimer: NodeJS.Timeout | null = null;
   private idleTimer: NodeJS.Timeout | null = null;
-  private isProcessing: boolean = false;
+  private isProcessing = false;
   private enhancedStorage: any;
   private logger: any;
 

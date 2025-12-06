@@ -194,8 +194,8 @@ export const useAILearning = (
   const recordAnswer = useCallback(
     async (
       isCorrect: boolean,
-      timeSpent: number = 0,
-      hintsUsed: number = 0
+      timeSpent = 0,
+      hintsUsed = 0
     ): Promise<{
       isComplete: boolean;
       shouldShowIntervention: boolean;

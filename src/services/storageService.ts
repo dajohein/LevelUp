@@ -102,8 +102,8 @@ const isLocalStorageAvailable = (): boolean => {
 };
 
 // Word Progress Storage with duplicate save prevention
-let lastSaveData: { [key: string]: any } = {};
-let lastSaveTime: { [key: string]: number } = {};
+const lastSaveData: { [key: string]: any } = {};
+const lastSaveTime: { [key: string]: number } = {};
 const SAVE_DEBOUNCE_MS = 100; // Prevent saves within 100ms of same data
 
 export const wordProgressStorage = {

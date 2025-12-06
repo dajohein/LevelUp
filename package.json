@@ -14,6 +14,8 @@
     "build:production": "./scripts/build-with-versioning.sh",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 50",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "health:storage": "curl -s http://localhost:5173/api/health || echo 'Development environment not running. Start with: npm run dev:start'",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
@@ -46,11 +48,13 @@
     "cors": "^2.8.5",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.1",
     "express": "^5.2.1",
     "prettier": "^3.7.4",
     "typescript": "^5.0.4",
-    "vite": "^7.2.6"
+    "vite": "^7.2.6",
+    "vite-plugin-remove-console": "^2.2.0"
   }
 }

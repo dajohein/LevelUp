@@ -25,7 +25,7 @@ export function createLazyComponent<T = any>(
 export function useDebouncedEffect(
   effect: () => void,
   deps: React.DependencyList,
-  delay: number = 300
+  delay = 300
 ) {
   React.useEffect(() => {
     const timer = setTimeout(effect, delay);

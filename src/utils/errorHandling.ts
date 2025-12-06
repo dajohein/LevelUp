@@ -100,8 +100,8 @@ export const useErrorBoundary = () => {
 // Retry utility for failed operations
 export const withRetry = async <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
+  maxRetries = 3,
+  delay = 1000
 ): Promise<T> => {
   let lastError: Error;
 

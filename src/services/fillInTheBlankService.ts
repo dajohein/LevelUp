@@ -89,7 +89,7 @@ export class FillInTheBlankService {
    */
   async initializeFillInTheBlank(
     languageCode: string,
-    targetWords: number = 20,
+    targetWords = 20,
     initialComplexity: 'simple' | 'moderate' | 'complex' = 'simple',
     moduleId?: string // Module for scoped challenges
   ): Promise<{
@@ -146,7 +146,7 @@ export class FillInTheBlankService {
     wordProgress: { [key: string]: WordProgress },
     currentProgress: number,
     targetWords: number,
-    aiEnhancementsEnabled: boolean = true
+    aiEnhancementsEnabled = true
   ): Promise<FillInTheBlankResult> {
     if (!this.state.isActive) {
       throw new Error('Fill in the Blank session not initialized');
@@ -349,9 +349,9 @@ export class FillInTheBlankService {
     // timeSpent: number, // Removed unused parameter
     sentenceComplexity: 'simple' | 'moderate' | 'complex',
     contextualAccuracy: number,
-    wasAIEnhanced: boolean = false,
-    contextUtilization: number = 0.8,
-    contextualClueUsage: number = 0.5
+    wasAIEnhanced = false,
+    contextUtilization = 0.8,
+    contextualClueUsage = 0.5
   ): Promise<void> {
     try {
       const sessionData: FillInTheBlankSessionData = {

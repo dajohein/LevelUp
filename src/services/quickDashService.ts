@@ -48,8 +48,8 @@ class QuickDashService {
   async initializeQuickDash(
     languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
-    targetWords: number = 8,
-    timeLimit: number = 300, // 5 minutes
+    targetWords = 8,
+    timeLimit = 300, // 5 minutes
     _allWords?: Word[], // Unused - centralized word selection handles this
     moduleId?: string // Module for scoped challenges
   ): Promise<void> {

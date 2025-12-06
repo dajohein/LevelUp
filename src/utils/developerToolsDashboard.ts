@@ -238,7 +238,7 @@ class LevelUpDeveloperTools {
       }
     },
 
-    clearAllData: (confirm: boolean = false) => {
+    clearAllData: (confirm = false) => {
       if (!confirm) {
         console.warn('⚠️ Use clearAllData(true) to confirm data deletion');
         return;

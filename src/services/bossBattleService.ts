@@ -43,7 +43,7 @@ class BossBattleService {
   initializeBossBattle(
     languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
-    targetWords: number = 25,
+    targetWords = 25,
     _allWords?: Word[], // Unused - centralized word selection handles this
     moduleId?: string // Module for scoped challenges
   ): void {
@@ -379,7 +379,7 @@ class BossBattleService {
     timeSpent: number,
     bossPhase: string,
     difficultyLevel: number,
-    wasAIEnhanced: boolean = false
+    wasAIEnhanced = false
   ): Promise<void> {
     if (!this.state) {
       throw new Error('Boss battle session not initialized');

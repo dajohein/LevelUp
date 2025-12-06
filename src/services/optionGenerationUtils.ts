@@ -135,7 +135,7 @@ export function generateModuleScopedOptions(
 export function generateScrambledVersions(
   word: string,
   difficulty: 'easy' | 'medium' | 'hard' | 'boss' = 'medium',
-  count: number = 3
+  count = 3
 ): string[] {
   const scrambled: string[] = [];
 

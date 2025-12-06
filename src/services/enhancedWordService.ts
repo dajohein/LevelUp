@@ -161,7 +161,7 @@ class EnhancedWordService {
    */
   recordAnswer(
     isCorrect: boolean,
-    timeSpent: number = 0
+    timeSpent = 0
   ): {
     isSessionComplete: boolean;
     nextWord: ReturnType<EnhancedWordService['getCurrentWord']>;
@@ -399,7 +399,7 @@ class EnhancedWordService {
   /**
    * Get recent session history
    */
-  getSessionHistory(languageCode: string, limit: number = 10) {
+  getSessionHistory(languageCode: string, limit = 10) {
     return learningCacheService.getSessionHistory(languageCode, limit);
   }
 

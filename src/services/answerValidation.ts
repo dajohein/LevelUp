@@ -33,7 +33,7 @@ const checkCapitalization = (
   }
 
   // If basic answer is correct, check capitalization
-  let capitalizationCorrect = userAnswer === correctAnswer;
+  const capitalizationCorrect = userAnswer === correctAnswer;
   let capitalizationPenalty = 1.0;
 
   if (!capitalizationCorrect && shouldBeCapitalized(correctAnswer, language)) {

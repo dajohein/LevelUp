@@ -61,7 +61,7 @@ class PrecisionModeService {
   async initializePrecisionMode(
     languageCode: string,
     _wordProgress?: { [key: string]: WordProgress }, // Unused - centralized word selection handles this
-    targetWords: number = 15,
+    targetWords = 15,
     _allWords?: Word[], // Unused - centralized word selection handles this
     moduleId?: string // Module ID for module-specific practice
   ): Promise<void> {

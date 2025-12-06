@@ -158,7 +158,7 @@ export const useBreakpoints = () => {
 /**
  * Custom hook for optimized local storage with debouncing and error handling
  */
-export const useDebouncedStorage = <T>(key: string, defaultValue: T, delay: number = 1000) => {
+export const useDebouncedStorage = <T>(key: string, defaultValue: T, delay = 1000) => {
   const [value, setValue] = useState<T>(() => {
     try {
       const item = localStorage.getItem(key);

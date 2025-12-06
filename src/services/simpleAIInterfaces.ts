@@ -78,7 +78,7 @@ export class BasicAILearningCoach implements SimpleAILearningCoach {
     const errorRate = responseData.filter(d => !d.correct).length / responseData.length;
 
     let level: 'low' | 'moderate' | 'high' | 'overload' = 'moderate';
-    let indicators: string[] = [];
+    const indicators: string[] = [];
 
     if (avgResponseTime > 5000 || errorRate > 0.7) {
       level = 'overload';

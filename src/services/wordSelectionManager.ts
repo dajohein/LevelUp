@@ -82,7 +82,7 @@ class WordSelectionManager {
   /**
    * Create or get a session tracker for word selection
    */
-  public createSession(sessionId: string, maxRecentTracking: number = 8): WordSessionTracker {
+  public createSession(sessionId: string, maxRecentTracking = 8): WordSessionTracker {
     const tracker: WordSessionTracker = {
       sessionId,
       usedWordIds: new Set(),

@@ -127,7 +127,7 @@ export class AIEnhancedWordService {
    */
   async initializeLearningSession(
     languageCode: string,
-    userId: string = 'default_user',
+    userId = 'default_user',
     moduleId?: string,
     wordProgress: { [key: string]: WordProgress } = {}
   ): Promise<boolean> {
@@ -317,8 +317,8 @@ export class AIEnhancedWordService {
    */
   async recordAnswer(
     isCorrect: boolean,
-    timeSpent: number = 0,
-    hintsUsed: number = 0
+    timeSpent = 0,
+    hintsUsed = 0
   ): Promise<{
     correct: boolean;
     nextQuizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';

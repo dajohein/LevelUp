@@ -82,7 +82,7 @@ export interface ChallengeAIEnhancements {
 }
 
 class ChallengeAIIntegrator {
-  private isAIEnabled: boolean = true;
+  private isAIEnabled = true;
   // private performanceBuffer: Map<string, any[]> = new Map(); // Removed unused field
 
   constructor() {

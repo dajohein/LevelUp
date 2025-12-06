@@ -248,7 +248,7 @@ export function adjustStrategyForRisk(
   // Get time profile for baseline pacing
   const timeProfile = getChallengeTimeProfile(`${sessionType}-mode`);
 
-  let strategy: ChallengeStrategy = {
+  const strategy: ChallengeStrategy = {
     pacing: currentStrategy.pacing || timeProfile.baseTime,
     quizMode: currentStrategy.quizMode || 'multiple-choice',
     cognitiveLoadLevel: currentStrategy.cognitiveLoadLevel || 'moderate',

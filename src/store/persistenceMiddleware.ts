@@ -58,7 +58,7 @@ let backgroundAutoSave: BackgroundAutoSave | null = null;
 
 // Simplified batching state
 let batchTimeout: NodeJS.Timeout | null = null;
-let pendingBatchActions = new Set<string>();
+const pendingBatchActions = new Set<string>();
 
 // Initialize background auto-save system
 const getAutoSave = () => {

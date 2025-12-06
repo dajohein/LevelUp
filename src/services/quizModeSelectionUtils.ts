@@ -36,7 +36,7 @@ export function getWordMasteryTier(xp: number): number {
  */
 export function generateQuizModeForMastery(
   tier: number,
-  allowOpenAnswer: boolean = true
+  allowOpenAnswer = true
 ): StandardQuizMode {
   // Tier 1 (0-20 XP): New/learning words - ONLY easy modes
   if (tier === 1) {

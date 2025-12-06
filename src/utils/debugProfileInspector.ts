@@ -5,7 +5,7 @@
 import { tieredStorage } from '../services/storage/tieredStorage';
 import { logger } from '../services/logger';
 
-export async function inspectStoredProfile(userId: string = 'default-user') {
+export async function inspectStoredProfile(userId = 'default-user') {
   try {
     const storageKey = `user-learning-profile-${userId}`;
 

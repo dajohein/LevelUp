@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import removeConsole from 'vite-plugin-remove-console';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -8,7 +9,13 @@ const __dirname = path.dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Remove console.log in production builds (keep warn/error)
+    removeConsole({
+      includes: ['log', 'debug', 'info'],
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

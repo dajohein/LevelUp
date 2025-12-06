@@ -72,7 +72,7 @@ export class IndexedDBWrapper {
   /**
    * Store data in IndexedDB
    */
-  async set<T>(key: string, data: T, category: string = 'default'): Promise<IndexedDBResult<void>> {
+  async set<T>(key: string, data: T, category = 'default'): Promise<IndexedDBResult<void>> {
     if (!this.db) {
       const initialized = await this.init();
       if (!initialized) {

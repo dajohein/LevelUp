@@ -244,7 +244,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     // Fallback: try to find and blank the word in the original sentence
     const sentence = context.sentence;
     const sentenceLower = sentence.toLowerCase();
-    let wordToReplace = word.toLowerCase().trim();
+    const wordToReplace = word.toLowerCase().trim();
     let wordIndex = sentenceLower.indexOf(wordToReplace);
     let actualWordLength = word.length;
 

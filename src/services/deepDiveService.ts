@@ -80,8 +80,8 @@ export class DeepDiveService {
    */
   async initializeDeepDive(
     languageCode: string,
-    targetWords: number = 15,
-    explorationDepth: number = 3,
+    targetWords = 15,
+    explorationDepth = 3,
     moduleId?: string // Module for scoped challenges
   ): Promise<{
     success: boolean;
@@ -151,7 +151,7 @@ export class DeepDiveService {
     wordProgress: { [key: string]: WordProgress },
     currentProgress: number,
     targetWords: number,
-    aiEnhancementsEnabled: boolean = true
+    aiEnhancementsEnabled = true
   ): Promise<DeepDiveResult> {
     if (!this.state.isActive) {
       throw new Error('Deep Dive session not initialized');
@@ -380,7 +380,7 @@ export class DeepDiveService {
     // timeSpent: number, // Removed unused parameter
     comprehensionLevel: number,
     explorationScore: number,
-    wasAIEnhanced: boolean = false
+    wasAIEnhanced = false
   ): Promise<void> {
     try {
       const sessionData: DeepDiveSessionData = {

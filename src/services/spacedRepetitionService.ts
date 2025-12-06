@@ -98,8 +98,8 @@ export const calculateNextReviewTime = (
   const lastPracticedDate = new Date(lastPracticed);
 
   // Base interval selection based on correct streak and mastery
-  let intervalIndex = Math.min(correctStreak, LEARNING_CONSTANTS.LEARNING_INTERVALS.length - 1);
-  let baseInterval = LEARNING_CONSTANTS.LEARNING_INTERVALS[intervalIndex];
+  const intervalIndex = Math.min(correctStreak, LEARNING_CONSTANTS.LEARNING_INTERVALS.length - 1);
+  const baseInterval = LEARNING_CONSTANTS.LEARNING_INTERVALS[intervalIndex];
 
   // Apply multiplier based on learning phase
   const multiplier =
@@ -314,7 +314,7 @@ export const createWordGroups = (
 export const selectWordsForReview = (
   words: Word[],
   wordProgress: { [key: string]: WordProgress },
-  maxReviewWords: number = 10
+  maxReviewWords = 10
 ): Word[] => {
   const now = new Date();
 
