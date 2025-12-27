@@ -5,7 +5,6 @@ import {
   getModulesForLanguage,
   getWordsForModule,
   getModuleStats,
-  availableLanguages,
 } from '../moduleService';
 import { WordProgress } from '../../store/types';
 import { logger } from '../logger';
@@ -217,10 +216,6 @@ describe('moduleService', () => {
       const words2 = getWordsForModule('de', 'grammatik-grundlagen');
 
       // Words should differ between modules
-      const ids1 = new Set(words1.map(w => w.id));
-      const ids2 = new Set(words2.map(w => w.id));
-      const intersection = [...ids1].filter(id => ids2.has(id));
-
       // Should have some difference (some modules may have overlaps)
       expect(words1.length + words2.length).toBeGreaterThan(0);
     });
@@ -229,31 +224,25 @@ describe('moduleService', () => {
   describe('getModuleStats', () => {
     const mockProgress: Record<string, WordProgress> = {
       'word-1': {
-        id: 'word-1',
-        term: 'test',
+        wordId: 'word-1',
         xp: 50,
-        lastReviewedAt: Date.now(),
-        reviewCount: 3,
-        correctCount: 2,
-        incorrectCount: 1,
+        lastPracticed: new Date().toISOString(),
+        timesCorrect: 2,
+        timesIncorrect: 1,
       },
       'word-2': {
-        id: 'word-2',
-        term: 'test2',
+        wordId: 'word-2',
         xp: 30,
-        lastReviewedAt: Date.now(),
-        reviewCount: 2,
-        correctCount: 1,
-        incorrectCount: 1,
+        lastPracticed: new Date().toISOString(),
+        timesCorrect: 1,
+        timesIncorrect: 1,
       },
       'word-3': {
-        id: 'word-3',
-        term: 'test3',
+        wordId: 'word-3',
         xp: 0,
-        lastReviewedAt: Date.now(),
-        reviewCount: 1,
-        correctCount: 0,
-        incorrectCount: 1,
+        lastPracticed: new Date().toISOString(),
+        timesCorrect: 0,
+        timesIncorrect: 1,
       },
     };
 
@@ -335,13 +324,11 @@ describe('moduleService', () => {
       const progressWithExtraWords: Record<string, WordProgress> = {
         ...mockProgress,
         'word-not-in-module': {
-          id: 'word-not-in-module',
-          term: 'extra',
+          wordId: 'word-not-in-module',
           xp: 100,
-          lastReviewedAt: Date.now(),
-          reviewCount: 10,
-          correctCount: 10,
-          incorrectCount: 0,
+          lastPracticed: new Date().toISOString(),
+          timesCorrect: 10,
+          timesIncorrect: 0,
         },
       };
 
@@ -393,13 +380,11 @@ describe('moduleService', () => {
     it('should return language-scoped stats', () => {
       const progress: Record<string, WordProgress> = {
         'word-1': {
-          id: 'word-1',
-          term: 'test',
+          wordId: 'word-1',
           xp: 50,
-          lastReviewedAt: Date.now(),
-          reviewCount: 3,
-          correctCount: 2,
-          incorrectCount: 1,
+          lastPracticed: new Date().toISOString(),
+          timesCorrect: 2,
+          timesIncorrect: 1,
         },
       };
 
@@ -422,13 +407,11 @@ describe('moduleService', () => {
       const largeProgress: Record<string, WordProgress> = {};
       for (let i = 0; i < 1000; i++) {
         largeProgress[`word-${i}`] = {
-          id: `word-${i}`,
-          term: `word${i}`,
+          wordId: `word-${i}`,
           xp: Math.floor(Math.random() * 100),
-          lastReviewedAt: Date.now(),
-          reviewCount: Math.floor(Math.random() * 10),
-          correctCount: Math.floor(Math.random() * 10),
-          incorrectCount: Math.floor(Math.random() * 10),
+          lastPracticed: new Date().toISOString(),
+          timesCorrect: Math.floor(Math.random() * 10),
+          timesIncorrect: Math.floor(Math.random() * 10),
         };
       }
 

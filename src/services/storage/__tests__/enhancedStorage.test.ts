@@ -2,7 +2,7 @@ import { enhancedStorage } from '../enhancedStorage';
 import { smartCache } from '../cache';
 import { asyncStorage } from '../asyncStorage';
 import { remoteStorage } from '../remoteStorage';
-import { WordProgress } from '../../store/types';
+import { WordProgress } from '../../../store/types';
 
 // Mock dependencies
 jest.mock('../cache');
@@ -12,20 +12,18 @@ jest.mock('../remoteStorage');
 describe('EnhancedStorageService', () => {
   const mockWordProgress: Record<string, WordProgress> = {
     'word-1': {
+      wordId: 'word-1',
       xp: 50,
-      lastReviewedAt: Date.now(),
-      reviewCount: 3,
-      correctCount: 2,
-      incorrectCount: 1,
+      lastPracticed: new Date().toISOString(),
       timesCorrect: 2,
+      timesIncorrect: 1,
     },
     'word-2': {
+      wordId: 'word-2',
       xp: 30,
-      lastReviewedAt: Date.now(),
-      reviewCount: 2,
-      correctCount: 1,
-      incorrectCount: 1,
+      lastPracticed: new Date().toISOString(),
       timesCorrect: 1,
+      timesIncorrect: 1,
     },
   };
 

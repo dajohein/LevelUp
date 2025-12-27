@@ -1,4 +1,4 @@
-import { GameSessionManager, SessionContext, SessionBonuses } from '../GameSessionManager';
+import { GameSessionManager } from '../GameSessionManager';
 import { challengeServiceManager } from '../../challengeServiceManager';
 
 // Mock dependencies

@@ -1,5 +1,8 @@
 import { Word } from '../services/wordService';
 
+// Re-export Word for convenience
+export type { Word };
+
 export type QuizMode = 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
 
 // Enhanced directional progress tracking

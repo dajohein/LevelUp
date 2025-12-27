@@ -7,10 +7,8 @@ import {
   fillInTheBlankAdapter,
 } from '../challengeServiceAdapters';
 import {
-  IChallengeService,
   ChallengeConfig,
   ChallengeContext,
-  StandardQuizMode,
 } from '../challengeServiceInterface';
 import { Word, WordProgress } from '../../store/types';
 
@@ -31,21 +29,14 @@ describe('Challenge Service Adapters', () => {
     id: 'word-1',
     term: 'Tisch',
     definition: 'table',
-    languageCode: 'de',
-    moduleId: 'grundwortschatz',
-    category: 'furniture',
-    type: 'noun',
-    example: 'Der Tisch ist groß.',
   };
 
   const mockWordProgress: WordProgress = {
-    id: 'word-1',
-    term: 'Tisch',
+    wordId: 'word-1',
     xp: 50,
-    lastReviewedAt: Date.now(),
-    reviewCount: 3,
-    correctCount: 2,
-    incorrectCount: 1,
+    lastPracticed: new Date().toISOString(),
+    timesCorrect: 2,
+    timesIncorrect: 1,
   };
 
   const mockChallengeConfig: ChallengeConfig = {
