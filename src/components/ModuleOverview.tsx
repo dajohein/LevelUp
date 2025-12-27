@@ -736,16 +736,6 @@ const AnalyticsSubSection = styled.div`
   margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
-const SectionHeader = styled.div`
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: ${props => props.theme.spacing.md};
-  color: ${props => props.theme.colors.text};
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-`;
-
 const RecommendationCard = styled.div`
   background: rgba(76, 175, 80, 0.1);
   border: 1px solid rgba(76, 175, 80, 0.2);
