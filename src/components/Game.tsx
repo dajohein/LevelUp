@@ -1,77 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
-// TODO: Clean up unused variables and parameters (57 issues identified)
-// This suppression will be removed once unused variables are cleaned up
-// See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for gradual cleanup strategy
+// Cleaned up unused imports, variables, and parameters
+// See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for ongoing strict mode efforts
 
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
-import { nextWord, setCurrentWord, setLanguage, setCurrentModule } from '../store/gameSlice';
-import {
-  addTimeElapsed,
-  completeSession,
-  incrementWordsCompleted,
-  addCorrectAnswer,
-  addIncorrectAnswer,
-  addPerfectAccuracyBonus,
-  setLanguage as setSessionLanguage,
-} from '../store/sessionSlice';
-import {
-  GameContainer,
-  GameContent,
-  SkipButtonContainer,
-  SessionProgressBar,
-  ProgressItem,
-  ProgressValue,
-  ProgressLabel,
-  Button,
-  BossIndicator,
-  QuickDashContainer,
-  DeepDiveContainer,
-  StreakChallengeContainer,
-  PrecisionModeContainer,
-  FillInTheBlankContainer,
-  BossBattleContainer,
-  SpeedMeter,
-  StreakMultiplier,
-  AccuracyMeter,
-  BrainMeter,
-  ContextMeter,
-  BossAvatar,
-  BossNamePlate,
-  BossName,
-  BossTitle,
-  HealthBarContainer,
-  HealthBarBackground,
-  HealthBarFill,
-  HealthText,
-  BossHealthBar,
-} from './Game/GameStyledComponents';
-import { useAudio } from '../features/audio/AudioContext';
-import { words, getWordsForLanguage } from '../services/wordService';
-import { calculateMasteryDecay } from '../services/masteryService';
-import { useEnhancedGame } from '../hooks/useEnhancedGame';
+import { nextWord, setCurrentWord } from '../store/gameSlice';
+import { incrementWordsCompleted, addCorrectAnswer, addIncorrectAnswer } from '../store/sessionSlice';
+import { GameContainer, GameContent, SkipButtonContainer, Button } from './Game/GameStyledComponents';
 import { useEnhancedGameState } from '../hooks/useEnhancedGameState';
 import { challengeServiceManager } from '../services/challengeServiceManager';
-// Import game business logic services
-import { gameServices } from '../services/game';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
 import { FeedbackOverlay } from './feedback/FeedbackOverlay';
 import { AchievementManager } from './AchievementManager';
-import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
-import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
-import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
-import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
-import { LearningCard } from './quiz/LearningCard';
 import { QuizRenderer } from './QuizRenderer';
 import { SessionManager } from './SessionManager';
 import { Navigation } from './Navigation';
-import { LearningProgress } from './LearningProgress';
-import { StorageManagement } from './StorageManagement';
 import { LevelUpNotification } from './animations/LevelUpNotification';
-import { useLevelUpDetection } from '../hooks/useLevelUpDetection';
 
 export const Game: React.FC = () => {
   const dispatch = useDispatch();
@@ -149,17 +95,14 @@ export const Game: React.FC = () => {
     languageFlag,
     sessionTimer,
     wordTimer,
-    wordStartTime,
     sessionCompleted,
     showLearningCard,
     lastAnswerCorrect,
     setLastAnswerCorrect,
     lastSelectedAnswer,
-    setLastSelectedAnswer,
     feedbackQuestionKey,
     setFeedbackQuestionKey,
     feedbackWordInfo,
-    setFeedbackWordInfo,
   } = gameState;
 
   const {
@@ -167,16 +110,10 @@ export const Game: React.FC = () => {
     handleOpenQuestionSubmit,
     handleWordTransition,
     handleContinueFromLearningCard,
-    checkAnswerCorrectness,
     formatTime,
   } = gameHandlers;
 
   const {
-    getQuestionWord,
-    getAnswerWord,
-    isUnidirectionalMode,
-    getQuizQuestion,
-    getQuizAnswer,
     contextForWord,
     wordLearningStatus,
   } = gameHelpers;
@@ -186,7 +123,6 @@ export const Game: React.FC = () => {
     handleEnhancedAnswer,
     getCurrentWordInfo,
     getSessionStats,
-    forceCompleteSession,
   } = enhancedGame;
 
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = levelUp;

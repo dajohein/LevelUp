@@ -1,8 +1,5 @@
 // @ts-nocheck
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Clean up unused parameters in adapter methods (13 issues identified)
-// This suppression will be removed once unused parameters are cleaned up
-// See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for gradual cleanup strategy
+// TODO: Clean up unused parameters in adapter methods (tracked)
 
 /**
  * Challenge Service Adapters
@@ -25,8 +22,7 @@ import { precisionModeService } from './precisionModeService';
 import { quickDashService } from './quickDashService';
 import { deepDiveService } from './deepDiveService';
 import { fillInTheBlankService } from './fillInTheBlankService';
-import { Word } from './wordService';
-import { getModulesForLanguage, getWordsForModule } from './moduleService';
+// Removed unused imports to reduce lint noise
 import { generateModuleScopedOptions, generateScrambledVersions } from './optionGenerationUtils';
 import { logger } from './logger';
 
@@ -81,7 +77,7 @@ class StreakChallengeAdapter implements IChallengeService {
     };
   }
 
-  recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {
+  recordCompletion(_wordId: string, _correct: boolean, _timeSpent: number): CompletionResult {
     // Streak challenge doesn't have a recordCompletion method, so we simulate it
     return { sessionContinues: true };
   }
@@ -148,7 +144,7 @@ class BossBattleAdapter implements IChallengeService {
     };
   }
 
-  recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {
+  recordCompletion(_wordId: string, _correct: boolean, _timeSpent: number): CompletionResult {
     // Boss battle doesn't have a recordCompletion method, so we simulate it
     return { sessionContinues: true };
   }
@@ -514,10 +510,10 @@ class FillInTheBlankAdapter implements IChallengeService {
   }
 
   recordCompletion(
-    wordId: string,
-    correct: boolean,
-    timeSpent: number,
-    metadata?: { errorType?: string }
+    _wordId: string,
+    _correct: boolean,
+    _timeSpent: number,
+    _metadata?: { errorType?: string }
   ): CompletionResult {
     // Fill-in-the-blank doesn't have a recordCompletion method, so we simulate it
     return { sessionContinues: true };
