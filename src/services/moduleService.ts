@@ -15,6 +15,7 @@ import deNiederlandischDeutschVokabeln from '../data/de/niederlandisch-deutsch-v
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 import esFrasesClave from '../data/es/frases-clave.json';
 import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
+import esRestauranteYSabores from '../data/es/restaurante-y-sabores.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
@@ -34,6 +35,7 @@ const moduleRegistry: Record<string, Record<string, any>> = {
     'vocabulario-basico': esVocabularioBasico,
     'frases-clave': esFrasesClave,
     'comida-y-bebidas': esComidaYBebidas,
+    'restaurante-y-sabores': esRestauranteYSabores,
   },
 };
 

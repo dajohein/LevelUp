@@ -43,13 +43,17 @@ This guide documents the standardized approach for creating and maintaining lang
 ### Required Word Entry Fields
 ```json
 {
-  "id": "1",                    // Sequential number (1, 2, 3...)
-  "term": "German phrase",      // The German term to learn
-  "definition": "Dutch translation", // Dutch equivalent
-  "direction": "definition-to-term", // Learning direction
-  "category": "grammatical category", // Grouping for organization
-  "context": "Educational explanation", // Grammar rule or usage note
-  "synonyms": ["alternative1", "alternative2"] // Related expressions
+   "id": "module-id:1",          // Robust ID: module-prefixed (e.g., "vocabulario-2-4:1")
+   "term": "Target language term",      // e.g., Spanish word/phrase
+   "definition": "Dutch translation",   // Dutch equivalent
+   "direction": "definition-to-term" | "term-to-definition", // Quiz direction per module
+   "category": "category label",  // Grouping for organization
+   "context": {                    // Contextual learning snippet
+      "sentence": "Example sentence in target language",
+      "translation": "Dutch translation of the sentence",
+      "sentenceWithBlank": "Sentence with {BLANK} for practice"
+   },
+   "synonyms": ["alternative1", "alternative2"] // Related expressions
 }
 ```
 
@@ -94,6 +98,13 @@ This guide documents the standardized approach for creating and maintaining lang
      ]
    }
    ```
+
+   ### Spanish Example (Unit 2.4)
+   - **Module ID**: `vocabulario-2-4`
+   - **Direction**: `term-to-definition` (español → neerlandés)
+   - **File**: `src/data/es/vocabulario-2-4.json`
+   - **Registration**: Added to `src/data/es/index.json`
+
 
 ### Phase 4: Quality Assurance
 1. **Validation Checks**

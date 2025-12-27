@@ -23,6 +23,13 @@
       "description": "Vocabulario esencial sobre comida, bebidas y cocina para conversaciones diarias.",
       "icon": "🍽️",
       "difficulty": "beginner"
+    },
+    {
+      "id": "restaurante-y-sabores",
+      "name": "Restaurante y Sabores",
+      "description": "Vocabulario de restaurante, comida, bebidas y adjetivos de sabor.",
+      "icon": "🍽️",
+      "difficulty": "beginner"
     }
   ]
 }
