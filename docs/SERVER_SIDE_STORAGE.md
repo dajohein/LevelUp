@@ -22,6 +22,9 @@ This document describes the new server-side storage system for LevelUp, which pr
 ### API Endpoints
 - `POST /api/storage` - Data operations (get/set/delete/list)
 - `POST /api/users` - User session management
+ 
+Integration tests (local handlers via stubbed `fetch`):
+- [src/services/storage/__tests__/remoteStorage.integration.test.ts](../src/services/storage/__tests__/remoteStorage.integration.test.ts)
 
 ## 🚀 Development Setup
 

@@ -183,8 +183,8 @@ cd LevelUp
 npm install
 
 # Development (with server-side storage)
-npm run dev:start         # Complete development environment
-npm run health:storage    # Verify all systems
+npm run dev:start         # Complete development environment (web + API)
+npm run health:storage    # Verify API health
 
 # Access your app
 # Web app: http://localhost:5173
@@ -206,6 +206,21 @@ When running in development mode (`localhost` or GitHub Codespaces), additional 
 - **Debug Tools** - Advanced development utilities
 
 *Development features are automatically hidden in production builds for a clean user experience.*
+
+### ✅ Storage Integration & Tests
+- **Language Isolation**: Strict per-language keys (e.g., `word_progress_de`) across all tiers
+- **Remote Backend**: Vercel serverless endpoints [api/storage.ts](api/storage.ts) and [api/users.ts](api/users.ts)
+- **Health Targets**: Cache hit rate ≥ 0.85, storage health score ≥ 80
+
+Run tests:
+```bash
+npm test            # Full suite (unit + integration)
+npm run test:coverage
+```
+
+Key tests:
+- [src/services/storage/__tests__/storageAnalytics.health.test.ts](src/services/storage/__tests__/storageAnalytics.health.test.ts)
+- [src/services/storage/__tests__/remoteStorage.integration.test.ts](src/services/storage/__tests__/remoteStorage.integration.test.ts)
 
 ### 📚 **Detailed Documentation**
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
@@ -257,11 +272,24 @@ The application implements **strict language separation** to prevent data contam
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
+### **Server-Side Storage**
+- **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
+- **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
+- **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
+- **Config**: [src/config/environment.ts](src/config/environment.ts) toggles remote vs local
+
 ### **Performance Monitoring**
 - **Real-time Health Scoring** (target: >80)
 - **Cache Performance Tracking** (target: >85% hit rate)
 - **Storage Analytics** with optimization recommendations
 - **Predictive Learning Insights** with behavioral pattern recognition
+
+Quick check in code:
+```ts
+const health = await enhancedStorage.getStorageHealth();
+const analytics = await enhancedStorage.getStorageAnalytics();
+console.log(health.status, analytics.data.health.score);
+```
 
 ## 🚀 **Deployment**
 

@@ -86,6 +86,8 @@ await testImmediateImprovements();
 const analytics = await enhancedStorage.getStorageAnalytics();
 console.log('Health score:', analytics.data.health.score); // >80
 console.log('Cache hit rate:', analytics.data.cache.hitRate); // >85%
+// Baseline enforced via tests: see
+// src/services/storage/__tests__/storageAnalytics.health.test.ts
 ```
 
 #### **Removed Test Files (November 2025 Cleanup)**
