@@ -74,26 +74,24 @@ tail -f logs/storage.log    # API server logs
 tail -f logs/vite.log       # Vite development server logs
 ```
 
-### Environment Configuration
+### Environment Configuration (Env-First)
 
-The system automatically detects the environment and configures API endpoints:
+Configuration is controlled via environment variables to follow Twelve-Factor principles. See `.env.example` for a full list.
 
-**Development Environment:**
-- **GitHub Codespaces**: Uses Vite proxy (http://localhost:5173/api/*)
-- **Local Machine**: Uses direct API connection (http://localhost:3001/api/*)
-- **Automatic Detection**: Based on hostname and environment variables
-- **Debug Mode**: Enabled with comprehensive logging
-- **Fallback**: Local storage if API server unavailable
+**Frontend (Vite):**
+- `VITE_API_BASE_URL` — Base URL for API calls (defaults to browser origin)
+- `VITE_ENABLE_REMOTE_STORAGE` — Enable remote storage sync
+- `VITE_ENABLE_LOCAL_FALLBACK` — Keep local tiers as fallback
+- `VITE_DEBUG_MODE` — Enable verbose logging in development
+- `VITE_STORAGE_ENDPOINT_STORAGE`, `VITE_STORAGE_ENDPOINT_USERS` — Endpoint paths
 
-**Production Environment:**
-- **Vercel Deployment**: Uses serverless functions at current domain
-- **Optimized Performance**: Minimal logging, optimistic updates
-- **Graceful Degradation**: Falls back to local storage during outages
+**Serverless APIs (Vercel):**
+- `CORS_ALLOWED_ORIGINS` — Comma-separated origins (use `*` for all)
+- `SESSION_TOKEN_TTL_MS` — Session token TTL in milliseconds
+- `RATE_LIMIT_MAX_ATTEMPTS`, `RATE_LIMIT_WINDOW_MS` — Rate limit controls
+- `ACCOUNT_CODE_MAX_ATTEMPTS`, `ACCOUNT_CODE_EXPIRY_MS` — Device linking code policy
 
-**Production:**
-- Uses your Vercel domain for API calls  
-- Optimized for performance
-- Maintains offline capabilities
+Set frontend variables in `.env` locally and in Vercel’s Project Settings for production. Server-side variables should be set only in Vercel.
 
 ## 📚 Usage Examples
 
@@ -150,33 +148,38 @@ The system is configured to work automatically on Vercel:
 2. **Frontend**: Static files served from `dist/`
 3. **Configuration**: `vercel.json` handles routing
 
-### Environment Variables (Optional)
-Set these in your Vercel dashboard if needed:
+### Environment Variables (Quick Setup)
+Copy `.env.example` to `.env` and adjust as needed:
 
 ```bash
-VITE_API_URL=https://your-custom-domain.com  # Override API URL
+cp .env.example .env
 ```
+
+Recommended local values:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:5173
+VITE_ENABLE_REMOTE_STORAGE=true
+VITE_ENABLE_LOCAL_FALLBACK=true
+VITE_DEBUG_MODE=true
+VITE_STORAGE_ENDPOINT_STORAGE=/api/storage
+VITE_STORAGE_ENDPOINT_USERS=/api/users
+```
+
+On Vercel, set server-side variables (e.g., `CORS_ALLOWED_ORIGINS`) in the project settings.
 
 ## 🔧 Configuration
 
 ### Environment-based Settings
-Located in `src/config/environment.ts`:
+Located in `src/config/environment.ts` and driven by `import.meta.env`:
 
 ```typescript
-// Development
+const env = import.meta.env;
 {
-  apiBaseUrl: 'http://localhost:3001',
-  enableRemoteStorage: true,
-  enableLocalFallback: true,
-  debugMode: true
-}
-
-// Production  
-{
-  apiBaseUrl: window.location.origin,
-  enableRemoteStorage: true,
-  enableLocalFallback: true,
-  debugMode: false
+  apiBaseUrl: env.VITE_API_BASE_URL || window.location.origin,
+  enableRemoteStorage: env.VITE_ENABLE_REMOTE_STORAGE === 'true',
+  enableLocalFallback: env.VITE_ENABLE_LOCAL_FALLBACK === 'true',
+  debugMode: env.VITE_DEBUG_MODE === 'true'
 }
 ```
 

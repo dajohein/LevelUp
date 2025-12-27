@@ -1,7 +1,8 @@
 /**
  * Environment Configuration for Server-Side Storage
  *
- * Manages configuration for local development vs. production deployment
+ * Refactored to be env-first (Twelve-Factor): configuration via `import.meta.env`
+ * with safe defaults. Hostname heuristics removed in favor of explicit envs.
  */
 
 export interface EnvironmentConfig {
@@ -24,50 +25,69 @@ export interface EnvironmentConfig {
   };
 }
 
-// Development configuration (local testing)
-const developmentConfig: EnvironmentConfig = {
-  apiBaseUrl: window.location.origin, // Use current origin with Vite proxy
-  enableRemoteStorage: true,
-  enableLocalFallback: true,
-  debugMode: true,
-  storageEndpoints: {
-    storage: '/api/storage',
-    users: '/api/users',
-  },
-  cacheBusting: {
-    enabled: true,
-    autoCleanOnStart: true,
-    clearServiceWorkerCache: true,
-    clearApplicationCache: true,
-    clearStorageCache: true,
-    addTimestampToRequests: true,
-    logCacheOperations: true,
-  },
-};
+// Parse boolean-like envs
+function parseBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined) return defaultValue;
+  return value === 'true' || value === '1';
+}
 
-// Production configuration (Vercel deployment)
-const productionConfig: EnvironmentConfig = {
-  apiBaseUrl: window.location.origin,
-  enableRemoteStorage: true,
-  enableLocalFallback: true, // Keep fallback for offline scenarios
-  debugMode: false,
-  storageEndpoints: {
-    storage: '/api/storage',
-    users: '/api/users',
-  },
-  cacheBusting: {
-    enabled: false,
-    autoCleanOnStart: false,
-    clearServiceWorkerCache: false,
-    clearApplicationCache: false,
-    clearStorageCache: false,
-    addTimestampToRequests: false,
-    logCacheOperations: false,
-  },
-};
+// Safe environment reader: prefers window.__APP_ENV (set in main.tsx),
+// falls back to process.env for tests and Node contexts.
+function getEnv(name: string): string | undefined {
+  const w: any = typeof window !== 'undefined' ? (window as any) : undefined;
+  if (w && w.__APP_ENV && typeof w.__APP_ENV[name] !== 'undefined') {
+    return w.__APP_ENV[name];
+  }
+  if (typeof process !== 'undefined' && (process as any).env && typeof (process as any).env[name] !== 'undefined') {
+    return (process as any).env[name];
+  }
+  return undefined;
+}
 
-// Test configuration (unit testing) - Used programmatically in tests
-const testConfig: EnvironmentConfig = {
+// Get configuration based on environment variables (with safe defaults)
+export function getEnvironmentConfig(): EnvironmentConfig {
+  const apiBaseUrl = getEnv('VITE_API_BASE_URL') || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+  const enableRemoteStorage = parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), true);
+  const enableLocalFallback = parseBool(getEnv('VITE_ENABLE_LOCAL_FALLBACK'), true);
+  const debugMode = parseBool(getEnv('VITE_DEBUG_MODE'), false);
+
+  const storage = getEnv('VITE_STORAGE_ENDPOINT_STORAGE') || '/api/storage';
+  const users = getEnv('VITE_STORAGE_ENDPOINT_USERS') || '/api/users';
+
+  const cacheEnabled = parseBool(getEnv('VITE_CACHE_ENABLED'), false);
+  const cacheAutoClean = parseBool(getEnv('VITE_CACHE_AUTO_CLEAN_ON_START'), false);
+  const cacheClearSW = parseBool(getEnv('VITE_CACHE_CLEAR_SW'), false);
+  const cacheClearApp = parseBool(getEnv('VITE_CACHE_CLEAR_APP'), false);
+  const cacheClearStorage = parseBool(getEnv('VITE_CACHE_CLEAR_STORAGE'), false);
+  const cacheAddTimestamp = parseBool(getEnv('VITE_CACHE_ADD_TIMESTAMP'), false);
+  const cacheLogOps = parseBool(getEnv('VITE_CACHE_LOG_OPERATIONS'), false);
+
+  return {
+    apiBaseUrl,
+    enableRemoteStorage,
+    enableLocalFallback,
+    debugMode,
+    storageEndpoints: {
+      storage,
+      users,
+    },
+    cacheBusting: {
+      enabled: cacheEnabled,
+      autoCleanOnStart: cacheAutoClean,
+      clearServiceWorkerCache: cacheClearSW,
+      clearApplicationCache: cacheClearApp,
+      clearStorageCache: cacheClearStorage,
+      addTimestampToRequests: cacheAddTimestamp,
+      logCacheOperations: cacheLogOps,
+    },
+  };
+}
+
+// Export the current environment config
+export const environmentConfig = getEnvironmentConfig();
+
+// Helper to get test config (used in tests)
+export const getTestConfig = (): EnvironmentConfig => ({
   apiBaseUrl: 'http://localhost:3001',
   enableRemoteStorage: false,
   enableLocalFallback: true,
@@ -85,39 +105,11 @@ const testConfig: EnvironmentConfig = {
     addTimestampToRequests: false,
     logCacheOperations: false,
   },
-};
+});
 
-// Get configuration based on environment
-export function getEnvironmentConfig(): EnvironmentConfig {
-  // Detect environment based on hostname and build context
-  const isLocalhost =
-    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const isCodespaces = window.location.hostname.includes('app.github.dev');
-  const isVercel =
-    window.location.hostname.includes('vercel.app') || window.location.hostname.includes('levelup');
-
-  if (isLocalhost || isCodespaces) {
-    return developmentConfig;
-  } else if (isVercel) {
-    return productionConfig;
-  } else {
-    return developmentConfig; // Default to development
-  }
-}
-
-// Export the current environment config
-export const environmentConfig = getEnvironmentConfig();
-
-// Helper to get test config (used in tests)
-export const getTestConfig = () => testConfig;
-
-// Environment detection helpers
-const isCodespaces = window.location.hostname.includes('app.github.dev');
-export const isDevelopment =
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  isCodespaces;
-export const isProduction = !isDevelopment && window.location.hostname.includes('vercel.app');
+// Environment detection helpers (approximate; primarily for logging levels)
+export const isDevelopment = parseBool(getEnv('VITE_DEBUG_MODE'), false);
+export const isProduction = !isDevelopment;
 export const isTest = false; // Set programmatically in tests
 
 // Storage tier configuration based on environment

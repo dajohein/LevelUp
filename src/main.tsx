@@ -20,6 +20,10 @@ import { logger } from './services/logger';
 import './utils/developerToolsDashboard'; // Initialize developer tools globally
 import './index.css';
 
+// Expose Vite env to runtime for env-first configuration (frontend)
+// This avoids direct import.meta.env usage in shared modules used by tests.
+(window as any).__APP_ENV = import.meta.env;
+
 // Initialize the enhanced storage system with server-side support
 initializeStorage({
   enableRemoteStorage: true,

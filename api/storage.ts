@@ -75,8 +75,11 @@ function decompressData(data: string): any {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS for development
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS configuration via environment (Twelve-Factor)
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
+  const origin = (req.headers['origin'] as string) || '*';
+  const corsOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || '*';
+  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -93,6 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const request: StorageRequest = req.body;
+    const defaultCompress = (process.env.STORAGE_COMPRESS_DEFAULT === 'true');
     
     // Validate required fields
     if (!request.userId) {
@@ -152,7 +156,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
-        const compress = request.options?.compress || false;
+        const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
         
         const storedItem = {

@@ -76,11 +76,11 @@ const accountCodes = new Map<string, {
 }>();
 const rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
 
-// Security constants
-const MAX_CODE_ATTEMPTS = 5; // Max attempts per code
-const MAX_RATE_LIMIT_ATTEMPTS = 10; // Max attempts per IP per hour
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
-const CODE_EXPIRY = 60 * 60 * 1000; // 1 hour (reduced from 24 hours)
+// Security constants (env-driven)
+const MAX_CODE_ATTEMPTS = Number(process.env.ACCOUNT_CODE_MAX_ATTEMPTS || 5); // Max attempts per code
+const MAX_RATE_LIMIT_ATTEMPTS = Number(process.env.RATE_LIMIT_MAX_ATTEMPTS || 10); // Max attempts per IP per window
+const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || (60 * 60 * 1000)); // default 1 hour
+const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || (60 * 60 * 1000)); // default 1 hour
 
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
@@ -136,7 +136,8 @@ function validateSession(token: string): string | null {
 // Helper function to create session
 function createSession(userId: string): string {
   const token = generateSessionToken();
-  const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+  const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || (24 * 60 * 60 * 1000));
+  const expires = Date.now() + ttlMs;
   sessions.set(token, { userId, expires });
   return token;
 }
@@ -181,8 +182,11 @@ function getClientIdentifier(req: any): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS via environment configuration
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
+  const origin = (req.headers['origin'] as string) || '*';
+  const corsOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || '*';
+  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
