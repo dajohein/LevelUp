@@ -1,0 +1,142 @@
+{
+  "name": "LevelUp Language Learning",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // TypeScript & JavaScript
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        
+        // React & JSX
+        "dsznajder.es7-react-js-snippets",
+        "styled-components.vscode-styled-components",
+        
+        // Testing
+        "orta.vscode-jest",
+        "firsttris.vscode-jest-runner",
+        
+        // Git & Collaboration
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        
+        // Utilities
+        "christian-kohler.path-intellisense",
+        "visualstudioexptteam.vscodeintellicode",
+        "gruntfuggly.todo-tree"
+      ],
+      
+      "settings": {
+        // Editor
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "editor.tabSize": 2,
+        "editor.rulers": [100, 120],
+        
+        // TypeScript
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+        "typescript.preferences.importModuleSpecifier": "relative",
+        
+        // ESLint
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact"
+        ],
+        "eslint.workingDirectories": [{ "mode": "auto" }],
+        
+        // Jest
+        "jest.autoRun": "off",
+        "jest.showCoverageOnLoad": false,
+        
+        // Files
+        "files.exclude": {
+          "**/.git": true,
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/coverage": true
+        },
+        
+        // Search
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/coverage": true,
+          "**/*.log": true
+        },
+        
+        // TODO Tree (for tracking technical debt)
+        "todo-tree.general.tags": [
+          "TODO",
+          "FIXME",
+          "HACK",
+          "XXX",
+          "DEPRECATED",
+          "BUG"
+        ],
+        "todo-tree.highlights.defaultHighlight": {
+          "foreground": "white",
+          "type": "text"
+        },
+        "todo-tree.highlights.customHighlight": {
+          "TODO": { "icon": "check", "foreground": "yellow" },
+          "FIXME": { "icon": "alert", "foreground": "red" },
+          "HACK": { "icon": "zap", "foreground": "orange" },
+          "DEPRECATED": { "icon": "x", "foreground": "gray" }
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [
+    5173,  // Vite dev server
+    3001   // Storage API server
+  ],
+  
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Storage API",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Lifecycle hooks
+  "postCreateCommand": "npm ci && npm run health:storage || echo 'Development environment ready. Start with: npm run dev:start'",
+  
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  
+  // Container configuration
+  "remoteUser": "node",
+  
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/node/.bashrc,type=bind,consistency=cached"
+  ],
+  
+  // Environment variables
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "VITE_DEV_MODE": "true"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "styled-components.vscode-styled-components",
+    "orta.vscode-jest",
+    "firsttris.vscode-jest-runner",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "christian-kohler.path-intellisense",
+    "visualstudioexptteam.vscodeintellicode",
+    "gruntfuggly.todo-tree"
+  ]
+}
