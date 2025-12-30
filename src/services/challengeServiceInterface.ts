@@ -36,6 +36,7 @@ export interface ChallengeContext {
   wordProgress: { [key: string]: WordProgress };
   languageCode: string;
   moduleId?: string; // For module-specific challenges
+  metadata?: { sessionType?: string }; // Optional metadata for challenge adaptation
 }
 
 // Standardized result from any challenge service

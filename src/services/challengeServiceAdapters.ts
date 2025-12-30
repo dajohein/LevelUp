@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO: Clean up unused parameters in adapter methods (tracked)
 
 /**
@@ -44,6 +43,10 @@ class StreakChallengeAdapter implements IChallengeService {
       context.currentStreak,
       context.wordProgress
     );
+
+    if (!result.word) {
+      throw new Error('No word available for streak challenge');
+    }
 
     // Generate appropriate options based on quiz mode using shared utilities
     let finalOptions: string[] = [];
@@ -106,6 +109,10 @@ class BossBattleAdapter implements IChallengeService {
       context.wordsCompleted,
       context.wordProgress
     );
+
+    if (!result.word) {
+      throw new Error('No word available for boss battle');
+    }
 
     // Generate appropriate options based on quiz mode using shared utilities
     let finalOptions: string[] = [];
@@ -447,15 +454,6 @@ class DeepDiveAdapter implements IChallengeService {
     };
   }
 
-  /**
-   * Generate basic multiple choice options (fallback method)
-   * Now uses module-scoped approach for better learning experience
-   */
-  private generateBasicOptions(word: any, allWords: any[], languageCode: string): string[] {
-    // Use the provided language code instead of hardcoded 'es'
-    return generateModuleScopedOptions(word, languageCode, allWords);
-  }
-
   recordCompletion(wordId: string, correct: boolean, timeSpent: number): CompletionResult {
     // Record completion in Deep Dive service for analytics and AI
     deepDiveService.recordWordCompletion(wordId, correct, timeSpent);
@@ -492,7 +490,6 @@ class FillInTheBlankAdapter implements IChallengeService {
     }
 
     const result = await fillInTheBlankService.getNextFillInTheBlankWord(
-      allWords,
       context.wordProgress,
       context.wordsCompleted,
       context.targetWords
