@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Cleaned up unused imports, variables, and parameters
 // See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for ongoing strict mode efforts
 
@@ -153,7 +152,6 @@ export const Game: React.FC = () => {
         showLearningCard={showLearningCard}
         wordLearningStatus={wordLearningStatus}
         currentSession={currentSession}
-        isSessionActive={isSessionActive}
         sessionProgress={sessionProgress}
         getSessionStats={getSessionStats}
         isTransitioning={isTransitioning}

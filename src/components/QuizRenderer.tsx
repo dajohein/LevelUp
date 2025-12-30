@@ -299,10 +299,29 @@ export interface QuizRendererProps {
   // Context
   contextForWord: any;
 
-  // Handlers
+  // Timers
+  wordTimer?: any;
+  sessionTimer?: any;
+
+  // Main handlers
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
+  handleWordTransition?: any;
+  handleEnhancedAnswer?: any;
+
+  // Audio handlers
+  playCorrect?: any;
+  playIncorrect?: any;
+
+  // Redux dispatch and state updates
+  dispatch?: any;
+  incrementWordsCompleted?: any;
+  addCorrectAnswer?: any;
+  addIncorrectAnswer?: any;
+  setLastAnswerCorrect?: any;
+  setFeedbackQuestionKey?: any;
+  setIsTransitioning?: any;
 }
 
 export const QuizRenderer: React.FC<QuizRendererProps> = ({
@@ -324,9 +343,22 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   lastSelectedAnswer,
   feedbackQuestionKey,
   contextForWord,
+  wordTimer: _wordTimer,
+  sessionTimer: _sessionTimer,
   handleSubmit,
   handleOpenQuestionSubmit,
   handleContinueFromLearningCard,
+  handleWordTransition: _handleWordTransition,
+  handleEnhancedAnswer: _handleEnhancedAnswer,
+  playCorrect: _playCorrect,
+  playIncorrect: _playIncorrect,
+  dispatch: _dispatch,
+  incrementWordsCompleted: _incrementWordsCompleted,
+  addCorrectAnswer: _addCorrectAnswer,
+  addIncorrectAnswer: _addIncorrectAnswer,
+  setLastAnswerCorrect: _setLastAnswerCorrect,
+  setFeedbackQuestionKey: _setFeedbackQuestionKey,
+  setIsTransitioning: _setIsTransitioning,
 }) => {
   // Get word info from enhanced system if available
   const enhancedWordInfo = isUsingSpacedRepetition ? getCurrentWordInfo() : null;
