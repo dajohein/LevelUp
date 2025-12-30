@@ -6,11 +6,20 @@ This directory contains scripts for development server management and language v
 
 ### `dev-start.sh`
 Starts both storage server and Vite dev server as background services.
+
+**Logging (Twelve-Factor):**
+- By default, logs stream to stdout (standard output)
+- Use `--log-files` flag to write logs to `logs/` directory instead
+
 **Usage:**
 ```bash
+# Stream logs to stdout (recommended)
 npm run dev:start
 # or
 ./scripts/dev-start.sh
+
+# Write logs to files
+./scripts/dev-start.sh --log-files
 ```
 
 ### `dev-stop.sh`
@@ -61,8 +70,11 @@ node scripts/dev-storage-server.cjs
 
 4. **View logs (if needed):**
    ```bash
+   # When using --log-files flag:
    tail -f logs/storage.log  # Storage server logs
    tail -f logs/vite.log     # Vite server logs
+   
+   # Default (stdout): logs appear in your terminal
    ```
 
 5. **Stop when done:**

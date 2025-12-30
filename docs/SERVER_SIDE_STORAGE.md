@@ -68,8 +68,16 @@ npm run test:storage  # Test storage endpoints
 
 ### Development Logs
 
-View real-time server logs:
+**Twelve-Factor Logging (Default):**
+Logs stream to stdout for easy aggregation and debugging:
 ```bash
+npm run dev:start    # Logs appear in terminal
+```
+
+**File-based Logging (Optional):**
+Write logs to disk for review:
+```bash
+./scripts/dev-start.sh --log-files
 tail -f logs/storage.log    # API server logs
 tail -f logs/vite.log       # Vite development server logs
 ```
@@ -335,14 +343,15 @@ npm run test:storage
 
 **Log Analysis:**
 ```bash
-# Real-time API logs
+# Real-time logs (with --log-files flag)
 tail -f logs/storage.log
-
-# Real-time web server logs  
 tail -f logs/vite.log
 
-# Search for errors
+# Search for errors (with --log-files flag)
 grep -i error logs/*.log
+
+# Default (stdout): use terminal scrollback or redirect
+./scripts/dev-start.sh 2>&1 | tee dev-output.log
 ```
 
 ### Performance Monitoring
