@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // TODO: Clean up unused styled components and variables (14 issues identified)
 // This suppression will be removed once unused variables are cleaned up
@@ -682,6 +681,7 @@ const ProgressFill = styled.div<{ progress: number }>`
   transition: width 0.3s ease;
 `;
 
+// @ts-ignore TS6133
 const AnalyticsSection = styled.div`
   background: ${props => props.theme.colors.surface};
   border-radius: ${props => props.theme.borderRadius.md};
@@ -690,6 +690,7 @@ const AnalyticsSection = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
+// @ts-ignore TS6133
 const AnalyticsTitle = styled.h3`
   color: ${props => props.theme.colors.text};
   margin: 0 0 ${props => props.theme.spacing.md} 0;
@@ -699,6 +700,7 @@ const AnalyticsTitle = styled.h3`
   font-size: 1.1rem;
 `;
 
+// @ts-ignore TS6133
 const AnalyticsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -710,6 +712,7 @@ const AnalyticsGrid = styled.div`
   }
 `;
 
+// @ts-ignore TS6133
 const AnalyticCard = styled.div`
   background: ${props => props.theme.colors.background};
   border-radius: ${props => props.theme.borderRadius.sm};
@@ -718,6 +721,7 @@ const AnalyticCard = styled.div`
   border: 1px solid ${props => props.theme.colors.primary}20;
 `;
 
+// @ts-ignore TS6133
 const AnalyticValue = styled.div`
   font-size: 1.4rem;
   font-weight: bold;
@@ -725,6 +729,7 @@ const AnalyticValue = styled.div`
   margin-bottom: ${props => props.theme.spacing.xs};
 `;
 
+// @ts-ignore TS6133
 const AnalyticLabel = styled.div`
   font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
@@ -732,10 +737,12 @@ const AnalyticLabel = styled.div`
   letter-spacing: 0.5px;
 `;
 
+// @ts-ignore TS6133
 const AnalyticsSubSection = styled.div`
   margin-bottom: ${props => props.theme.spacing.lg};
 `;
 
+// @ts-ignore TS6133
 const RecommendationCard = styled.div`
   background: rgba(76, 175, 80, 0.1);
   border: 1px solid rgba(76, 175, 80, 0.2);
@@ -760,6 +767,7 @@ const RecommendationCard = styled.div`
   }
 `;
 
+// @ts-ignore TS6133
 const WeeklyProgressItem = styled.div`
   display: flex;
   align-items: center;
@@ -775,6 +783,7 @@ const WeeklyProgressItem = styled.div`
   }
 `;
 
+// @ts-ignore TS6133
 const WeekLabel = styled.span`
   min-width: 50px;
   font-size: 0.75rem;
@@ -782,6 +791,7 @@ const WeekLabel = styled.span`
   font-weight: 500;
 `;
 
+// @ts-ignore TS6133
 const ProgressBar = styled.div<{ width: number; color: string }>`
   height: 8px;
   background: ${props => props.color};
@@ -817,12 +827,14 @@ const ProgressBar = styled.div<{ width: number; color: string }>`
   }
 `;
 
+// @ts-ignore TS6133
 const ProgressStats = styled.span`
   color: ${props => props.theme.colors.text};
   font-size: 0.75rem;
   font-weight: 400;
 `;
 
+// @ts-ignore TS6133
 const ActivityCard = styled.div`
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
