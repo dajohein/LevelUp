@@ -30,6 +30,13 @@
       "description": "Vocabulario de restaurante, comida, bebidas y adjetivos de sabor.",
       "icon": "🍽️",
       "difficulty": "beginner"
+    },
+    {
+      "id": "moda-y-estilo",
+      "name": "Moda y Estilo",
+      "description": "Vocabulario sobre ropa, moda, apariencia y estilo personal.",
+      "icon": "👔",
+      "difficulty": "beginner"
     }
   ]
 }

@@ -16,6 +16,7 @@ import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 import esFrasesClave from '../data/es/frases-clave.json';
 import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
 import esRestauranteYSabores from '../data/es/restaurante-y-sabores.json';
+import esModaYEstilo from '../data/es/moda-y-estilo.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
@@ -24,7 +25,7 @@ export const availableLanguages = {
 } as const;
 
 // Module registry for static imports (restored for browser compatibility)
-const moduleRegistry: Record<string, Record<string, any>> = {
+const moduleRegistry: Record<string, Record<string, Module>> = {
   de: {
     grundwortschatz: deGrundwortschatz,
     'grammatik-grundlagen': deGrammatikGrundlagen,
@@ -36,6 +37,7 @@ const moduleRegistry: Record<string, Record<string, any>> = {
     'frases-clave': esFrasesClave,
     'comida-y-bebidas': esComidaYBebidas,
     'restaurante-y-sabores': esRestauranteYSabores,
+    'moda-y-estilo': esModaYEstilo,
   },
 };
 
@@ -100,15 +102,7 @@ export const getModuleStats = (
   const words = getWordsForModule(languageCode, moduleId);
   const totalWords = words.length;
 
-  // Reduced debug logging for performance - only log when requested
-  if (process.env.NODE_ENV === 'development' && Math.random() < 0.1) {
-    console.log(`🔍 getModuleStats for ${moduleId}:`, {
-      totalWords,
-      wordsWithProgress: `${words.filter(word => wordProgress[word.id]?.xp > 0).length}/${totalWords}`,
-      wordProgressKeys: Object.keys(wordProgress).length,
-      sampleModuleWordIDs: words.slice(0, 3).map(w => w.id),
-    });
-  }
+  // Debug logging removed for ESLint compliance
 
   if (totalWords === 0) {
     return {
@@ -145,16 +139,7 @@ export const getModuleStats = (
   const averageMastery = Math.round(totalMastery / totalWords);
   const practicePercentage = Math.round((wordsWithProgress / totalWords) * 100);
 
-  // Reduced debug logging for performance - only log occasionally
-  if (process.env.NODE_ENV === 'development' && Math.random() < 0.1) {
-    console.log(`📊 Stats calculation for ${moduleId}:`, {
-      wordsWithProgress,
-      totalWords,
-      practicePercentage,
-      completedWords,
-      averageMastery,
-    });
-  }
+  // Debug logging removed for ESLint compliance
 
   return {
     totalWords,

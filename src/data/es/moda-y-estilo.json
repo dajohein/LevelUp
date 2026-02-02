@@ -1,0 +1,815 @@
+{
+  "id": "moda-y-estilo",
+  "name": "Moda y Estilo",
+  "description": "Vocabulario sobre ropa, moda, apariencia y estilo personal (dirección: neerlandés → español).",
+  "icon": "👔",
+  "difficulty": "beginner",
+  "words": [
+    {
+      "id": "moda-y-estilo:1",
+      "term": "alto/-a",
+      "definition": "lang, hoog",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi hermano es muy alto.",
+        "translation": "Mijn broer is erg lang.",
+        "sentenceWithBlank": "Mi hermano es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:2",
+      "term": "bajo/-a",
+      "definition": "kort, klein",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "La mesa es baja.",
+        "translation": "De tafel is laag.",
+        "sentenceWithBlank": "La mesa es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:3",
+      "term": "gordo/-a",
+      "definition": "dik",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "El libro es muy gordo.",
+        "translation": "Het boek is erg dik.",
+        "sentenceWithBlank": "El libro es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:4",
+      "term": "delgado/-a",
+      "definition": "slank",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Ella es delgada y elegante.",
+        "translation": "Zij is slank en elegant.",
+        "sentenceWithBlank": "Ella es {BLANK} y elegante."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:5",
+      "term": "la talla",
+      "definition": "de maat",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "¿Qué talla usas?",
+        "translation": "Welke maat draag je?",
+        "sentenceWithBlank": "¿Qué {BLANK} usas?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:6",
+      "term": "el pelo",
+      "definition": "het haar",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tiene el pelo largo.",
+        "translation": "Zij heeft lang haar.",
+        "sentenceWithBlank": "Tiene {BLANK} largo."
+      },
+      "synonyms": ["el cabello"]
+    },
+    {
+      "id": "moda-y-estilo:7",
+      "term": "los ojos",
+      "definition": "de ogen",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tiene los ojos azules.",
+        "translation": "Hij heeft blauwe ogen.",
+        "sentenceWithBlank": "Tiene {BLANK} azules."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:8",
+      "term": "grande",
+      "definition": "groot",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La camisa es demasiado grande.",
+        "translation": "Het overhemd is te groot.",
+        "sentenceWithBlank": "La camisa es demasiado {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:9",
+      "term": "pequeño/-a",
+      "definition": "klein",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Este vestido es pequeño.",
+        "translation": "Deze jurk is klein.",
+        "sentenceWithBlank": "Este vestido es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:10",
+      "term": "rubio/-a",
+      "definition": "blond",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi amiga es rubia.",
+        "translation": "Mijn vriendin is blond.",
+        "sentenceWithBlank": "Mi amiga es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:11",
+      "term": "moreno/-a",
+      "definition": "donker",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Él tiene el pelo moreno.",
+        "translation": "Hij heeft donker haar.",
+        "sentenceWithBlank": "Él tiene el pelo {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:12",
+      "term": "castaño/-a",
+      "definition": "bruin",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tiene ojos castaños.",
+        "translation": "Hij heeft bruine ogen.",
+        "sentenceWithBlank": "Tiene ojos {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:13",
+      "term": "liso/-a",
+      "definition": "steil",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Su pelo es liso y largo.",
+        "translation": "Haar haar is steil en lang.",
+        "sentenceWithBlank": "Su pelo es {BLANK} y largo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:14",
+      "term": "largo/-a",
+      "definition": "lang",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Lleva un vestido largo.",
+        "translation": "Ze draagt een lange jurk.",
+        "sentenceWithBlank": "Lleva un vestido {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:15",
+      "term": "corto/-a",
+      "definition": "kort",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tiene el pelo corto.",
+        "translation": "Hij heeft kort haar.",
+        "sentenceWithBlank": "Tiene el pelo {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:16",
+      "term": "rizado/-a",
+      "definition": "gekruld",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi hermana tiene el pelo rizado.",
+        "translation": "Mijn zus heeft gekruld haar.",
+        "sentenceWithBlank": "Mi hermana tiene el pelo {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:17",
+      "term": "las gafas",
+      "definition": "de bril",
+      "direction": "definition-to-term",
+      "category": "accesorios",
+      "context": {
+        "sentence": "Necesito gafas para leer.",
+        "translation": "Ik heb een bril nodig om te lezen.",
+        "sentenceWithBlank": "Necesito {BLANK} para leer."
+      },
+      "synonyms": ["los lentes"]
+    },
+    {
+      "id": "moda-y-estilo:18",
+      "term": "el bigote",
+      "definition": "de snor",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi padre tiene bigote.",
+        "translation": "Mijn vader heeft een snor.",
+        "sentenceWithBlank": "Mi padre tiene {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:19",
+      "term": "la barba",
+      "definition": "de baard",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "El hombre lleva barba.",
+        "translation": "De man draagt een baard.",
+        "sentenceWithBlank": "El hombre lleva {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:20",
+      "term": "los pantalones",
+      "definition": "de broek",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Estos pantalones son cómodos.",
+        "translation": "Deze broek is comfortabel.",
+        "sentenceWithBlank": "Estos {BLANK} son cómodos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:21",
+      "term": "la chaqueta",
+      "definition": "het jasje",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Necesito una chaqueta para el frío.",
+        "translation": "Ik heb een jasje nodig voor de kou.",
+        "sentenceWithBlank": "Necesito una {BLANK} para el frío."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:22",
+      "term": "raro/-a",
+      "definition": "vreemd, raar",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Ese vestido es un poco raro.",
+        "translation": "Die jurk is een beetje vreemd.",
+        "sentenceWithBlank": "Ese vestido es un poco {BLANK}."
+      },
+      "synonyms": ["extraño/-a"]
+    },
+    {
+      "id": "moda-y-estilo:23",
+      "term": "común",
+      "definition": "gewoon",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Es un estilo muy común.",
+        "translation": "Het is een heel gewone stijl.",
+        "sentenceWithBlank": "Es un estilo muy {BLANK}."
+      },
+      "synonyms": ["normal"]
+    },
+    {
+      "id": "moda-y-estilo:24",
+      "term": "fácil",
+      "definition": "gemakkelijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Esta ropa es fácil de lavar.",
+        "translation": "Deze kleding is gemakkelijk te wassen.",
+        "sentenceWithBlank": "Esta ropa es {BLANK} de lavar."
+      },
+      "synonyms": ["sencillo/-a"]
+    },
+    {
+      "id": "moda-y-estilo:25",
+      "term": "difícil",
+      "definition": "moeilijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Es difícil elegir un vestido.",
+        "translation": "Het is moeilijk om een jurk te kiezen.",
+        "sentenceWithBlank": "Es {BLANK} elegir un vestido."
+      },
+      "synonyms": ["complicado/-a"]
+    },
+    {
+      "id": "moda-y-estilo:26",
+      "term": "feo/-a",
+      "definition": "lelijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "No me gusta, es feo.",
+        "translation": "Ik vind het niet mooi, het is lelijk.",
+        "sentenceWithBlank": "No me gusta, es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:27",
+      "term": "bonito/-a",
+      "definition": "mooi",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Qué vestido tan bonito.",
+        "translation": "Wat een mooie jurk.",
+        "sentenceWithBlank": "Qué vestido tan {BLANK}."
+      },
+      "synonyms": ["lindo/-a"]
+    },
+    {
+      "id": "moda-y-estilo:28",
+      "term": "guapo/-a",
+      "definition": "mooi, knap",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Es un chico muy guapo.",
+        "translation": "Hij is een heel knappe jongen.",
+        "sentenceWithBlank": "Es un chico muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:29",
+      "term": "aburrido/-a",
+      "definition": "saai",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Este color es aburrido.",
+        "translation": "Deze kleur is saai.",
+        "sentenceWithBlank": "Este color es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:30",
+      "term": "divertido/-a",
+      "definition": "leuk, grappig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Lleva ropa muy divertida.",
+        "translation": "Hij draagt heel leuke kleding.",
+        "sentenceWithBlank": "Lleva ropa muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:31",
+      "term": "viejo/-a",
+      "definition": "oud",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Estos zapatos son viejos.",
+        "translation": "Deze schoenen zijn oud.",
+        "sentenceWithBlank": "Estos zapatos son {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:32",
+      "term": "nuevo/-a",
+      "definition": "nieuw",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Me compré un abrigo nuevo.",
+        "translation": "Ik kocht een nieuwe jas.",
+        "sentenceWithBlank": "Me compré un abrigo {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:33",
+      "term": "alegre",
+      "definition": "vrolijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Lleva colores alegres.",
+        "translation": "Ze draagt vrolijke kleuren.",
+        "sentenceWithBlank": "Lleva colores {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:34",
+      "term": "simpático/-a",
+      "definition": "aardig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La dependienta es muy simpática.",
+        "translation": "De verkoopster is erg aardig.",
+        "sentenceWithBlank": "La dependienta es muy {BLANK}."
+      },
+      "synonyms": ["amable"]
+    },
+    {
+      "id": "moda-y-estilo:35",
+      "term": "amable",
+      "definition": "vriendelijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El vendedor es amable.",
+        "translation": "De verkoper is vriendelijk.",
+        "sentenceWithBlank": "El vendedor es {BLANK}."
+      },
+      "synonyms": ["simpático/-a"]
+    },
+    {
+      "id": "moda-y-estilo:36",
+      "term": "romper",
+      "definition": "kapotmaken, scheuren",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No quiero romper la camisa.",
+        "translation": "Ik wil het overhemd niet scheuren.",
+        "sentenceWithBlank": "No quiero {BLANK} la camisa."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:37",
+      "term": "cortar",
+      "definition": "knippen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a cortar el pelo.",
+        "translation": "Ik ga mijn haar knippen.",
+        "sentenceWithBlank": "Voy a {BLANK} el pelo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:38",
+      "term": "los vaqueros",
+      "definition": "de spijkerbroek",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Llevo mis vaqueros favoritos.",
+        "translation": "Ik draag mijn favoriete spijkerbroek.",
+        "sentenceWithBlank": "Llevo mis {BLANK} favoritos."
+      },
+      "synonyms": ["los jeans"]
+    },
+    {
+      "id": "moda-y-estilo:39",
+      "term": "el vestido",
+      "definition": "de jurk",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Me gusta ese vestido azul.",
+        "translation": "Ik vind die blauwe jurk mooi.",
+        "sentenceWithBlank": "Me gusta ese {BLANK} azul."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:40",
+      "term": "la falda",
+      "definition": "de rok",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "La falda es muy elegante.",
+        "translation": "De rok is erg elegant.",
+        "sentenceWithBlank": "{BLANK} es muy elegante."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:41",
+      "term": "el bolso",
+      "definition": "de tas",
+      "direction": "definition-to-term",
+      "category": "accesorios",
+      "context": {
+        "sentence": "Compré un bolso nuevo.",
+        "translation": "Ik kocht een nieuwe tas.",
+        "sentenceWithBlank": "Compré un {BLANK} nuevo."
+      },
+      "synonyms": ["la cartera"]
+    },
+    {
+      "id": "moda-y-estilo:42",
+      "term": "los accesorios",
+      "definition": "de accessoires",
+      "direction": "definition-to-term",
+      "category": "accesorios",
+      "context": {
+        "sentence": "Los accesorios son importantes.",
+        "translation": "De accessoires zijn belangrijk.",
+        "sentenceWithBlank": "{BLANK} son importantes."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:43",
+      "term": "el collar",
+      "definition": "de ketting",
+      "direction": "definition-to-term",
+      "category": "accesorios",
+      "context": {
+        "sentence": "Lleva un collar de plata.",
+        "translation": "Ze draagt een zilveren ketting.",
+        "sentenceWithBlank": "Lleva un {BLANK} de plata."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:44",
+      "term": "las zapatillas",
+      "definition": "de sneakers",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Me compré unas zapatillas nuevas.",
+        "translation": "Ik kocht nieuwe sneakers.",
+        "sentenceWithBlank": "Me compré unas {BLANK} nuevas."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:45",
+      "term": "el cinturón",
+      "definition": "de riem",
+      "direction": "definition-to-term",
+      "category": "accesorios",
+      "context": {
+        "sentence": "Necesito un cinturón negro.",
+        "translation": "Ik heb een zwarte riem nodig.",
+        "sentenceWithBlank": "Necesito un {BLANK} negro."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:46",
+      "term": "deportivo/-a",
+      "definition": "sportief",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Me gusta la ropa deportiva.",
+        "translation": "Ik vind sportkleding leuk.",
+        "sentenceWithBlank": "Me gusta la ropa {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:47",
+      "term": "elegante",
+      "definition": "elegant, sierlijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Ese traje es muy elegante.",
+        "translation": "Dat pak is erg elegant.",
+        "sentenceWithBlank": "Ese traje es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:48",
+      "term": "el consejo",
+      "definition": "de tip, het advies",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Dame un consejo de moda.",
+        "translation": "Geef me een modetip.",
+        "sentenceWithBlank": "Dame un {BLANK} de moda."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:49",
+      "term": "la primavera",
+      "definition": "de lente",
+      "direction": "definition-to-term",
+      "category": "estaciones",
+      "context": {
+        "sentence": "La ropa de primavera es ligera.",
+        "translation": "Lentekleding is licht.",
+        "sentenceWithBlank": "La ropa de {BLANK} es ligera."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:50",
+      "term": "el estilo",
+      "definition": "de stijl",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Cada persona tiene su estilo.",
+        "translation": "Elke persoon heeft zijn eigen stijl.",
+        "sentenceWithBlank": "Cada persona tiene su {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:51",
+      "term": "barato/-a",
+      "definition": "goedkoop",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Esta tienda es barata.",
+        "translation": "Deze winkel is goedkoop.",
+        "sentenceWithBlank": "Esta tienda es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:52",
+      "term": "caro/-a",
+      "definition": "duur",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El vestido es muy caro.",
+        "translation": "De jurk is erg duur.",
+        "sentenceWithBlank": "El vestido es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:53",
+      "term": "mucho/-a",
+      "definition": "veel",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Tengo mucha ropa.",
+        "translation": "Ik heb veel kleding.",
+        "sentenceWithBlank": "Tengo {BLANK} ropa."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:54",
+      "term": "poco/-a",
+      "definition": "weinig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Tiene poca ropa.",
+        "translation": "Hij heeft weinig kleding.",
+        "sentenceWithBlank": "Tiene {BLANK} ropa."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:55",
+      "term": "demasiado/-a",
+      "definition": "te veel",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Esto es demasiado grande.",
+        "translation": "Dit is te groot.",
+        "sentenceWithBlank": "Esto es {BLANK} grande."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:56",
+      "term": "la ropa",
+      "definition": "de kleding",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Necesito comprar ropa nueva.",
+        "translation": "Ik moet nieuwe kleding kopen.",
+        "sentenceWithBlank": "Necesito comprar {BLANK} nueva."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:57",
+      "term": "las rebajas",
+      "definition": "de uitverkoop",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "Voy a las rebajas de enero.",
+        "translation": "Ik ga naar de uitverkoop van januari.",
+        "sentenceWithBlank": "Voy a {BLANK} de enero."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:58",
+      "term": "la prenda (de vestir)",
+      "definition": "het kledingstuk",
+      "direction": "definition-to-term",
+      "category": "ropa",
+      "context": {
+        "sentence": "Esta prenda es de algodón.",
+        "translation": "Dit kledingstuk is van katoen.",
+        "sentenceWithBlank": "Esta {BLANK} es de algodón."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:59",
+      "term": "la revista",
+      "definition": "het tijdschrift",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Leo revistas de moda.",
+        "translation": "Ik lees modetijdschriften.",
+        "sentenceWithBlank": "Leo {BLANK} de moda."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:60",
+      "term": "la marca",
+      "definition": "het merk",
+      "direction": "definition-to-term",
+      "category": "compras",
+      "context": {
+        "sentence": "¿Qué marca prefieres?",
+        "translation": "Welk merk verkies je?",
+        "sentenceWithBlank": "¿Qué {BLANK} prefieres?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:61",
+      "term": "vestirse (i)",
+      "definition": "zich aankleden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me visto rápidamente por la mañana.",
+        "translation": "Ik kleed me 's ochtends snel aan.",
+        "sentenceWithBlank": "Me {BLANK} rápidamente por la mañana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:62",
+      "term": "llevar",
+      "definition": "dragen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Hoy llevo una camisa azul.",
+        "translation": "Vandaag draag ik een blauw overhemd.",
+        "sentenceWithBlank": "Hoy {BLANK} una camisa azul."
+      },
+      "synonyms": []
+    }
+  ]
+}
