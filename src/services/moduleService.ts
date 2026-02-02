@@ -27,17 +27,17 @@ export const availableLanguages = {
 // Module registry for static imports (restored for browser compatibility)
 const moduleRegistry: Record<string, Record<string, Module>> = {
   de: {
-    grundwortschatz: deGrundwortschatz,
-    'grammatik-grundlagen': deGrammatikGrundlagen,
-    'grammatik-herhaling': deGrammatikHerhaling,
-    'niederlandisch-deutsch-vokabeln': deNiederlandischDeutschVokabeln,
+    grundwortschatz: deGrundwortschatz as Module,
+    'grammatik-grundlagen': deGrammatikGrundlagen as Module,
+    'grammatik-herhaling': deGrammatikHerhaling as Module,
+    'niederlandisch-deutsch-vokabeln': deNiederlandischDeutschVokabeln as Module,
   },
   es: {
-    'vocabulario-basico': esVocabularioBasico,
-    'frases-clave': esFrasesClave,
-    'comida-y-bebidas': esComidaYBebidas,
-    'restaurante-y-sabores': esRestauranteYSabores,
-    'moda-y-estilo': esModaYEstilo,
+    'vocabulario-basico': esVocabularioBasico as Module,
+    'frases-clave': esFrasesClave as Module,
+    'comida-y-bebidas': esComidaYBebidas as Module,
+    'restaurante-y-sabores': esRestauranteYSabores as Module,
+    'moda-y-estilo': esModaYEstilo as Module,
   },
 };
 

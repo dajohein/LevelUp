@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "icons:generate": "bash scripts/pwa/generate-icons.sh",
     "clean": "rm -rf dist node_modules/.vite",
-    "prepare": "husky install"
+    "prepare": "[ -d .git ] && husky install || true"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
