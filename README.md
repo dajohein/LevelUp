@@ -5,6 +5,7 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
 
 ### � **Code Cleanup (October 26, 2025)**
+
 - **Removed obsolete files**: Cleaned up backup directories, old verification files, and unused scripts
 - **Streamlined codebase**: Removed 6+ legacy files while preserving all current functionality
 - **Maintained developer tools**: Kept essential migration tests and debugging utilities
@@ -20,10 +21,10 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 
 ### ✨ **Brain Progress System**
 
-- **🧠 Visual Learning Levels**: 
+- **🧠 Visual Learning Levels**:
   - Empty brains = Not started
   - 1 brain filled = Beginner (0-33%)
-  - 2 brains filled = Learning (34-66%) 
+  - 2 brains filled = Learning (34-66%)
   - 3 brains filled = Expert (67-100%)
 - **🎨 Smart Visual Feedback**: Partial brains pulse gently, filled brains have a subtle glow
 - **📱 Mobile Optimized**: Perfect brain icon sizing for touch devices
@@ -54,18 +55,19 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 - **👨‍💻 Developer UX**: Performance monitoring still available on-demand via browser console
 
 ### 🛠️ **Developer Controls (Development Mode)**
+
 ```javascript
 // Enable performance monitoring when needed:
-window.enablePerformanceDebug()
+window.enablePerformanceDebug();
 
 // Get performance analysis:
-window.getPerformanceReport()
+window.getPerformanceReport();
 
 // Disable when done:
-window.disablePerformanceDebug()
+window.disablePerformanceDebug();
 
 // Test that the fix works:
-window.testPerformanceFix()
+window.testPerformanceFix();
 ```
 
 **Result**: Smooth gameplay experience with zero background monitoring overhead!
@@ -104,7 +106,7 @@ window.testPerformanceFix()
 - **🌐 Server-Side Storage**: Cross-device sync with Vercel serverless functions
 - **🔄 Backend Migration Ready**: Zero-code-change transition with validation and backup
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
-- **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights  
+- **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
 - **🎯 Storage Analytics**: Comprehensive monitoring with 0-100 health scoring
 - **⚙️ Production-Ready**: Enterprise architecture with comprehensive error handling
@@ -122,7 +124,7 @@ window.testPerformanceFix()
 
 - **Cross-device sync** with automatic user session management
 - **50x storage capacity** increase with IndexedDB integration
-- **90% faster** analytics processing with intelligent caching 
+- **90% faster** analytics processing with intelligent caching
 - **85%+ cache hit rate** with predictive warming and optimization
 - **Real-time health monitoring** with automated optimization recommendations
 - **Zero-code backend migration** ready for seamless API integration
@@ -130,6 +132,7 @@ window.testPerformanceFix()
 ## 🎯 **Core Learning Features**
 
 ### **Intelligent Learning System** 🧠
+
 - **Evidence-based spaced repetition** with optimal intervals (30min → 1 month)
 - **Smart word grouping** (5-7 words) for better focus and retention
 - **Mixed quiz modes** within sessions for engaging variety
@@ -139,6 +142,7 @@ window.testPerformanceFix()
 - **Personalized analytics** and ML-powered learning recommendations
 
 ### **Triple Quiz System**
+
 - **📝 Multiple Choice**: Visual recognition for beginners (up to 50 XP)
 - **🔤 Letter Scramble**: Interactive word building with real-time feedback
 - **✍️ Open-Ended**: Advanced recall testing for mastery (50+ XP)
@@ -146,6 +150,7 @@ window.testPerformanceFix()
 - **German case sensitivity** with partial credit system
 
 ### **Enhanced Analytics** 📊
+
 - **Session performance tracking** with accuracy and speed metrics
 - **Weekly progress charts** and learning trend analysis
 - **Personalized recommendations** based on performance data
@@ -155,13 +160,18 @@ window.testPerformanceFix()
 ## 🛠 **Technical Architecture**
 
 ### **Frontend Stack**
+
 - **React 18** with TypeScript for type-safe component development
 - **Redux Toolkit** for predictable state management
-- **Vite** for fast development and optimized production builds
-- **React Router** for client-side navigation
+- **Vite 7** for fast development and optimized production builds
+- **React Router 6** for client-side navigation
 - **Emotion/Styled** for component styling and theming
+- **TypeScript 5.9** with strict mode for maximum type safety
+
+> 📦 **Dependency Status**: Last reviewed February 2026 - See [DEPENDENCY_UPDATE_PLAN.md](DEPENDENCY_UPDATE_PLAN.md) for details
 
 ### **Storage & Analytics**
+
 - **Four-tier storage**: Memory → localStorage → IndexedDB → Remote server
 - **Automatic language isolation** preventing cross-language data contamination
 - **Real-time health monitoring** with performance optimization
@@ -171,11 +181,13 @@ window.testPerformanceFix()
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Modern web browser
 
 ### Quick Start
+
 ```bash
 # Clone and install
 git clone https://github.com/dajohein/LevelUp.git
@@ -199,30 +211,36 @@ npm run dev:stop
 ```
 
 ### 🧪 **Development Mode Features**
+
 When running in development mode (`localhost` or GitHub Codespaces), additional features are available:
+
 - **🤖 Simple AI Demo** - Interactive AI learning demonstration
-- **🎨 Component Library** - Complete UI component showcase  
+- **🎨 Component Library** - Complete UI component showcase
 - **⏳ Loading States** - Loading state demonstrations
 - **Debug Tools** - Advanced development utilities
 
-*Development features are automatically hidden in production builds for a clean user experience.*
+_Development features are automatically hidden in production builds for a clean user experience._
 
 ### ✅ Storage Integration & Tests
+
 - **Language Isolation**: Strict per-language keys (e.g., `word_progress_de`) across all tiers
 - **Remote Backend**: Vercel serverless endpoints [api/storage.ts](api/storage.ts) and [api/users.ts](api/users.ts)
 - **Health Targets**: Cache hit rate ≥ 0.85, storage health score ≥ 80
 
 Run tests:
+
 ```bash
 npm test            # Full suite (unit + integration)
 npm run test:coverage
 ```
 
 Key tests:
-- [src/services/storage/__tests__/storageAnalytics.health.test.ts](src/services/storage/__tests__/storageAnalytics.health.test.ts)
-- [src/services/storage/__tests__/remoteStorage.integration.test.ts](src/services/storage/__tests__/remoteStorage.integration.test.ts)
+
+- [src/services/storage/**tests**/storageAnalytics.health.test.ts](src/services/storage/__tests__/storageAnalytics.health.test.ts)
+- [src/services/storage/**tests**/remoteStorage.integration.test.ts](src/services/storage/__tests__/remoteStorage.integration.test.ts)
 
 ### 📚 **Detailed Documentation**
+
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides
 - **Server-Side Storage**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Cross-device sync setup
@@ -266,25 +284,30 @@ src/
 ## 🔧 **Advanced Features**
 
 ### **Language Data Isolation**
+
 The application implements **strict language separation** to prevent data contamination:
+
 - **Per-Language Storage**: Each language maintains isolated progress
 - **Redux State Separation**: Language-specific progress loading prevents cross-contamination
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
 ### **Server-Side Storage**
+
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
 - **Config**: [src/config/environment.ts](src/config/environment.ts) toggles remote vs local
 
 ### **Performance Monitoring**
+
 - **Real-time Health Scoring** (target: >80)
 - **Cache Performance Tracking** (target: >85% hit rate)
 - **Storage Analytics** with optimization recommendations
 - **Predictive Learning Insights** with behavioral pattern recognition
 
 Quick check in code:
+
 ```ts
 const health = await enhancedStorage.getStorageHealth();
 const analytics = await enhancedStorage.getStorageAnalytics();
@@ -294,6 +317,7 @@ console.log(health.status, analytics.data.health.score);
 ## 🚀 **Deployment**
 
 ### **Production (Vercel)**
+
 ```bash
 # Deploy to Vercel (zero configuration)
 npm run build
@@ -304,6 +328,7 @@ VITE_API_URL=your-api-domain.com
 ```
 
 ### **Development**
+
 ```bash
 # Complete development environment
 npm run dev:start    # Starts API + web servers as background services
