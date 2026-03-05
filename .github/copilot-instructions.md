@@ -3,6 +3,7 @@
 ## 🎯 **Core Coding Principles**
 
 ### 1. **CRITICAL: Language Data Isolation**
+
 **Never allow cross-language data contamination - this is the #1 architectural constraint**
 
 ```typescript
@@ -11,10 +12,11 @@ await enhancedStorage.saveWordProgress(languageCode, progress);
 const progress = await enhancedStorage.loadWordProgress(languageCode);
 
 // ❌ NEVER: Mixed language data
-const mixed = {...germanData, ...spanishData}; // FORBIDDEN
+const mixed = { ...germanData, ...spanishData }; // FORBIDDEN
 ```
 
 ### 2. **Storage System Usage**
+
 Use the **tiered storage architecture** (Memory → localStorage → IndexedDB → Remote):
 
 ```typescript
@@ -31,13 +33,16 @@ if (analytics.data.health.score < 80) {
 ```
 
 ### 3. **TypeScript Requirements**
+
 - **Full type safety**: No `any` types without justification
 - **Strict language isolation**: Types must prevent cross-language mixing
 - **Interface-first**: Define interfaces before implementation
 - **Zero build errors**: Code must compile without TypeScript errors
 
 ### 4. **Testing Requirements**
+
 Every new feature must include:
+
 - Unit tests for core logic
 - Integration tests for storage operations
 - Language isolation verification
@@ -86,14 +91,18 @@ const results = await testImmediateImprovements();
    ```
 
 ### **Documentation File Structure:**
+
 ```
 README.md                    # Main project overview
 docs/
-├── README.md               # Documentation index
-├── PHASE2_ANALYTICS_COMPLETE.md  # Latest implementation status
-├── PERFORMANCE_OPTIMIZATION.md   # Performance & testing guide
-├── ERROR_HANDLING.md       # Error patterns and debugging
-└── DEPLOYMENT.md          # Production deployment guide
+├── README.md               # Documentation index (organized by topic)
+├── SEPARATION_OF_CONCERNS.md      # Architecture & design
+├── LANGUAGE_SEPARATION.md         # Language data isolation
+├── AI_LEARNING_ENGINE.md          # AI system (main feature)
+├── PERFORMANCE_OPTIMIZATION.md    # Performance & optimization
+├── ERROR_HANDLING.md              # Error patterns & debugging
+├── DEPLOYMENT.md                  # Production deployment
+└── [See docs/README.md for full index]
 ```
 
 ## 🛠 **Coding Instructions**
@@ -103,6 +112,7 @@ docs/
 ### **Component Development:**
 
 1. **React Component Pattern:**
+
    ```typescript
    interface ComponentProps {
      languageCode: string;  // ALWAYS required for language isolation
@@ -112,7 +122,7 @@ docs/
    export const Component: React.FC<ComponentProps> = ({ languageCode, onAction }) => {
      // Use language-scoped hooks
      const progress = useLanguageProgress(languageCode);
-     
+
      // Validate language isolation
      useEffect(() => {
        if (!languageCode) throw new Error('Language code required');
@@ -123,13 +133,14 @@ docs/
    ```
 
 2. **Redux State Management:**
+
    ```typescript
    // CRITICAL: Always load language-specific data
    const loadPersistedState = (): Partial<GameState> => {
      const currentLanguage = getCurrentLanguage();
      return {
        language: currentLanguage,
-       wordProgress: currentLanguage ? wordProgressStorage.load(currentLanguage) : {}
+       wordProgress: currentLanguage ? wordProgressStorage.load(currentLanguage) : {},
      };
    };
    ```
@@ -139,13 +150,13 @@ docs/
    // ALWAYS use enhanced storage with language isolation
    const saveData = async (languageCode: string, data: any) => {
      const result = await enhancedStorage.saveWordProgress(languageCode, data);
-     
+
      // Monitor performance
      const analytics = await enhancedStorage.getStorageAnalytics();
      if (analytics.data.health.score < 80) {
        console.warn('Storage health degraded');
      }
-     
+
      return result;
    };
    ```
@@ -153,21 +164,24 @@ docs/
 ## Architecture Guidelines
 
 ### 🔴 CRITICAL: Language Data Separation
+
 **The most important architectural constraint is maintaining strict language data isolation to prevent cross-contamination.**
 
 ## 🔧 **Required Patterns**
 
 ### **Language Isolation Pattern (MANDATORY):**
+
 ```typescript
 // ✅ CORRECT: Always language-scoped
 const progress = await enhancedStorage.loadWordProgress(languageCode);
 const analytics = await enhancedStorage.getStorageAnalytics();
 
 // ❌ FORBIDDEN: Cross-language mixing
-const mixed = {...germanProgress, ...spanishProgress};
+const mixed = { ...germanProgress, ...spanishProgress };
 ```
 
 ### **Error Handling Pattern:**
+
 ```typescript
 try {
   const result = await storageOperation();
@@ -182,16 +196,17 @@ try {
 ```
 
 ### **Performance Monitoring Pattern:**
+
 ```typescript
 // Monitor storage health regularly
 const checkSystemHealth = async () => {
   const analytics = await enhancedStorage.getStorageAnalytics();
-  
+
   // Health score should be > 80
   if (analytics.data.health.score < 80) {
     await indexedDBStorage.cleanup();
   }
-  
+
   // Cache hit rate should be > 85%
   if (analytics.data.cache.hitRate < 0.85) {
     // Review caching strategy
@@ -200,6 +215,7 @@ const checkSystemHealth = async () => {
 ```
 
 #### Storage Performance & Analytics
+
 ```typescript
 // Monitor storage health (0-100 score)
 const health = await enhancedStorage.getStorageAnalytics();
@@ -214,17 +230,19 @@ console.log('Storage distribution:', tierStats.data.distribution);
 ```
 
 #### Language Isolation Patterns
+
 ```typescript
 // ✅ CORRECT: Language-scoped operations
-wordProgressStorage.save(languageCode, progress);  // Language-specific storage
-wordProgressStorage.load(languageCode);           // Language-specific loading
+wordProgressStorage.save(languageCode, progress); // Language-specific storage
+wordProgressStorage.load(languageCode); // Language-specific loading
 
-// ❌ WRONG: Mixed language operations  
-const allProgress = {...germanData, ...spanishData}; // Creates contamination
+// ❌ WRONG: Mixed language operations
+const allProgress = { ...germanData, ...spanishData }; // Creates contamination
 store.getState().game.wordProgress; // If contains mixed language data
 ```
 
 #### Redux State Management Rules
+
 1. **Never load mixed language data into Redux state**
 2. **Always scope progress loading by current language**
 3. **Implement storage-level validation with debug logging**
@@ -235,12 +253,12 @@ store.getState().game.wordProgress; // If contains mixed language data
 const loadPersistedState = (): Partial<GameState> => {
   const savedState = gameStateStorage.load();
   const currentLanguage = savedState.language;
-  
+
   // CRITICAL: Load only current language's progress
-  const languageSpecificProgress = currentLanguage 
-    ? wordProgressStorage.load(currentLanguage) 
+  const languageSpecificProgress = currentLanguage
+    ? wordProgressStorage.load(currentLanguage)
     : {};
-    
+
   return {
     ...savedState,
     wordProgress: languageSpecificProgress  // Never mixed data
@@ -250,34 +268,42 @@ const loadPersistedState = (): Partial<GameState> => {
 
 ### **Key Directories:**
 ```
+
 src/
-├── services/storage/       # Enhanced storage system (Phase 2+)
-├── components/            # React components
-├── store/                 # Redux state (language isolation critical)
-├── data/{lang}/          # Language-specific data
-├── config/               # Language rules configuration
-└── utils/                # Testing utilities
+├── services/storage/ # Enhanced storage system (Phase 2+)
+├── components/ # React components (UI, game modes, etc.)
+├── store/ # Redux state (language isolation critical)
+├── data/{lang}/ # Language-specific vocabulary & modules
+├── config/ # Language rules configuration
+├── utils/ # Core utilities & dev tools
+│ ├── test*.ts # Test utilities (for development)
+│ ├── debug*.ts # Debug helpers (for development)
+│ └── \*.ts # Core utilities
+└── hooks/ # React custom hooks
+
 ```
 
 ### **Critical Files:**
 - `src/services/storage/enhancedStorage.ts` - Main storage orchestration
-- `src/store/gameSlice.ts` - Language isolation implementation
+- `src/store/gameSlice.ts` - Redux state with language isolation
 - `src/config/languageRules.ts` - Language-specific behavior
-- `src/utils/testImmediateImprovements.ts` - System testing
+- `src/components/Game.tsx` - Main game component
+- `docs/README.md` - Documentation index
 
 ## ✅ **Development Checklist**
 
 ### **Before Every Commit:**
 - [ ] **Language isolation verified** - No cross-language data mixing
-- [ ] **TypeScript compiles** - Zero errors required
-- [ ] **Tests pass** - Run `testImmediateImprovements()`
-- [ ] **Storage health > 80** - Check analytics
-- [ ] **Documentation updated** - In existing files only
+- [ ] **TypeScript compiles** - Zero errors required (`npm run type-check`)
+- [ ] **Tests pass** - Run `npm test` or use dev tools
+- [ ] **Storage health > 80** - Check analytics (dev dashboard)
+- [ ] **Documentation updated** - In existing docs/ files only
 - [ ] **Performance targets met** - Cache hit rate > 85%
+- [ ] **No new root-level docs** - Consolidate into docs/ directory
 
 ### **Code Review Criteria:**
 1. **Language separation compliance** - Most critical
-2. **Type safety** - No `any` without justification  
+2. **Type safety** - No `any` without justification
 3. **Error handling** - Graceful fallbacks
 4. **Performance impact** - Monitor storage analytics
 5. **Testing coverage** - Unit and integration tests
@@ -285,11 +311,12 @@ src/
 ## 🚨 **Common Mistakes to Avoid**
 
 1. **Cross-language data mixing** - Will break user progress
-2. **Direct localStorage access** - Use enhanced storage services
+2. **Direct localStorage access** - Use enhanced storage services only
 3. **Missing language validation** - Always validate language codes
 4. **Ignoring storage health** - Monitor analytics regularly
-5. **Creating standalone docs** - Update existing documentation
+5. **Creating standalone docs in root** - Consolidate into existing `docs/` files
 6. **Skipping tests** - Every feature needs verification
+7. **Using old doc files** - Refer to `docs/` directory, not archived files
 
 ---
 
@@ -297,15 +324,17 @@ src/
 
 ### **Language-Agnostic Architecture:**
 - Languages auto-discovered from `src/data/{language-code}/`
-- Rules configured in `src/config/languageRules.ts`  
+- Rules configured in `src/config/languageRules.ts`
 - No hardcoded language references in core logic
 
-### **Current System Status (October 2025):**
+### **Current System Status (March 2026):**
 - ✅ **Phase 2+ Complete**: Enhanced storage with 50x capacity increase
 - ✅ **Backend Migration Ready**: Zero-code-change transition prepared
 - ✅ **Real-time Analytics**: Health monitoring and performance optimization
 - ✅ **Comprehensive Testing**: Full test suite available
 - ✅ **Production Ready**: Enterprise-grade architecture deployed
+- ✅ **Documentation Cleaned**: 57% reduction in doc files, focused index
+- ✅ **Code Cleanup Complete**: Removed obsolete test files from public/
 
 ### **Next Development Priorities:**
 1. Advanced analytics dashboard UI
@@ -317,3 +346,4 @@ src/
 
 *For project overview and features, see README.md*
 *For technical architecture details, see docs/ directory*
+```
