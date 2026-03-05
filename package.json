@@ -10,7 +10,7 @@
     "dev:start": "./scripts/dev-start.sh",
     "dev:stop": "./scripts/dev-stop.sh",
     "dev:restart": "./scripts/dev-restart.sh",
-    "build": "npx tsc && vite build",
+    "build": "vite build",
     "build:production": "./scripts/build-with-versioning.sh",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
