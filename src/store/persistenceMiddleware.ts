@@ -59,6 +59,7 @@ let backgroundAutoSave: BackgroundAutoSave | null = null;
 // Simplified batching state
 let batchTimeout: NodeJS.Timeout | null = null;
 const pendingBatchActions = new Set<string>();
+let hasGameCheckAnswerInBatch = false; // Track if game/checkAnswer is in current batch
 
 // Initialize background auto-save system
 const getAutoSave = () => {
@@ -91,10 +92,26 @@ const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action
 
     // Queue word progress if language exists
     const languageCode = state.game?.language;
-    if (languageCode && state.game?.wordProgress?.[languageCode]) {
+    const wordProgress = state.game?.wordProgress;
+    const wordProgressKeys = wordProgress ? Object.keys(wordProgress) : [];
+    
+    // ALWAYS log for checkAnswer to diagnose the issue
+    if (actionType === 'game/checkAnswer') {
+      logger.debug('🔍 Word progress persistence check:', {
+        action: actionType,
+        languageCode,
+        hasWordProgress: !!wordProgress,
+        wordProgressCount: wordProgressKeys.length,
+        sampleKeys: wordProgressKeys.slice(0, 5),
+        wordProgressSample: wordProgressKeys.length > 0 ? wordProgress[wordProgressKeys[0]] : null,
+      });
+    }
+    
+    if (languageCode && wordProgress && wordProgressKeys.length > 0) {
+      logger.debug(`📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`);
       autoSave.queueChange(
         'wordProgress',
-        state.game.wordProgress[languageCode],
+        wordProgress, // wordProgress is indexed by wordId, not languageCode
         languageCode,
         priority
       );
@@ -137,6 +154,11 @@ export const persistenceMiddleware: Middleware<{}, RootState> = store => next =>
     if (isRelatedAction) {
       // Add to pending batch
       pendingBatchActions.add(action.type);
+      
+      // Track if game/checkAnswer is in the batch
+      if (action.type === 'game/checkAnswer') {
+        hasGameCheckAnswerInBatch = true;
+      }
 
       // Clear existing timeout
       if (batchTimeout) {
@@ -146,8 +168,38 @@ export const persistenceMiddleware: Middleware<{}, RootState> = store => next =>
       // Set new batch timeout
       batchTimeout = setTimeout(() => {
         if (pendingBatchActions.size > 0) {
-          // Queue state for all related actions in one go
-          queueStateChange(autoSave, store.getState(), action);
+          const batchedState = store.getState();
+          
+          // Always queue gameState if this batch includes game/checkAnswer (for wordProgress)
+          if (hasGameCheckAnswerInBatch) {
+            autoSave.queueChange('gameState', batchedState.game, undefined, 'high');
+            
+            // Queue word progress separately with language code
+            const languageCode = batchedState.game?.language;
+            const wordProgress = batchedState.game?.wordProgress;
+            const wordProgressKeys = wordProgress ? Object.keys(wordProgress) : [];
+            
+            if (languageCode && wordProgress && wordProgressKeys.length > 0) {
+              logger.debug(`📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`);
+              autoSave.queueChange(
+                'wordProgress',
+                wordProgress,
+                languageCode,
+                'high'
+              );
+            } else {
+              logger.debug('⚠️ WordProgress not queued:', {
+                languageCode: !!languageCode,
+                hasWordProgress: !!wordProgress,
+                wordProgressKeys: wordProgressKeys.length,
+              });
+            }
+          }
+          
+          // Queue session state for session actions in batch
+          if (Array.from(pendingBatchActions).some(a => a.startsWith('session/'))) {
+            autoSave.queueChange('sessionState', batchedState.session, undefined, 'medium');
+          }
 
           if (process.env.NODE_ENV === 'development') {
             logger.debug(
@@ -156,6 +208,7 @@ export const persistenceMiddleware: Middleware<{}, RootState> = store => next =>
           }
 
           pendingBatchActions.clear();
+          hasGameCheckAnswerInBatch = false;
         }
         batchTimeout = null;
       }, 50); // 50ms batch window

@@ -78,6 +78,20 @@ class EnhancedStorageService {
 
       const result = await asyncStorage.set(key, wordProgress, options);
 
+      // CRITICAL: Also update the old unified key format for backward compatibility
+      // This ensures wordProgressStorage.loadRaw() can find the data
+      if (result.success && typeof localStorage !== 'undefined') {
+        try {
+          const unifiedKey = 'levelup_word_progress';
+          const unified = JSON.parse(localStorage.getItem(unifiedKey) || '{}');
+          unified[languageCode] = wordProgress;
+          localStorage.setItem(unifiedKey, JSON.stringify(unified));
+        } catch (compatError) {
+          logger.warn(`Failed to update backward-compatible key for ${languageCode}:`, compatError);
+          // Don't fail the whole operation just because backward compat failed
+        }
+      }
+
       // Update cache on successful save (CRITICAL: Keep cache synchronized!)
       if (result.success && this.config.cacheLanguageData) {
         await smartCache.set(

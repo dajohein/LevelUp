@@ -1,12 +1,10 @@
 /**
  * Data Migration Service for safely upgrading legacy data formats
  * Provides safe migration from legacy data format to enhanced directional tracking
- * Also handles word ID migration for collision prevention
  */
 
 import { logger } from './logger';
 import { wordProgressStorage } from './storageService';
-import { WordIdMigrationService } from './wordIdMigrationService';
 import type { WordProgress, LegacyWordProgress } from '../store/types';
 
 export class DataMigrationService {
@@ -130,8 +128,10 @@ export class DataMigrationService {
   static safeLoadWordProgress(languageCode: string): { [key: string]: WordProgress } {
     // Prevent concurrent migrations for the same language
     if (this.migrationInProgress.has(languageCode)) {
-      // If migration is in progress, load current data without migration
-      return wordProgressStorage.loadRaw(languageCode) as { [key: string]: WordProgress };
+      const rawData = wordProgressStorage.loadRaw(languageCode) as {
+        [key: string]: WordProgress;
+      };
+      return rawData;
     }
 
     try {
@@ -177,34 +177,8 @@ export class DataMigrationService {
         migratedData = rawData as { [key: string]: WordProgress };
       }
 
-      // Step 2: Check if word ID migration is needed (for collision prevention)
-      const idMigrationStats = WordIdMigrationService.getIdMigrationStats(languageCode);
-
-      if (idMigrationStats.needsMigration) {
-        logger.info(
-          `Starting word ID migration for ${languageCode}: ${idMigrationStats.oldFormatWords} words need robust IDs`
-        );
-
-        // Run word ID migration
-        const idMigrationResult = WordIdMigrationService.migrateWordProgressIds(
-          languageCode,
-          migratedData
-        );
-
-        if (idMigrationResult.success && idMigrationResult.migratedCount > 0) {
-          logger.info(
-            `Word ID migration completed: ${idMigrationResult.migratedCount} IDs updated for ${languageCode}`
-          );
-
-          // Reload the data after ID migration
-          migratedData = wordProgressStorage.loadRaw(languageCode) as {
-            [key: string]: WordProgress;
-          };
-        } else if (!idMigrationResult.success) {
-          logger.error(`Word ID migration failed for ${languageCode}:`, idMigrationResult.errors);
-          // Continue with existing data even if ID migration failed
-        }
-      }
+      // Note: We use numeric IDs consistently throughout the system.
+      // No ID migration or consolidation needed.
 
       // Clear migration flag
       this.migrationInProgress.delete(languageCode);
@@ -216,7 +190,10 @@ export class DataMigrationService {
 
       logger.error('Error during migration:', error);
       // Fallback to original data if migration fails
-      return wordProgressStorage.loadRaw(languageCode) as { [key: string]: WordProgress };
+      const fallbackData = wordProgressStorage.loadRaw(languageCode) as {
+        [key: string]: WordProgress;
+      };
+      return fallbackData;
     }
   }
 

@@ -205,12 +205,39 @@ export const wordProgressStorage = {
     if (!isLocalStorageAvailable()) return {};
 
     try {
+      // First, try to load from the old unified key (legacy format)
       const data = safeJSONParse<PersistentWordProgress>(
         localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
         {}
       );
 
-      return data[languageCode] || {};
+      if (data[languageCode] && Object.keys(data[languageCode]).length > 0) {
+        return data[languageCode];
+      }
+
+      // Fallback: Try to load from new tieredStorage per-language key
+      // The new system uses `word_progress_${languageCode}` format
+      const newKey = `word_progress_${languageCode}`;
+      const newData = localStorage.getItem(newKey);
+      if (newData) {
+        try {
+          const parsed = safeJSONParse<{ [key: string]: any }>(newData, {});
+          if (Object.keys(parsed).length > 0) {
+            // CRITICAL FIX: Also sync this back to the unified key for consistency
+            const unified = safeJSONParse<PersistentWordProgress>(
+              localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
+              {}
+            );
+            unified[languageCode] = parsed;
+            localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(unified));
+            return parsed;
+          }
+        } catch (parseError) {
+          logger.warn(`Failed to parse new format word progress for ${languageCode}:`, parseError);
+        }
+      }
+
+      return {};
     } catch (error) {
       logger.error('Failed to load raw word progress:', error);
       return {};
