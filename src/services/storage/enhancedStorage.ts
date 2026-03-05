@@ -253,6 +253,32 @@ class EnhancedStorageService {
   }
 
   /**
+   * Achievements operations
+   */
+  async saveAchievements(achievements: any): Promise<StorageResult<void>> {
+    const options: StorageOptions = {
+      compress: false, // Achievements data is small
+      priority: 'high', // Achievements should be saved immediately
+      ttl: 365 * 24 * 60 * 60 * 1000, // 1 year
+    };
+
+    // Invalidate analytics cache since achievements affect overall progress
+    this.invalidateAnalyticsCache();
+
+    if (this.config.debugMode) {
+      logger.debug(`💾 Saving achievements`, {
+        unlockedCount: achievements.unlockedAchievements?.length || 0,
+      });
+    }
+
+    return await asyncStorage.set('achievements', achievements, options);
+  }
+
+  async loadAchievements(): Promise<StorageResult<any>> {
+    return await asyncStorage.get('achievements');
+  }
+
+  /**
    * Analytics and metrics
    */
   async saveAnalytics(languageCode: string, analytics: any): Promise<StorageResult<void>> {
