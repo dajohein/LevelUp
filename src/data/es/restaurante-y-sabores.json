@@ -5,53 +5,629 @@
   "icon": "🍽️",
   "difficulty": "beginner",
   "words": [
-    {"id": "restaurante-y-sabores:1", "term": "la mesa", "definition": "de tafel", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "La mesa está limpia y preparada.", "translation": "De tafel is schoon en gedekt.", "sentenceWithBlank": "{BLANK} está limpia y preparada."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:2", "term": "la carta", "definition": "de kaart, het menu", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "¿Nos trae la carta, por favor?", "translation": "Brengt u de kaart, alstublieft?", "sentenceWithBlank": "¿Nos trae {BLANK}, por favor?"}, "synonyms": ["el menú"]},
-    {"id": "restaurante-y-sabores:3", "term": "el camarero", "definition": "de ober", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "El camarero trae las bebidas.", "translation": "De ober brengt de drankjes.", "sentenceWithBlank": "{BLANK} trae las bebidas."}, "synonyms": ["el mesero"]},
-    {"id": "restaurante-y-sabores:4", "term": "la camarera", "definition": "de ober", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "La camarera es muy amable.", "translation": "De ober is erg vriendelijk.", "sentenceWithBlank": "{BLANK} es muy amable."}, "synonyms": ["la mesera"]},
-    {"id": "restaurante-y-sabores:5", "term": "la cuenta", "definition": "de rekening", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "¿Podemos pedir la cuenta?", "translation": "Mogen we de rekening vragen?", "sentenceWithBlank": "¿Podemos pedir {BLANK}?"}, "synonyms": []},
-    {"id": "restaurante-y-sabores:6", "term": "el plato", "definition": "het gerecht", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "Este plato es típico de la región.", "translation": "Dit gerecht is typisch voor de regio.", "sentenceWithBlank": "Este {BLANK} es típico de la región."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:7", "term": "la carne", "definition": "het vlees", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "Prefiero la carne bien hecha.", "translation": "Ik heb het vlees liever goed doorbakken.", "sentenceWithBlank": "Prefiero {BLANK} bien hecha."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:8", "term": "el pescado", "definition": "de vis", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "El pescado es fresco hoy.", "translation": "De vis is vandaag vers.", "sentenceWithBlank": "{BLANK} es fresco hoy."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:9", "term": "el jamón", "definition": "de ham", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "Compré jamón para el bocadillo.", "translation": "Ik kocht ham voor het broodje.", "sentenceWithBlank": "Compré {BLANK} para el bocadillo."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:10", "term": "el helado", "definition": "het ijs", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "Después de comer, tomamos helado.", "translation": "Na het eten namen we ijs.", "sentenceWithBlank": "Después de comer, tomamos {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:11", "term": "la fruta", "definition": "het fruit", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "La fruta está muy madura.", "translation": "Het fruit is erg rijp.", "sentenceWithBlank": "{BLANK} está muy madura."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:12", "term": "el huevo", "definition": "het ei", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "Necesito un huevo para la receta.", "translation": "Ik heb een ei nodig voor het recept.", "sentenceWithBlank": "Necesito un {BLANK} para la receta."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:13", "term": "la sal", "definition": "het zout", "direction": "definition-to-term", "category": "condimentos", "context": {"sentence": "Añade un poco de sal.", "translation": "Voeg een beetje zout toe.", "sentenceWithBlank": "Añade un poco de {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:14", "term": "la ensalada", "definition": "de salade", "direction": "definition-to-term", "category": "comida", "context": {"sentence": "La ensalada tiene tomate y lechuga.", "translation": "De salade heeft tomaat en sla.", "sentenceWithBlank": "{BLANK} tiene tomate y lechuga."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:15", "term": "el queso", "definition": "de kaas", "direction": "definition-to-term", "category": "lácteos", "context": {"sentence": "El queso holandés es famoso.", "translation": "Nederlandse kaas is beroemd.", "sentenceWithBlank": "El {BLANK} holandés es famoso."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:16", "term": "la coliflor", "definition": "de bloemkool", "direction": "definition-to-term", "category": "verduras", "context": {"sentence": "Cocina la coliflor al vapor.", "translation": "Kook de bloemkool op stoom.", "sentenceWithBlank": "Cocina {BLANK} al vapor."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:17", "term": "la bebida", "definition": "het drankje", "direction": "definition-to-term", "category": "bebidas", "context": {"sentence": "¿Qué bebida quieres?", "translation": "Welk drankje wil je?", "sentenceWithBlank": "¿Qué {BLANK} quieres?"}, "synonyms": []},
-    {"id": "restaurante-y-sabores:18", "term": "el refresco", "definition": "de frisdrank", "direction": "definition-to-term", "category": "bebidas", "context": {"sentence": "Prefiero un refresco frío.", "translation": "Ik heb liever een koude frisdrank.", "sentenceWithBlank": "Prefiero un {BLANK} frío."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:19", "term": "el café", "definition": "de koffie", "direction": "definition-to-term", "category": "bebidas", "context": {"sentence": "Tomo café por la mañana.", "translation": "Ik drink 's ochtends koffie.", "sentenceWithBlank": "Tomo {BLANK} por la mañana."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:20", "term": "la copa", "definition": "het glas", "direction": "definition-to-term", "category": "restaurante", "context": {"sentence": "Sirve el vino en la copa.", "translation": "Schenk de wijn in het glas.", "sentenceWithBlank": "Sirve el vino en {BLANK}."}, "synonyms": ["el vaso"]},
-    {"id": "restaurante-y-sabores:21", "term": "el agua sin gas", "definition": "het mineraalwater", "direction": "definition-to-term", "category": "bebidas", "context": {"sentence": "Quiero agua sin gas, por favor.", "translation": "Ik wil mineraalwater, alstublieft.", "sentenceWithBlank": "Quiero {BLANK}, por favor."}, "synonyms": ["el agua natural"]},
-    {"id": "restaurante-y-sabores:22", "term": "tener (le) sed", "definition": "dorst hebben", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Después de correr, tengo mucha sed.", "translation": "Na het rennen heb ik veel dorst.", "sentenceWithBlank": "Después de correr, {BLANK} mucha sed."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:23", "term": "tener (le) hambre", "definition": "honger hebben", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Los niños siempre tienen hambre a las seis.", "translation": "De kinderen hebben altijd honger om zes uur.", "sentenceWithBlank": "Los niños siempre {BLANK} a las seis."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:24", "term": "rico/-a", "definition": "lekker, rijk", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "El pastel está muy rico.", "translation": "De taart is heel lekker.", "sentenceWithBlank": "El pastel está muy {BLANK}."}, "synonyms": ["delicioso/-a", "sabroso/-a"]},
-    {"id": "restaurante-y-sabores:25", "term": "sano/-a", "definition": "gezond", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "Comer verduras es sano.", "translation": "Groenten eten is gezond.", "sentenceWithBlank": "Comer verduras es {BLANK}."}, "synonyms": ["saludable"]},
-    {"id": "restaurante-y-sabores:26", "term": "vegetariano/-a", "definition": "vegetarisch, vegetariër", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "Mi hermana es vegetariana.", "translation": "Mijn zus is vegetarisch.", "sentenceWithBlank": "Mi hermana es {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:27", "term": "cocinar", "definition": "koken", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Me gusta cocinar los fines de semana.", "translation": "Ik kook graag in het weekend.", "sentenceWithBlank": "Me gusta {BLANK} los fines de semana."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:28", "term": "probar (ue)", "definition": "proeven, proberen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Quiero probar el nuevo plato.", "translation": "Ik wil het nieuwe gerecht proberen.", "sentenceWithBlank": "Quiero {BLANK} el nuevo plato."}, "synonyms": ["degustar"]},
-    {"id": "restaurante-y-sabores:29", "term": "picante", "definition": "pittig", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "La salsa está demasiado picante.", "translation": "De saus is te pittig.", "sentenceWithBlank": "La salsa está demasiado {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:30", "term": "dulce", "definition": "zoet", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "El postre es muy dulce.", "translation": "Het dessert is erg zoet.", "sentenceWithBlank": "El postre es muy {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:31", "term": "salado/-a", "definition": "zout", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "Estas patatas están muy saladas.", "translation": "Deze aardappelen zijn erg zout.", "sentenceWithBlank": "Estas patatas están muy {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:32", "term": "redondo/-a", "definition": "rond", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "El plato es redondo.", "translation": "Het bord is rond.", "sentenceWithBlank": "El plato es {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:33", "term": "plano/-a", "definition": "plat", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "La mesa es plana.", "translation": "De tafel is plat.", "sentenceWithBlank": "La mesa es {BLANK}."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:34", "term": "delicioso/-a", "definition": "heerlijk", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "La sopa está deliciosa.", "translation": "De soep is heerlijk.", "sentenceWithBlank": "La sopa está {BLANK}."}, "synonyms": ["rico/-a", "sabroso/-a"]},
-    {"id": "restaurante-y-sabores:35", "term": "famoso/-a", "definition": "beroemd", "direction": "definition-to-term", "category": "adjetivos", "context": {"sentence": "El queso holandés es famoso en el mundo.", "translation": "Nederlandse kaas is wereldwijd beroemd.", "sentenceWithBlank": "El queso holandés es {BLANK} en el mundo."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:36", "term": "pedir (i)", "definition": "vragen, bestellen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Vamos a pedir la comida ahora.", "translation": "We gaan nu het eten bestellen.", "sentenceWithBlank": "Vamos a {BLANK} la comida ahora."}, "synonyms": ["solicitar"]},
-    {"id": "restaurante-y-sabores:37", "term": "elegir (i)", "definition": "kiezen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "No sé qué plato elegir.", "translation": "Ik weet niet welk gerecht ik moet kiezen.", "sentenceWithBlank": "No sé qué plato {BLANK}."}, "synonyms": ["seleccionar"]},
-    {"id": "restaurante-y-sabores:38", "term": "significar", "definition": "betekenen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "¿Qué significa esta palabra?", "translation": "Wat betekent dit woord?", "sentenceWithBlank": "¿Qué {BLANK} esta palabra?"}, "synonyms": ["querer decir"]},
-    {"id": "restaurante-y-sabores:39", "term": "olvidar", "definition": "vergeten", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "No debes olvidar tus llaves.", "translation": "Je mag je sleutels niet vergeten.", "sentenceWithBlank": "No debes {BLANK} tus llaves."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:40", "term": "entrar", "definition": "naar binnen gaan", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Vamos a entrar al restaurante.", "translation": "We gaan het restaurant binnen.", "sentenceWithBlank": "Vamos a {BLANK} al restaurante."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:41", "term": "preparar", "definition": "bereiden, klaarmaken", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Voy a preparar la cena.", "translation": "Ik ga het avondeten klaarmaken.", "sentenceWithBlank": "Voy a {BLANK} la cena."}, "synonyms": ["cocinar"]},
-    {"id": "restaurante-y-sabores:42", "term": "saber", "definition": "weten", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "¿Sabes dónde está el baño?", "translation": "Weet je waar de wc is?", "sentenceWithBlank": "¿{BLANK} dónde está el baño?"}, "synonyms": []},
-    {"id": "restaurante-y-sabores:43", "term": "preferir (ie)", "definition": "liever willen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Prefiero comer temprano.", "translation": "Ik wil liever vroeg eten.", "sentenceWithBlank": "{BLANK} comer temprano."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:44", "term": "cubrir", "definition": "bedekken", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Debes cubrir la comida.", "translation": "Je moet het eten bedekken.", "sentenceWithBlank": "Debes {BLANK} la comida."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:45", "term": "resistir", "definition": "zich verzetten", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "No podemos resistir la tentación.", "translation": "We kunnen de verleiding niet weerstaan.", "sentenceWithBlank": "No podemos {BLANK} la tentación."}, "synonyms": ["oponerse"]},
-    {"id": "restaurante-y-sabores:46", "term": "echar", "definition": "toevoegen", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Voy a echar sal a la sopa.", "translation": "Ik ga zout toevoegen aan de soep.", "sentenceWithBlank": "Voy a {BLANK} sal a la sopa."}, "synonyms": ["añadir", "agregar"]},
-    {"id": "restaurante-y-sabores:47", "term": "pensar (ie)", "definition": "denken", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Pienso en qué pedir.", "translation": "Ik denk na over wat ik bestel.", "sentenceWithBlank": "{BLANK} en qué pedir."}, "synonyms": []},
-    {"id": "restaurante-y-sabores:48", "term": "tomar", "definition": "nemen, drinken", "direction": "definition-to-term", "category": "verbos", "context": {"sentence": "Vamos a tomar un café.", "translation": "We gaan een koffie drinken.", "sentenceWithBlank": "Vamos a {BLANK} un café."}, "synonyms": ["beber"]}
+    {
+      "id": "restaurante-y-sabores:1",
+      "term": "la mesa",
+      "definition": "de tafel",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "La mesa está limpia y preparada.",
+        "translation": "De tafel is schoon en gedekt.",
+        "sentenceWithBlank": "{BLANK} está limpia y preparada."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:2",
+      "term": "la carta",
+      "definition": "de kaart, het menu",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "¿Nos trae la carta, por favor?",
+        "translation": "Brengt u de kaart, alstublieft?",
+        "sentenceWithBlank": "¿Nos trae {BLANK}, por favor?"
+      },
+      "synonyms": ["el menú"]
+    },
+    {
+      "id": "restaurante-y-sabores:3",
+      "term": "el camarero",
+      "definition": "de ober",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "El camarero trae las bebidas.",
+        "translation": "De ober brengt de drankjes.",
+        "sentenceWithBlank": "{BLANK} trae las bebidas."
+      },
+      "synonyms": ["el mesero"]
+    },
+    {
+      "id": "restaurante-y-sabores:4",
+      "term": "la camarera",
+      "definition": "de ober",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "La camarera es muy amable.",
+        "translation": "De ober is erg vriendelijk.",
+        "sentenceWithBlank": "{BLANK} es muy amable."
+      },
+      "synonyms": ["la mesera"]
+    },
+    {
+      "id": "restaurante-y-sabores:5",
+      "term": "la cuenta",
+      "definition": "de rekening",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "¿Podemos pedir la cuenta?",
+        "translation": "Mogen we de rekening vragen?",
+        "sentenceWithBlank": "¿Podemos pedir {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:6",
+      "term": "el plato",
+      "definition": "het gerecht",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "Este plato es típico de la región.",
+        "translation": "Dit gerecht is typisch voor de regio.",
+        "sentenceWithBlank": "Este {BLANK} es típico de la región."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:7",
+      "term": "la carne",
+      "definition": "het vlees",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "Prefiero la carne bien hecha.",
+        "translation": "Ik heb het vlees liever goed doorbakken.",
+        "sentenceWithBlank": "Prefiero {BLANK} bien hecha."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:8",
+      "term": "el pescado",
+      "definition": "de vis",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "El pescado es fresco hoy.",
+        "translation": "De vis is vandaag vers.",
+        "sentenceWithBlank": "{BLANK} es fresco hoy."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:9",
+      "term": "el jamón",
+      "definition": "de ham",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "Compré jamón para el bocadillo.",
+        "translation": "Ik kocht ham voor het broodje.",
+        "sentenceWithBlank": "Compré {BLANK} para el bocadillo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:10",
+      "term": "el helado",
+      "definition": "het ijs",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "Después de comer, tomamos helado.",
+        "translation": "Na het eten namen we ijs.",
+        "sentenceWithBlank": "Después de comer, tomamos {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:11",
+      "term": "la fruta",
+      "definition": "het fruit",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "La fruta está muy madura.",
+        "translation": "Het fruit is erg rijp.",
+        "sentenceWithBlank": "{BLANK} está muy madura."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:12",
+      "term": "el huevo",
+      "definition": "het ei",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "Necesito un huevo para la receta.",
+        "translation": "Ik heb een ei nodig voor het recept.",
+        "sentenceWithBlank": "Necesito un {BLANK} para la receta."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:13",
+      "term": "la sal",
+      "definition": "het zout",
+      "direction": "definition-to-term",
+      "category": "condimentos",
+      "context": {
+        "sentence": "Añade un poco de sal.",
+        "translation": "Voeg een beetje zout toe.",
+        "sentenceWithBlank": "Añade un poco de {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:14",
+      "term": "la ensalada",
+      "definition": "de salade",
+      "direction": "definition-to-term",
+      "category": "comida",
+      "context": {
+        "sentence": "La ensalada tiene tomate y lechuga.",
+        "translation": "De salade heeft tomaat en sla.",
+        "sentenceWithBlank": "{BLANK} tiene tomate y lechuga."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:15",
+      "term": "el queso",
+      "definition": "de kaas",
+      "direction": "definition-to-term",
+      "category": "lácteos",
+      "context": {
+        "sentence": "El queso holandés es famoso.",
+        "translation": "Nederlandse kaas is beroemd.",
+        "sentenceWithBlank": "El {BLANK} holandés es famoso."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:16",
+      "term": "la coliflor",
+      "definition": "de bloemkool",
+      "direction": "definition-to-term",
+      "category": "verduras",
+      "context": {
+        "sentence": "Cocina la coliflor al vapor.",
+        "translation": "Kook de bloemkool op stoom.",
+        "sentenceWithBlank": "Cocina {BLANK} al vapor."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:17",
+      "term": "la bebida",
+      "definition": "het drankje",
+      "direction": "definition-to-term",
+      "category": "bebidas",
+      "context": {
+        "sentence": "¿Qué bebida quieres?",
+        "translation": "Welk drankje wil je?",
+        "sentenceWithBlank": "¿Qué {BLANK} quieres?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:18",
+      "term": "el refresco",
+      "definition": "de frisdrank",
+      "direction": "definition-to-term",
+      "category": "bebidas",
+      "context": {
+        "sentence": "Prefiero un refresco frío.",
+        "translation": "Ik heb liever een koude frisdrank.",
+        "sentenceWithBlank": "Prefiero un {BLANK} frío."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:19",
+      "term": "el café",
+      "definition": "de koffie",
+      "direction": "definition-to-term",
+      "category": "bebidas",
+      "context": {
+        "sentence": "Tomo café por la mañana.",
+        "translation": "Ik drink 's ochtends koffie.",
+        "sentenceWithBlank": "Tomo {BLANK} por la mañana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:20",
+      "term": "la copa",
+      "definition": "het glas",
+      "direction": "definition-to-term",
+      "category": "restaurante",
+      "context": {
+        "sentence": "Sirve el vino en la copa.",
+        "translation": "Schenk de wijn in het glas.",
+        "sentenceWithBlank": "Sirve el vino en {BLANK}."
+      },
+      "synonyms": ["el vaso"]
+    },
+    {
+      "id": "restaurante-y-sabores:21",
+      "term": "el agua sin gas",
+      "definition": "het mineraalwater",
+      "direction": "definition-to-term",
+      "category": "bebidas",
+      "context": {
+        "sentence": "Quiero agua sin gas, por favor.",
+        "translation": "Ik wil mineraalwater, alstublieft.",
+        "sentenceWithBlank": "Quiero {BLANK}, por favor."
+      },
+      "synonyms": ["el agua natural"]
+    },
+    {
+      "id": "restaurante-y-sabores:22",
+      "term": "tener (le) sed",
+      "definition": "dorst hebben",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Después de correr, tengo mucha sed.",
+        "translation": "Na het rennen heb ik veel dorst.",
+        "sentenceWithBlank": "Después de correr, {BLANK} mucha sed."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:23",
+      "term": "tener (le) hambre",
+      "definition": "honger hebben",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Los niños siempre tienen hambre a las seis.",
+        "translation": "De kinderen hebben altijd honger om zes uur.",
+        "sentenceWithBlank": "Los niños siempre {BLANK} a las seis."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:24",
+      "term": "rico/-a",
+      "definition": "lekker, rijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El pastel está muy rico.",
+        "translation": "De taart is heel lekker.",
+        "sentenceWithBlank": "El pastel está muy {BLANK}."
+      },
+      "synonyms": ["delicioso", "deliciosa", "sabroso", "sabrosa", "rico", "rica"]
+    },
+    {
+      "id": "restaurante-y-sabores:25",
+      "term": "sano/-a",
+      "definition": "gezond",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Comer verduras es sano.",
+        "translation": "Groenten eten is gezond.",
+        "sentenceWithBlank": "Comer verduras es {BLANK}."
+      },
+      "synonyms": ["saludable", "sano", "sana"]
+    },
+    {
+      "id": "restaurante-y-sabores:26",
+      "term": "vegetariano/-a",
+      "definition": "vegetarisch, vegetariër",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Mi hermana es vegetariana.",
+        "translation": "Mijn zus is vegetarisch.",
+        "sentenceWithBlank": "Mi hermana es {BLANK}."
+      },
+      "synonyms": ["vegetariano", "vegetariana"]
+    },
+    {
+      "id": "restaurante-y-sabores:27",
+      "term": "cocinar",
+      "definition": "koken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta cocinar los fines de semana.",
+        "translation": "Ik kook graag in het weekend.",
+        "sentenceWithBlank": "Me gusta {BLANK} los fines de semana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:28",
+      "term": "probar (ue)",
+      "definition": "proeven, proberen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero probar el nuevo plato.",
+        "translation": "Ik wil het nieuwe gerecht proberen.",
+        "sentenceWithBlank": "Quiero {BLANK} el nuevo plato."
+      },
+      "synonyms": ["degustar"]
+    },
+    {
+      "id": "restaurante-y-sabores:29",
+      "term": "picante",
+      "definition": "pittig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La salsa está demasiado picante.",
+        "translation": "De saus is te pittig.",
+        "sentenceWithBlank": "La salsa está demasiado {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:30",
+      "term": "dulce",
+      "definition": "zoet",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El postre es muy dulce.",
+        "translation": "Het dessert is erg zoet.",
+        "sentenceWithBlank": "El postre es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:31",
+      "term": "salado/-a",
+      "definition": "zout",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Estas patatas están muy saladas.",
+        "translation": "Deze aardappelen zijn erg zout.",
+        "sentenceWithBlank": "Estas patatas están muy {BLANK}."
+      },
+      "synonyms": ["salado", "salada"]
+    },
+    {
+      "id": "restaurante-y-sabores:32",
+      "term": "redondo/-a",
+      "definition": "rond",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El plato es redondo.",
+        "translation": "Het bord is rond.",
+        "sentenceWithBlank": "El plato es {BLANK}."
+      },
+      "synonyms": ["redondo", "redonda"]
+    },
+    {
+      "id": "restaurante-y-sabores:33",
+      "term": "plano/-a",
+      "definition": "plat",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La mesa es plana.",
+        "translation": "De tafel is plat.",
+        "sentenceWithBlank": "La mesa es {BLANK}."
+      },
+      "synonyms": ["plano", "plana"]
+    },
+    {
+      "id": "restaurante-y-sabores:34",
+      "term": "delicioso/-a",
+      "definition": "heerlijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La sopa está deliciosa.",
+        "translation": "De soep is heerlijk.",
+        "sentenceWithBlank": "La sopa está {BLANK}."
+      },
+      "synonyms": ["rico", "rica", "sabroso", "sabrosa", "delicioso", "deliciosa"]
+    },
+    {
+      "id": "restaurante-y-sabores:35",
+      "term": "famoso/-a",
+      "definition": "beroemd",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El queso holandés es famoso en el mundo.",
+        "translation": "Nederlandse kaas is wereldwijd beroemd.",
+        "sentenceWithBlank": "El queso holandés es {BLANK} en el mundo."
+      },
+      "synonyms": ["famoso", "famosa"]
+    },
+    {
+      "id": "restaurante-y-sabores:36",
+      "term": "pedir (i)",
+      "definition": "vragen, bestellen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a pedir la comida ahora.",
+        "translation": "We gaan nu het eten bestellen.",
+        "sentenceWithBlank": "Vamos a {BLANK} la comida ahora."
+      },
+      "synonyms": ["solicitar"]
+    },
+    {
+      "id": "restaurante-y-sabores:37",
+      "term": "elegir (i)",
+      "definition": "kiezen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No sé qué plato elegir.",
+        "translation": "Ik weet niet welk gerecht ik moet kiezen.",
+        "sentenceWithBlank": "No sé qué plato {BLANK}."
+      },
+      "synonyms": ["seleccionar"]
+    },
+    {
+      "id": "restaurante-y-sabores:38",
+      "term": "significar",
+      "definition": "betekenen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Qué significa esta palabra?",
+        "translation": "Wat betekent dit woord?",
+        "sentenceWithBlank": "¿Qué {BLANK} esta palabra?"
+      },
+      "synonyms": ["querer decir"]
+    },
+    {
+      "id": "restaurante-y-sabores:39",
+      "term": "olvidar",
+      "definition": "vergeten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No debes olvidar tus llaves.",
+        "translation": "Je mag je sleutels niet vergeten.",
+        "sentenceWithBlank": "No debes {BLANK} tus llaves."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:40",
+      "term": "entrar",
+      "definition": "naar binnen gaan",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a entrar al restaurante.",
+        "translation": "We gaan het restaurant binnen.",
+        "sentenceWithBlank": "Vamos a {BLANK} al restaurante."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:41",
+      "term": "preparar",
+      "definition": "bereiden, klaarmaken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a preparar la cena.",
+        "translation": "Ik ga het avondeten klaarmaken.",
+        "sentenceWithBlank": "Voy a {BLANK} la cena."
+      },
+      "synonyms": ["cocinar"]
+    },
+    {
+      "id": "restaurante-y-sabores:42",
+      "term": "saber",
+      "definition": "weten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Sabes dónde está el baño?",
+        "translation": "Weet je waar de wc is?",
+        "sentenceWithBlank": "¿{BLANK} dónde está el baño?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:43",
+      "term": "preferir (ie)",
+      "definition": "liever willen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Prefiero comer temprano.",
+        "translation": "Ik wil liever vroeg eten.",
+        "sentenceWithBlank": "{BLANK} comer temprano."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:44",
+      "term": "cubrir",
+      "definition": "bedekken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Debes cubrir la comida.",
+        "translation": "Je moet het eten bedekken.",
+        "sentenceWithBlank": "Debes {BLANK} la comida."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:45",
+      "term": "resistir",
+      "definition": "zich verzetten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No podemos resistir la tentación.",
+        "translation": "We kunnen de verleiding niet weerstaan.",
+        "sentenceWithBlank": "No podemos {BLANK} la tentación."
+      },
+      "synonyms": ["oponerse"]
+    },
+    {
+      "id": "restaurante-y-sabores:46",
+      "term": "echar",
+      "definition": "toevoegen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a echar sal a la sopa.",
+        "translation": "Ik ga zout toevoegen aan de soep.",
+        "sentenceWithBlank": "Voy a {BLANK} sal a la sopa."
+      },
+      "synonyms": ["añadir", "agregar"]
+    },
+    {
+      "id": "restaurante-y-sabores:47",
+      "term": "pensar (ie)",
+      "definition": "denken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Pienso en qué pedir.",
+        "translation": "Ik denk na over wat ik bestel.",
+        "sentenceWithBlank": "{BLANK} en qué pedir."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "restaurante-y-sabores:48",
+      "term": "tomar",
+      "definition": "nemen, drinken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a tomar un café.",
+        "translation": "We gaan een koffie drinken.",
+        "sentenceWithBlank": "Vamos a {BLANK} un café."
+      },
+      "synonyms": ["beber"]
+    }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "id": "moda-y-estilo",
-  "name": "Moda y Estilo",
-  "description": "Vocabulario sobre ropa, moda, apariencia y estilo personal (dirección: neerlandés → español).",
+  "name": "Moda, Estilo y Deportes",
+  "description": "Vocabulario sobre ropa, moda, apariencia, estilo personal y deportes (dirección: neerlandes -> espanol).",
   "icon": "👔",
   "difficulty": "beginner",
   "words": [
@@ -16,7 +16,7 @@
         "translation": "Mijn broer is erg lang.",
         "sentenceWithBlank": "Mi hermano es muy {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["alto", "alta"]
     },
     {
       "id": "moda-y-estilo:2",
@@ -29,7 +29,7 @@
         "translation": "De tafel is laag.",
         "sentenceWithBlank": "La mesa es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["bajo", "baja"]
     },
     {
       "id": "moda-y-estilo:3",
@@ -42,7 +42,7 @@
         "translation": "Het boek is erg dik.",
         "sentenceWithBlank": "El libro es muy {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["gordo", "gorda"]
     },
     {
       "id": "moda-y-estilo:4",
@@ -55,7 +55,7 @@
         "translation": "Zij is slank en elegant.",
         "sentenceWithBlank": "Ella es {BLANK} y elegante."
       },
-      "synonyms": []
+      "synonyms": ["delgado", "delgada"]
     },
     {
       "id": "moda-y-estilo:5",
@@ -120,7 +120,7 @@
         "translation": "Deze jurk is klein.",
         "sentenceWithBlank": "Este vestido es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["pequeño", "pequeña"]
     },
     {
       "id": "moda-y-estilo:10",
@@ -133,7 +133,7 @@
         "translation": "Mijn vriendin is blond.",
         "sentenceWithBlank": "Mi amiga es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["rubio", "rubia"]
     },
     {
       "id": "moda-y-estilo:11",
@@ -146,7 +146,7 @@
         "translation": "Hij heeft donker haar.",
         "sentenceWithBlank": "Él tiene el pelo {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["moreno", "morena"]
     },
     {
       "id": "moda-y-estilo:12",
@@ -159,7 +159,7 @@
         "translation": "Hij heeft bruine ogen.",
         "sentenceWithBlank": "Tiene ojos {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["castaño", "castaña"]
     },
     {
       "id": "moda-y-estilo:13",
@@ -172,7 +172,7 @@
         "translation": "Haar haar is steil en lang.",
         "sentenceWithBlank": "Su pelo es {BLANK} y largo."
       },
-      "synonyms": []
+      "synonyms": ["liso", "lisa"]
     },
     {
       "id": "moda-y-estilo:14",
@@ -185,7 +185,7 @@
         "translation": "Ze draagt een lange jurk.",
         "sentenceWithBlank": "Lleva un vestido {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["largo", "larga"]
     },
     {
       "id": "moda-y-estilo:15",
@@ -198,7 +198,7 @@
         "translation": "Hij heeft kort haar.",
         "sentenceWithBlank": "Tiene el pelo {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["corto", "corta"]
     },
     {
       "id": "moda-y-estilo:16",
@@ -211,7 +211,7 @@
         "translation": "Mijn zus heeft gekruld haar.",
         "sentenceWithBlank": "Mi hermana tiene el pelo {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["rizado", "rizada"]
     },
     {
       "id": "moda-y-estilo:17",
@@ -289,7 +289,7 @@
         "translation": "Die jurk is een beetje vreemd.",
         "sentenceWithBlank": "Ese vestido es un poco {BLANK}."
       },
-      "synonyms": ["extraño/-a"]
+      "synonyms": ["extraño", "extraña", "raro", "rara"]
     },
     {
       "id": "moda-y-estilo:23",
@@ -315,7 +315,7 @@
         "translation": "Deze kleding is gemakkelijk te wassen.",
         "sentenceWithBlank": "Esta ropa es {BLANK} de lavar."
       },
-      "synonyms": ["sencillo/-a"]
+      "synonyms": ["sencillo", "sencilla"]
     },
     {
       "id": "moda-y-estilo:25",
@@ -328,7 +328,7 @@
         "translation": "Het is moeilijk om een jurk te kiezen.",
         "sentenceWithBlank": "Es {BLANK} elegir un vestido."
       },
-      "synonyms": ["complicado/-a"]
+      "synonyms": ["complicado", "complicada"]
     },
     {
       "id": "moda-y-estilo:26",
@@ -341,7 +341,7 @@
         "translation": "Ik vind het niet mooi, het is lelijk.",
         "sentenceWithBlank": "No me gusta, es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["feo", "fea"]
     },
     {
       "id": "moda-y-estilo:27",
@@ -354,7 +354,7 @@
         "translation": "Wat een mooie jurk.",
         "sentenceWithBlank": "Qué vestido tan {BLANK}."
       },
-      "synonyms": ["lindo/-a"]
+      "synonyms": ["lindo", "linda", "bonito", "bonita"]
     },
     {
       "id": "moda-y-estilo:28",
@@ -367,7 +367,7 @@
         "translation": "Hij is een heel knappe jongen.",
         "sentenceWithBlank": "Es un chico muy {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["guapo", "guapa"]
     },
     {
       "id": "moda-y-estilo:29",
@@ -380,7 +380,7 @@
         "translation": "Deze kleur is saai.",
         "sentenceWithBlank": "Este color es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["aburrido", "aburrida"]
     },
     {
       "id": "moda-y-estilo:30",
@@ -393,7 +393,7 @@
         "translation": "Hij draagt heel leuke kleding.",
         "sentenceWithBlank": "Lleva ropa muy {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["divertido", "divertida"]
     },
     {
       "id": "moda-y-estilo:31",
@@ -406,7 +406,7 @@
         "translation": "Deze schoenen zijn oud.",
         "sentenceWithBlank": "Estos zapatos son {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["viejo", "vieja"]
     },
     {
       "id": "moda-y-estilo:32",
@@ -419,7 +419,7 @@
         "translation": "Ik kocht een nieuwe jas.",
         "sentenceWithBlank": "Me compré un abrigo {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["nuevo", "nueva"]
     },
     {
       "id": "moda-y-estilo:33",
@@ -445,7 +445,7 @@
         "translation": "De verkoopster is erg aardig.",
         "sentenceWithBlank": "La dependienta es muy {BLANK}."
       },
-      "synonyms": ["amable"]
+      "synonyms": ["amable", "simpático", "simpática"]
     },
     {
       "id": "moda-y-estilo:35",
@@ -458,7 +458,7 @@
         "translation": "De verkoper is vriendelijk.",
         "sentenceWithBlank": "El vendedor es {BLANK}."
       },
-      "synonyms": ["simpático/-a"]
+      "synonyms": ["simpático", "simpática"]
     },
     {
       "id": "moda-y-estilo:36",
@@ -601,7 +601,7 @@
         "translation": "Ik vind sportkleding leuk.",
         "sentenceWithBlank": "Me gusta la ropa {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["deportivo", "deportiva"]
     },
     {
       "id": "moda-y-estilo:47",
@@ -666,7 +666,7 @@
         "translation": "Deze winkel is goedkoop.",
         "sentenceWithBlank": "Esta tienda es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["barato", "barata"]
     },
     {
       "id": "moda-y-estilo:52",
@@ -679,7 +679,7 @@
         "translation": "De jurk is erg duur.",
         "sentenceWithBlank": "El vestido es muy {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["caro", "cara"]
     },
     {
       "id": "moda-y-estilo:53",
@@ -692,7 +692,7 @@
         "translation": "Ik heb veel kleding.",
         "sentenceWithBlank": "Tengo {BLANK} ropa."
       },
-      "synonyms": []
+      "synonyms": ["mucho", "mucha"]
     },
     {
       "id": "moda-y-estilo:54",
@@ -705,7 +705,7 @@
         "translation": "Hij heeft weinig kleding.",
         "sentenceWithBlank": "Tiene {BLANK} ropa."
       },
-      "synonyms": []
+      "synonyms": ["poco", "poca"]
     },
     {
       "id": "moda-y-estilo:55",
@@ -718,7 +718,7 @@
         "translation": "Dit is te groot.",
         "sentenceWithBlank": "Esto es {BLANK} grande."
       },
-      "synonyms": []
+      "synonyms": ["demasiado", "demasiada"]
     },
     {
       "id": "moda-y-estilo:56",
@@ -810,6 +810,383 @@
         "sentenceWithBlank": "Hoy {BLANK} una camisa azul."
       },
       "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:262",
+      "term": "el ciclismo",
+      "definition": "wielrennen",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "El ciclismo es muy popular en los Países Bajos.",
+        "translation": "Wielrennen is erg populair in Nederland.",
+        "sentenceWithBlank": "{BLANK} es muy popular en los Países Bajos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:263",
+      "term": "el hockey",
+      "definition": "hockey",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Jugamos al hockey los sábados.",
+        "translation": "We spelen hockey op zaterdag.",
+        "sentenceWithBlank": "Jugamos al {BLANK} los sábados."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:264",
+      "term": "el barranquismo",
+      "definition": "canyoning",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "El barranquismo es un deporte de aventura.",
+        "translation": "Canyoning is een avontuurlijke sport.",
+        "sentenceWithBlank": "{BLANK} es un deporte de aventura."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:265",
+      "term": "el senderismo",
+      "definition": "wandelsport",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Hacemos senderismo en la montaña.",
+        "translation": "We doen aan wandelsport in de bergen.",
+        "sentenceWithBlank": "Hacemos {BLANK} en la montaña."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:266",
+      "term": "la equitación",
+      "definition": "paardrijden",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "La equitación requiere equilibrio.",
+        "translation": "Paardrijden vereist evenwicht.",
+        "sentenceWithBlank": "{BLANK} requiere equilibrio."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:267",
+      "term": "patinar",
+      "definition": "schaatsen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta patinar en invierno.",
+        "translation": "Ik schaats graag in de winter.",
+        "sentenceWithBlank": "Me gusta {BLANK} en invierno."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:268",
+      "term": "escalar",
+      "definition": "bergbeklimmen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Queremos escalar esa montaña.",
+        "translation": "We willen die berg beklimmen.",
+        "sentenceWithBlank": "Queremos {BLANK} esa montaña."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:269",
+      "term": "esquiar",
+      "definition": "skiën",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a esquiar en febrero.",
+        "translation": "We gaan skiën in februari.",
+        "sentenceWithBlank": "Vamos a {BLANK} en febrero."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:270",
+      "term": "montar en bicicleta",
+      "definition": "fietsen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta montar en bicicleta al parque.",
+        "translation": "Ik fiets graag naar het park.",
+        "sentenceWithBlank": "Me gusta {BLANK} al parque."
+      },
+      "synonyms": ["ir en bici"]
+    },
+    {
+      "id": "moda-y-estilo:271",
+      "term": "el equipo",
+      "definition": "het team",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Nuestro equipo entrena tres veces por semana.",
+        "translation": "Ons team traint drie keer per week.",
+        "sentenceWithBlank": "Nuestro {BLANK} entrena tres veces por semana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:272",
+      "term": "el jugador",
+      "definition": "de speler",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Ese jugador es muy rápido.",
+        "translation": "Die speler is erg snel.",
+        "sentenceWithBlank": "Ese {BLANK} es muy rápido."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:273",
+      "term": "al día",
+      "definition": "per dag",
+      "direction": "definition-to-term",
+      "category": "frecuencia",
+      "context": {
+        "sentence": "Bebo dos litros de agua al día.",
+        "translation": "Ik drink twee liter water per dag.",
+        "sentenceWithBlank": "Bebo dos litros de agua {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:274",
+      "term": "a la semana",
+      "definition": "per week",
+      "direction": "definition-to-term",
+      "category": "frecuencia",
+      "context": {
+        "sentence": "Entrenamos cuatro veces a la semana.",
+        "translation": "We trainen vier keer per week.",
+        "sentenceWithBlank": "Entrenamos cuatro veces {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:275",
+      "term": "al mes",
+      "definition": "per maand",
+      "direction": "definition-to-term",
+      "category": "frecuencia",
+      "context": {
+        "sentence": "Participa en una carrera al mes.",
+        "translation": "Hij neemt deel aan een wedstrijd per maand.",
+        "sentenceWithBlank": "Participa en una carrera {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:276",
+      "term": "al año",
+      "definition": "per jaar",
+      "direction": "definition-to-term",
+      "category": "frecuencia",
+      "context": {
+        "sentence": "Vamos a esquiar una vez al año.",
+        "translation": "We gaan een keer per jaar skiën.",
+        "sentenceWithBlank": "Vamos a esquiar una vez {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:277",
+      "term": "el deporte",
+      "definition": "de sport",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "El deporte es bueno para la salud.",
+        "translation": "Sport is goed voor de gezondheid.",
+        "sentenceWithBlank": "{BLANK} es bueno para la salud."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:278",
+      "term": "el partido",
+      "definition": "de wedstrijd",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "El partido empieza a las ocho.",
+        "translation": "De wedstrijd begint om acht uur.",
+        "sentenceWithBlank": "{BLANK} empieza a las ocho."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:279",
+      "term": "el éxito",
+      "definition": "het succes",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "El éxito llega con esfuerzo.",
+        "translation": "Succes komt met inspanning.",
+        "sentenceWithBlank": "{BLANK} llega con esfuerzo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:280",
+      "term": "entrenar",
+      "definition": "trainen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero entrenar más este mes.",
+        "translation": "Ik wil deze maand meer trainen.",
+        "sentenceWithBlank": "Quiero {BLANK} más este mes."
+      },
+      "synonyms": ["practicar"]
+    },
+    {
+      "id": "moda-y-estilo:281",
+      "term": "descansar",
+      "definition": "uitrusten",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Es importante descansar después de entrenar.",
+        "translation": "Het is belangrijk om uit te rusten na het trainen.",
+        "sentenceWithBlank": "Es importante {BLANK} después de entrenar."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:282",
+      "term": "ganar",
+      "definition": "winnen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Queremos ganar el partido.",
+        "translation": "We willen de wedstrijd winnen.",
+        "sentenceWithBlank": "Queremos {BLANK} el partido."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:283",
+      "term": "perder (ie)",
+      "definition": "verliezen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No queremos perder otra vez.",
+        "translation": "We willen niet nog eens verliezen.",
+        "sentenceWithBlank": "No queremos {BLANK} otra vez."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:284",
+      "term": "el entrenamiento",
+      "definition": "de training",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "El entrenamiento empieza temprano.",
+        "translation": "De training begint vroeg.",
+        "sentenceWithBlank": "{BLANK} empieza temprano."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:285",
+      "term": "el participante",
+      "definition": "de deelnemer",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Cada participante recibe un número.",
+        "translation": "Elke deelnemer krijgt een nummer.",
+        "sentenceWithBlank": "Cada {BLANK} recibe un número."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:286",
+      "term": "bajar",
+      "definition": "afdalen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Después de subir, toca bajar.",
+        "translation": "Na het stijgen is het tijd om af te dalen.",
+        "sentenceWithBlank": "Después de subir, toca {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:287",
+      "term": "la dificultad",
+      "definition": "de moeilijkheid",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "La dificultad de esta ruta es alta.",
+        "translation": "De moeilijkheid van deze route is hoog.",
+        "sentenceWithBlank": "{BLANK} de esta ruta es alta."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:288",
+      "term": "nadar",
+      "definition": "zwemmen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me encanta nadar en el mar.",
+        "translation": "Ik zwem heel graag in zee.",
+        "sentenceWithBlank": "Me encanta {BLANK} en el mar."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:289",
+      "term": "saltar",
+      "definition": "springen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Puedes saltar más alto con práctica.",
+        "translation": "Je kunt hoger springen met oefening.",
+        "sentenceWithBlank": "Puedes {BLANK} más alto con práctica."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:290",
+      "term": "practicar",
+      "definition": "beoefenen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Voy a practicar español y deporte.",
+        "translation": "Ik ga Spaans en sport beoefenen.",
+        "sentenceWithBlank": "Voy a {BLANK} español y deporte."
+      },
+      "synonyms": ["entrenar"]
     }
   ]
 }

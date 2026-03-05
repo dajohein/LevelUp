@@ -1,22 +1,22 @@
-import type { Module, LanguageInfo, WordProgress } from '../store/types';
-import type { Word } from './wordService';
-import { logger } from './logger';
+import type { LanguageInfo, Module, WordProgress } from '../store/types';
 import { DataIntegrityError } from '../utils/errorHandling';
+import { logger } from './logger';
+import type { Word } from './wordService';
 
 // Import language info files
 import deLanguageInfo from '../data/de/index.json';
 import esLanguageInfo from '../data/es/index.json';
 
 // Import module files
-import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import deGrammatikGrundlagen from '../data/de/grammatik-grundlagen.json';
 import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
+import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import deNiederlandischDeutschVokabeln from '../data/de/niederlandisch-deutsch-vokabeln.json';
-import esVocabularioBasico from '../data/es/vocabulario-basico.json';
-import esFrasesClave from '../data/es/frases-clave.json';
 import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
-import esRestauranteYSabores from '../data/es/restaurante-y-sabores.json';
+import esFrasesClave from '../data/es/frases-clave.json';
 import esModaYEstilo from '../data/es/moda-y-estilo.json';
+import esRestauranteYSabores from '../data/es/restaurante-y-sabores.json';
+import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {

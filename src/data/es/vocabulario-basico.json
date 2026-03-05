@@ -198,7 +198,7 @@
         "translation": "Mijn vader is heel sportief en rent elke dag.",
         "sentenceWithBlank": "Mi padre es muy {BLANK} y corre cada día."
       },
-      "synonyms": ["atlético", "activo"]
+      "synonyms": ["atlético", "activo", "deportivo", "deportiva"]
     },
     {
       "id": "16",
@@ -211,7 +211,7 @@
         "translation": "Deze film is heel saai.",
         "sentenceWithBlank": "Esta película es muy {BLANK}."
       },
-      "synonyms": ["tedioso", "monótono"]
+      "synonyms": ["tedioso", "monótono", "aburrido", "aburrida"]
     },
     {
       "id": "17",
@@ -250,7 +250,7 @@
         "translation": "Ze heeft een prachtig huis op het platteland.",
         "sentenceWithBlank": "Tiene una casa {BLANK} en el campo."
       },
-      "synonyms": ["hermoso", "bello", "lindo"]
+      "synonyms": ["hermoso", "bello", "lindo", "precioso", "preciosa"]
     },
     {
       "id": "20",
@@ -263,7 +263,7 @@
         "translation": "Dit gebouw heeft een heel modern ontwerp.",
         "sentenceWithBlank": "Este edificio tiene un diseño muy {BLANK}."
       },
-      "synonyms": ["contemporáneo", "actual"]
+      "synonyms": ["contemporáneo", "actual", "moderno", "moderna"]
     },
     {
       "id": "21",
@@ -562,7 +562,7 @@
         "translation": "Welkom in ons huis!",
         "sentenceWithBlank": "¡{BLANK} a nuestra casa!"
       },
-      "synonyms": ["recibido con gusto"]
+      "synonyms": ["recibido con gusto", "bienvenido", "bienvenida"]
     },
     {
       "id": "44",
@@ -575,7 +575,7 @@
         "translation": "Deze stoel is heel comfortabel.",
         "sentenceWithBlank": "Esta silla es muy {BLANK}."
       },
-      "synonyms": ["confortable", "agradable"]
+      "synonyms": ["confortable", "agradable", "cómodo", "cómoda"]
     },
     {
       "id": "45",
@@ -588,7 +588,7 @@
         "translation": "Ik voel me oncomfortabel in deze situatie.",
         "sentenceWithBlank": "Me siento {BLANK} en esta situación."
       },
-      "synonyms": ["molesto", "desagradable"]
+      "synonyms": ["molesto", "desagradable", "incómodo", "incómoda"]
     },
     {
       "id": "46",
@@ -601,7 +601,7 @@
         "translation": "Morgen komt er een nieuwe film uit.",
         "sentenceWithBlank": "Estrenan una película {BLANK} mañana."
       },
-      "synonyms": ["reciente", "fresco"]
+      "synonyms": ["reciente", "fresco", "nuevo", "nueva"]
     },
     {
       "id": "47",

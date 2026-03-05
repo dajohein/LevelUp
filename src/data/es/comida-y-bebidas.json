@@ -29,9 +29,7 @@
         "translation": "Mag ik de kaart zien, alstublieft?",
         "sentenceWithBlank": "¿Puedo ver {BLANK}, por favor?"
       },
-      "synonyms": [
-        "el menú"
-      ]
+      "synonyms": ["el menú"]
     },
     {
       "id": "comida-y-bebidas:187",
@@ -57,9 +55,7 @@
         "translation": "De ober bracht ons de rekening.",
         "sentenceWithBlank": "{BLANK} nos trajo la cuenta."
       },
-      "synonyms": [
-        "el mesero"
-      ]
+      "synonyms": ["el mesero"]
     },
     {
       "id": "comida-y-bebidas:189",
@@ -72,9 +68,7 @@
         "translation": "De ober is erg vriendelijk.",
         "sentenceWithBlank": "{BLANK} es muy amable."
       },
-      "synonyms": [
-        "la mesera"
-      ]
+      "synonyms": ["la mesera"]
     },
     {
       "id": "comida-y-bebidas:190",
@@ -100,9 +94,7 @@
         "translation": "Ik vind de smaak van deze soep lekker.",
         "sentenceWithBlank": "Me gusta {BLANK} de esta sopa."
       },
-      "synonyms": [
-        "el gusto"
-      ]
+      "synonyms": ["el gusto"]
     },
     {
       "id": "comida-y-bebidas:192",
@@ -115,9 +107,7 @@
         "translation": "Ik geef de voorkeur aan mineraalwater.",
         "sentenceWithBlank": "Prefiero {BLANK}."
       },
-      "synonyms": [
-        "el agua natural"
-      ]
+      "synonyms": ["el agua natural"]
     },
     {
       "id": "comida-y-bebidas:193",
@@ -156,9 +146,7 @@
         "translation": "De groenten zijn erg gezond.",
         "sentenceWithBlank": "{BLANK} son muy saludables."
       },
-      "synonyms": [
-        "las hortalizas"
-      ]
+      "synonyms": ["las hortalizas"]
     },
     {
       "id": "comida-y-bebidas:196",
@@ -249,10 +237,7 @@
         "translation": "De paella is heerlijk.",
         "sentenceWithBlank": "La paella está {BLANK}."
       },
-      "synonyms": [
-        "rico/-a",
-        "sabroso/-a"
-      ]
+      "synonyms": ["rico", "rica", "sabroso", "sabrosa", "delicioso", "deliciosa"]
     },
     {
       "id": "comida-y-bebidas:203",
@@ -265,9 +250,7 @@
         "translation": "Het is belangrijk om gezonde voeding te eten.",
         "sentenceWithBlank": "Es importante comer alimentos {BLANK}."
       },
-      "synonyms": [
-        "saludable"
-      ]
+      "synonyms": ["saludable", "sano", "sana"]
     },
     {
       "id": "comida-y-bebidas:204",
@@ -280,10 +263,7 @@
         "translation": "Deze taart is heel lekker.",
         "sentenceWithBlank": "Este pastel está muy {BLANK}."
       },
-      "synonyms": [
-        "delicioso/-a",
-        "sabroso/-a"
-      ]
+      "synonyms": ["delicioso", "deliciosa", "sabroso", "sabrosa", "rico", "rica"]
     },
     {
       "id": "comida-y-bebidas:205",
@@ -296,7 +276,7 @@
         "translation": "Mijn zus is vegetarisch.",
         "sentenceWithBlank": "Mi hermana es {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["vegetariano", "vegetariana"]
     },
     {
       "id": "comida-y-bebidas:206",
@@ -309,9 +289,7 @@
         "translation": "Paella is een typisch Spaans gerecht.",
         "sentenceWithBlank": "La paella es un plato {BLANK} español."
       },
-      "synonyms": [
-        "característico/-a"
-      ]
+      "synonyms": ["característico", "característica", "típico", "típica"]
     },
     {
       "id": "comida-y-bebidas:207",
@@ -324,10 +302,7 @@
         "translation": "Het is nodig om elke dag water te drinken.",
         "sentenceWithBlank": "Es {BLANK} beber agua todos los días."
       },
-      "synonyms": [
-        "precisar",
-        "requerir"
-      ]
+      "synonyms": ["precisar", "requerir"]
     },
     {
       "id": "comida-y-bebidas:208",
@@ -340,9 +315,7 @@
         "translation": "Wat betekent dit woord?",
         "sentenceWithBlank": "¿Qué {BLANK} esta palabra?"
       },
-      "synonyms": [
-        "querer decir"
-      ]
+      "synonyms": ["querer decir"]
     },
     {
       "id": "comida-y-bebidas:209",
@@ -381,10 +354,7 @@
         "translation": "Ik ga zout toevoegen aan de soep.",
         "sentenceWithBlank": "Voy a {BLANK} sal a la sopa."
       },
-      "synonyms": [
-        "añadir",
-        "agregar"
-      ]
+      "synonyms": ["añadir", "agregar"]
     },
     {
       "id": "comida-y-bebidas:212",
@@ -397,9 +367,7 @@
         "translation": "Weet je hoe je paella moet koken?",
         "sentenceWithBlank": "¿{BLANK} cocinar paella?"
       },
-      "synonyms": [
-        "conocer"
-      ]
+      "synonyms": ["conocer"]
     },
     {
       "id": "comida-y-bebidas:213",
@@ -412,9 +380,7 @@
         "translation": "Je moet de pan bedekken terwijl je kookt.",
         "sentenceWithBlank": "Debes {BLANK} la olla mientras cocinas."
       },
-      "synonyms": [
-        "tapar"
-      ]
+      "synonyms": ["tapar"]
     },
     {
       "id": "comida-y-bebidas:214",
@@ -440,9 +406,7 @@
         "translation": "We hebben meel nodig om brood te maken.",
         "sentenceWithBlank": "Necesitamos {BLANK} para hacer el pan."
       },
-      "synonyms": [
-        "la harina"
-      ]
+      "synonyms": ["la harina"]
     },
     {
       "id": "comida-y-bebidas:216",
@@ -520,7 +484,7 @@
         "translation": "Deze soep is te zout.",
         "sentenceWithBlank": "Esta sopa está demasiado {BLANK}."
       },
-      "synonyms": []
+      "synonyms": ["salado", "salada"]
     },
     {
       "id": "comida-y-bebidas:222",
@@ -533,9 +497,7 @@
         "translation": "Ik houd niet van heel pittig eten.",
         "sentenceWithBlank": "No me gusta la comida muy {BLANK}."
       },
-      "synonyms": [
-        "ardiente"
-      ]
+      "synonyms": ["ardiente"]
     },
     {
       "id": "comida-y-bebidas:223",
@@ -548,9 +510,7 @@
         "translation": "Dit dessert is heel zoet.",
         "sentenceWithBlank": "Este postre está muy {BLANK}."
       },
-      "synonyms": [
-        "azucarado"
-      ]
+      "synonyms": ["azucarado"]
     },
     {
       "id": "comida-y-bebidas:224",
@@ -563,9 +523,7 @@
         "translation": "De ronde tafel is perfect voor het gezin.",
         "sentenceWithBlank": "La mesa {BLANK} es perfecta para la familia."
       },
-      "synonyms": [
-        "circular"
-      ]
+      "synonyms": ["circular", "redondo", "redonda"]
     },
     {
       "id": "comida-y-bebidas:225",
@@ -578,9 +536,7 @@
         "translation": "Het bord is helemaal plat.",
         "sentenceWithBlank": "El plato es completamente {BLANK}."
       },
-      "synonyms": [
-        "liso"
-      ]
+      "synonyms": ["liso", "plano", "plana"]
     },
     {
       "id": "comida-y-bebidas:226",
@@ -593,10 +549,7 @@
         "translation": "Dit restaurant is heel beroemd.",
         "sentenceWithBlank": "Este restaurante es muy {BLANK}."
       },
-      "synonyms": [
-        "conocido",
-        "célebre"
-      ]
+      "synonyms": ["conocido", "célebre", "famoso", "famosa"]
     },
     {
       "id": "comida-y-bebidas:227",
@@ -609,10 +562,7 @@
         "translation": "Help! Ik heb hulp nodig!",
         "sentenceWithBlank": "¡{BLANK}! ¡Necesito ayuda!"
       },
-      "synonyms": [
-        "¡auxilio!",
-        "¡ayuda!"
-      ]
+      "synonyms": ["¡auxilio!", "¡ayuda!"]
     },
     {
       "id": "comida-y-bebidas:228",
@@ -625,10 +575,7 @@
         "translation": "We hebben een klein probleem in de keuken.",
         "sentenceWithBlank": "Tenemos un pequeño {BLANK} en la cocina."
       },
-      "synonyms": [
-        "la dificultad",
-        "el inconveniente"
-      ]
+      "synonyms": ["la dificultad", "el inconveniente"]
     },
     {
       "id": "comida-y-bebidas:229",
@@ -641,9 +588,7 @@
         "translation": "Ik geef je een goed advies over koken.",
         "sentenceWithBlank": "Te doy un buen {BLANK} sobre cocina."
       },
-      "synonyms": [
-        "la recomendación"
-      ]
+      "synonyms": ["la recomendación"]
     },
     {
       "id": "comida-y-bebidas:230",
@@ -656,10 +601,7 @@
         "translation": "Het is een gewoonte om laat te dineren in Spanje.",
         "sentenceWithBlank": "Es {BLANK} cenar tarde en España."
       },
-      "synonyms": [
-        "el hábito",
-        "la tradición"
-      ]
+      "synonyms": ["el hábito", "la tradición"]
     },
     {
       "id": "comida-y-bebidas:231",
@@ -672,9 +614,7 @@
         "translation": "Ik kan geen weerstand bieden aan dit heerlijke dessert.",
         "sentenceWithBlank": "No puedo {BLANK} este delicioso postre."
       },
-      "synonyms": [
-        "oponerse"
-      ]
+      "synonyms": ["oponerse"]
     },
     {
       "id": "comida-y-bebidas:232",
@@ -687,10 +627,7 @@
         "translation": "Het is moeilijk om te kiezen tussen zoveel desserts.",
         "sentenceWithBlank": "Es difícil {BLANK} entre tantos postres."
       },
-      "synonyms": [
-        "seleccionar",
-        "escoger"
-      ]
+      "synonyms": ["seleccionar", "escoger"]
     },
     {
       "id": "comida-y-bebidas:233",
@@ -703,9 +640,7 @@
         "translation": "Dit recept betekent veel voor mijn familie.",
         "sentenceWithBlank": "Esta receta {BLANK} mucho para mi familia."
       },
-      "synonyms": [
-        "querer decir"
-      ]
+      "synonyms": ["querer decir"]
     },
     {
       "id": "comida-y-bebidas:234",
@@ -822,9 +757,7 @@
         "translation": "Als voorgerecht hebben we groentesoep.",
         "sentenceWithBlank": "De {BLANK} tenemos sopa de verduras."
       },
-      "synonyms": [
-        "el primer plato"
-      ]
+      "synonyms": ["el primer plato"]
     },
     {
       "id": "comida-y-bebidas:243",
@@ -837,9 +770,7 @@
         "translation": "Het hoofdgerecht is gebraden kip.",
         "sentenceWithBlank": "{BLANK} plato es pollo asado."
       },
-      "synonyms": [
-        "el plato principal"
-      ]
+      "synonyms": ["el plato principal"]
     },
     {
       "id": "comida-y-bebidas:244",
@@ -852,9 +783,7 @@
         "translation": "Welk nagerecht raden jullie aan?",
         "sentenceWithBlank": "¿Qué {BLANK} recomiendan?"
       },
-      "synonyms": [
-        "el dulce"
-      ]
+      "synonyms": ["el dulce"]
     },
     {
       "id": "comida-y-bebidas:245",
@@ -867,9 +796,7 @@
         "translation": "Kunt u ons de rekening brengen, alstublieft?",
         "sentenceWithBlank": "¿Nos puede traer {BLANK}, por favor?"
       },
-      "synonyms": [
-        "la factura"
-      ]
+      "synonyms": ["la factura"]
     },
     {
       "id": "comida-y-bebidas:246",
@@ -882,10 +809,7 @@
         "translation": "Natuurlijk vind ik paella lekker.",
         "sentenceWithBlank": "Por {BLANK} que me gusta la paella."
       },
-      "synonyms": [
-        "naturalmente",
-        "claro"
-      ]
+      "synonyms": ["naturalmente", "claro"]
     },
     {
       "id": "comida-y-bebidas:247",
@@ -898,9 +822,7 @@
         "translation": "Wil je een frisdrank bij het eten?",
         "sentenceWithBlank": "¿Quieres un {BLANK} con la comida?"
       },
-      "synonyms": [
-        "la bebida gaseosa"
-      ]
+      "synonyms": ["la bebida gaseosa"]
     },
     {
       "id": "comida-y-bebidas:248",
@@ -913,10 +835,7 @@
         "translation": "Dit is een heel interessant onderwerp.",
         "sentenceWithBlank": "Este es un {BLANK} muy interesante."
       },
-      "synonyms": [
-        "el asunto",
-        "la cuestión"
-      ]
+      "synonyms": ["el asunto", "la cuestión"]
     },
     {
       "id": "comida-y-bebidas:249",
@@ -929,9 +848,7 @@
         "translation": "Mijn leraar is Spaanstalig.",
         "sentenceWithBlank": "Mi profesor es {BLANK}."
       },
-      "synonyms": [
-        "el hablante de español"
-      ]
+      "synonyms": ["el hablante de español"]
     },
     {
       "id": "comida-y-bebidas:250",
@@ -944,9 +861,7 @@
         "translation": "Mag ik je een vraag stellen over het recept?",
         "sentenceWithBlank": "¿Puedo hacerte una {BLANK} sobre la receta?"
       },
-      "synonyms": [
-        "la cuestión"
-      ]
+      "synonyms": ["la cuestión"]
     },
     {
       "id": "comida-y-bebidas:251",
@@ -959,9 +874,7 @@
         "translation": "Het antwoord op je vraag is heel eenvoudig.",
         "sentenceWithBlank": "{BLANK} a tu pregunta es muy simple."
       },
-      "synonyms": [
-        "la contestación"
-      ]
+      "synonyms": ["la contestación"]
     },
     {
       "id": "comida-y-bebidas:252",
@@ -974,9 +887,7 @@
         "translation": "Ik heb een meer gedetailleerde uitleg nodig.",
         "sentenceWithBlank": "Necesito una {BLANK} más detallada."
       },
-      "synonyms": [
-        "la aclaración"
-      ]
+      "synonyms": ["la aclaración"]
     },
     {
       "id": "comida-y-bebidas:253",
@@ -989,10 +900,7 @@
         "translation": "Dit woord heeft verschillende betekenissen.",
         "sentenceWithBlank": "Esta {BLANK} tiene varios significados."
       },
-      "synonyms": [
-        "el término",
-        "la expresión"
-      ]
+      "synonyms": ["el término", "la expresión"]
     },
     {
       "id": "comida-y-bebidas:254",
@@ -1005,9 +913,7 @@
         "translation": "Morgen is het een feestdag in Spanje.",
         "sentenceWithBlank": "Mañana es {BLANK} en España."
       },
-      "synonyms": [
-        "el día de fiesta"
-      ]
+      "synonyms": ["el día de fiesta"]
     },
     {
       "id": "comida-y-bebidas:255",
@@ -1020,9 +926,7 @@
         "translation": "Dit ingrediënt is essentieel voor het recept.",
         "sentenceWithBlank": "Este {BLANK} es esencial para la receta."
       },
-      "synonyms": [
-        "el componente"
-      ]
+      "synonyms": ["el componente"]
     },
     {
       "id": "comida-y-bebidas:256",
@@ -1087,9 +991,7 @@
         "translation": "Geef je me een glas rode wijn?",
         "sentenceWithBlank": "¿Me das una {BLANK} de vino tinto?"
       },
-      "synonyms": [
-        "el vaso"
-      ]
+      "synonyms": ["el vaso"]
     },
     {
       "id": "comida-y-bebidas:261",
