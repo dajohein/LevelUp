@@ -1187,6 +1187,149 @@
         "sentenceWithBlank": "Voy a {BLANK} español y deporte."
       },
       "synonyms": ["entrenar"]
+    },
+    {
+      "id": "moda-y-estilo:291",
+      "term": "la experiencia",
+      "definition": "de ervaring",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Tengo mucha experiencia en moda.",
+        "translation": "Ik heb veel ervaring in mode.",
+        "sentenceWithBlank": "Tengo mucha {BLANK} en moda."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:292",
+      "term": "el nivel",
+      "definition": "het niveau",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Mi nivel de español es intermedio.",
+        "translation": "Mijn niveau Spaans is gemiddeld.",
+        "sentenceWithBlank": "Mi {BLANK} de español es intermedio."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:293",
+      "term": "ofrecer",
+      "definition": "aanbieden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "La tienda ofrece descuentos especiales.",
+        "translation": "De winkel biedt speciale kortingen aan.",
+        "sentenceWithBlank": "La tienda {BLANK} descuentos especiales."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:294",
+      "term": "el albergue",
+      "definition": "de herberg",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Nos quedamos en un albergue juvenil.",
+        "translation": "We blijven in een jeugdherberg.",
+        "sentenceWithBlank": "Nos quedamos en un {BLANK} juvenil."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:295",
+      "term": "la dirección",
+      "definition": "het adres",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "¿Cuál es tu dirección?",
+        "translation": "Wat is jouw adres?",
+        "sentenceWithBlank": "¿Cuál es tu {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:296",
+      "term": "el código postal",
+      "definition": "de postcode",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Necesito el código postal para el envío.",
+        "translation": "Ik heb de postcode nodig voor de verzending.",
+        "sentenceWithBlank": "Necesito {BLANK} para el envío."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:297",
+      "term": "la firma",
+      "definition": "de handtekening",
+      "direction": "definition-to-term",
+      "category": "sustantivos",
+      "context": {
+        "sentence": "Pon tu firma aquí, por favor.",
+        "translation": "Zet je handtekening hier, alsjeblieft.",
+        "sentenceWithBlank": "Pon tu {BLANK} aquí, por favor."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:298",
+      "term": "estar de moda",
+      "definition": "in de mode zijn",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Estos colores están de moda este año.",
+        "translation": "Deze kleuren zijn dit jaar in de mode.",
+        "sentenceWithBlank": "Estos colores {BLANK} este año."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:299",
+      "term": "ir a la moda",
+      "definition": "in de mode zijn",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Ella siempre va a la moda.",
+        "translation": "Zij is altijd in de mode.",
+        "sentenceWithBlank": "Ella siempre {BLANK}."
+      },
+      "synonyms": ["estar de moda"]
+    },
+    {
+      "id": "moda-y-estilo:300",
+      "term": "jugar (ue) al fútbol",
+      "definition": "voetballen",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Me gusta jugar al fútbol los fines de semana.",
+        "translation": "Ik voetbal graag in het weekend.",
+        "sentenceWithBlank": "Me gusta {BLANK} los fines de semana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "moda-y-estilo:301",
+      "term": "jugar (ue) al tenis",
+      "definition": "tennissen",
+      "direction": "definition-to-term",
+      "category": "deportes",
+      "context": {
+        "sentence": "Juego al tenis dos veces por semana.",
+        "translation": "Ik tennis twee keer per week.",
+        "sentenceWithBlank": "{BLANK} dos veces por semana."
+      },
+      "synonyms": []
     }
   ]
 }
