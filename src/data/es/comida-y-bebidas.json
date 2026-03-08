@@ -202,20 +202,20 @@
     },
     {
       "id": "comida-y-bebidas:200",
-      "term": "tener (le) sed",
+      "term": "tener sed",
       "definition": "dorst hebben",
       "direction": "definition-to-term",
       "category": "verbos",
       "context": {
         "sentence": "Tengo mucha sed después del ejercicio.",
         "translation": "Ik heb veel dorst na de training.",
-        "sentenceWithBlank": "{BLANK} mucha sed después del ejercicio."
+        "sentenceWithBlank": "Después del ejercicio, es normal {BLANK}."
       },
       "synonyms": []
     },
     {
       "id": "comida-y-bebidas:201",
-      "term": "tener (le) hambre",
+      "term": "tener hambre",
       "definition": "honger hebben",
       "direction": "definition-to-term",
       "category": "verbos",

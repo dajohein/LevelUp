@@ -280,20 +280,20 @@
     },
     {
       "id": "restaurante-y-sabores:22",
-      "term": "tener (le) sed",
+      "term": "tener sed",
       "definition": "dorst hebben",
       "direction": "definition-to-term",
       "category": "verbos",
       "context": {
         "sentence": "Después de correr, tengo mucha sed.",
         "translation": "Na het rennen heb ik veel dorst.",
-        "sentenceWithBlank": "Después de correr, {BLANK} mucha sed."
+        "sentenceWithBlank": "Después de correr, es normal {BLANK}."
       },
       "synonyms": []
     },
     {
       "id": "restaurante-y-sabores:23",
-      "term": "tener (le) hambre",
+      "term": "tener hambre",
       "definition": "honger hebben",
       "direction": "definition-to-term",
       "category": "verbos",

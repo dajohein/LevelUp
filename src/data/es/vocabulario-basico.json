@@ -761,7 +761,7 @@
     },
     {
       "id": "59",
-      "term": "reñir(i)",
+      "term": "reñir (i)",
       "definition": "ruzie maken",
       "direction": "definition-to-term",
       "category": "verbos",
@@ -872,7 +872,7 @@
       "context": {
         "sentence": "Necesito comprar material escolar.",
         "translation": "Ik moet schoolspullen kopen.",
-        "sentenceWithBlank": "Necesito comprar {BLANK} escolar."
+        "sentenceWithBlank": "Necesito comprar {BLANK}."
       },
       "synonyms": ["los útiles escolares"]
     },
@@ -898,7 +898,7 @@
       "context": {
         "sentence": "Los niños dibujan con lápices de color.",
         "translation": "De kinderen tekenen met kleurpotloden.",
-        "sentenceWithBlank": "Los niños dibujan con {BLANK} de color."
+        "sentenceWithBlank": "Los niños dibujan con {BLANK}."
       },
       "synonyms": ["el lápiz de colores"]
     },
@@ -1366,7 +1366,7 @@
       "context": {
         "sentence": "Vamos a ir de camping este fin de semana.",
         "translation": "We gaan dit weekend kamperen.",
-        "sentenceWithBlank": "Vamos a {BLANK} de camping este fin de semana."
+        "sentenceWithBlank": "Este fin de semana, vamos a {BLANK}."
       },
       "synonyms": ["acampar"]
     },
