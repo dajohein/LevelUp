@@ -10,6 +10,7 @@ import styled from '@emotion/styled';
 import { useAILearning } from '../hooks/useAILearning';
 
 import { adaptiveLearningEngine } from '../services';
+import { logger } from '../services/logger';
 import { BaseButton, Card } from './ui';
 import { theme } from '../styles/theme';
 
