@@ -17,7 +17,7 @@
  * - Maintained backward compatibility
  */
 
-import type { Middleware, UnknownAction } from '@reduxjs/toolkit';
+import type { Middleware, AnyAction } from '@reduxjs/toolkit';
 import type { Store } from 'redux';
 import type { RootState } from './store';
 import { logger } from '../services/logger';
@@ -89,11 +89,7 @@ const getAutoSave = () => {
 };
 
 // Simplified queue helper
-const queueStateChange = (
-  autoSave: BackgroundAutoSave,
-  state: RootState,
-  action: UnknownAction
-) => {
+const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action: AnyAction) => {
   const actionType = action.type;
   const priority = CRITICAL_ACTIONS.includes(actionType) ? 'high' : 'medium';
 

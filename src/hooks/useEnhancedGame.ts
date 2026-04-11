@@ -139,7 +139,7 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
         // Reset the enhanced service
         enhancedWordService.resetSession();
 
-        return { isComplete: true, recommendations };
+        return { isComplete: true as const, recommendations };
       } else {
         // Update state with next word
         const sessionProgress = enhancedWordService.getSessionProgress();
@@ -151,7 +151,7 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
         }));
 
         setWordStartTime(Date.now());
-        return { isComplete: false, nextWord: result.nextWord };
+        return { isComplete: false as const, nextWord: result.nextWord };
       }
     },
     [enhancedState.isUsingSpacedRepetition, wordStartTime, languageCode]

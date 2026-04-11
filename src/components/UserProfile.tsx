@@ -366,11 +366,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
 
     return {};
-  }, [currentLanguage]); // Remove reduxWordProgress dependency to prevent frequent updates
+  }, [currentLanguage, gameData.wordProgress]); // gameData.wordProgress included for correctness
 
   // Memoize expensive calculations
   const profileData = useMemo(() => {
-    if (!currentLanguage) return { languageXP: 0, currentLevel: 1, stats: { studiedWords: 0, masteredWords: 0, wordsInProgress: 0, averageMastery: 0 }, xpProgress: { current: 0, required: 100, percentage: 0 }, levelInfo: null };
+    if (!currentLanguage)
+      return {
+        languageXP: 0,
+        currentLevel: 1,
+        stats: {
+          totalWords: 0,
+          studiedWords: 0,
+          masteredWords: 0,
+          perfectWords: 0,
+          totalXP: 0,
+          currentLevel: 1,
+          learningStreak: 0,
+          masteryRate: 0,
+          perfectRate: 0,
+          studyRate: 0,
+        },
+        xpProgress: { current: 0, needed: 100, percentage: 0 },
+        levelInfo: getLevelInfo(1),
+      };
     const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
     const currentLevel = calculateCurrentLevel(languageXP);
     const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
@@ -596,16 +614,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     fontSize: '0.8rem',
                   }}
                   onClick={async () => {
-                    console.log('Manually creating fresh profile...');
+                    logger.debug('Manually creating fresh profile...');
                     // Clear any existing incomplete profile first
                     const storage = new (
                       await import('../services/storage/userLearningProfile')
                     ).UserLearningProfileStorage();
                     try {
                       await storage.deleteProfile(userId);
-                      console.log('Old profile cleared');
+                      logger.debug('Old profile cleared');
                     } catch (e) {
-                      console.log('No old profile to clear or error clearing:', e);
+                      logger.debug('No old profile to clear or error clearing:', e);
                     }
                     // Trigger refresh to create new profile
                     refreshProfile();
@@ -625,7 +643,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     fontSize: '0.8rem',
                   }}
                   onClick={() => {
-                    console.log('Running storage test...');
+                    logger.debug('Running storage test...');
                     testLearningProfileStorage();
                   }}
                 >
@@ -643,7 +661,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     fontSize: '0.8rem',
                   }}
                   onClick={() => {
-                    console.log('Inspecting stored profile...');
+                    logger.debug('Inspecting stored profile...');
                     inspectStoredProfile(userId);
                   }}
                 >

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styled from '@emotion/styled';
 
 /** Extends Window with a dev-only render-tracking helper. */
