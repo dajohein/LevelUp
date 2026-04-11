@@ -319,18 +319,12 @@ export interface QuizRendererProps {
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition?: (...args: unknown[]) => unknown;
-  handleEnhancedAnswer?: (...args: unknown[]) => unknown;
 
   // Audio handlers
   playCorrect?: () => void;
   playIncorrect?: () => void;
 
   // Redux dispatch and state updates
-  dispatch?: (...args: unknown[]) => unknown;
-  incrementWordsCompleted?: () => unknown;
-  addCorrectAnswer?: () => unknown;
-  addIncorrectAnswer?: () => unknown;
   setLastAnswerCorrect?: (correct: boolean | null) => void;
   setFeedbackQuestionKey?: (key: string) => void;
   setIsTransitioning?: (transitioning: boolean) => void;
@@ -360,14 +354,8 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   handleSubmit,
   handleOpenQuestionSubmit,
   handleContinueFromLearningCard,
-  handleWordTransition: _handleWordTransition,
-  handleEnhancedAnswer: _handleEnhancedAnswer,
   playCorrect: _playCorrect,
   playIncorrect: _playIncorrect,
-  dispatch: _dispatch,
-  incrementWordsCompleted: _incrementWordsCompleted,
-  addCorrectAnswer: _addCorrectAnswer,
-  addIncorrectAnswer: _addIncorrectAnswer,
   setLastAnswerCorrect: _setLastAnswerCorrect,
   setFeedbackQuestionKey: _setFeedbackQuestionKey,
   setIsTransitioning: _setIsTransitioning,
@@ -377,6 +365,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const wordToUse = enhancedWordInfo?.word || currentWord;
   let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
   const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
+
+  // Nothing to render if there is no word yet
+  if (!wordToUse) return null;
 
   // Session-specific quiz mode overrides
   if (currentSession?.id === 'fill-in-the-blank') {
@@ -434,7 +425,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             sessionProgress={
-              sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)
+              sessionProgress?.wordsCompleted / Math.max(currentSession?.targetWords || 20, 1)
             }
             context={contextForWord}
           />
