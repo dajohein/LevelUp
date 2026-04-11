@@ -2,18 +2,35 @@
  * Manages quiz mode selection, validation, and mode-specific behavior.
  * Extracted from Game.tsx to improve maintainability and testability.
  */
+import { Word } from '../wordService';
+import { ChallengeResult } from '../challengeServiceInterface';
+
+/** Shape of the enhanced word info returned by the challenge service. */
+interface EnhancedWordInfo {
+  quizMode?: string;
+  word?: Word;
+  options?: ChallengeResult['options'];
+  metadata?: ChallengeResult['metadata'];
+}
+
 export class GameModeHandler {
   /**
    * Determine the current quiz mode to use based on enhanced word info or fallback
    */
-  getCurrentQuizMode(enhancedWordInfo: any, fallbackQuizMode: string): string {
+  getCurrentQuizMode(
+    enhancedWordInfo: EnhancedWordInfo | null | undefined,
+    fallbackQuizMode: string
+  ): string {
     return enhancedWordInfo?.quizMode || fallbackQuizMode;
   }
 
   /**
    * Get the current word to use based on enhanced word info or fallback
    */
-  getCurrentWord(enhancedWordInfo: any, fallbackCurrentWord: any): any {
+  getCurrentWord(
+    enhancedWordInfo: EnhancedWordInfo | null | undefined,
+    fallbackCurrentWord: Word | null
+  ): Word | null {
     return enhancedWordInfo?.word || fallbackCurrentWord;
   }
 
@@ -35,7 +52,7 @@ export class GameModeHandler {
   /**
    * Get the question text based on quiz mode and word direction
    */
-  getQuizQuestion(word: any, quizMode: string): string {
+  getQuizQuestion(word: Word, quizMode: string): string {
     // For enhanced quiz modes, provide context-specific prompts
     if (quizMode === 'contextual-analysis') {
       const baseQuestion = this.isUnidirectionalMode(quizMode)
@@ -79,7 +96,7 @@ export class GameModeHandler {
   /**
    * Get the answer text based on quiz mode and word direction
    */
-  getQuizAnswer(word: any, quizMode: string): string {
+  getQuizAnswer(word: Word, quizMode: string): string {
     if (quizMode === 'fill-in-the-blank') {
       // Fill-in-the-blank: ALWAYS use the target language (German) word
       // The context sentence is in German, so we blank out the German term
@@ -103,7 +120,7 @@ export class GameModeHandler {
   /**
    * Get question word based on word direction (bidirectional modes)
    */
-  getQuestionWord(word: any): string {
+  getQuestionWord(word: Word | null | undefined): string {
     if (!word) return '';
 
     // Use word direction to determine question word
@@ -114,7 +131,7 @@ export class GameModeHandler {
   /**
    * Get answer word based on word direction (bidirectional modes)
    */
-  getAnswerWord(word: any): string {
+  getAnswerWord(word: Word | null | undefined): string {
     if (!word) return '';
 
     // Use word direction to determine answer word
@@ -125,7 +142,7 @@ export class GameModeHandler {
   /**
    * Get context for word direction (preserving original complexity)
    */
-  getContextForDirection(word: any): { sentence: string; translation: string } | undefined {
+  getContextForDirection(word: Word): { sentence: string; translation: string } | undefined {
     // If word has explicit context field, use it
     if (word.context) {
       if (typeof word.context === 'string') {
@@ -148,7 +165,7 @@ export class GameModeHandler {
   validateQuizModeConfig(
     sessionId: string,
     quizMode: string,
-    currentWord: any
+    currentWord: Word | null | undefined
   ): {
     isValid: boolean;
     errors: string[];
@@ -166,8 +183,8 @@ export class GameModeHandler {
     // Mode-specific validations
     switch (quizMode) {
       case 'multiple-choice':
-        if (!currentWord.term || !currentWord.dutch) {
-          errors.push('Multiple choice requires both term and dutch translation');
+        if (!currentWord.term || !currentWord.definition) {
+          errors.push('Multiple choice requires both term and definition');
         }
         break;
 

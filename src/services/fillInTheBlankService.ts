@@ -140,9 +140,14 @@ export class FillInTheBlankService {
   }
 
   /**
-   * Get next Fill in the Blank challenge with AI enhancement
+   * Get next Fill in the Blank challenge with AI enhancement.
+   * @param allWords - Explicit word pool to select from (e.g. module-scoped words).
+   *                   When non-empty, these words are used instead of the internal
+   *                   language/module selection, ensuring consistent module scoping
+   *                   across all challenge services.
    */
   async getNextFillInTheBlankWord(
+    allWords: Word[],
     wordProgress: { [key: string]: WordProgress },
     currentProgress: number,
     targetWords: number,
@@ -171,20 +176,30 @@ export class FillInTheBlankService {
       `📝 Fill in the Blank parameters: currentProgress=${currentProgress}, targetWords=${targetWords}, sessionProgress=${sessionProgress}, sentenceComplexity=${sentenceComplexity}, difficulty=${difficulty}`
     );
 
-    // Use centralized word selection
-    const selectionResult = selectWordForChallenge(
-      this.state.languageCode,
-      wordProgress,
-      this.state.sessionId,
-      difficulty,
-      this.state.moduleId
-    );
+    let selectedWord: Word;
 
-    if (!selectionResult) {
-      throw new Error('No words available for Fill in the Blank');
+    if (allWords.length > 0) {
+      // Use the explicitly provided word pool (module-scoped or pre-filtered words)
+      const word = this.selectFromPool(allWords, wordProgress, difficulty);
+      if (!word) {
+        throw new Error('No words available for Fill in the Blank');
+      }
+      selectedWord = word;
+    } else {
+      // Fall back to centralized word selection by language/module
+      const selectionResult = selectWordForChallenge(
+        this.state.languageCode,
+        wordProgress,
+        this.state.sessionId,
+        difficulty,
+        this.state.moduleId
+      );
+
+      if (!selectionResult) {
+        throw new Error('No words available for Fill in the Blank');
+      }
+      selectedWord = selectionResult.word;
     }
-
-    const selectedWord = selectionResult.word;
     const contextualDifficulty =
       sessionProgress * 80 +
       (sentenceComplexity === 'complex' ? 30 : sentenceComplexity === 'moderate' ? 15 : 0);
@@ -193,7 +208,6 @@ export class FillInTheBlankService {
     let languageHints: string[] = [];
     let contextualSupport: string[] = [];
     let reasoning: string[] = [];
-    let timeAllocated: number;
 
     // AI-enhanced word selection for contextual understanding
     if (aiEnhancementsEnabled && contextualDifficulty > 30) {
@@ -299,7 +313,7 @@ export class FillInTheBlankService {
     const contextualClues = this.extractContextualClues(sentence);
 
     const difficultyLevel = calculateWordDifficulty(selectedWord, wordProgress[selectedWord.id]);
-    timeAllocated = calculateTimeAllocation(
+    const timeAllocated = calculateTimeAllocation(
       selectedWord,
       'fill-in-blank',
       difficultyLevel,
@@ -381,6 +395,68 @@ export class FillInTheBlankService {
     } catch (error) {
       logger.error('❌ Failed to record Fill in the Blank completion:', error);
     }
+  }
+
+  /**
+   * Select a word from an explicit pool, prioritising words that need more practice.
+   *
+   * Scoring constants:
+   * - EASY_XP_CEILING: offset that biases easy-mode scores toward low-XP words
+   * - EASY_ERROR_WEIGHT: extra score per incorrect attempt in easy mode
+   * - HARD_ERROR_WEIGHT: extra score per incorrect attempt in hard mode (less aggressive)
+   * - MEDIUM_XP_TARGET: ideal XP midpoint for balanced-mode scoring
+   * - MEDIUM_ERROR_WEIGHT: extra score per incorrect attempt in medium mode
+   * - TOP_CANDIDATE_COUNT: number of top-scored candidates to randomly sample from
+   */
+  private static readonly EASY_XP_CEILING = 200;
+  private static readonly EASY_ERROR_WEIGHT = 10;
+  private static readonly HARD_ERROR_WEIGHT = 5;
+  private static readonly MEDIUM_XP_TARGET = 50;
+  private static readonly MEDIUM_XP_CEILING = 100;
+  private static readonly MEDIUM_ERROR_WEIGHT = 7;
+  private static readonly TOP_CANDIDATE_COUNT = 5;
+
+  private selectFromPool(
+    pool: Word[],
+    wordProgress: { [key: string]: WordProgress },
+    difficulty: 'easy' | 'medium' | 'hard'
+  ): Word | null {
+    if (pool.length === 0) return null;
+
+    // Score each word: lower XP / more errors = higher priority
+    const scored = pool.map(word => {
+      const progress = wordProgress[word.id];
+      const xp = progress?.xp ?? 0;
+      const timesIncorrect = progress?.timesIncorrect ?? 0;
+
+      let score: number;
+      if (difficulty === 'easy') {
+        // Prefer words with low XP (still-learning words)
+        score =
+          FillInTheBlankService.EASY_XP_CEILING -
+          xp +
+          timesIncorrect * FillInTheBlankService.EASY_ERROR_WEIGHT;
+      } else if (difficulty === 'hard') {
+        // Prefer words with higher XP (mastered words need harder challenges)
+        score = xp + timesIncorrect * FillInTheBlankService.HARD_ERROR_WEIGHT;
+      } else {
+        // Medium: balanced – score peaks near the MEDIUM_XP_TARGET
+        score =
+          FillInTheBlankService.MEDIUM_XP_CEILING -
+          Math.abs(xp - FillInTheBlankService.MEDIUM_XP_TARGET) +
+          timesIncorrect * FillInTheBlankService.MEDIUM_ERROR_WEIGHT;
+      }
+
+      return { word, score };
+    });
+
+    // Sort descending by score and pick from top candidates
+    scored.sort((a, b) => b.score - a.score);
+    const topCount = Math.min(FillInTheBlankService.TOP_CANDIDATE_COUNT, scored.length);
+    const topCandidates = scored.slice(0, topCount);
+
+    // Pick randomly from top candidates to add variety
+    return topCandidates[Math.floor(Math.random() * topCandidates.length)].word;
   }
 
   /**

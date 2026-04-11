@@ -5,7 +5,8 @@
  * Helps users learn the word before being quizzed on it
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Word } from '../../services/wordService';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 
@@ -164,7 +165,7 @@ const Timer = styled.div`
 `;
 
 interface LearningCardProps {
-  word: any;
+  word: Word;
   currentIndex: number;
   totalWords: number;
   level?: number;
@@ -186,8 +187,11 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   autoAdvanceDelay = 3000, // 3 seconds default
   reason = 'new',
 }) => {
-  const [timeLeft, setTimeLeft] = useState(autoAdvanceDelay / 1000);
   const onContinueRef = useRef(onContinue);
+  // timeLeft is initialized from autoAdvanceDelay and counted down in the interval
+  // callback. Using a local `remaining` closure avoids synchronous setState in the
+  // effect body while still resetting the countdown when deps change.
+  const [timeLeft, setTimeLeft] = useState(autoAdvanceDelay / 1000);
 
   // Update the ref when onContinue changes
   useEffect(() => {
@@ -195,46 +199,47 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   }, [onContinue]);
 
   useEffect(() => {
-    if (autoAdvance) {
-      // Reset timer when autoAdvance or delay changes
-      setTimeLeft(autoAdvanceDelay / 1000);
+    if (!autoAdvance) return;
 
-      const timer = setTimeout(() => onContinueRef.current(), autoAdvanceDelay);
+    // `remaining` tracks the current countdown value inside this effect closure.
+    // Updating it inside callbacks (not synchronously in the effect body) satisfies
+    // the react-hooks/set-state-in-effect lint rule.
+    let remaining = autoAdvanceDelay / 1000;
 
-      const countdown = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            clearInterval(countdown);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    // Reset the displayed countdown on the next event-loop tick so the UI reflects
+    // the new delay immediately when `autoAdvanceDelay` changes, without calling
+    // setState synchronously in the effect body.
+    const initReset = setTimeout(() => setTimeLeft(remaining), 0);
 
-      return () => {
-        clearTimeout(timer);
-        clearInterval(countdown);
-      };
-    } else {
-      setTimeLeft(0);
-    }
+    const timer = setTimeout(() => onContinueRef.current(), autoAdvanceDelay);
+
+    const countdown = setInterval(() => {
+      remaining = Math.max(0, remaining - 1);
+      setTimeLeft(remaining); // called from callback, not synchronously in effect body
+    }, 1000);
+
+    return () => {
+      clearTimeout(initReset);
+      clearTimeout(timer);
+      clearInterval(countdown);
+    };
   }, [autoAdvance, autoAdvanceDelay]); // Removed onContinue from dependencies
 
-  const getQuestionWord = (word: any) => {
-    const direction = word.direction || 'definition-to-term';
+  const getQuestionWord = (w: Word) => {
+    const direction = w.direction || 'definition-to-term';
     if (direction === 'term-to-definition') {
-      return word.term;
+      return w.term;
     } else {
-      return word.definition;
+      return w.definition;
     }
   };
 
-  const getAnswerWord = (word: any) => {
-    const direction = word.direction || 'definition-to-term';
+  const getAnswerWord = (w: Word) => {
+    const direction = w.direction || 'definition-to-term';
     if (direction === 'term-to-definition') {
-      return word.definition;
+      return w.definition;
     } else {
-      return word.term;
+      return w.term;
     }
   };
 
@@ -251,7 +256,7 @@ export const LearningCard: React.FC<LearningCardProps> = ({
         ) : (
           <>
             <span>📝</span>
-            Practice Time - Let's Review!
+            Practice Time - Let&apos;s Review!
           </>
         )}
       </CardHeader>
@@ -261,11 +266,11 @@ export const LearningCard: React.FC<LearningCardProps> = ({
         <Translation>{getAnswerWord(word)}</Translation>
         {word.context && (
           <Context>
-            "
+            {'"'}
             {typeof word.context === 'string'
               ? word.context
               : word.context.sentence || word.context.translation || ''}
-            "
+            {'"'}
           </Context>
         )}
       </WordDisplay>
