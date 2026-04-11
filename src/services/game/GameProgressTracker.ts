@@ -23,6 +23,12 @@ export interface AnswerValidationResult {
 }
 
 /**
+ * Mastery level below which a word with incorrect answers is considered to
+ * need reinforcement (i.e. the learning card is shown again).
+ */
+const REINFORCEMENT_MASTERY_THRESHOLD = 50;
+
+/**
  * Manages game progress tracking, mastery calculations, and learning analytics.
  * Extracted from Game.tsx to improve separation of concerns.
  */
@@ -184,7 +190,7 @@ export class GameProgressTracker {
       // More incorrect than correct answers — actively struggling with this word
       currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect ||
       // Has wrong answers and hasn't built enough mastery to overcome them
-      (currentWordProgress.timesIncorrect > 0 && currentMastery < 50);
+      (currentWordProgress.timesIncorrect > 0 && currentMastery < REINFORCEMENT_MASTERY_THRESHOLD);
 
     return {
       currentMastery,
