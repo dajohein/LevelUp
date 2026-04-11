@@ -10,6 +10,15 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { enhancedWordService } from '../services/enhancedWordService';
 import { logger } from '../services/logger';
+import { Word } from '../services/wordService';
+
+export interface EnhancedWordInfo {
+  word: Word | null;
+  quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+  options: string[];
+  isReviewWord: boolean;
+  wordType: 'group' | 'review';
+}
 
 export interface EnhancedGameState {
   isUsingSpacedRepetition: boolean;
@@ -21,13 +30,7 @@ export interface EnhancedGameState {
     timeElapsed: number;
     sessionType: string;
   } | null;
-  currentWordInfo: {
-    word: any;
-    quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
-    options: string[];
-    isReviewWord: boolean;
-    wordType: 'group' | 'review';
-  } | null;
+  currentWordInfo: EnhancedWordInfo | null;
   recommendations: string[];
 }
 
@@ -266,6 +269,15 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
   // and to reset correctly when the user switches languages or completes a session.
   const autoInitLanguageRef = useRef('');
 
+  // Stable ref so the auto-init effect always calls the latest version of
+  // initializeEnhancedSession without needing it in the dependency array.
+  // (initializeEnhancedSession re-creates whenever wordProgress changes, i.e. after
+  //  every answer; including it would retrigger auto-init on each answer.)
+  const initializeEnhancedSessionRef = useRef(initializeEnhancedSession);
+  useEffect(() => {
+    initializeEnhancedSessionRef.current = initializeEnhancedSession;
+  });
+
   useEffect(() => {
     if (currentSession) {
       // A session just started – clear the ref so we re-init when it ends.
@@ -273,12 +285,8 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
     } else if (languageCode && autoInitLanguageRef.current !== languageCode) {
       // Free-play mode and language is ready – initialize the enhanced session.
       autoInitLanguageRef.current = languageCode;
-      initializeEnhancedSession();
+      initializeEnhancedSessionRef.current();
     }
-    // Note: intentionally omitting `initializeEnhancedSession` from deps to avoid
-    // re-running on every wordProgress update (it changes when wordProgress changes).
-    // The `autoInitLanguageRef` ref guard ensures we only initialize once per language.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [languageCode, currentSession]);
 
   return {

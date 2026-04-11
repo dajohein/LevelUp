@@ -15,14 +15,33 @@ import {
   addPerfectAccuracyBonus,
   setLanguage as setSessionLanguage,
   clearStaleSession,
+  SessionType,
+  SessionProgress,
 } from '../store/sessionSlice';
-import { useEnhancedGame } from './useEnhancedGame';
+import { useEnhancedGame, EnhancedWordInfo } from './useEnhancedGame';
 import { useLevelUpDetection } from './useLevelUpDetection';
 import { useAudio } from '../features/audio/AudioContext';
-import { words } from '../services/wordService';
+import { words, Word } from '../services/wordService';
 import { gameServices } from '../services/game';
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { logger } from '../services/logger';
+import { WordProgress } from '../store/types';
+
+/** Shape of the feedback overlay shown after each answer. */
+export interface FeedbackWordInfo {
+  originalWord: string;
+  correctAnswer: string;
+  context: string;
+}
+
+/** Context (sentence + translation) associated with the current word direction. */
+type ContextForWord = { sentence: string; translation: string } | undefined;
+
+/** Return value of handleEnhancedAnswer. */
+type EnhancedAnswerResult =
+  | false
+  | { isComplete: true; recommendations: string[] }
+  | { isComplete: false; nextWord: EnhancedWordInfo | null };
 
 export interface GameState {
   inputValue: string;
@@ -42,12 +61,8 @@ export interface GameState {
   setLastSelectedAnswer: (answer: string) => void;
   feedbackQuestionKey: string;
   setFeedbackQuestionKey: (key: string) => void;
-  feedbackWordInfo: {
-    originalWord: string;
-    correctAnswer: string;
-    context: string;
-  } | null;
-  setFeedbackWordInfo: (info: any) => void;
+  feedbackWordInfo: FeedbackWordInfo | null;
+  setFeedbackWordInfo: (info: FeedbackWordInfo | null) => void;
 }
 
 export interface GameHandlers {
@@ -55,7 +70,7 @@ export interface GameHandlers {
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
     transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
-    additionalData?: any
+    additionalData?: unknown
   ) => Promise<void>;
   handleContinueFromLearningCard: () => void;
   checkAnswerCorrectness: (answer: string) => boolean;
@@ -63,12 +78,12 @@ export interface GameHandlers {
 }
 
 export interface GameHelpers {
-  getQuestionWord: (word: any) => string;
-  getAnswerWord: (word: any) => string;
+  getQuestionWord: (word: Word) => string;
+  getAnswerWord: (word: Word) => string;
   isUnidirectionalMode: (quizMode: string) => boolean;
-  getQuizQuestion: (word: any, quizMode: string) => string;
-  getQuizAnswer: (word: any, quizMode: string) => string;
-  contextForWord: any;
+  getQuizQuestion: (word: Word, quizMode: string) => string;
+  getQuizAnswer: (word: Word, quizMode: string) => string;
+  contextForWord: ContextForWord;
   wordLearningStatus: {
     isTrulyNewWord: boolean;
     needsReinforcement: boolean;
@@ -78,14 +93,25 @@ export interface GameHelpers {
 export interface UseEnhancedGameStateProps {
   languageCode: string;
   moduleId?: string;
-  currentWord: any;
+  currentWord: Word | null;
   quizMode: string;
-  wordProgress: any;
-  currentSession: any;
-  sessionProgress: any;
+  wordProgress: Record<string, WordProgress>;
+  currentSession: SessionType | null;
+  sessionProgress: SessionProgress;
   isSessionActive: boolean;
   sessionStartTime: number | null;
   gameLanguage: string | null;
+}
+
+/** Session stats returned by getSessionStats(). */
+interface SessionStats {
+  currentIndex: number;
+  totalWords: number;
+  correctAnswers: number;
+  accuracy: number;
+  timeElapsed: number;
+  sessionType: string;
+  isEnhanced: boolean;
 }
 
 export interface UseEnhancedGameStateReturn {
@@ -94,9 +120,9 @@ export interface UseEnhancedGameStateReturn {
   gameHelpers: GameHelpers;
   enhancedGame: {
     isUsingSpacedRepetition: boolean;
-    handleEnhancedAnswer: (isCorrect: boolean) => any;
-    getCurrentWordInfo: () => any;
-    getSessionStats: () => any;
+    handleEnhancedAnswer: (isCorrect: boolean) => EnhancedAnswerResult;
+    getCurrentWordInfo: () => (EnhancedWordInfo & { isEnhanced: boolean }) | null;
+    getSessionStats: () => SessionStats;
     forceCompleteSession: () => void;
     initializeEnhancedSession: () => Promise<boolean>;
   };
@@ -169,11 +195,11 @@ export const useEnhancedGameState = ({
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = useLevelUpDetection();
 
   // Helper functions
-  const getQuestionWord = useCallback((word: any): string => {
+  const getQuestionWord = useCallback((word: Word): string => {
     return gameServices.modeHandler.getQuestionWord(word);
   }, []);
 
-  const getAnswerWord = useCallback((word: any): string => {
+  const getAnswerWord = useCallback((word: Word): string => {
     return gameServices.modeHandler.getAnswerWord(word);
   }, []);
 
@@ -181,11 +207,11 @@ export const useEnhancedGameState = ({
     return gameServices.modeHandler.isUnidirectionalMode(quizMode);
   }, []);
 
-  const getQuizQuestion = useCallback((word: any, quizMode: string): string => {
+  const getQuizQuestion = useCallback((word: Word, quizMode: string): string => {
     return gameServices.modeHandler.getQuizQuestion(word, quizMode);
   }, []);
 
-  const getQuizAnswer = useCallback((word: any, quizMode: string): string => {
+  const getQuizAnswer = useCallback((word: Word, quizMode: string): string => {
     return gameServices.modeHandler.getQuizAnswer(word, quizMode);
   }, []);
 
@@ -196,13 +222,12 @@ export const useEnhancedGameState = ({
   }, []);
 
   // Context calculation (memoized to prevent render loops)
-  const contextForWord = useMemo(() => {
+  const contextForWord = useMemo((): ContextForWord => {
     const enhancedWordInfo = getCurrentWordInfo();
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    if (!wordToUse) return null;
+    if (!wordToUse) return undefined;
     return gameServices.modeHandler.getContextForDirection(wordToUse);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWord?.id, getCurrentWordInfo]);
+  }, [currentWord, getCurrentWordInfo]);
 
   // Learning status calculation
   const wordLearningStatus = useMemo(() => {
@@ -218,8 +243,7 @@ export const useEnhancedGameState = ({
       isTrulyNewWord: status.isTrulyNewWord,
       needsReinforcement: status.needsReinforcement,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWord?.id, wordProgress]);
+  }, [currentWord, wordProgress]);
 
   // Answer correctness checker
   const checkAnswerCorrectness = useCallback(
@@ -243,12 +267,18 @@ export const useEnhancedGameState = ({
     [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]
   );
 
+  // Stable ref to the latest handleWordTransition. handleSubmit reads through this
+  // ref so it doesn't need handleWordTransition in its own dep array (handleWordTransition
+  // is recreated on every wordProgress change, which would force handleSubmit to
+  // also recreate after every answer, adding churn without any benefit).
+  const handleWordTransitionRef = useRef<typeof handleWordTransition | null>(null);
+
   // Word transition handler — declared before handleSubmit so handleSubmit's closure captures
   // the already-initialised const and the react-hooks/immutability rule is satisfied.
   const handleWordTransition = useCallback(
     async (
       transitionType: 'enhanced' | 'standard' | 'quiz' | 'batch-complete' = 'standard',
-      additionalData?: any
+      additionalData?: unknown
     ) => {
       try {
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -284,7 +314,7 @@ export const useEnhancedGameState = ({
             currentSession?.id &&
             challengeServiceManager.isSessionTypeSupported(currentSession.id)
           ) {
-            const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+            const timeRemaining = Math.max(0, (currentSession.timeLimit ?? 0) * 60 - sessionTimer);
 
             const context = {
               wordsCompleted: sessionProgress.wordsCompleted,
@@ -319,9 +349,10 @@ export const useEnhancedGameState = ({
         dispatch(nextWord());
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      currentSession?.id,
+      currentSession,
+      currentModule,
+      isSessionActive,
       sessionProgress.wordsCompleted,
       sessionProgress.currentStreak,
       sessionTimer,
@@ -332,6 +363,11 @@ export const useEnhancedGameState = ({
       dispatch,
     ]
   );
+
+  // Keep the ref in sync so handleSubmit always calls the latest version.
+  useEffect(() => {
+    handleWordTransitionRef.current = handleWordTransition;
+  });
 
   // Main submission handler
   const handleSubmit = useCallback(
@@ -392,7 +428,7 @@ export const useEnhancedGameState = ({
 
             if (completionResult.isComplete && completionResult.shouldNavigate) {
               setSessionCompleted(true);
-              navigate(completionResult.navigationPath!);
+              navigate(completionResult.navigationPath ?? `/completed/${languageCode}`);
               return;
             }
           } else {
@@ -416,18 +452,18 @@ export const useEnhancedGameState = ({
         sessionProgress
       );
 
-      // Trigger delayed transition
+      // Trigger delayed transition via ref so this callback doesn't need
+      // handleWordTransition in its dep array (handleWordTransition re-creates on every
+      // wordProgress change; including it here would force handleSubmit to also
+      // re-create after every answer without any benefit).
+      const transitionType = isBatchComplete ? 'batch-complete' : 'standard';
       setTimeout(
         () => {
-          handleWordTransition(isBatchComplete ? 'batch-complete' : 'standard');
+          handleWordTransitionRef.current?.(transitionType);
         },
         gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
       );
     },
-    // handleWordTransition omitted intentionally: captured via closure; adding it would cause
-    // handleSubmit to be recreated on every answer (handleWordTransition changes with wordProgress).
-    // dispatch omitted: stable reference from useDispatch.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       currentWord,
       quizMode,
@@ -439,6 +475,7 @@ export const useEnhancedGameState = ({
       languageCode,
       gameLanguage,
       isUsingSpacedRepetition,
+      dispatch,
       getCurrentWordInfo,
       handleEnhancedAnswer,
       getQuizQuestion,
@@ -526,7 +563,9 @@ export const useEnhancedGameState = ({
     }
   }, [languageCode, dispatch]); // Run immediately when languageCode is available
 
-  // Language initialization (runs after stale session clearing)
+  // Language setup — dispatches language/module actions and sets display strings.
+  // Intentionally separate from session initialization so language changes don't
+  // accidentally re-trigger session setup.
   useEffect(() => {
     if (languageCode) {
       dispatch(setLanguage(languageCode));
@@ -541,41 +580,58 @@ export const useEnhancedGameState = ({
         setLanguageName(langData.name);
         setLanguageFlag(langData.flag);
       }
-
-      // Only initialize session if one is actually active (user has started a session)
-      // FIXED: Add sessionInitialized ref to prevent multiple initializations
-      if (
-        !isUsingSpacedRepetition &&
-        isSessionActive &&
-        currentSession &&
-        !sessionInitializedRef.current
-      ) {
-        sessionInitializedRef.current = true;
-        gameServices.sessionManager
-          .initializeSession(
-            currentSession,
-            languageCode,
-            wordProgress,
-            sessionProgress,
-            currentModule || undefined // Pass current module for module-specific practice
-          )
-          .then(success => {
-            if (!success) {
-              dispatch(nextWord());
-            }
-          })
-          .catch(error => {
-            logger.error('Failed to initialize session', { error });
-            dispatch(nextWord());
-          });
-      }
     }
-    // Deps intentionally minimal: adding currentSession/wordProgress etc. would re-run the
-    // session initializer on every answer, which is undesirable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, languageCode, moduleId, isSessionActive]); // Removed currentSession?.id to prevent re-runs
+  }, [dispatch, languageCode, moduleId]);
 
-  // Session state management
+  // Session initialization — guarded by sessionInitializedRef so it only runs once per
+  // session even though wordProgress / sessionProgress change after every answer.
+  // We read those values through refs so we can keep them out of the dep array and
+  // avoid re-triggering the initializer on every answer submission.
+  const wordProgressRef = useRef(wordProgress);
+  const sessionProgressRef = useRef(sessionProgress);
+  const currentModuleRef = useRef(currentModule);
+  useEffect(() => {
+    wordProgressRef.current = wordProgress;
+  });
+  useEffect(() => {
+    sessionProgressRef.current = sessionProgress;
+  });
+  useEffect(() => {
+    currentModuleRef.current = currentModule;
+  });
+
+  useEffect(() => {
+    if (
+      languageCode &&
+      !isUsingSpacedRepetition &&
+      isSessionActive &&
+      currentSession &&
+      !sessionInitializedRef.current
+    ) {
+      sessionInitializedRef.current = true;
+      gameServices.sessionManager
+        .initializeSession(
+          currentSession,
+          languageCode,
+          wordProgressRef.current,
+          sessionProgressRef.current,
+          currentModuleRef.current || undefined
+        )
+        .then(success => {
+          if (!success) {
+            dispatch(nextWord());
+          }
+        })
+        .catch(error => {
+          logger.error('Failed to initialize session', { error });
+          dispatch(nextWord());
+        });
+    }
+  }, [dispatch, languageCode, isSessionActive, isUsingSpacedRepetition, currentSession]);
+
+  // Session state management — reset timers and initialization flag when a new session
+  // becomes active. Depends on currentSession (not currentSession?.id) so TypeScript
+  // knows the full object is available inside the effect body.
   useEffect(() => {
     if (isSessionActive && currentSession) {
       setSessionCompleted(false);
@@ -585,9 +641,7 @@ export const useEnhancedGameState = ({
       // Reset session initialization flag when a new session becomes active
       sessionInitializedRef.current = false;
     }
-    // currentSession?.id used instead of currentSession to avoid re-runs on progress updates
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSessionActive, currentSession?.id]);
+  }, [isSessionActive, currentSession]);
 
   // Session completion logic
   useEffect(() => {
