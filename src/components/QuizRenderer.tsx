@@ -8,8 +8,15 @@ import { LearningCard } from './quiz/LearningCard';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
 import { WordProgress } from '../store/types';
-import { SessionType, SessionProgress } from '../store/sessionSlice';
+import {
+  SessionType,
+  SessionProgress,
+  addCorrectAnswer,
+  addIncorrectAnswer,
+  incrementWordsCompleted,
+} from '../store/sessionSlice';
 import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
+import { AppDispatch } from '../store/store';
 
 // Import styled components from Game.tsx (will need to be shared)
 const QuickDashContainer = styled.div`
@@ -304,28 +311,28 @@ export interface QuizRendererProps {
   contextForWord: { sentence: string; translation: string; audio?: string } | null | undefined;
 
   // Timers
-  wordTimer?: unknown;
-  sessionTimer?: unknown;
+  wordTimer?: number | ReturnType<typeof setInterval>;
+  sessionTimer?: number | ReturnType<typeof setInterval>;
 
   // Main handlers
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition?: unknown;
-  handleEnhancedAnswer?: unknown;
+  handleWordTransition?: () => void;
+  handleEnhancedAnswer?: (isCorrect: boolean) => void;
 
   // Audio handlers
-  playCorrect?: unknown;
-  playIncorrect?: unknown;
+  playCorrect?: () => void;
+  playIncorrect?: () => void;
 
   // Redux dispatch and state updates
-  dispatch?: unknown;
-  incrementWordsCompleted?: unknown;
-  addCorrectAnswer?: unknown;
-  addIncorrectAnswer?: unknown;
-  setLastAnswerCorrect?: unknown;
-  setFeedbackQuestionKey?: unknown;
-  setIsTransitioning?: unknown;
+  dispatch?: AppDispatch;
+  incrementWordsCompleted?: typeof incrementWordsCompleted;
+  addCorrectAnswer?: typeof addCorrectAnswer;
+  addIncorrectAnswer?: typeof addIncorrectAnswer;
+  setLastAnswerCorrect?: (value: boolean | null) => void;
+  setFeedbackQuestionKey?: (key: string) => void;
+  setIsTransitioning?: (value: boolean) => void;
 }
 
 export const QuizRenderer: React.FC<QuizRendererProps> = ({
