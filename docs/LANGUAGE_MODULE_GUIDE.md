@@ -7,21 +7,25 @@ This guide documents the standardized approach for creating and maintaining lang
 ## 🎯 Core Design Principles
 
 ### 1. **Individual Form Practice**
+
 - ✅ **DO**: Create entries for individual grammatical forms (`ich bin`, `du bist`, `er ist`)
 - ❌ **DON'T**: Create paradigm tables or generic conjugation explanations
 - **Rationale**: Individual forms provide focused, actionable practice
 
 ### 2. **Educational Context**
+
 - ✅ **DO**: Provide educational explanations that help learners understand grammar rules
 - ❌ **DON'T**: Use generic technical descriptions like "antwoord op vraag"
 - **Example**: `"Modalwerkwoord 'können' - mogelijkheid, vermogen of toestemming"` vs `"antwoord op wie/wat vraag"`
 
 ### 3. **Meaningful Synonyms**
+
 - ✅ **DO**: Include true alternatives and related expressions (`den Mann → den Kerl, den Herr, den Typ`)
 - ❌ **DON'T**: Include grammatical variations as synonyms (`ich bin → du bist`)
 - **Purpose**: Expand vocabulary with genuine word alternatives
 
 ### 4. **Strict Language Isolation**
+
 - ✅ **DO**: Keep all language data completely separate by language code
 - ❌ **DON'T**: Mix language data or create cross-language references
 - **Critical**: This prevents data contamination in the storage system
@@ -29,6 +33,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ## 📋 Module Structure Standard
 
 ### Required Module Fields
+
 ```json
 {
   "id": "module-identifier",
@@ -41,9 +46,10 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 ### Required Word Entry Fields
+
 ```json
 {
-   "id": "module-id:1",          // Robust ID: module-prefixed (e.g., "vocabulario-2-4:1")
+   "id": "module-id:1",          // Robust ID: module-prefixed (e.g., "fiesta-fauna-y-forma-de-ser:1")
    "term": "Target language term",      // e.g., Spanish word/phrase
    "definition": "Dutch translation",   // Dutch equivalent
    "direction": "definition-to-term" | "term-to-definition", // Quiz direction per module
@@ -60,6 +66,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ## 🔧 Implementation Process
 
 ### Phase 1: Content Analysis
+
 1. **Source Material Review**
    - Extract individual grammatical forms from educational materials
    - Identify natural groupings (verb conjugations, case usage, etc.)
@@ -71,7 +78,9 @@ This guide documents the standardized approach for creating and maintaining lang
    - Example: Extract `ich bin`, `du bist`, `er ist` rather than "sein conjugation"
 
 ### Phase 2: Module Creation
+
 1. **Structure Setup**
+
    ```bash
    # Create module file in language directory
    touch src/data/{language-code}/{module-name}.json
@@ -81,6 +90,7 @@ This guide documents the standardized approach for creating and maintaining lang
    - Start with sequential IDs (1, 2, 3...)
    - Use consistent direction (`definition-to-term` for German→Dutch)
    - Group related forms with same category
+   - Prefer thematic slugs for module IDs and file names; do not use unit, lesson, or chapter numbers
 
 3. **Quality Enhancement**
    - Add educational contexts explaining grammar rules
@@ -88,25 +98,29 @@ This guide documents the standardized approach for creating and maintaining lang
    - Ensure all entries have complete structure
 
 ### Phase 3: Module Registration
+
 1. **Update Language Index**
+
    ```json
    // src/data/{language-code}/index.json
    {
-     "modules": [
-       "existing-module",
-       "new-module-id"
-     ]
+     "modules": ["existing-module", "new-module-id"]
    }
    ```
 
-   ### Spanish Example (Unit 2.4)
-   - **Module ID**: `vocabulario-2-4`
-   - **Direction**: `term-to-definition` (español → neerlandés)
-   - **File**: `src/data/es/vocabulario-2-4.json`
-   - **Registration**: Added to `src/data/es/index.json`
+   ### Spanish Example (Thematic Naming)
+   - **Module ID**: `fiesta-fauna-y-forma-de-ser`
+   - **Direction**: `definition-to-term` (neerlandés → español)
+   - **File**: `src/data/es/fiesta-fauna-y-forma-de-ser.json`
+   - **Registration**: Added to `src/data/es/index.json` and `src/services/moduleService.ts`
 
+   ### Naming Rule
+   - **Never use unit, lesson, or chapter numbers** in module IDs, file names, or learner-facing titles.
+   - **Use thematic slugs instead** so modules stay understandable even if the source material changes.
+   - **For staged content**: prepare the full JSON file with a thematic slug, but keep it inactive until release by omitting it from `src/data/es/index.json` and `src/services/moduleService.ts`.
 
 ### Phase 4: Quality Assurance
+
 1. **Validation Checks**
    - No duplicate IDs within module
    - Sequential ID numbering (1 to N)
@@ -123,6 +137,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ### ✅ Good Examples
 
 **Individual Grammatical Forms:**
+
 ```json
 {
   "id": "15",
@@ -136,6 +151,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 **Educational Context:**
+
 ```json
 {
   "context": "Voorzetsel 'in' met datief toont statische locatie - je bent ergens aanwezig"
@@ -143,6 +159,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 **Meaningful Synonyms:**
+
 ```json
 {
   "synonyms": ["den Kerl", "den Herr", "den Typ"]
@@ -152,6 +169,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ### ❌ Avoid These Patterns
 
 **Generic Contexts:**
+
 ```json
 {
   "context": "W-vraag met 'was' (wat) voor activiteit/beroep" // Too technical
@@ -159,6 +177,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 **Grammatical Examples as Synonyms:**
+
 ```json
 {
   "synonyms": ["du bist", "er ist"] // These are different forms, not synonyms
@@ -166,6 +185,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 **Paradigm Entries:**
+
 ```json
 {
   "term": "sein conjugation",
@@ -176,6 +196,7 @@ This guide documents the standardized approach for creating and maintaining lang
 ## 🛠 Tools and Validation
 
 ### Automated Quality Checks
+
 ```python
 # Check for duplicate IDs
 def check_duplicate_ids(module_data):
@@ -202,6 +223,7 @@ def check_generic_contexts(module_data):
 ```
 
 ### Validation Commands
+
 ```bash
 # JSON syntax validation
 python3 -m json.tool src/data/de/module-name.json
@@ -216,16 +238,19 @@ npm run test:languages
 ## 📈 Module Types and Examples
 
 ### Grammar Modules
+
 - **Focus**: Individual grammatical forms and constructions
 - **Examples**: `grammatik-grundlagen.json`, `grammatik-herhaling.json`
 - **Content**: Verb conjugations, case usage, preposition combinations
 
-### Vocabulary Modules  
+### Vocabulary Modules
+
 - **Focus**: Thematic word collections
 - **Examples**: `grundwortschatz.json`
 - **Content**: Nouns, verbs, adjectives by topic
 
 ### Conversation Modules
+
 - **Focus**: Common phrases and expressions
 - **Examples**: Future implementation
 - **Content**: Greetings, questions, responses
@@ -233,6 +258,7 @@ npm run test:languages
 ## 🔄 Maintenance Guidelines
 
 ### Regular Quality Reviews
+
 1. **Monthly Checks**
    - Run validation scripts
    - Review user feedback
@@ -244,6 +270,7 @@ npm run test:languages
    - Add new grammatical forms
 
 ### Continuous Improvement
+
 1. **User Analytics Integration**
    - Monitor difficult entries
    - Track completion rates
@@ -257,11 +284,13 @@ npm run test:languages
 ## 🎯 Success Metrics
 
 ### Learning Effectiveness
+
 - **Individual Form Mastery**: Users can recognize and produce specific forms
-- **Context Understanding**: Learners grasp when to use different grammatical constructions  
+- **Context Understanding**: Learners grasp when to use different grammatical constructions
 - **Vocabulary Expansion**: Synonyms increase active vocabulary
 
 ### Technical Quality
+
 - **Data Integrity**: No duplicate IDs, consistent structure
 - **Performance**: Fast loading, efficient storage
 - **Maintainability**: Easy to update and expand
@@ -285,4 +314,4 @@ npm run test:languages
 
 ---
 
-*This guide reflects best practices developed during German grammar module creation (October 2025). Update as we learn from additional language implementations.*
+_This guide reflects best practices developed during German grammar module creation (October 2025). Update as we learn from additional language implementations._

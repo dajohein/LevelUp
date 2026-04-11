@@ -29,8 +29,8 @@ const testConfigurations = [
     expectedFlag: '🇪🇸',
     expectedCaseSensitive: false,
     expectedCapitalizationRequired: false,
-    expectedModules: ['vocabulario-basico'],
-    sampleWords: ['las vacaciones', 'el verano', 'la playa']
+    expectedModules: ['vocabulario-basico', 'fiesta-fauna-y-forma-de-ser'],
+    sampleWords: ['las vacaciones', 'la aventura', 'el perro']
   }
 ];
 

@@ -37,6 +37,13 @@
       "description": "Vocabulario sobre ropa, moda, apariencia y estilo personal.",
       "icon": "👔",
       "difficulty": "beginner"
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser",
+      "name": "Fiesta, Fauna y Forma de Ser",
+      "description": "Vocabulario sobre celebraciones, rasgos de personalidad, mascotas y animales.",
+      "icon": "📖",
+      "difficulty": "beginner"
     }
   ]
 }

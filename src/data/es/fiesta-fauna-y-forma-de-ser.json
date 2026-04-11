@@ -1,0 +1,646 @@
+{
+  "id": "fiesta-fauna-y-forma-de-ser",
+  "name": "Fiesta, Fauna y Forma de Ser",
+  "description": "Vocabulario sobre celebraciones, rasgos de personalidad, mascotas y animales.",
+  "icon": "📖",
+  "difficulty": "beginner",
+  "words": [
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:1",
+      "term": "la aventura",
+      "definition": "het avontuur",
+      "direction": "definition-to-term",
+      "category": "eventos",
+      "context": {
+        "sentence": "El viaje fue toda una aventura.",
+        "translation": "De reis was echt een avontuur.",
+        "sentenceWithBlank": "El viaje fue toda una {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:2",
+      "term": "el desfile",
+      "definition": "de optocht",
+      "direction": "definition-to-term",
+      "category": "eventos",
+      "context": {
+        "sentence": "El desfile empieza a las cinco.",
+        "translation": "De optocht begint om vijf uur.",
+        "sentenceWithBlank": "{BLANK} empieza a las cinco."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:3",
+      "term": "la barbacoa",
+      "definition": "de barbecue",
+      "direction": "definition-to-term",
+      "category": "eventos",
+      "context": {
+        "sentence": "Hacemos una barbacoa en el jardín.",
+        "translation": "We houden een barbecue in de tuin.",
+        "sentenceWithBlank": "Hacemos una {BLANK} en el jardín."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:4",
+      "term": "escaparse",
+      "definition": "ontsnappen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "El gato intenta escaparse por la ventana.",
+        "translation": "De kat probeert door het raam te ontsnappen.",
+        "sentenceWithBlank": "El gato intenta {BLANK} por la ventana."
+      },
+      "synonyms": ["huir"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:5",
+      "term": "nadar",
+      "definition": "zwemmen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta nadar en el lago en verano.",
+        "translation": "Ik zwem graag in het meer in de zomer.",
+        "sentenceWithBlank": "Me gusta {BLANK} en el lago en verano."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:6",
+      "term": "regalar",
+      "definition": "cadeau geven",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero regalar un libro a mi amiga.",
+        "translation": "Ik wil mijn vriendin een boek cadeau doen.",
+        "sentenceWithBlank": "Quiero {BLANK} un libro a mi amiga."
+      },
+      "synonyms": ["dar"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:7",
+      "term": "el/la novio/-a",
+      "definition": "de vriend / de vriendin",
+      "direction": "definition-to-term",
+      "category": "personas",
+      "context": {
+        "sentence": "Va a la fiesta con su novio.",
+        "translation": "Ze gaat met haar vriend naar het feest.",
+        "sentenceWithBlank": "Va a la fiesta con su {BLANK}."
+      },
+      "synonyms": ["la pareja"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:8",
+      "term": "simpático/-a",
+      "definition": "sympathiek, aardig",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Tu vecino es muy simpático con todos.",
+        "translation": "Je buurman is erg aardig voor iedereen.",
+        "sentenceWithBlank": "Tu vecino es muy {BLANK} con todos."
+      },
+      "synonyms": ["simpático", "simpática", "amable"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:9",
+      "term": "invitado/-a",
+      "definition": "uitgenodigd",
+      "direction": "definition-to-term",
+      "category": "personas",
+      "context": {
+        "sentence": "Solo los invitados pueden entrar.",
+        "translation": "Alleen de genodigden mogen naar binnen.",
+        "sentenceWithBlank": "Solo los {BLANK} pueden entrar."
+      },
+      "synonyms": ["invitado", "invitada"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:10",
+      "term": "castaño/-a",
+      "definition": "kastanjebruin",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tiene el pelo castaño y corto.",
+        "translation": "Hij heeft kastanjebruin en kort haar.",
+        "sentenceWithBlank": "Tiene el pelo {BLANK} y corto."
+      },
+      "synonyms": ["castaño", "castaña"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:11",
+      "term": "tímido/-a",
+      "definition": "verlegen, stil",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "De niño era muy tímido en clase.",
+        "translation": "Als kind was hij erg verlegen in de klas.",
+        "sentenceWithBlank": "De niño era muy {BLANK} en clase."
+      },
+      "synonyms": ["tímido", "tímida", "reservado/-a"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:12",
+      "term": "espontáneo/-a",
+      "definition": "spontaan",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Ella siempre da respuestas espontáneas.",
+        "translation": "Zij geeft altijd spontane antwoorden.",
+        "sentenceWithBlank": "Ella siempre da respuestas {BLANK}."
+      },
+      "synonyms": ["espontáneo", "espontánea"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:13",
+      "term": "inteligente",
+      "definition": "slim, intelligent",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Su hermana es muy inteligente.",
+        "translation": "Zijn zus is erg slim.",
+        "sentenceWithBlank": "Su hermana es muy {BLANK}."
+      },
+      "synonyms": ["listo/-a"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:14",
+      "term": "sincero/-a",
+      "definition": "eerlijk",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Prefiero una respuesta sincera.",
+        "translation": "Ik heb liever een eerlijk antwoord.",
+        "sentenceWithBlank": "Prefiero una respuesta {BLANK}."
+      },
+      "synonyms": ["sincero", "sincera", "honesto/-a"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:15",
+      "term": "¿hasta cuándo?",
+      "definition": "tot wanneer?",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "¿Hasta cuándo te quedas en Madrid?",
+        "translation": "Tot wanneer blijf je in Madrid?",
+        "sentenceWithBlank": "{BLANK} te quedas en Madrid?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:16",
+      "term": "¡qué aburrido!",
+      "definition": "wat saai!",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "La película fue tan lenta: ¡qué aburrido!",
+        "translation": "De film was zo traag: wat saai!",
+        "sentenceWithBlank": "La película fue tan lenta: {BLANK}"
+      },
+      "synonyms": ["qué rollo"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:17",
+      "term": "¡qué pena!",
+      "definition": "wat jammer!",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "No puedes venir, ¡qué pena!",
+        "translation": "Je kunt niet komen, wat jammer!",
+        "sentenceWithBlank": "No puedes venir, {BLANK}"
+      },
+      "synonyms": ["qué lástima"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:18",
+      "term": "desde hace",
+      "definition": "sinds",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Vivo aquí desde hace dos años.",
+        "translation": "Ik woon hier sinds twee jaar.",
+        "sentenceWithBlank": "Vivo aquí {BLANK} dos años."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:19",
+      "term": "también",
+      "definition": "ook",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Yo también quiero ir al cine.",
+        "translation": "Ik wil ook naar de bioscoop.",
+        "sentenceWithBlank": "Yo {BLANK} quiero ir al cine."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:20",
+      "term": "tampoco",
+      "definition": "ook niet",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "No me gusta el café y a ella tampoco.",
+        "translation": "Ik hou niet van koffie en zij ook niet.",
+        "sentenceWithBlank": "No me gusta el café y a ella {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:21",
+      "term": "un poco",
+      "definition": "een beetje",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Estoy un poco cansado hoy.",
+        "translation": "Ik ben vandaag een beetje moe.",
+        "sentenceWithBlank": "Estoy {BLANK} cansado hoy."
+      },
+      "synonyms": ["algo"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:22",
+      "term": "la mascota",
+      "definition": "het huisdier",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "Su mascota duerme en la cocina.",
+        "translation": "Hun huisdier slaapt in de keuken.",
+        "sentenceWithBlank": "Su {BLANK} duerme en la cocina."
+      },
+      "synonyms": ["el animal doméstico"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:23",
+      "term": "el gato",
+      "definition": "de kat",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "El gato está encima del sofá.",
+        "translation": "De kat zit op de bank.",
+        "sentenceWithBlank": "{BLANK} está encima del sofá."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:24",
+      "term": "el perro",
+      "definition": "de hond",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "El perro corre por el parque.",
+        "translation": "De hond rent door het park.",
+        "sentenceWithBlank": "{BLANK} corre por el parque."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:25",
+      "term": "el conejo",
+      "definition": "het konijn",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "El conejo come zanahorias frescas.",
+        "translation": "Het konijn eet verse wortels.",
+        "sentenceWithBlank": "{BLANK} come zanahorias frescas."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:26",
+      "term": "el pez",
+      "definition": "de vis",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "El pez nada en una pecera pequeña.",
+        "translation": "De vis zwemt in een kleine vissenkom.",
+        "sentenceWithBlank": "{BLANK} nada en una pecera pequeña."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:27",
+      "term": "el ratón",
+      "definition": "de muis",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "El ratón se esconde debajo de la mesa.",
+        "translation": "De muis verstopt zich onder de tafel.",
+        "sentenceWithBlank": "{BLANK} se esconde debajo de la mesa."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:28",
+      "term": "la gallina",
+      "definition": "de kip",
+      "direction": "definition-to-term",
+      "category": "mascotas",
+      "context": {
+        "sentence": "La gallina pone un huevo cada día.",
+        "translation": "De kip legt elke dag een ei.",
+        "sentenceWithBlank": "{BLANK} pone un huevo cada día."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:29",
+      "term": "el caballo",
+      "definition": "het paard",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El caballo corre muy rápido.",
+        "translation": "Het paard rent erg snel.",
+        "sentenceWithBlank": "{BLANK} corre muy rápido."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:30",
+      "term": "el tigre",
+      "definition": "de tijger",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El tigre vive en grandes reservas naturales.",
+        "translation": "De tijger leeft in grote natuurreservaten.",
+        "sentenceWithBlank": "{BLANK} vive en grandes reservas naturales."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:31",
+      "term": "el elefante",
+      "definition": "de olifant",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El elefante tiene una memoria increíble.",
+        "translation": "De olifant heeft een ongelooflijk geheugen.",
+        "sentenceWithBlank": "{BLANK} tiene una memoria increíble."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:32",
+      "term": "el león",
+      "definition": "de leeuw",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El león descansa bajo el árbol.",
+        "translation": "De leeuw rust onder de boom.",
+        "sentenceWithBlank": "{BLANK} descansa bajo el árbol."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:33",
+      "term": "el oso",
+      "definition": "de beer",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El oso busca comida en el bosque.",
+        "translation": "De beer zoekt eten in het bos.",
+        "sentenceWithBlank": "{BLANK} busca comida en el bosque."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:34",
+      "term": "el loro",
+      "definition": "de papegaai",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El loro repite palabras nuevas.",
+        "translation": "De papegaai herhaalt nieuwe woorden.",
+        "sentenceWithBlank": "{BLANK} repite palabras nuevas."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:35",
+      "term": "el mono",
+      "definition": "de aap",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El mono sube al árbol con facilidad.",
+        "translation": "De aap klimt gemakkelijk in de boom.",
+        "sentenceWithBlank": "{BLANK} sube al árbol con facilidad."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:36",
+      "term": "la serpiente",
+      "definition": "de slang",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "La serpiente se mueve sin hacer ruido.",
+        "translation": "De slang beweegt zonder geluid te maken.",
+        "sentenceWithBlank": "{BLANK} se mueve sin hacer ruido."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:37",
+      "term": "el pájaro",
+      "definition": "de vogel",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El pájaro canta por la mañana.",
+        "translation": "De vogel zingt 's morgens.",
+        "sentenceWithBlank": "{BLANK} canta por la mañana."
+      },
+      "synonyms": ["el ave"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:38",
+      "term": "el burro",
+      "definition": "de ezel",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El burro lleva bolsas en la montaña.",
+        "translation": "De ezel draagt tassen in de bergen.",
+        "sentenceWithBlank": "{BLANK} lleva bolsas en la montaña."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:39",
+      "term": "volar",
+      "definition": "vliegen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "A muchas aves les gusta volar alto.",
+        "translation": "Veel vogels vliegen graag hoog.",
+        "sentenceWithBlank": "A muchas aves les gusta {BLANK} alto."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:40",
+      "term": "medir",
+      "definition": "meten; lang zijn",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "La jirafa puede medir más de cinco metros.",
+        "translation": "Een giraf kan meer dan vijf meter lang zijn.",
+        "sentenceWithBlank": "La jirafa puede {BLANK} más de cinco metros."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:41",
+      "term": "la altura",
+      "definition": "de hoogte",
+      "direction": "definition-to-term",
+      "category": "descripciones",
+      "context": {
+        "sentence": "La altura del edificio impresiona a todos.",
+        "translation": "De hoogte van het gebouw maakt indruk op iedereen.",
+        "sentenceWithBlank": "{BLANK} del edificio impresiona a todos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:42",
+      "term": "las alas",
+      "definition": "de vleugels",
+      "direction": "definition-to-term",
+      "category": "animales",
+      "context": {
+        "sentence": "El pájaro abre las alas antes de volar.",
+        "translation": "De vogel spreidt zijn vleugels voordat hij vliegt.",
+        "sentenceWithBlank": "El pájaro abre {BLANK} antes de volar."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:43",
+      "term": "cerca",
+      "definition": "dichtbij",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Mi casa está cerca del parque.",
+        "translation": "Mijn huis ligt dichtbij het park.",
+        "sentenceWithBlank": "Mi casa está {BLANK} del parque."
+      },
+      "synonyms": ["próximo"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:44",
+      "term": "lejos",
+      "definition": "ver weg",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "La estación está lejos de aquí.",
+        "translation": "Het station is ver weg van hier.",
+        "sentenceWithBlank": "La estación está {BLANK} de aquí."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:45",
+      "term": "ruidoso/-a",
+      "definition": "rumoerig, luidruchtig",
+      "direction": "definition-to-term",
+      "category": "descripciones",
+      "context": {
+        "sentence": "La calle es demasiado ruidosa por la noche.",
+        "translation": "De straat is 's nachts te rumoerig.",
+        "sentenceWithBlank": "La calle es demasiado {BLANK} por la noche."
+      },
+      "synonyms": ["ruidoso", "ruidosa"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:46",
+      "term": "peligroso/-a",
+      "definition": "gevaarlijk",
+      "direction": "definition-to-term",
+      "category": "descripciones",
+      "context": {
+        "sentence": "Cruzar aquí es peligroso.",
+        "translation": "Hier oversteken is gevaarlijk.",
+        "sentenceWithBlank": "Cruzar aquí es {BLANK}."
+      },
+      "synonyms": ["peligroso", "peligrosa"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:47",
+      "term": "gritar",
+      "definition": "gillen, schreeuwen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "No hace falta gritar en clase.",
+        "translation": "Het is niet nodig om in de klas te schreeuwen.",
+        "sentenceWithBlank": "No hace falta {BLANK} en clase."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:48",
+      "term": "más o menos",
+      "definition": "ongeveer",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Llegaremos en más o menos una hora.",
+        "translation": "We komen over ongeveer een uur aan.",
+        "sentenceWithBlank": "Llegaremos en {BLANK} una hora."
+      },
+      "synonyms": ["aproximadamente"]
+    },
+    {
+      "id": "fiesta-fauna-y-forma-de-ser:49",
+      "term": "entre",
+      "definition": "tussen",
+      "direction": "definition-to-term",
+      "category": "preposiciones",
+      "context": {
+        "sentence": "La farmacia está entre el banco y la panadería.",
+        "translation": "De apotheek ligt tussen de bank en de bakkerij.",
+        "sentenceWithBlank": "La farmacia está {BLANK} el banco y la panadería."
+      },
+      "synonyms": []
+    }
+  ]
+}

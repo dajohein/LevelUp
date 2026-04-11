@@ -17,6 +17,7 @@ import esFrasesClave from '../data/es/frases-clave.json';
 import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
 import esRestauranteYSabores from '../data/es/restaurante-y-sabores.json';
 import esModaYEstilo from '../data/es/moda-y-estilo.json';
+import esFiestaFaunaYFormaDeSer from '../data/es/fiesta-fauna-y-forma-de-ser.json';
 
 // Available languages registry (restored for browser compatibility)
 export const availableLanguages = {
@@ -38,6 +39,7 @@ const moduleRegistry: Record<string, Record<string, Module>> = {
     'comida-y-bebidas': esComidaYBebidas as Module,
     'restaurante-y-sabores': esRestauranteYSabores as Module,
     'moda-y-estilo': esModaYEstilo as Module,
+    'fiesta-fauna-y-forma-de-ser': esFiestaFaunaYFormaDeSer as Module,
   },
 };
 

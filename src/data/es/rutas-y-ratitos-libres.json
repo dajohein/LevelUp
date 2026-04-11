@@ -1,0 +1,451 @@
+{
+  "id": "rutas-y-ratitos-libres",
+  "name": "Rutas y Ratitos Libres",
+  "description": "Vocabulario sobre viajes, ocio, desplazamientos y lugares para explorar.",
+  "icon": "🧭",
+  "difficulty": "beginner",
+  "words": [
+    {
+      "id": "rutas-y-ratitos-libres:1",
+      "term": "la agencia de viajes",
+      "definition": "het reisbureau",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "La agencia de viajes organiza nuestras vacaciones.",
+        "translation": "Het reisbureau organiseert onze vakantie.",
+        "sentenceWithBlank": "{BLANK} organiza nuestras vacaciones."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:2",
+      "term": "el lugar de interés",
+      "definition": "de bezienswaardigheid",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "Ese lugar de interés atrae a muchos turistas.",
+        "translation": "Die bezienswaardigheid trekt veel toeristen aan.",
+        "sentenceWithBlank": "Ese {BLANK} atrae a muchos turistas."
+      },
+      "synonyms": ["la atracción turística"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:3",
+      "term": "la atracción",
+      "definition": "de attractie",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "La atracción principal abre a las diez.",
+        "translation": "De hoofdattractie gaat om tien uur open.",
+        "sentenceWithBlank": "{BLANK} principal abre a las diez."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:4",
+      "term": "el billete",
+      "definition": "het kaartje; het toegangsbewijs",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "Guarda el billete para entrar al museo.",
+        "translation": "Bewaar het kaartje om het museum binnen te gaan.",
+        "sentenceWithBlank": "Guarda {BLANK} para entrar al museo."
+      },
+      "synonyms": ["la entrada"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:5",
+      "term": "la excursión",
+      "definition": "de excursie",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "Mañana hacemos una excursión al lago.",
+        "translation": "Morgen maken we een excursie naar het meer.",
+        "sentenceWithBlank": "Mañana hacemos una {BLANK} al lago."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:6",
+      "term": "el/la guía",
+      "definition": "de reisleider / de gids",
+      "direction": "definition-to-term",
+      "category": "viajes",
+      "context": {
+        "sentence": "La guía explica la historia del castillo.",
+        "translation": "De gids legt de geschiedenis van het kasteel uit.",
+        "sentenceWithBlank": "{BLANK} explica la historia del castillo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:7",
+      "term": "el cibercafé",
+      "definition": "het internetcafé",
+      "direction": "definition-to-term",
+      "category": "digital",
+      "context": {
+        "sentence": "Buscamos un cibercafé para imprimir los billetes.",
+        "translation": "We zoeken een internetcafé om de tickets te printen.",
+        "sentenceWithBlank": "Buscamos un {BLANK} para imprimir los billetes."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:8",
+      "term": "el fin de semana",
+      "definition": "het weekend",
+      "direction": "definition-to-term",
+      "category": "ocio",
+      "context": {
+        "sentence": "El fin de semana visitamos a nuestros amigos.",
+        "translation": "In het weekend bezoeken we onze vrienden.",
+        "sentenceWithBlank": "{BLANK} visitamos a nuestros amigos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:9",
+      "term": "el cine",
+      "definition": "de bioscoop",
+      "direction": "definition-to-term",
+      "category": "ocio",
+      "context": {
+        "sentence": "Vamos al cine esta noche.",
+        "translation": "We gaan vanavond naar de bioscoop.",
+        "sentenceWithBlank": "Vamos al {BLANK} esta noche."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:10",
+      "term": "la plaza",
+      "definition": "het plein",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "Quedamos en la plaza del centro.",
+        "translation": "We spreken af op het plein in het centrum.",
+        "sentenceWithBlank": "Quedamos en {BLANK} del centro."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:11",
+      "term": "la fiesta",
+      "definition": "het feest",
+      "direction": "definition-to-term",
+      "category": "ocio",
+      "context": {
+        "sentence": "La fiesta termina muy tarde.",
+        "translation": "Het feest eindigt erg laat.",
+        "sentenceWithBlank": "{BLANK} termina muy tarde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:12",
+      "term": "el lugar",
+      "definition": "de plaats, de plek",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "Este lugar es perfecto para descansar.",
+        "translation": "Deze plek is perfect om uit te rusten.",
+        "sentenceWithBlank": "Este {BLANK} es perfecto para descansar."
+      },
+      "synonyms": ["el sitio"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:13",
+      "term": "la llamada",
+      "definition": "het telefoontje",
+      "direction": "definition-to-term",
+      "category": "comunicación",
+      "context": {
+        "sentence": "Recibí una llamada esta mañana.",
+        "translation": "Ik kreeg vanochtend een telefoontje.",
+        "sentenceWithBlank": "Recibí una {BLANK} esta mañana."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:14",
+      "term": "el camino",
+      "definition": "het pad",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "Seguimos el camino hasta la playa.",
+        "translation": "We volgen het pad tot aan het strand.",
+        "sentenceWithBlank": "Seguimos {BLANK} hasta la playa."
+      },
+      "synonyms": ["la senda"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:15",
+      "term": "el hostal",
+      "definition": "het hostel",
+      "direction": "definition-to-term",
+      "category": "alojamiento",
+      "context": {
+        "sentence": "Dormimos en un hostal del centro.",
+        "translation": "We slapen in een hostel in het centrum.",
+        "sentenceWithBlank": "Dormimos en un {BLANK} del centro."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:16",
+      "term": "la naturaleza",
+      "definition": "de natuur",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "Nos encanta pasar tiempo en la naturaleza.",
+        "translation": "We brengen graag tijd door in de natuur.",
+        "sentenceWithBlank": "Nos encanta pasar tiempo en {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:17",
+      "term": "el desierto",
+      "definition": "de woestijn",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "El desierto puede ser muy caluroso.",
+        "translation": "De woestijn kan erg heet zijn.",
+        "sentenceWithBlank": "{BLANK} puede ser muy caluroso."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:18",
+      "term": "el lago",
+      "definition": "het meer",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "El lago está muy tranquilo hoy.",
+        "translation": "Het meer is vandaag erg rustig.",
+        "sentenceWithBlank": "{BLANK} está muy tranquilo hoy."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:19",
+      "term": "el barco",
+      "definition": "de boot",
+      "direction": "definition-to-term",
+      "category": "transporte",
+      "context": {
+        "sentence": "El barco sale del puerto a las ocho.",
+        "translation": "De boot vertrekt om acht uur uit de haven.",
+        "sentenceWithBlank": "{BLANK} sale del puerto a las ocho."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:20",
+      "term": "la isla",
+      "definition": "het eiland",
+      "direction": "definition-to-term",
+      "category": "naturaleza",
+      "context": {
+        "sentence": "La isla es pequeña pero muy bonita.",
+        "translation": "Het eiland is klein maar erg mooi.",
+        "sentenceWithBlank": "{BLANK} es pequeña pero muy bonita."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:21",
+      "term": "repetir",
+      "definition": "herhalen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Puedes repetir la pregunta, por favor.",
+        "translation": "Kun je de vraag herhalen, alsjeblieft?",
+        "sentenceWithBlank": "Puedes {BLANK} la pregunta, por favor."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:22",
+      "term": "reír(se)",
+      "definition": "lachen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Nos gusta reírnos juntos.",
+        "translation": "We lachen graag samen.",
+        "sentenceWithBlank": "Nos gusta {BLANK} juntos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:23",
+      "term": "elegir",
+      "definition": "kiezen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Es difícil elegir solo una foto.",
+        "translation": "Het is moeilijk om maar één foto te kiezen.",
+        "sentenceWithBlank": "Es difícil {BLANK} solo una foto."
+      },
+      "synonyms": ["escoger"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:24",
+      "term": "volver",
+      "definition": "teruggaan, terugkomen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Queremos volver a este lugar.",
+        "translation": "We willen naar deze plek terugkomen.",
+        "sentenceWithBlank": "Queremos {BLANK} a este lugar."
+      },
+      "synonyms": ["regresar"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:25",
+      "term": "quedarse",
+      "definition": "blijven",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a quedarnos dos noches más.",
+        "translation": "We blijven nog twee nachten.",
+        "sentenceWithBlank": "Vamos a {BLANK} dos noches más."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:26",
+      "term": "actuar",
+      "definition": "optreden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "El grupo va a actuar esta noche.",
+        "translation": "De groep gaat vanavond optreden.",
+        "sentenceWithBlank": "El grupo va a {BLANK} esta noche."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:27",
+      "term": "caminar",
+      "definition": "wandelen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Nos gusta caminar por la montaña.",
+        "translation": "We wandelen graag in de bergen.",
+        "sentenceWithBlank": "Nos gusta {BLANK} por la montaña."
+      },
+      "synonyms": ["pasear"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:28",
+      "term": "chatear",
+      "definition": "chatten",
+      "direction": "definition-to-term",
+      "category": "digital",
+      "context": {
+        "sentence": "Por la noche solemos chatear con amigos.",
+        "translation": "'s Avonds chatten we vaak met vrienden.",
+        "sentenceWithBlank": "Por la noche solemos {BLANK} con amigos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:29",
+      "term": "sacar fotos",
+      "definition": "foto's maken",
+      "direction": "definition-to-term",
+      "category": "ocio",
+      "context": {
+        "sentence": "Me encanta sacar fotos en vacaciones.",
+        "translation": "Ik maak graag foto's op vakantie.",
+        "sentenceWithBlank": "Me encanta {BLANK} en vacaciones."
+      },
+      "synonyms": ["hacer fotos"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:30",
+      "term": "maravilloso/-a",
+      "definition": "prachtig",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "La vista desde aquí es maravillosa.",
+        "translation": "Het uitzicht hiervandaan is prachtig.",
+        "sentenceWithBlank": "La vista desde aquí es {BLANK}."
+      },
+      "synonyms": ["maravilloso", "maravillosa"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:31",
+      "term": "pesado/-a",
+      "definition": "vervelend",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "El viaje en autobús fue pesado.",
+        "translation": "De busreis was vervelend.",
+        "sentenceWithBlank": "El viaje en autobús fue {BLANK}."
+      },
+      "synonyms": ["pesado", "pesada"]
+    },
+    {
+      "id": "rutas-y-ratitos-libres:32",
+      "term": "increíble",
+      "definition": "ongelofelijk",
+      "direction": "definition-to-term",
+      "category": "adjetivos",
+      "context": {
+        "sentence": "Fue una experiencia increíble.",
+        "translation": "Het was een ongelooflijke ervaring.",
+        "sentenceWithBlank": "Fue una experiencia {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:33",
+      "term": "la línea",
+      "definition": "de lijn",
+      "direction": "definition-to-term",
+      "category": "transporte",
+      "context": {
+        "sentence": "Tomamos la línea 3 hasta el centro.",
+        "translation": "We nemen lijn 3 naar het centrum.",
+        "sentenceWithBlank": "Tomamos {BLANK} 3 hasta el centro."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "rutas-y-ratitos-libres:34",
+      "term": "el avión",
+      "definition": "het vliegtuig",
+      "direction": "definition-to-term",
+      "category": "transporte",
+      "context": {
+        "sentence": "El avión llega con retraso.",
+        "translation": "Het vliegtuig komt met vertraging aan.",
+        "sentenceWithBlank": "{BLANK} llega con retraso."
+      },
+      "synonyms": []
+    }
+  ]
+}
