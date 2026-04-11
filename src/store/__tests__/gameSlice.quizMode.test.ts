@@ -52,6 +52,7 @@ jest.mock('../../services/quizModeSelectionUtils', () => ({
 import gameReducer, { nextWord, setCurrentWord } from '../gameSlice';
 import { selectWordForMixedPractice } from '../../services/wordSelectionManager';
 import { selectQuizMode } from '../../services/quizModeSelectionUtils';
+import { WordProgress } from '../types';
 
 const mockSelectWordForMixedPractice = selectWordForMixedPractice as jest.Mock;
 const mockSelectQuizMode = selectQuizMode as jest.Mock;
@@ -75,7 +76,7 @@ const WORD_SELECTION_RESULT = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function makeWordProgress(xp: number) {
+function makeWordProgress(xp: number): { [key: string]: WordProgress } {
   const now = new Date().toISOString();
   return {
     [TEST_WORD.id]: {
@@ -88,7 +89,7 @@ function makeWordProgress(xp: number) {
   };
 }
 
-function buildStore(wordProgress: Record<string, unknown> = {}) {
+function buildStore(wordProgress: { [key: string]: WordProgress } = {}) {
   return configureStore({
     reducer: { game: gameReducer },
     preloadedState: {
