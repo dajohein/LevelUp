@@ -238,7 +238,7 @@ export const AccountLinking: React.FC = () => {
       <Section>
         <SectionTitle>📱 Share Progress from This Device</SectionTitle>
         <Description>
-          Generate a secure code to link this device's progress with another device. The code is
+          Generate a secure code to link this device&apos;s progress with another device. The code is
           valid for 1 hour and expires automatically.
         </Description>
 

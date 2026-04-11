@@ -622,9 +622,10 @@ export class TieredStorageService implements TieredStorageProvider {
       case 'local':
         localStorage.removeItem(key);
         return { success: true };
-      case 'indexedDB':
+      case 'indexedDB': {
         const result = await indexedDBStorage.delete(key);
         return result;
+      }
       case 'remote':
         return await remoteStorage.delete(key);
       case 'archive':

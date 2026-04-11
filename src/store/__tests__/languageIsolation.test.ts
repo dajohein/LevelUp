@@ -209,7 +209,7 @@ describe('Language Data Isolation', () => {
 
       // Switch from German to Spanish
       let currentLanguage = 'de';
-      let germanProgress = Object.entries(allProgress)
+      const germanProgress = Object.entries(allProgress)
         .filter(([key]) => key.startsWith(`${currentLanguage}:`))
         .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}) as any;
 

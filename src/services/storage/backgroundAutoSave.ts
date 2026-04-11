@@ -152,23 +152,26 @@ class BackgroundAutoSave {
             }
             break;
 
-          case 'gameState':
+          case 'gameState': {
             // Take the latest game state change
             const latestGameState = changes[changes.length - 1];
             savePromises.push(this.enhancedStorage.saveGameState(latestGameState.data));
             break;
+          }
 
-          case 'sessionState':
+          case 'sessionState': {
             // Take the latest session state change
             const latestSessionState = changes[changes.length - 1];
             savePromises.push(this.enhancedStorage.saveSessionState(latestSessionState.data));
             break;
+          }
 
-          case 'achievements':
+          case 'achievements': {
             // Take the latest achievements change
             const latestAchievements = changes[changes.length - 1];
             savePromises.push(this.enhancedStorage.saveAchievements(latestAchievements.data));
             break;
+          }
         }
       }
 

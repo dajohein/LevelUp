@@ -116,7 +116,7 @@ export const LoadingDiagnostics: React.FC = () => {
       </div>
 
       <div style={{ marginTop: '8px', fontSize: '10px', opacity: 0.7 }}>
-        Add trackRender('ComponentName') to useEffect to monitor
+        Add trackRender(&apos;ComponentName&apos;) to useEffect to monitor
       </div>
     </DiagnosticsContainer>
   );

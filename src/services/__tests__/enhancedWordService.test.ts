@@ -1,4 +1,5 @@
 import { enhancedWordService } from '../enhancedWordService';
+import { getWordsForLanguage } from '../wordService';
 
 // Mock dependencies to return simple test data
 jest.mock('../wordService', () => ({
@@ -69,8 +70,7 @@ describe('enhancedWordService', () => {
     });
 
     it('should handle empty word list', () => {
-      const mockGetWords = require('../wordService').getWordsForLanguage;
-      mockGetWords.mockReturnValueOnce([]);
+      jest.mocked(getWordsForLanguage).mockReturnValueOnce([]);
 
       const result = enhancedWordService.initializeLearningSession('de');
 

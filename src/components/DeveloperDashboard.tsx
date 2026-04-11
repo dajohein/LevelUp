@@ -378,7 +378,7 @@ export const DeveloperDashboard: React.FC = () => {
 
               <div>
                 <strong style={{ color: '#4CAF50' }}>Export User Data:</strong>
-                <CodeBlock>await LevelUpDev.storage.exportUserData('de')</CodeBlock>
+                <CodeBlock>await LevelUpDev.storage.exportUserData(&apos;de&apos;)</CodeBlock>
               </div>
             </div>
           </Section>

@@ -1,5 +1,3 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // TODO: Clean up unused variables and parameters (18 issues identified)
 // This suppression will be removed once unused variables are cleaned up
 // See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for gradual cleanup strategy
@@ -96,8 +94,8 @@ export class AILearningCoach {
   private readonly COGNITIVE_LOAD_WINDOW = 600000; // 10 minutes
 
   constructor(
-    private _enhancedStorage: EnhancedStorageService,
-    private _patternRecognizer: PatternRecognizer,
+    _enhancedStorage: EnhancedStorageService,
+    _patternRecognizer: PatternRecognizer,
     private predictiveAnalytics: PredictiveAnalytics
   ) {}
 
@@ -550,15 +548,15 @@ export class AILearningCoach {
   }
 
   private async getRecentLearningHistory(
-    userId: string,
-    languageCode: string
+    _userId: string,
+    _languageCode: string
   ): Promise<AnalyticsEvent[]> {
     // Implement based on your storage system
     return [];
   }
 
   // Additional helper methods would continue here...
-  private generateInitialGuidance(languageCode: string): LearningCoachInsight[] {
+  private generateInitialGuidance(_languageCode: string): LearningCoachInsight[] {
     return [
       {
         type: 'pattern',
@@ -805,8 +803,8 @@ export class AILearningCoach {
   }
 
   private async generatePersonalizedRecommendations(
-    userId: string,
-    languageCode: string,
+    _userId: string,
+    _languageCode: string,
     context: any
   ): Promise<LearningCoachInsight[]> {
     const insights: LearningCoachInsight[] = [];
@@ -1003,7 +1001,7 @@ export class AILearningCoach {
     return triggers;
   }
 
-  private analyzeModalityPreferences(events: AnalyticsEvent[]): any {
+  private analyzeModalityPreferences(_events: AnalyticsEvent[]): any {
     return {
       visual: 0.6,
       auditory: 0.3,
@@ -1019,7 +1017,7 @@ export class AILearningCoach {
     return 'kinesthetic';
   }
 
-  private analyzeDifficultyProgression(events: AnalyticsEvent[]): number {
+  private analyzeDifficultyProgression(_events: AnalyticsEvent[]): number {
     // Simple implementation - could be enhanced
     return 0.7; // Default moderate difficulty preference
   }
@@ -1030,10 +1028,10 @@ export class AILearningCoach {
   }
 
   private async selectOptimalWords(
-    userId: string,
-    languageCode: string,
-    personality: LearningPersonality,
-    momentum: LearningMomentum
+    _userId: string,
+    _languageCode: string,
+    _personality: LearningPersonality,
+    _momentum: LearningMomentum
   ): Promise<string[]> {
     // Simple implementation - could integrate with existing word service
     return ['example', 'word', 'list'];
@@ -1042,7 +1040,7 @@ export class AILearningCoach {
   private calculateOptimalDifficulty(
     momentum: LearningMomentum,
     personality: LearningPersonality,
-    currentProgress: any
+    _currentProgress: any
   ): number {
     let baseDifficulty = 0.7;
 
@@ -1072,14 +1070,14 @@ export class AILearningCoach {
     return baseDuration;
   }
 
-  private identifyLearningFocus(personality: LearningPersonality, currentProgress: any): string[] {
+  private identifyLearningFocus(_personality: LearningPersonality, _currentProgress: any): string[] {
     // Implementation for learning focus identification
     return [];
   }
 
   private generateLearningStrategy(
-    personality: LearningPersonality,
-    momentum: LearningMomentum
+    _personality: LearningPersonality,
+    _momentum: LearningMomentum
   ): string {
     // Implementation for learning strategy generation
     return '';
@@ -1098,7 +1096,7 @@ export class AILearningCoach {
       motivation: MotivationProfile;
       insights: LearningCoachInsight[];
     },
-    sessionEvents: AnalyticsEvent[]
+    _sessionEvents: AnalyticsEvent[]
   ): Promise<void> {
     try {
       // Load existing profile or create new one
@@ -1144,54 +1142,6 @@ export class AILearningCoach {
     }
   }
 
-  /**
-   * Calculate session metrics from analytics events
-   */
-  private calculateSessionMetrics(sessionEvents: AnalyticsEvent[]): {
-    sessionDuration: number;
-    wordsAttempted: number;
-    accuracy: number;
-    averageResponseTime: number;
-  } {
-    if (sessionEvents.length === 0) {
-      return {
-        sessionDuration: 0,
-        wordsAttempted: 0,
-        accuracy: 0,
-        averageResponseTime: 0,
-      };
-    }
-
-    // Calculate session duration
-    const timestamps = sessionEvents.map(e => e.timestamp);
-    const sessionDuration = Math.max(...timestamps) - Math.min(...timestamps);
-
-    // Calculate words attempted
-    const wordsAttempted = sessionEvents.filter(
-      e => e.type === AnalyticsEventType.WORD_ATTEMPT
-    ).length;
-
-    // Calculate accuracy
-    const successes = sessionEvents.filter(e => e.type === AnalyticsEventType.WORD_SUCCESS).length;
-    const failures = sessionEvents.filter(e => e.type === AnalyticsEventType.WORD_FAILURE).length;
-    const accuracy = successes + failures > 0 ? successes / (successes + failures) : 0;
-
-    // Calculate average response time
-    const responseTimes = sessionEvents
-      .filter(e => e.data?.responseTime)
-      .map(e => e.data.responseTime);
-    const averageResponseTime =
-      responseTimes.length > 0
-        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-        : 0;
-
-    return {
-      sessionDuration,
-      wordsAttempted,
-      accuracy,
-      averageResponseTime,
-    };
-  }
 
   /**
    * Load existing learning profile from storage

@@ -343,12 +343,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     gameData.language ||
     (availableLanguages.length > 0 ? availableLanguages[0].code : null);
 
-  if (!currentLanguage) {
-    return null; // Don't render if no languages are available
-  }
-
   // Get word progress data - prefer localStorage for language-specific data
   const wordProgress = useMemo(() => {
+    if (!currentLanguage) return {};
     // Always prefer localStorage for language-specific data to avoid mixing languages
     // The Redux store might contain data for a different language than what we're displaying
     try {
@@ -373,6 +370,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
   // Memoize expensive calculations
   const profileData = useMemo(() => {
+    if (!currentLanguage) return { languageXP: 0, currentLevel: 1, stats: { studiedWords: 0, masteredWords: 0, wordsInProgress: 0, averageMastery: 0 }, xpProgress: { current: 0, required: 100, percentage: 0 }, levelInfo: null };
     const languageXP = calculateLanguageXP(wordProgress, currentLanguage);
     const currentLevel = calculateCurrentLevel(languageXP);
     const stats = calculateLanguageAchievementStats(wordProgress, currentLanguage);
@@ -385,10 +383,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const { languageXP, currentLevel, stats, xpProgress, levelInfo } = profileData;
 
   useEffect(() => {
+    if (!currentLanguage) return;
     // Trigger progress animation on mount or language change
     const timer = setTimeout(() => setAnimateProgress(true), 100);
     return () => clearTimeout(timer);
   }, [currentLanguage]);
+
+  if (!currentLanguage) {
+    return null; // Don't render if no languages are available
+  }
 
   // Achievement thresholds based on language-specific progress
   const achievements = [
@@ -575,7 +578,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               🤖 AI Learning Coach will create your profile after a few learning sessions
               <br />
               <small style={{ opacity: 0.7 }}>
-                Debug: userId="{userId}", profileLoading={String(profileLoading)}
+                Debug: userId=&quot;{userId}&quot;, profileLoading={String(profileLoading)}
               </small>
               <br />
               <div

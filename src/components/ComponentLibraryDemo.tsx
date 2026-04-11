@@ -1411,7 +1411,7 @@ const GridContainer = styled.div\`
                 </CardHeader>
                 <CardContent>
                   <BodyText>
-                    Optimized with Emotion's compile-time CSS generation and tree-shaking for
+                    Optimized with Emotion&apos;s compile-time CSS generation and tree-shaking for
                     minimal bundle size.
                   </BodyText>
                 </CardContent>

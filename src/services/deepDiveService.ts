@@ -206,7 +206,6 @@ export class DeepDiveService {
     let contextualHints: string[] = [];
     let comprehensionBoost: string[] = [];
     let reasoning: string[] = [];
-    let timeAllocated: number;
 
     // AI-enhanced word selection for deep understanding
     if (aiEnhancementsEnabled && comprehensionDepth >= 2) {
@@ -329,7 +328,7 @@ export class DeepDiveService {
 
     // Calculate difficulty and time allocation
     const difficultyLevel = calculateWordDifficulty(selectedWord, wordProgress[selectedWord.id]);
-    timeAllocated = calculateTimeAllocation(selectedWord, 'deep-dive', difficultyLevel, quizMode);
+    const timeAllocated = calculateTimeAllocation(selectedWord, 'deep-dive', difficultyLevel, quizMode);
 
     // Generate contextual content with simple fallback options
     const options = this.generateOptions(selectedWord, quizMode);

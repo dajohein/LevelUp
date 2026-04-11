@@ -37,13 +37,13 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+  constructor() { /* intentional no-op */ }
+  disconnect() { /* intentional no-op */ }
+  observe() { /* intentional no-op */ }
   takeRecords() {
     return [];
   }
-  unobserve() {}
+  unobserve() { /* intentional no-op */ }
 } as any;
 
 // Mock localStorage

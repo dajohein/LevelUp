@@ -174,7 +174,7 @@ export const OfflineBanner: React.FC = () => {
 
   return (
     <OfflineIndicator className={!isOnline ? 'visible' : ''}>
-      🔴 You're offline. Some features may be limited, but you can continue learning!
+      🔴 You&apos;re offline. Some features may be limited, but you can continue learning!
     </OfflineIndicator>
   );
 };

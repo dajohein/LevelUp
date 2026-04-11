@@ -198,9 +198,7 @@ const getDemoUserId = () => {
   return userId;
 };
 
-interface LearningStatsPageProps {}
-
-export const LearningStatsPage: React.FC<LearningStatsPageProps> = () => {
+export const LearningStatsPage: React.FC = () => {
   const { languageCode } = useParams<{ languageCode: string }>();
   const reduxWordProgress = useSelector((state: RootState) => state.game.wordProgress);
   const currentLanguage = useSelector((state: RootState) => state.game.language);
