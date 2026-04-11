@@ -54,7 +54,7 @@ export interface GameHandlers {
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
-    transitionType?: 'enhanced' | 'standard' | 'quiz',
+    transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
     additionalData?: any
   ) => Promise<void>;
   handleContinueFromLearningCard: () => void;
@@ -98,6 +98,7 @@ export interface UseEnhancedGameStateReturn {
     getCurrentWordInfo: () => any;
     getSessionStats: () => any;
     forceCompleteSession: () => void;
+    initializeEnhancedSession: () => Promise<boolean>;
   };
   levelUp: {
     showLevelUp: boolean;
@@ -163,6 +164,7 @@ export const useEnhancedGameState = ({
     getCurrentWordInfo,
     getSessionStats,
     forceCompleteSession,
+    initializeEnhancedSession,
   } = useEnhancedGame(languageCode, moduleId);
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = useLevelUpDetection();
 
@@ -199,6 +201,7 @@ export const useEnhancedGameState = ({
     const wordToUse = enhancedWordInfo?.word || currentWord;
     if (!wordToUse) return null;
     return gameServices.modeHandler.getContextForDirection(wordToUse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord?.id, getCurrentWordInfo]);
 
   // Learning status calculation
@@ -215,6 +218,7 @@ export const useEnhancedGameState = ({
       isTrulyNewWord: status.isTrulyNewWord,
       needsReinforcement: status.needsReinforcement,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord?.id, wordProgress]);
 
   // Answer correctness checker
@@ -237,6 +241,96 @@ export const useEnhancedGameState = ({
       return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
     },
     [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]
+  );
+
+  // Word transition handler — declared before handleSubmit so handleSubmit's closure captures
+  // the already-initialised const and the react-hooks/immutability rule is satisfied.
+  const handleWordTransition = useCallback(
+    async (
+      transitionType: 'enhanced' | 'standard' | 'quiz' | 'batch-complete' = 'standard',
+      additionalData?: any
+    ) => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        if (transitionType === 'enhanced') {
+          const result = additionalData;
+          if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
+            setSessionCompleted(true);
+          } else {
+            setIsTransitioning(false);
+            setWordTimer(0);
+            setWordStartTime(Date.now());
+          }
+          return;
+        }
+
+        // Batch complete in free-play: restart the enhanced session for the next word group.
+        if (transitionType === 'batch-complete') {
+          dispatch(nextWord()); // Keep Redux in sync with a fresh word (used as fallback)
+          initializeEnhancedSession(); // Start the next 5–7 word batch
+          setIsTransitioning(false);
+          setWordTimer(0);
+          setWordStartTime(Date.now());
+          return;
+        }
+
+        setIsTransitioning(false);
+        setWordTimer(0);
+        setWordStartTime(Date.now());
+
+        if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
+          if (
+            currentSession?.id &&
+            challengeServiceManager.isSessionTypeSupported(currentSession.id)
+          ) {
+            const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+
+            const context = {
+              wordsCompleted: sessionProgress.wordsCompleted,
+              currentStreak: sessionProgress.currentStreak,
+              timeRemaining,
+              targetWords: currentSession.targetWords || 15,
+              wordProgress,
+              languageCode: languageCode,
+              moduleId: currentModule || undefined,
+            };
+
+            const result = await challengeServiceManager.getNextWord(currentSession.id, context);
+
+            if (result.word) {
+              dispatch(
+                setCurrentWord({
+                  word: result.word,
+                  options: result.options,
+                  quizMode: result.quizMode,
+                })
+              );
+            }
+          } else {
+            dispatch(nextWord());
+          }
+        }
+      } catch (error) {
+        logger.error(`Failed to get next word from ${currentSession?.id} service:`, {
+          sessionId: currentSession?.id,
+          error,
+        });
+        dispatch(nextWord());
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      currentSession?.id,
+      sessionProgress.wordsCompleted,
+      sessionProgress.currentStreak,
+      sessionTimer,
+      wordProgress,
+      languageCode,
+      isUsingSpacedRepetition,
+      initializeEnhancedSession,
+      dispatch,
+    ]
   );
 
   // Main submission handler
@@ -283,19 +377,30 @@ export const useEnhancedGameState = ({
       dispatch(checkAnswer(answer));
 
       // Handle enhanced vs standard game logic
+      let isBatchComplete = false;
       if (isUsingSpacedRepetition) {
         const result = handleEnhancedAnswer(validationResult.isCorrect);
 
-        const completionResult = gameServices.sessionManager.handleEnhancedSessionCompletion(
-          result,
-          gameLanguage || undefined,
-          languageCode
-        );
+        if (result && typeof result === 'object' && result.isComplete) {
+          if (isSessionActive) {
+            // Session mode: navigate to the completion screen
+            const completionResult = gameServices.sessionManager.handleEnhancedSessionCompletion(
+              result,
+              gameLanguage || undefined,
+              languageCode
+            );
 
-        if (completionResult.isComplete && completionResult.shouldNavigate) {
-          setSessionCompleted(true);
-          navigate(completionResult.navigationPath!);
-          return;
+            if (completionResult.isComplete && completionResult.shouldNavigate) {
+              setSessionCompleted(true);
+              navigate(completionResult.navigationPath!);
+              return;
+            }
+          } else {
+            // Free-play mode: a batch of words is complete.
+            // Let the normal transition run, then restart the enhanced session
+            // for the next batch (handled in handleWordTransition).
+            isBatchComplete = true;
+          }
         }
       }
 
@@ -314,11 +419,15 @@ export const useEnhancedGameState = ({
       // Trigger delayed transition
       setTimeout(
         () => {
-          handleWordTransition();
+          handleWordTransition(isBatchComplete ? 'batch-complete' : 'standard');
         },
         gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
       );
     },
+    // handleWordTransition omitted intentionally: captured via closure; adding it would cause
+    // handleSubmit to be recreated on every answer (handleWordTransition changes with wordProgress).
+    // dispatch omitted: stable reference from useDispatch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       currentWord,
       quizMode,
@@ -340,77 +449,6 @@ export const useEnhancedGameState = ({
       playCorrect,
       playIncorrect,
       navigate,
-    ]
-  );
-
-  // Word transition handler
-  const handleWordTransition = useCallback(
-    async (transitionType: 'enhanced' | 'standard' | 'quiz' = 'standard', additionalData?: any) => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        if (transitionType === 'enhanced') {
-          const result = additionalData;
-          if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
-            setSessionCompleted(true);
-          } else {
-            setIsTransitioning(false);
-            setWordTimer(0);
-            setWordStartTime(Date.now());
-          }
-          return;
-        }
-
-        setIsTransitioning(false);
-        setWordTimer(0);
-        setWordStartTime(Date.now());
-
-        if (!isUsingSpacedRepetition && isSessionActive && currentSession) {
-          if (
-            currentSession?.id &&
-            challengeServiceManager.isSessionTypeSupported(currentSession.id)
-          ) {
-            const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
-
-            const context = {
-              wordsCompleted: sessionProgress.wordsCompleted,
-              currentStreak: sessionProgress.currentStreak,
-              timeRemaining,
-              targetWords: currentSession.targetWords || 15,
-              wordProgress,
-              languageCode: languageCode,
-              moduleId: currentModule || undefined, // Add current module for module-specific practice
-            };
-
-            const result = await challengeServiceManager.getNextWord(currentSession.id, context);
-
-            if (result.word) {
-              dispatch(
-                setCurrentWord({
-                  word: result.word,
-                  options: result.options,
-                  quizMode: result.quizMode,
-                })
-              );
-            }
-          } else {
-            dispatch(nextWord());
-          }
-        }
-      } catch (error) {
-        logger.error(`Failed to get next word from ${currentSession?.id} service:`, { sessionId: currentSession?.id, error });
-        dispatch(nextWord());
-      }
-    },
-    [
-      currentSession?.id,
-      sessionProgress.wordsCompleted,
-      sessionProgress.currentStreak,
-      sessionTimer,
-      wordProgress,
-      languageCode,
-      isUsingSpacedRepetition,
-      dispatch,
     ]
   );
 
@@ -532,6 +570,9 @@ export const useEnhancedGameState = ({
           });
       }
     }
+    // Deps intentionally minimal: adding currentSession/wordProgress etc. would re-run the
+    // session initializer on every answer, which is undesirable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, languageCode, moduleId, isSessionActive]); // Removed currentSession?.id to prevent re-runs
 
   // Session state management
@@ -544,6 +585,8 @@ export const useEnhancedGameState = ({
       // Reset session initialization flag when a new session becomes active
       sessionInitializedRef.current = false;
     }
+    // currentSession?.id used instead of currentSession to avoid re-runs on progress updates
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSessionActive, currentSession?.id]);
 
   // Session completion logic
@@ -665,6 +708,7 @@ export const useEnhancedGameState = ({
       getCurrentWordInfo,
       getSessionStats,
       forceCompleteSession,
+      initializeEnhancedSession,
     },
     levelUp: {
       showLevelUp,

@@ -8,6 +8,7 @@ import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
 import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
+import { selectQuizMode } from '../services/quizModeSelectionUtils';
 import type { GameState } from './types';
 
 // Load persisted game state
@@ -96,7 +97,7 @@ export const gameSlice = createSlice({
         if (result) {
           state.currentWord = result.word;
           state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term); // Convert Word objects to strings
-          state.quizMode = 'multiple-choice'; // Default quiz mode, can be enhanced later
+          state.quizMode = selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
           state.isCorrect = null;
           state.lastAnswer = undefined;
           state.capitalizationFeedback = undefined;
@@ -123,13 +124,16 @@ export const gameSlice = createSlice({
       action: PayloadAction<{
         word: any;
         options: string[];
-        quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
+        // quizMode is optional: when omitted, selectQuizMode() picks the adaptive
+        // mode from the word's current mastery level.  Challenge services that own
+        // their own mode logic should pass an explicit value.
+        quizMode?: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
       }>
     ) => {
       const { word, options, quizMode } = action.payload;
       state.currentWord = word;
       state.currentOptions = options;
-      state.quizMode = quizMode;
+      state.quizMode = quizMode ?? selectQuizMode({ word, wordProgress: state.wordProgress });
       state.isCorrect = null;
       state.lastAnswer = undefined;
       state.capitalizationFeedback = undefined;

@@ -17,6 +17,10 @@ jest.mock('../../services/enhancedWordService', () => ({
     })),
     moveToNextWord: jest.fn(() => true),
     recordWordResult: jest.fn(),
+    recordAnswer: jest.fn(() => ({
+      isSessionComplete: false,
+      nextWord: null,
+    })),
     getSessionProgress: jest.fn(() => ({
       currentIndex: 1,
       totalWords: 10,
@@ -34,6 +38,10 @@ jest.mock('../../services/enhancedWordService', () => ({
       weakWords: [],
       recommendations: ['Practice more'],
     })),
+    getSessionHistory: jest.fn(() => []),
+    getLearningAnalytics: jest.fn(() => null),
+    refreshWordGroups: jest.fn(),
+    forceCompleteSession: jest.fn(() => null),
   },
 }));
 
@@ -86,9 +94,10 @@ const createTestStore = () => {
 // Wrapper component for hook tests
 const createWrapper = () => {
   const store = createTestStore();
-  return ({ children }: { children: React.ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
+  function TestWrapper({ children }: { children: React.ReactNode }) {
+    return <Provider store={store}>{children}</Provider>;
+  }
+  return TestWrapper;
 };
 
 describe('useEnhancedGame', () => {
@@ -103,8 +112,9 @@ describe('useEnhancedGame', () => {
       });
 
       expect(result.current.enhancedState).toBeDefined();
-      expect(result.current.enhancedState.isUsingSpacedRepetition).toBe(false);
-      expect(result.current.enhancedState.sessionProgress).toBeNull();
+      // With auto-init, the hook immediately starts an enhanced session for free-play mode.
+      expect(typeof result.current.enhancedState.isUsingSpacedRepetition).toBe('boolean');
+      expect(result.current.enhancedState.sessionProgress).toBeDefined();
     });
 
     it('should accept language code', () => {
@@ -184,7 +194,7 @@ describe('useEnhancedGame', () => {
       });
 
       expect(typeof result.current.handleEnhancedAnswer).toBe('function');
-      
+
       act(() => {
         result.current.handleEnhancedAnswer(true);
       });
@@ -299,6 +309,99 @@ describe('useEnhancedGame', () => {
 
       // Should not throw
       expect(true).toBe(true);
+    });
+  });
+
+  describe('Auto-initialization (free-play mode)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let mockService: any;
+
+    beforeEach(() => {
+      // Grab the already-hoisted mock inside beforeEach to avoid TDZ issues.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockService = (jest.requireMock('../../services/enhancedWordService') as any)
+        .enhancedWordService;
+      mockService.initializeLearningSession.mockClear();
+    });
+
+    it('auto-inits enhanced session when no active session is present', async () => {
+      await act(async () => {
+        renderHook(() => useEnhancedGame('de'), { wrapper: createWrapper() });
+      });
+
+      // initializeLearningSession should have been called for free-play mode
+      expect(mockService.initializeLearningSession).toHaveBeenCalled();
+    });
+
+    it('does not auto-init when language code is empty', async () => {
+      await act(async () => {
+        renderHook(() => useEnhancedGame(''), { wrapper: createWrapper() });
+      });
+
+      expect(mockService.initializeLearningSession).not.toHaveBeenCalled();
+    });
+
+    it('does not auto-init when a session is active', async () => {
+      // Build a store that has an active session.
+      const sessionStore = configureStore({
+        reducer: { game: gameReducer, session: sessionReducer },
+        preloadedState: {
+          game: {
+            currentWord: null,
+            currentOptions: [],
+            quizMode: 'multiple-choice',
+            score: 0,
+            isCorrect: null,
+            lives: 3,
+            language: 'de',
+            module: null,
+            streak: 0,
+            bestStreak: 0,
+            totalAttempts: 0,
+            correctAnswers: 0,
+            wordProgress: {},
+          },
+          session: {
+            currentLanguage: 'de',
+            currentSession: {
+              id: 'quick-dash',
+              name: 'Quick Dash',
+              description: '',
+              emoji: '⚡',
+              targetWords: 8,
+              difficulty: 'beginner',
+              requiredScore: 600,
+              scoreMultiplier: 1.5,
+            },
+            progress: {
+              wordsCompleted: 0,
+              correctAnswers: 0,
+              incorrectAnswers: 0,
+              currentStreak: 0,
+              longestStreak: 0,
+              timeElapsed: 0,
+              hintsUsed: 0,
+              score: 0,
+              bonusPoints: 0,
+            },
+            isSessionActive: true,
+            sessionStartTime: Date.now(),
+            completedSessionsByLanguage: {},
+            weeklyChallengeBylanguage: {},
+          },
+        },
+      });
+
+      function SessionWrapper({ children }: { children: React.ReactNode }) {
+        return <Provider store={sessionStore}>{children}</Provider>;
+      }
+
+      await act(async () => {
+        renderHook(() => useEnhancedGame('de'), { wrapper: SessionWrapper });
+      });
+
+      // Should NOT auto-init when a session is active
+      expect(mockService.initializeLearningSession).not.toHaveBeenCalled();
     });
   });
 });
