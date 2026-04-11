@@ -346,28 +346,33 @@ class DeepDiveAdapter implements IChallengeService {
         result.quizMode as string
       )
     ) {
-      // Check word mastery level to avoid giving difficult modes to new words
+      // Check word mastery level to avoid giving difficult modes to low-mastery words.
+      // Thresholds align with quizModeSelectionUtils:
+      //   Tier 1 (0–20 XP):   multiple-choice only
+      //   Tier 2 (21–50 XP):  multiple-choice / letter-scramble / fill-in-the-blank
+      //   Tier 3+ (51+ XP):   open-answer allowed
       const wordProgress = context.wordProgress[result.word.id];
-      const masteryLevel = wordProgress?.xp || 0; // Use XP instead of masteryLevel
-      const isNewWord = masteryLevel === 0;
+      const masteryLevel = wordProgress?.xp || 0;
+      const canUseOpenAnswer = masteryLevel >= 50; // Tier 3+
+      const canUseFillInBlank = masteryLevel >= 20; // Tier 2+
 
       // For enhanced modes, use varied quiz types but respect mastery level
       const enhancedModeMapping: { [key: string]: StandardQuizMode } = {
-        'contextual-analysis': isNewWord
-          ? 'multiple-choice'
-          : Math.random() > 0.5
+        'contextual-analysis': canUseFillInBlank
+          ? Math.random() > 0.5
             ? 'multiple-choice'
-            : 'fill-in-the-blank',
-        'usage-example': isNewWord
-          ? 'multiple-choice'
-          : Math.random() > 0.3
+            : 'fill-in-the-blank'
+          : 'multiple-choice',
+        'usage-example': canUseOpenAnswer
+          ? Math.random() > 0.3
             ? 'open-answer'
-            : 'multiple-choice',
-        'synonym-antonym': isNewWord
-          ? 'multiple-choice'
-          : Math.random() > 0.4
+            : 'multiple-choice'
+          : 'multiple-choice',
+        'synonym-antonym': canUseFillInBlank
+          ? Math.random() > 0.4
             ? 'letter-scramble'
-            : 'multiple-choice',
+            : 'multiple-choice'
+          : 'multiple-choice',
       };
 
       standardQuizMode = enhancedModeMapping[result.quizMode as string] || 'multiple-choice';
@@ -382,7 +387,8 @@ class DeepDiveAdapter implements IChallengeService {
         convertedTo: standardQuizMode,
         aiEnhanced: result.aiEnhanced,
         masteryLevel,
-        isNewWord,
+        canUseOpenAnswer,
+        canUseFillInBlank,
       });
 
       // Generate appropriate options based on the converted mode

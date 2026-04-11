@@ -6,8 +6,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RootState } from '../store/store';
 import { nextWord, setCurrentWord } from '../store/gameSlice';
-import { incrementWordsCompleted, addCorrectAnswer, addIncorrectAnswer } from '../store/sessionSlice';
-import { GameContainer, GameContent, SkipButtonContainer, Button } from './Game/GameStyledComponents';
+import { incrementWordsCompleted } from '../store/sessionSlice';
+import {
+  GameContainer,
+  GameContent,
+  SkipButtonContainer,
+  Button,
+} from './Game/GameStyledComponents';
 import { useEnhancedGameState } from '../hooks/useEnhancedGameState';
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { UnifiedLoading } from './feedback/UnifiedLoading';
@@ -72,7 +77,7 @@ export const Game: React.FC = () => {
   // Enhanced game state management hook
   const { gameState, gameHandlers, gameHelpers, enhancedGame, levelUp, audio } =
     useEnhancedGameState({
-      languageCode: languageCode!,
+      languageCode: languageCode ?? '',
       moduleId,
       currentWord,
       quizMode,
@@ -107,19 +112,16 @@ export const Game: React.FC = () => {
   const {
     handleSubmit,
     handleOpenQuestionSubmit,
-    handleWordTransition,
+    handleWordTransition: _handleWordTransition,
     handleContinueFromLearningCard,
     formatTime,
   } = gameHandlers;
 
-  const {
-    contextForWord,
-    wordLearningStatus,
-  } = gameHelpers;
+  const { contextForWord, wordLearningStatus } = gameHelpers;
 
   const {
     isUsingSpacedRepetition,
-    handleEnhancedAnswer,
+    handleEnhancedAnswer: _handleEnhancedAnswer,
     getCurrentWordInfo,
     getSessionStats,
   } = enhancedGame;
@@ -166,14 +168,8 @@ export const Game: React.FC = () => {
         handleSubmit={handleSubmit}
         handleOpenQuestionSubmit={handleOpenQuestionSubmit}
         handleContinueFromLearningCard={handleContinueFromLearningCard}
-        handleWordTransition={handleWordTransition}
-        handleEnhancedAnswer={handleEnhancedAnswer}
         playCorrect={playCorrect}
         playIncorrect={playIncorrect}
-        dispatch={dispatch}
-        incrementWordsCompleted={incrementWordsCompleted}
-        addCorrectAnswer={addCorrectAnswer}
-        addIncorrectAnswer={addIncorrectAnswer}
         setLastAnswerCorrect={setLastAnswerCorrect}
         setFeedbackQuestionKey={setFeedbackQuestionKey}
         setIsTransitioning={setIsTransitioning}
@@ -208,7 +204,10 @@ export const Game: React.FC = () => {
                   challengeServiceManager.resetSession(currentSession.id);
                 }
 
-                const timeRemaining = Math.max(0, currentSession.timeLimit! * 60 - sessionTimer);
+                const timeRemaining = Math.max(
+                  0,
+                  (currentSession.timeLimit ?? 0) * 60 - sessionTimer
+                );
 
                 const context = {
                   wordsCompleted: sessionProgress.wordsCompleted,
@@ -216,19 +215,21 @@ export const Game: React.FC = () => {
                   timeRemaining,
                   targetWords: currentSession.targetWords || 15,
                   wordProgress,
-                  languageCode: languageCode!,
+                  languageCode: languageCode ?? '',
                 };
 
                 challengeServiceManager
                   .getNextWord(currentSession.id, context)
                   .then(result => {
-                    dispatch(
-                      setCurrentWord({
-                        word: result.word!,
-                        options: result.options,
-                        quizMode: result.quizMode,
-                      })
-                    );
+                    if (result.word) {
+                      dispatch(
+                        setCurrentWord({
+                          word: result.word,
+                          options: result.options,
+                          quizMode: result.quizMode,
+                        })
+                      );
+                    }
                   })
                   .catch(error => {
                     console.error(
@@ -258,15 +259,7 @@ export const Game: React.FC = () => {
         isCorrect={lastAnswerCorrect}
         correctAnswer={feedbackWordInfo?.correctAnswer || ''}
         originalWord={feedbackWordInfo?.originalWord || ''}
-        wordContext={
-          feedbackWordInfo?.context
-            ? typeof feedbackWordInfo.context === 'string'
-              ? feedbackWordInfo.context
-              : (feedbackWordInfo.context as any)?.sentence ||
-                (feedbackWordInfo.context as any)?.translation ||
-                ''
-            : ''
-        }
+        wordContext={feedbackWordInfo?.context || ''}
         capitalizationFeedback={capitalizationFeedback}
       />
       <AchievementManager />

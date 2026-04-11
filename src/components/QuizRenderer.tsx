@@ -8,15 +8,8 @@ import { LearningCard } from './quiz/LearningCard';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
 import { WordProgress } from '../store/types';
-import {
-  SessionType,
-  SessionProgress,
-  addCorrectAnswer,
-  addIncorrectAnswer,
-  incrementWordsCompleted,
-} from '../store/sessionSlice';
+import { SessionType, SessionProgress } from '../store/sessionSlice';
 import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
-import { AppDispatch } from '../store/store';
 
 // Import styled components from Game.tsx (will need to be shared)
 const QuickDashContainer = styled.div`
@@ -296,7 +289,7 @@ export interface QuizRendererProps {
 
   // Session state
   currentSession: SessionType | null;
-  sessionProgress: SessionProgress & { bossHealth?: number; targetWords?: number };
+  sessionProgress: SessionProgress & { bossHealth?: number };
   getSessionStats: () => { currentIndex?: number; totalWords?: number } | null;
 
   // UI state
@@ -318,19 +311,13 @@ export interface QuizRendererProps {
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition?: () => void;
-  handleEnhancedAnswer?: (isCorrect: boolean) => void;
 
   // Audio handlers
   playCorrect?: () => void;
   playIncorrect?: () => void;
 
   // Redux dispatch and state updates
-  dispatch?: AppDispatch;
-  incrementWordsCompleted?: typeof incrementWordsCompleted;
-  addCorrectAnswer?: typeof addCorrectAnswer;
-  addIncorrectAnswer?: typeof addIncorrectAnswer;
-  setLastAnswerCorrect?: (value: boolean | null) => void;
+  setLastAnswerCorrect?: (correct: boolean | null) => void;
   setFeedbackQuestionKey?: (key: string) => void;
   setIsTransitioning?: (value: boolean) => void;
 }
@@ -359,14 +346,8 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   handleSubmit,
   handleOpenQuestionSubmit,
   handleContinueFromLearningCard,
-  handleWordTransition: _handleWordTransition,
-  handleEnhancedAnswer: _handleEnhancedAnswer,
   playCorrect: _playCorrect,
   playIncorrect: _playIncorrect,
-  dispatch: _dispatch,
-  incrementWordsCompleted: _incrementWordsCompleted,
-  addCorrectAnswer: _addCorrectAnswer,
-  addIncorrectAnswer: _addIncorrectAnswer,
   setLastAnswerCorrect: _setLastAnswerCorrect,
   setFeedbackQuestionKey: _setFeedbackQuestionKey,
   setIsTransitioning: _setIsTransitioning,
@@ -377,14 +358,18 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   let quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
   const optionsToUse = enhancedWordInfo?.options || currentOptions || [];
 
+  // Nothing to render if there is no word yet
+  if (!wordToUse) return null;
+
   // Session-specific quiz mode overrides
   if (currentSession?.id === 'fill-in-the-blank') {
     // Only use fill-in-the-blank if the word has context, otherwise respect the original mode
     const hasContext = wordToUse.context && wordToUse.context.sentence;
     if (!hasContext && quizModeToUse === 'fill-in-the-blank') {
-      // If no context available for fill-in-blank, fall back to the word service's recommendation
+      // If no context available for fill-in-blank, fall back based on mastery level.
+      // open-answer requires Tier 3+ (≥50 XP); lower mastery uses multiple-choice.
       const wordXP = wordProgress[wordToUse.id]?.xp || 0;
-      quizModeToUse = wordXP < 20 ? 'multiple-choice' : 'open-answer';
+      quizModeToUse = wordXP >= 50 ? 'open-answer' : 'multiple-choice';
     }
   }
 
@@ -432,7 +417,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             sessionProgress={
-              sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)
+              sessionProgress?.wordsCompleted / Math.max(currentSession?.targetWords || 20, 1)
             }
             context={contextForWord ?? undefined}
           />
