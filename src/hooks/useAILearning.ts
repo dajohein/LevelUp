@@ -12,8 +12,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { aiEnhancedWordService } from '../services/aiEnhancedWordService';
 import { AdaptiveLearningDecision } from '../services/adaptiveLearningEngine';
+import { LearningRecommendation } from '../services/analytics/interfaces';
 import { Word } from '../services/wordService';
 import { logger } from '../services/logger';
+import type { RootState } from '../store/store';
 
 interface AILearningState {
   currentWord: Word | null;
@@ -23,7 +25,7 @@ interface AILearningState {
   progress: number;
   wordType: 'group' | 'review';
   aiDecision?: AdaptiveLearningDecision;
-  aiRecommendations: any[];
+  aiRecommendations: LearningRecommendation[];
   shouldShowIntervention: boolean;
   interventionMessage: string;
   isAIEnabled: boolean;
@@ -65,7 +67,7 @@ export const useAILearning = (
 
   // Get word progress from Redux store (with fallback for missing store)
   const { wordProgress, language } = useSelector(
-    (state: any) => ({
+    (state: RootState) => ({
       wordProgress: state?.game?.wordProgress || {},
       language: state?.game?.language || '',
     }),
@@ -111,39 +113,6 @@ export const useAILearning = (
   }, [enableAIOption]);
 
   /**
-   * Initialize AI-enhanced learning session
-   */
-  const initializeSession = useCallback(
-    async (languageCode: string, moduleId?: string): Promise<boolean> => {
-      try {
-        logger.debug(`🚀 Initializing AI learning session for ${languageCode}`);
-
-        const success = await aiEnhancedWordService.initializeLearningSession(
-          languageCode,
-          userId,
-          moduleId,
-          wordProgress
-        );
-
-        if (success) {
-          sessionInitializedRef.current = true;
-          await refreshCurrentWord();
-
-          logger.debug('✅ AI learning session initialized successfully');
-          return true;
-        } else {
-          logger.warn('❌ Failed to initialize AI learning session');
-          return false;
-        }
-      } catch (error) {
-        logger.error('AI learning session initialization failed:', error);
-        return false;
-      }
-    },
-    [userId, wordProgress]
-  );
-
-  /**
    * Refresh current word with AI analysis
    */
   const refreshCurrentWord = useCallback(async (): Promise<void> => {
@@ -187,6 +156,39 @@ export const useAILearning = (
       logger.error('Failed to refresh current word:', error);
     }
   }, []);
+
+  /**
+   * Initialize AI-enhanced learning session
+   */
+  const initializeSession = useCallback(
+    async (languageCode: string, moduleId?: string): Promise<boolean> => {
+      try {
+        logger.debug(`🚀 Initializing AI learning session for ${languageCode}`);
+
+        const success = await aiEnhancedWordService.initializeLearningSession(
+          languageCode,
+          userId,
+          moduleId,
+          wordProgress
+        );
+
+        if (success) {
+          sessionInitializedRef.current = true;
+          await refreshCurrentWord();
+
+          logger.debug('✅ AI learning session initialized successfully');
+          return true;
+        } else {
+          logger.warn('❌ Failed to initialize AI learning session');
+          return false;
+        }
+      } catch (error) {
+        logger.error('AI learning session initialization failed:', error);
+        return false;
+      }
+    },
+    [userId, wordProgress, refreshCurrentWord]
+  );
 
   /**
    * Record answer with AI tracking and intervention detection

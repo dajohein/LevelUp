@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { getLevelInfo } from '../../services/levelService';
@@ -262,6 +262,11 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
   const [isExiting, setIsExiting] = useState(false);
   const levelInfo = getLevelInfo(newLevel);
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(onClose, 800);
+  }, [onClose]);
+
   // Auto-close after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -269,12 +274,7 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(onClose, 800);
-  };
+  }, [handleClose]);
 
   // Generate confetti pieces
   const confettiPieces = Array.from({ length: 50 }, (_, i) => ({

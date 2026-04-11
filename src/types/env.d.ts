@@ -18,6 +18,8 @@ interface ImportMetaEnv {
   readonly VITE_CACHE_CLEAR_STORAGE?: string; // 'true' | 'false'
   readonly VITE_CACHE_ADD_TIMESTAMP?: string; // 'true' | 'false'
   readonly VITE_CACHE_LOG_OPERATIONS?: string; // 'true' | 'false'
+
+  readonly VITE_VAPID_PUBLIC_KEY?: string;
 }
 
 interface ImportMeta {

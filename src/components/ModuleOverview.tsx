@@ -8,10 +8,12 @@ import styled from '@emotion/styled';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RootState } from '../store/store';
+import { WordProgress } from '../store/types';
 import { setLanguage, setCurrentModule } from '../store/gameSlice';
 import { resetSession, startSession } from '../store/sessionSlice';
 import { Navigation } from './Navigation';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
+import { logger } from '../services/logger';
 import { DataMigrationService } from '../services/dataMigrationService';
 
 const OverviewContainer = styled.div`
@@ -1161,6 +1163,15 @@ export const ModuleOverview: React.FC = () => {
     return getModulesForLanguage(languageCode);
   }, [languageCode]);
 
+  const modulesStartedCount = useMemo(
+    () =>
+      modules.filter(m => {
+        const stats = getModuleStats(languageCode ?? '', m.id, wordProgress);
+        return stats.completionPercentage > 0;
+      }).length,
+    [modules, languageCode, wordProgress]
+  );
+
   const handleMixedPractice = () => {
     if (!languageCode) return;
 
@@ -1175,7 +1186,7 @@ export const ModuleOverview: React.FC = () => {
     dispatch(setCurrentModule(null)); // No specific module for mixed practice
     dispatch(resetSession());
 
-    console.log('Starting mixed practice with modules:', modulesToPractice);
+    logger.debug('Starting mixed practice with modules:', modulesToPractice);
 
     // Start a Deep Dive session for mixed practice (good balance of words and time)
     dispatch(startSession('deep-dive'));
@@ -1242,24 +1253,14 @@ export const ModuleOverview: React.FC = () => {
                 <QuickStatLabel>Words Learned</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
-                <QuickStatValue>
-                  📚{' '}
-                  {useMemo(
-                    () =>
-                      modules.filter(m => {
-                        const stats = getModuleStats(languageCode!, m.id, wordProgress);
-                        return stats.completionPercentage > 0;
-                      }).length,
-                    [modules, languageCode, wordProgress]
-                  )}
-                </QuickStatValue>
+                <QuickStatValue>📚 {modulesStartedCount}</QuickStatValue>
                 <QuickStatLabel>Modules Started</QuickStatLabel>
               </QuickStatCard>
               <QuickStatCard>
                 <QuickStatValue>
                   ⚡{' '}
                   {Object.values(wordProgress).reduce(
-                    (sum: number, p: any) => sum + (p?.xp || 0),
+                    (sum: number, p: WordProgress) => sum + (p?.xp || 0),
                     0
                   )}
                 </QuickStatValue>
@@ -1298,7 +1299,7 @@ export const ModuleOverview: React.FC = () => {
           ) : (
             <ModulesGrid>
               {modules.map(module => {
-                const stats = getModuleStats(languageCode!, module.id, wordProgress);
+                const stats = getModuleStats(languageCode ?? '', module.id, wordProgress);
 
                 return (
                   <ModuleCard key={module.id}>

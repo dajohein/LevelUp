@@ -195,7 +195,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       const currentPath = location.pathname;
       if (currentPath.includes('/language/')) {
         // Extract language code and go to sessions
-        const languageMatch = currentPath.match(/\/language\/([^\/]+)/);
+        const languageMatch = currentPath.match(/\/language\/([^/]+)/);
         if (languageMatch) {
           navigate(`/sessions/${languageMatch[1]}`);
         } else {
