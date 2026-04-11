@@ -5,11 +5,14 @@
  * Shows progress, recommendations, and learning insights
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from '@emotion/styled';
+import { useSelector } from 'react-redux';
 import { enhancedWordService } from '../services/enhancedWordService';
 import { learningCacheService } from '../services/cacheService';
 import { DirectionalStats } from './DirectionalStats';
+import { RootState } from '../store/store';
+import { words as allLanguageWords } from '../services/wordService';
 
 const Container = styled.div`
   background: ${props => props.theme.colors.surface};
@@ -176,6 +179,32 @@ const EmptyState = styled.div`
   color: ${props => props.theme.colors.textSecondary};
 `;
 
+interface WeeklyProgressEntry {
+  week: string;
+  sessionsCompleted: number;
+  wordsLearned: number;
+  accuracyRate: number;
+}
+
+interface AnalyticsData {
+  totalSessions: number;
+  totalWordsLearned: number;
+  averageAccuracy: number;
+  preferredQuizModes: Record<string, number>;
+  learningStreak: number;
+  lastSessionDate: string;
+  weeklyProgress: WeeklyProgressEntry[];
+}
+
+interface SessionRecord {
+  id: string;
+  performance: {
+    recommendations: string[];
+    averageAccuracy: number;
+    wordsLearned: number;
+  };
+}
+
 interface SessionAnalyticsProps {
   languageCode: string;
   showRecommendations?: boolean;
@@ -187,9 +216,13 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   showRecommendations = true,
   showWeeklyProgress = true,
 }) => {
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-  const [sessionData, setSessionData] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [sessionData, setSessionData] = useState<SessionRecord[]>([]);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
+
+  const { wordProgress, totalAttempts, correctAnswers, streak } = useSelector(
+    (state: RootState) => state.game
+  );
 
   // Only reload analytics when truly necessary and cache the results
   useEffect(() => {
@@ -217,7 +250,34 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   const recentSessions =
     sessionData.length > 0 ? sessionData : enhancedWordService.getSessionHistory(languageCode, 5);
 
-  if (!analytics && recentSessions.length === 0) {
+  // Derive analytics from Redux wordProgress when cache has no data
+  const derivedAnalytics = useMemo(() => {
+    const languageWordList = allLanguageWords[languageCode]?.words || [];
+    const wordsWithProgress = languageWordList.filter(
+      word => wordProgress[word.id] && wordProgress[word.id].xp > 0
+    );
+
+    if (wordsWithProgress.length === 0) return null;
+
+    return {
+      totalSessions: totalAttempts > 0 ? Math.max(1, Math.floor(totalAttempts / 10)) : 0,
+      totalWordsLearned: wordsWithProgress.length,
+      averageAccuracy: totalAttempts > 0 ? correctAnswers / totalAttempts : 0,
+      learningStreak: streak,
+      preferredQuizModes: {} as Record<string, number>,
+      lastSessionDate: '',
+      weeklyProgress: [] as Array<{
+        week: string;
+        sessionsCompleted: number;
+        wordsLearned: number;
+        accuracyRate: number;
+      }>,
+    };
+  }, [languageCode, wordProgress, totalAttempts, correctAnswers, streak]);
+
+  const effectiveAnalytics = analytics || derivedAnalytics;
+
+  if (!effectiveAnalytics && recentSessions.length === 0) {
     return (
       <Container>
         <Title>📊 Learning Analytics</Title>
@@ -241,11 +301,11 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
 
   // Calculate accuracy trend
   const getAccuracyTrend = () => {
-    if (!analytics || recentSessions.length < 2) {
+    if (!effectiveAnalytics || recentSessions.length < 2) {
       return { change: 0, trend: 'neutral' as const };
     }
 
-    const overallAccuracy = analytics.averageAccuracy * 100;
+    const overallAccuracy = effectiveAnalytics.averageAccuracy * 100;
     const recentAccuracy = averageRecentAccuracy * 100;
     const change = recentAccuracy - overallAccuracy;
 
@@ -259,20 +319,20 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   const displayAccuracy =
     averageRecentAccuracy > 0
       ? averageRecentAccuracy * 100
-      : (analytics?.averageAccuracy || 0) * 100;
+      : (effectiveAnalytics?.averageAccuracy || 0) * 100;
 
   return (
     <Container>
       <Title>📊 Learning Analytics</Title>
 
-      {analytics && (
+      {effectiveAnalytics && (
         <StatsGrid>
           <StatCard>
-            <StatValue>{analytics.totalSessions}</StatValue>
+            <StatValue>{effectiveAnalytics.totalSessions}</StatValue>
             <StatLabel>Sessions</StatLabel>
           </StatCard>
           <StatCard>
-            <StatValue>{analytics.totalWordsLearned}</StatValue>
+            <StatValue>{effectiveAnalytics.totalWordsLearned}</StatValue>
             <StatLabel>Words Learned</StatLabel>
           </StatCard>
           <TrendStat>
@@ -287,7 +347,7 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
             <StatLabel>Accuracy</StatLabel>
           </TrendStat>
           <StatCard>
-            <StatValue>{analytics.learningStreak}</StatValue>
+            <StatValue>{effectiveAnalytics.learningStreak}</StatValue>
             <StatLabel>Day Streak</StatLabel>
           </StatCard>
         </StatsGrid>
@@ -304,31 +364,39 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
         </RecommendationsSection>
       )}
 
-      {showWeeklyProgress && analytics?.weeklyProgress && analytics.weeklyProgress.length > 0 && (
-        <WeeklyProgressChart>
-          <SectionTitle>📈 Weekly Progress</SectionTitle>
-          {analytics.weeklyProgress.slice(0, 4).map((week: any) => {
-            const maxSessions = Math.max(
-              ...analytics.weeklyProgress.map((w: any) => w.sessionsCompleted)
-            );
-            const progressWidth =
-              maxSessions > 0 ? (week.sessionsCompleted / maxSessions) * 100 : 0;
-            const accuracyColor =
-              week.accuracyRate > 0.8 ? '#22c55e' : week.accuracyRate > 0.6 ? '#f59e0b' : '#ef4444';
+      {showWeeklyProgress &&
+        effectiveAnalytics?.weeklyProgress &&
+        effectiveAnalytics.weeklyProgress.length > 0 && (
+          <WeeklyProgressChart>
+            <SectionTitle>📈 Weekly Progress</SectionTitle>
+            {effectiveAnalytics.weeklyProgress.slice(0, 4).map((week: WeeklyProgressEntry) => {
+              const maxSessions = Math.max(
+                ...effectiveAnalytics.weeklyProgress.map(
+                  (w: WeeklyProgressEntry) => w.sessionsCompleted
+                )
+              );
+              const progressWidth =
+                maxSessions > 0 ? (week.sessionsCompleted / maxSessions) * 100 : 0;
+              const accuracyColor =
+                week.accuracyRate > 0.8
+                  ? '#22c55e'
+                  : week.accuracyRate > 0.6
+                    ? '#f59e0b'
+                    : '#ef4444';
 
-            return (
-              <WeekBar key={week.week}>
-                <WeekLabel>{week.week}</WeekLabel>
-                <ProgressBar width={progressWidth} color={accuracyColor} />
-                <ProgressText>
-                  {week.sessionsCompleted} sessions • {week.wordsLearned} words •{' '}
-                  {Math.round(week.accuracyRate * 100)}%
-                </ProgressText>
-              </WeekBar>
-            );
-          })}
-        </WeeklyProgressChart>
-      )}
+              return (
+                <WeekBar key={week.week}>
+                  <WeekLabel>{week.week}</WeekLabel>
+                  <ProgressBar width={progressWidth} color={accuracyColor} />
+                  <ProgressText>
+                    {week.sessionsCompleted} sessions • {week.wordsLearned} words •{' '}
+                    {Math.round(week.accuracyRate * 100)}%
+                  </ProgressText>
+                </WeekBar>
+              );
+            })}
+          </WeeklyProgressChart>
+        )}
 
       {recentSessions.length > 0 && (
         <RecommendationsSection>
