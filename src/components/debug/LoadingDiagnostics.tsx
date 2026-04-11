@@ -1,5 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styled from '@emotion/styled';
+
+/** Extends Window with a dev-only render-tracking helper. */
+interface DevWindow extends Window {
+  trackRender?: (componentName: string) => void;
+}
 
 const DiagnosticsContainer = styled.div`
   position: fixed;
@@ -61,7 +66,7 @@ export const LoadingDiagnostics: React.FC = () => {
   }, [renderCounts]);
 
   // Hook to track component renders
-  const trackRender = (componentName: string) => {
+  const trackRender = useCallback((componentName: string) => {
     const now = Date.now();
     setRenderCounts(prev => {
       const current = prev.get(componentName) || {
@@ -77,12 +82,19 @@ export const LoadingDiagnostics: React.FC = () => {
       });
       return updated;
     });
-  };
+  }, []);
 
-  // Expose tracking function globally for development
-  if (process.env.NODE_ENV === 'development') {
-    (window as any).trackRender = trackRender;
-  }
+  // Expose tracking function globally for development (side-effect must live in an effect)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      (window as DevWindow).trackRender = trackRender;
+    }
+    return () => {
+      if (process.env.NODE_ENV === 'development') {
+        delete (window as DevWindow).trackRender;
+      }
+    };
+  }, [trackRender]);
 
   if (process.env.NODE_ENV !== 'development') {
     return null;
@@ -116,7 +128,7 @@ export const LoadingDiagnostics: React.FC = () => {
       </div>
 
       <div style={{ marginTop: '8px', fontSize: '10px', opacity: 0.7 }}>
-        Add trackRender('ComponentName') to useEffect to monitor
+        Add trackRender(&apos;ComponentName&apos;) to useEffect to monitor
       </div>
     </DiagnosticsContainer>
   );

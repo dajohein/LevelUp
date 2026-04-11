@@ -3,7 +3,7 @@ import { RootState } from './store';
 import { unlockAchievement } from './achievementsSlice';
 import { Achievement } from './types';
 
-export const achievementsMiddleware: Middleware<{}, RootState> =
+export const achievementsMiddleware: Middleware<Record<string, never>, RootState> =
   store => next => (action: AnyAction) => {
     const result = next(action);
 

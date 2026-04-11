@@ -8,7 +8,7 @@ import { ChallengeResult } from '../challengeServiceInterface';
 /** Shape of the enhanced word info returned by the challenge service. */
 interface EnhancedWordInfo {
   quizMode?: string;
-  word?: Word;
+  word?: Word | null;
   options?: ChallengeResult['options'];
   metadata?: ChallengeResult['metadata'];
 }

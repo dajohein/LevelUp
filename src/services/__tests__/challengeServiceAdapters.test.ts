@@ -6,11 +6,15 @@ import {
   deepDiveAdapter,
   fillInTheBlankAdapter,
 } from '../challengeServiceAdapters';
-import {
-  ChallengeConfig,
-  ChallengeContext,
-} from '../challengeServiceInterface';
+import { ChallengeConfig, ChallengeContext } from '../challengeServiceInterface';
 import { Word, WordProgress } from '../../store/types';
+import { streakChallengeService } from '../streakChallengeService';
+import { bossBattleService } from '../bossBattleService';
+import { precisionModeService } from '../precisionModeService';
+import { quickDashService } from '../quickDashService';
+import { deepDiveService } from '../deepDiveService';
+import { fillInTheBlankService } from '../fillInTheBlankService';
+import { generateModuleScopedOptions } from '../optionGenerationUtils';
 
 // Mock dependencies
 jest.mock('../streakChallengeService');
@@ -71,8 +75,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should initialize with correct parameters', async () => {
-      const { streakChallengeService } = require('../streakChallengeService');
-      streakChallengeService.initializeStreak.mockReturnValue(undefined);
+      jest.mocked(streakChallengeService).initializeStreak.mockReturnValue(undefined);
 
       await streakChallengeAdapter.initialize(mockChallengeConfig);
 
@@ -85,22 +88,17 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word with options for multiple-choice quiz mode', async () => {
-      const { streakChallengeService } = require('../streakChallengeService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      streakChallengeService.getNextStreakWord.mockResolvedValue({
+      jest.mocked(streakChallengeService).getNextStreakWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
+        options: [],
         aiEnhanced: false,
         reasoning: ['test reasoning'],
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const result = await streakChallengeAdapter.getNextWord(mockChallengeContext);
 
@@ -135,8 +133,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should initialize with boss battle service', async () => {
-      const { bossBattleService } = require('../bossBattleService');
-      bossBattleService.initializeBossBattle.mockResolvedValue(undefined);
+      jest.mocked(bossBattleService).initializeBossBattle.mockReturnValue(undefined);
 
       await bossBattleAdapter.initialize(mockChallengeConfig);
 
@@ -150,23 +147,18 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word with boss phase metadata', async () => {
-      const { bossBattleService } = require('../bossBattleService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      bossBattleService.getNextBossWord.mockResolvedValue({
+      jest.mocked(bossBattleService).getNextBossWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
+        options: [],
         aiEnhanced: true,
         reasoning: ['boss battle reasoning'],
         bossPhase: 'phase-2',
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const result = await bossBattleAdapter.getNextWord(mockChallengeContext);
 
@@ -189,12 +181,12 @@ describe('Challenge Service Adapters', () => {
       expect(typeof precisionModeAdapter.getNextWord).toBe('function');
       expect(typeof precisionModeAdapter.recordCompletion).toBe('function');
       expect(typeof precisionModeAdapter.reset).toBe('function');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(typeof (precisionModeAdapter as any).hasSessionFailed).toBe('function');
     });
 
     it('should initialize precision mode with correct parameters', async () => {
-      const { precisionModeService } = require('../precisionModeService');
-      precisionModeService.initializePrecisionMode.mockResolvedValue(undefined);
+      jest.mocked(precisionModeService).initializePrecisionMode.mockResolvedValue(undefined);
 
       await precisionModeAdapter.initialize(mockChallengeConfig);
 
@@ -208,12 +200,10 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word for precision mode', async () => {
-      const { precisionModeService } = require('../precisionModeService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      precisionModeService.getNextPrecisionWord.mockResolvedValue({
+      jest.mocked(precisionModeService).getNextPrecisionWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
+        options: [],
         aiEnhanced: true,
         reasoning: ['precision reasoning'],
         confidenceBoost: ['take your time'],
@@ -221,12 +211,9 @@ describe('Challenge Service Adapters', () => {
         optimalPacing: 30,
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const result = await precisionModeAdapter.getNextWord(mockChallengeContext);
 
@@ -236,8 +223,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should record completion and return sessionFailed on incorrect answer', () => {
-      const { precisionModeService } = require('../precisionModeService');
-      precisionModeService.recordWordCompletion.mockReturnValue(false); // Session continues = false
+      jest.mocked(precisionModeService).recordWordCompletion.mockReturnValue(false); // Session continues = false
 
       const result = precisionModeAdapter.recordCompletion('word-1', false, 5000);
 
@@ -246,8 +232,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should return sessionContinues on correct answer', () => {
-      const { precisionModeService } = require('../precisionModeService');
-      precisionModeService.recordWordCompletion.mockReturnValue(true); // Session continues = true
+      jest.mocked(precisionModeService).recordWordCompletion.mockReturnValue(true); // Session continues = true
 
       const result = precisionModeAdapter.recordCompletion('word-1', true, 5000);
 
@@ -255,9 +240,9 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should expose hasSessionFailed method', () => {
-      const { precisionModeService } = require('../precisionModeService');
-      precisionModeService.hasSessionFailed.mockReturnValue(true);
+      jest.mocked(precisionModeService).hasSessionFailed.mockReturnValue(true);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const failed = (precisionModeAdapter as any).hasSessionFailed();
 
       expect(failed).toBe(true);
@@ -275,8 +260,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should initialize with quick dash parameters', async () => {
-      const { quickDashService } = require('../quickDashService');
-      quickDashService.initializeQuickDash.mockResolvedValue(undefined);
+      jest.mocked(quickDashService).initializeQuickDash.mockResolvedValue(undefined);
 
       await quickDashAdapter.initialize(mockChallengeConfig);
 
@@ -291,23 +275,18 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word with time-based context', async () => {
-      const { quickDashService } = require('../quickDashService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      quickDashService.getNextQuickDashWord.mockResolvedValue({
+      jest.mocked(quickDashService).getNextQuickDashWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
         options: ['option1', 'option2', 'option3', 'option4'],
         aiEnhanced: false,
+        timeAllocated: 30,
         reasoning: ['quick dash reasoning'],
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const contextWithTime = { ...mockChallengeContext, timeRemaining: 120 };
       const result = await quickDashAdapter.getNextWord(contextWithTime);
@@ -321,8 +300,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should record completion', () => {
-      const { quickDashService } = require('../quickDashService');
-      quickDashService.recordWordCompletion.mockReturnValue(undefined);
+      jest.mocked(quickDashService).recordWordCompletion.mockReturnValue(undefined);
 
       const result = quickDashAdapter.recordCompletion('word-1', true, 3000);
 
@@ -331,8 +309,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should reset quick dash service', () => {
-      const { quickDashService } = require('../quickDashService');
-      quickDashService.reset.mockReturnValue(undefined);
+      jest.mocked(quickDashService).reset.mockReturnValue(undefined);
 
       quickDashAdapter.reset();
 
@@ -350,8 +327,12 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should initialize with deep dive parameters', async () => {
-      const { deepDiveService } = require('../deepDiveService');
-      deepDiveService.initializeDeepDive.mockResolvedValue(undefined);
+      jest.mocked(deepDiveService).initializeDeepDive.mockResolvedValue({
+        success: true,
+        sessionId: 'test-session',
+        estimatedDuration: 300,
+        explorationPhases: ['exploration', 'validation'],
+      });
 
       await deepDiveAdapter.initialize(mockChallengeConfig);
 
@@ -364,22 +345,20 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word and handle standard quiz modes', async () => {
-      const { deepDiveService } = require('../deepDiveService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      deepDiveService.getNextDeepDiveWord.mockResolvedValue({
+      jest.mocked(deepDiveService).getNextDeepDiveWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
         aiEnhanced: true,
+        timeAllocated: 60,
+        difficultyLevel: 3,
+        contextualHints: [],
+        comprehensionBoost: [],
         reasoning: ['deep dive reasoning'],
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const result = await deepDiveAdapter.getNextWord(mockChallengeContext);
 
@@ -389,22 +368,20 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should handle enhanced quiz modes (contextual-analysis)', async () => {
-      const { deepDiveService } = require('../deepDiveService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      deepDiveService.getNextDeepDiveWord.mockResolvedValue({
+      jest.mocked(deepDiveService).getNextDeepDiveWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'contextual-analysis',
         aiEnhanced: true,
+        timeAllocated: 60,
+        difficultyLevel: 3,
+        contextualHints: [],
+        comprehensionBoost: [],
         reasoning: ['contextual reasoning'],
       });
 
-      generateModuleScopedOptions.mockReturnValue([
-        'Tisch',
-        'Stuhl',
-        'Fenster',
-        'Tür',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['Tisch', 'Stuhl', 'Fenster', 'Tür']);
 
       const result = await deepDiveAdapter.getNextWord(mockChallengeContext);
 
@@ -414,8 +391,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should record completion with deep dive service', () => {
-      const { deepDiveService } = require('../deepDiveService');
-      deepDiveService.recordWordCompletion.mockReturnValue(undefined);
+      jest.mocked(deepDiveService).recordWordCompletion.mockReturnValue(undefined);
 
       const result = deepDiveAdapter.recordCompletion('word-1', true, 15000);
 
@@ -434,8 +410,12 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should initialize fill in the blank service', async () => {
-      const { fillInTheBlankService } = require('../fillInTheBlankService');
-      fillInTheBlankService.initializeFillInTheBlank.mockResolvedValue(undefined);
+      jest.mocked(fillInTheBlankService).initializeFillInTheBlank.mockResolvedValue({
+        success: true,
+        sessionId: 'test-session',
+        estimatedDuration: 600,
+        complexityLevels: ['simple', 'moderate', 'complex'],
+      });
 
       await fillInTheBlankAdapter.initialize(mockChallengeConfig);
 
@@ -446,12 +426,18 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should get next word with fill-in-the-blank quiz mode', async () => {
-      const { fillInTheBlankService } = require('../fillInTheBlankService');
-
-      fillInTheBlankService.getNextFillInTheBlankWord.mockResolvedValue({
+      jest.mocked(fillInTheBlankService).getNextFillInTheBlankWord.mockResolvedValue({
         word: mockWord,
+        sentence: 'The ___ is on the table.',
+        blankPosition: 1,
         options: ['table', 'chair', 'window', 'door'],
+        sentenceComplexity: 'simple',
+        contextualClues: [],
+        timeAllocated: 60,
+        difficultyLevel: 2,
         aiEnhanced: true,
+        languageHints: [],
+        contextualSupport: [],
         reasoning: ['fill-in reasoning'],
       });
 
@@ -475,8 +461,7 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should reset fill in the blank service', () => {
-      const { fillInTheBlankService } = require('../fillInTheBlankService');
-      fillInTheBlankService.reset.mockReturnValue(undefined);
+      jest.mocked(fillInTheBlankService).reset.mockReturnValue(undefined);
 
       fillInTheBlankAdapter.reset();
 
@@ -486,29 +471,34 @@ describe('Challenge Service Adapters', () => {
 
   describe('Cross-adapter consistency', () => {
     it('all adapters should return ChallengeResult with required fields', async () => {
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-      generateModuleScopedOptions.mockReturnValue([
-        'option1',
-        'option2',
-        'option3',
-        'option4',
-      ]);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['option1', 'option2', 'option3', 'option4']);
 
-      const mockServiceResult = {
+      // Mock all services with their required fields
+      jest.mocked(streakChallengeService).getNextStreakWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
+        options: [],
         aiEnhanced: false,
         reasoning: ['test'],
-      };
-
-      // Mock all services
-      const { streakChallengeService } = require('../streakChallengeService');
-      const { bossBattleService } = require('../bossBattleService');
-      const { quickDashService } = require('../quickDashService');
-
-      streakChallengeService.getNextStreakWord.mockResolvedValue(mockServiceResult);
-      bossBattleService.getNextBossWord.mockResolvedValue(mockServiceResult);
-      quickDashService.getNextQuickDashWord.mockResolvedValue(mockServiceResult);
+      });
+      jest.mocked(bossBattleService).getNextBossWord.mockResolvedValue({
+        word: mockWord,
+        quizMode: 'multiple-choice',
+        options: [],
+        aiEnhanced: false,
+        bossPhase: 'phase-1',
+        reasoning: ['test'],
+      });
+      jest.mocked(quickDashService).getNextQuickDashWord.mockResolvedValue({
+        word: mockWord,
+        quizMode: 'multiple-choice',
+        options: [],
+        aiEnhanced: false,
+        timeAllocated: 30,
+        reasoning: ['test'],
+      });
 
       const adapters = [streakChallengeAdapter, bossBattleAdapter, quickDashAdapter];
 
@@ -518,7 +508,9 @@ describe('Challenge Service Adapters', () => {
         expect(result).toHaveProperty('word');
         expect(result).toHaveProperty('options');
         expect(result).toHaveProperty('quizMode');
-        expect(result.quizMode).toMatch(/^(multiple-choice|letter-scramble|open-answer|fill-in-the-blank)$/);
+        expect(result.quizMode).toMatch(
+          /^(multiple-choice|letter-scramble|open-answer|fill-in-the-blank)$/
+        );
         expect(Array.isArray(result.options)).toBe(true);
       }
     });
@@ -573,16 +565,20 @@ describe('Challenge Service Adapters', () => {
 
   describe('Error handling', () => {
     it('should handle missing allWords gracefully in context', async () => {
-      const { deepDiveService } = require('../deepDiveService');
-      const { generateModuleScopedOptions } = require('../optionGenerationUtils');
-
-      deepDiveService.getNextDeepDiveWord.mockResolvedValue({
+      jest.mocked(deepDiveService).getNextDeepDiveWord.mockResolvedValue({
         word: mockWord,
         quizMode: 'multiple-choice',
         aiEnhanced: false,
+        timeAllocated: 60,
+        difficultyLevel: 3,
+        contextualHints: [],
+        comprehensionBoost: [],
+        reasoning: [],
       });
 
-      generateModuleScopedOptions.mockReturnValue(['option1', 'option2', 'option3', 'option4']);
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockReturnValue(['option1', 'option2', 'option3', 'option4']);
 
       const contextWithoutWords = { ...mockChallengeContext, allWords: undefined };
       const result = await deepDiveAdapter.getNextWord(contextWithoutWords);
@@ -592,13 +588,13 @@ describe('Challenge Service Adapters', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { streakChallengeService } = require('../streakChallengeService');
+      jest
+        .mocked(streakChallengeService)
+        .getNextStreakWord.mockRejectedValue(new Error('Service error'));
 
-      streakChallengeService.getNextStreakWord.mockRejectedValue(new Error('Service error'));
-
-      await expect(
-        streakChallengeAdapter.getNextWord(mockChallengeContext)
-      ).rejects.toThrow('Service error');
+      await expect(streakChallengeAdapter.getNextWord(mockChallengeContext)).rejects.toThrow(
+        'Service error'
+      );
     });
   });
 });

@@ -136,7 +136,7 @@ describe('sessionSlice behavior', () => {
   });
 
   it('setWeeklyChallenge should update challenge for language', () => {
-    let state = sessionReducer(getInitialState(), setLanguage('de'));
+    const state = sessionReducer(getInitialState(), setLanguage('de'));
     const next = sessionReducer(
       state,
       setWeeklyChallenge({ languageCode: 'de', isActive: true, targetScore: 3000, rank: 2 })

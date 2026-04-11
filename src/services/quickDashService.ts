@@ -409,7 +409,7 @@ class QuickDashService {
         return chars.join('');
 
       case 2:
-      default:
+      default: {
         // Random shuffle but keep first letter (easier for speed recognition)
         const firstChar = chars[0];
         const remaining = chars.slice(1);
@@ -418,6 +418,7 @@ class QuickDashService {
           [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
         }
         return firstChar + remaining.join('');
+      }
     }
   }
 

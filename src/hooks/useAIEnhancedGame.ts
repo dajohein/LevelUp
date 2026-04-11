@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { enhancedWordService } from '../services/enhancedWordService';
 import { simpleAILearning, SimpleAIContext } from '../services/simpleAILearning';
+import { Word } from '../services/wordService';
 import { logger } from '../services/logger';
 
 export interface AIEnhancedGameState {
@@ -24,7 +25,7 @@ export interface AIEnhancedGameState {
     sessionType: string;
   } | null;
   currentWordInfo: {
-    word: any;
+    word: Word | null;
     quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     options: string[];
     isReviewWord: boolean;
@@ -49,52 +50,6 @@ export const useAIEnhancedGame = (languageCode: string, moduleId?: string, enabl
   });
 
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
-
-  /**
-   * Initialize enhanced learning session with optional AI
-   */
-  const initializeEnhancedSession = useCallback(async () => {
-    if (!languageCode) {
-      logger.warn('No language code provided for enhanced session');
-      return;
-    }
-
-    try {
-      logger.info(
-        `🚀 Starting ${enableAI ? 'AI-enhanced' : 'standard'} learning session for ${languageCode}`
-      );
-
-      const sessionInitialized = enhancedWordService.initializeLearningSession(
-        languageCode,
-        moduleId,
-        wordProgress
-      );
-
-      if (!sessionInitialized) {
-        logger.error('Failed to initialize enhanced session');
-        return;
-      }
-
-      setEnhancedState(prev => ({
-        ...prev,
-        isUsingSpacedRepetition: true,
-        sessionProgress: {
-          currentIndex: 0,
-          totalWords: 10, // We'll update this as we go
-          correctAnswers: 0,
-          accuracy: 0,
-          timeElapsed: 0,
-          sessionType: 'enhanced',
-        },
-        recommendations: [],
-      }));
-
-      // Load first word with AI enhancement
-      await loadNextWord();
-    } catch (error) {
-      logger.error('Enhanced session initialization failed:', error);
-    }
-  }, [languageCode, moduleId, enableAI]);
 
   /**
    * Load next word with AI-driven quiz mode selection
@@ -165,7 +120,53 @@ export const useAIEnhancedGame = (languageCode: string, moduleId?: string, enabl
     } catch (error) {
       logger.error('Failed to load next word:', error);
     }
-  }, [languageCode, moduleId, enableAI, wordProgress, enhancedState.sessionEvents]);
+  }, [languageCode, enableAI, wordProgress, enhancedState.sessionEvents]);
+
+  /**
+   * Initialize enhanced learning session with optional AI
+   */
+  const initializeEnhancedSession = useCallback(async () => {
+    if (!languageCode) {
+      logger.warn('No language code provided for enhanced session');
+      return;
+    }
+
+    try {
+      logger.info(
+        `🚀 Starting ${enableAI ? 'AI-enhanced' : 'standard'} learning session for ${languageCode}`
+      );
+
+      const sessionInitialized = enhancedWordService.initializeLearningSession(
+        languageCode,
+        moduleId,
+        wordProgress
+      );
+
+      if (!sessionInitialized) {
+        logger.error('Failed to initialize enhanced session');
+        return;
+      }
+
+      setEnhancedState(prev => ({
+        ...prev,
+        isUsingSpacedRepetition: true,
+        sessionProgress: {
+          currentIndex: 0,
+          totalWords: 10, // We'll update this as we go
+          correctAnswers: 0,
+          accuracy: 0,
+          timeElapsed: 0,
+          sessionType: 'enhanced',
+        },
+        recommendations: [],
+      }));
+
+      // Load first word with AI enhancement
+      await loadNextWord();
+    } catch (error) {
+      logger.error('Enhanced session initialization failed:', error);
+    }
+  }, [languageCode, moduleId, enableAI, wordProgress, loadNextWord]);
 
   /**
    * Track word attempt with AI learning

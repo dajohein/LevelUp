@@ -10,6 +10,7 @@ import styled from '@emotion/styled';
 import { useAILearning } from '../hooks/useAILearning';
 
 import { adaptiveLearningEngine } from '../services';
+import { logger } from '../services/logger';
 import { BaseButton, Card } from './ui';
 import { theme } from '../styles/theme';
 
@@ -161,7 +162,10 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
       learningVelocity: 85,
       masteryTrend: 92,
     },
-    predictions: null as any,
+    predictions: null as null | {
+      breakthrough?: { probability: number; estimatedSessions: number; reasoning: string[] };
+      churn?: { recommendations: Array<{ description?: string } | string> };
+    },
     userProfile: {
       learningStyle: 'visual-quick',
       cognitiveCapacity: 0.8,
@@ -218,7 +222,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         'practice' // session type
       );
 
-      console.log('Adaptive Learning Decision:', decision);
+      logger.debug('Adaptive Learning Decision:', decision);
 
       // Update demo state with realistic results
       setDemoState(prev => ({
@@ -230,7 +234,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
         },
       }));
     } catch (error) {
-      console.log('Demo mode - showing simulated adaptive learning results');
+      logger.debug('Demo mode - showing simulated adaptive learning results');
     }
   };
 
@@ -254,14 +258,14 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
       },
     }));
 
-    console.log('ML Prediction Demo completed');
+    logger.debug('ML Prediction Demo completed');
   };
 
   const runPatternRecognitionDemo = async () => {
     setDemoState(prev => ({ ...prev, currentDemo: 'pattern-recognition' }));
 
     // Simulate pattern recognition results
-    console.log('Pattern Recognition Demo: Skill transfer patterns detected');
+    logger.debug('Pattern Recognition Demo: Skill transfer patterns detected');
 
     setDemoState(prev => ({
       ...prev,
@@ -337,7 +341,7 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
               <RecommendationList>
                 {aiLearningState.aiRecommendations.slice(0, 3).map((rec, index) => (
                   <RecommendationItem key={index}>
-                    {typeof rec === 'string' ? rec : rec.message || 'Optimize learning approach'}
+                    {typeof rec === 'string' ? rec : rec.action || 'Optimize learning approach'}
                   </RecommendationItem>
                 ))}
               </RecommendationList>
@@ -365,8 +369,10 @@ export const AdvancedAISystemDemo: React.FC<{ languageCode?: string }> = ({
               <RecommendationList>
                 {demoState.predictions.churn.recommendations
                   ?.slice(0, 2)
-                  .map((rec: any, index: number) => (
-                    <RecommendationItem key={index}>{rec.description || rec}</RecommendationItem>
+                  .map((rec: { description?: string } | string, index: number) => (
+                    <RecommendationItem key={index}>
+                      {typeof rec === 'string' ? rec : rec.description || ''}
+                    </RecommendationItem>
                   ))}
               </RecommendationList>
             </DemoSection>

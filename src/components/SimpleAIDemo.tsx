@@ -124,7 +124,7 @@ export const SimpleAIDemo: React.FC<SimpleAIDemoProps> = ({ languageCode }) => {
         </ButtonGroup>
       </AIStatusCard>
 
-      {sessionStarted && enhancedState.currentWordInfo && (
+      {sessionStarted && enhancedState.currentWordInfo && enhancedState.currentWordInfo.word && (
         <>
           <WordCard>
             <h2>{enhancedState.currentWordInfo.word.term}</h2>

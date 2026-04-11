@@ -17,11 +17,18 @@
  * - Maintained backward compatibility
  */
 
-import type { Middleware } from '@reduxjs/toolkit';
+import type { Middleware, AnyAction } from '@reduxjs/toolkit';
+import type { Store } from 'redux';
 import type { RootState } from './store';
 import { logger } from '../services/logger';
 import BackgroundAutoSave from '../services/storage/backgroundAutoSave';
 import { enhancedStorage } from '../services/storage/enhancedStorage';
+
+/** Dev-only window extensions for debugging the persistence layer. */
+interface DevWindow extends Window {
+  __BACKGROUND_AUTOSAVE__?: BackgroundAutoSave;
+  __SAVE_ANALYTICS__?: { getAnalytics: () => unknown };
+}
 
 // Critical actions that need immediate saving (bypass background queue)
 const CRITICAL_ACTIONS = [
@@ -75,14 +82,14 @@ const getAutoSave = () => {
 
     // Make available for debugging
     if (typeof window !== 'undefined') {
-      (window as any).__BACKGROUND_AUTOSAVE__ = backgroundAutoSave;
+      (window as DevWindow).__BACKGROUND_AUTOSAVE__ = backgroundAutoSave;
     }
   }
   return backgroundAutoSave;
 };
 
 // Simplified queue helper
-const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action: any) => {
+const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action: AnyAction) => {
   const actionType = action.type;
   const priority = CRITICAL_ACTIONS.includes(actionType) ? 'high' : 'medium';
 
@@ -94,7 +101,7 @@ const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action
     const languageCode = state.game?.language;
     const wordProgress = state.game?.wordProgress;
     const wordProgressKeys = wordProgress ? Object.keys(wordProgress) : [];
-    
+
     // ALWAYS log for checkAnswer to diagnose the issue
     if (actionType === 'game/checkAnswer') {
       logger.debug('🔍 Word progress persistence check:', {
@@ -106,9 +113,11 @@ const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action
         wordProgressSample: wordProgressKeys.length > 0 ? wordProgress[wordProgressKeys[0]] : null,
       });
     }
-    
+
     if (languageCode && wordProgress && wordProgressKeys.length > 0) {
-      logger.debug(`📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`);
+      logger.debug(
+        `📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`
+      );
       autoSave.queueChange(
         'wordProgress',
         wordProgress, // wordProgress is indexed by wordId, not languageCode
@@ -128,101 +137,99 @@ const queueStateChange = (autoSave: BackgroundAutoSave, state: RootState, action
 };
 
 // Simplified persistence middleware
-export const persistenceMiddleware: Middleware<{}, RootState> = store => next => action => {
-  // Execute action first
-  const result = next(action);
+export const persistenceMiddleware: Middleware<Record<string, never>, RootState> =
+  store => next => action => {
+    // Execute action first
+    const result = next(action);
 
-  // Only process actions that need persistence
-  if (!PERSIST_ACTIONS.includes(action.type) && !CRITICAL_ACTIONS.includes(action.type)) {
-    return result;
-  }
-
-  try {
-    const autoSave = getAutoSave();
-    const state = store.getState();
-
-    // Handle critical actions immediately
-    if (CRITICAL_ACTIONS.includes(action.type)) {
-      queueStateChange(autoSave, state, action);
-      autoSave.forceSave(); // Immediate save for critical actions
+    // Only process actions that need persistence
+    if (!PERSIST_ACTIONS.includes(action.type) && !CRITICAL_ACTIONS.includes(action.type)) {
       return result;
     }
 
-    // Handle related action groups with intelligent batching
-    const isRelatedAction = RELATED_ACTION_GROUPS.some(group => group.includes(action.type));
+    try {
+      const autoSave = getAutoSave();
+      const state = store.getState();
 
-    if (isRelatedAction) {
-      // Add to pending batch
-      pendingBatchActions.add(action.type);
-      
-      // Track if game/checkAnswer is in the batch
-      if (action.type === 'game/checkAnswer') {
-        hasGameCheckAnswerInBatch = true;
+      // Handle critical actions immediately
+      if (CRITICAL_ACTIONS.includes(action.type)) {
+        queueStateChange(autoSave, state, action);
+        autoSave.forceSave(); // Immediate save for critical actions
+        return result;
       }
 
-      // Clear existing timeout
-      if (batchTimeout) {
-        clearTimeout(batchTimeout);
-      }
+      // Handle related action groups with intelligent batching
+      const isRelatedAction = RELATED_ACTION_GROUPS.some(group => group.includes(action.type));
 
-      // Set new batch timeout
-      batchTimeout = setTimeout(() => {
-        if (pendingBatchActions.size > 0) {
-          const batchedState = store.getState();
-          
-          // Always queue gameState if this batch includes game/checkAnswer (for wordProgress)
-          if (hasGameCheckAnswerInBatch) {
-            autoSave.queueChange('gameState', batchedState.game, undefined, 'high');
-            
-            // Queue word progress separately with language code
-            const languageCode = batchedState.game?.language;
-            const wordProgress = batchedState.game?.wordProgress;
-            const wordProgressKeys = wordProgress ? Object.keys(wordProgress) : [];
-            
-            if (languageCode && wordProgress && wordProgressKeys.length > 0) {
-              logger.debug(`📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`);
-              autoSave.queueChange(
-                'wordProgress',
-                wordProgress,
-                languageCode,
-                'high'
-              );
-            } else {
-              logger.debug('⚠️ WordProgress not queued:', {
-                languageCode: !!languageCode,
-                hasWordProgress: !!wordProgress,
-                wordProgressKeys: wordProgressKeys.length,
-              });
-            }
-          }
-          
-          // Queue session state for session actions in batch
-          if (Array.from(pendingBatchActions).some(a => a.startsWith('session/'))) {
-            autoSave.queueChange('sessionState', batchedState.session, undefined, 'medium');
-          }
+      if (isRelatedAction) {
+        // Add to pending batch
+        pendingBatchActions.add(action.type);
 
-          if (process.env.NODE_ENV === 'development') {
-            logger.debug(
-              `🔄 Batched ${pendingBatchActions.size} related actions: ${Array.from(pendingBatchActions).join(', ')}`
-            );
-          }
-
-          pendingBatchActions.clear();
-          hasGameCheckAnswerInBatch = false;
+        // Track if game/checkAnswer is in the batch
+        if (action.type === 'game/checkAnswer') {
+          hasGameCheckAnswerInBatch = true;
         }
-        batchTimeout = null;
-      }, 50); // 50ms batch window
-    } else {
-      // Non-related action - queue immediately
-      queueStateChange(autoSave, state, action);
-    }
-  } catch (error) {
-    logger.error('Persistence middleware error:', error);
-    // Don't throw - keep app working
-  }
 
-  return result;
-};
+        // Clear existing timeout
+        if (batchTimeout) {
+          clearTimeout(batchTimeout);
+        }
+
+        // Set new batch timeout
+        batchTimeout = setTimeout(() => {
+          if (pendingBatchActions.size > 0) {
+            const batchedState = store.getState();
+
+            // Always queue gameState if this batch includes game/checkAnswer (for wordProgress)
+            if (hasGameCheckAnswerInBatch) {
+              autoSave.queueChange('gameState', batchedState.game, undefined, 'high');
+
+              // Queue word progress separately with language code
+              const languageCode = batchedState.game?.language;
+              const wordProgress = batchedState.game?.wordProgress;
+              const wordProgressKeys = wordProgress ? Object.keys(wordProgress) : [];
+
+              if (languageCode && wordProgress && wordProgressKeys.length > 0) {
+                logger.debug(
+                  `📝 Queuing wordProgress for language: ${languageCode} (${wordProgressKeys.length} words)`
+                );
+                autoSave.queueChange('wordProgress', wordProgress, languageCode, 'high');
+              } else {
+                logger.debug('⚠️ WordProgress not queued:', {
+                  languageCode: !!languageCode,
+                  hasWordProgress: !!wordProgress,
+                  wordProgressKeys: wordProgressKeys.length,
+                });
+              }
+            }
+
+            // Queue session state for session actions in batch
+            if (Array.from(pendingBatchActions).some(a => a.startsWith('session/'))) {
+              autoSave.queueChange('sessionState', batchedState.session, undefined, 'medium');
+            }
+
+            if (process.env.NODE_ENV === 'development') {
+              logger.debug(
+                `🔄 Batched ${pendingBatchActions.size} related actions: ${Array.from(pendingBatchActions).join(', ')}`
+              );
+            }
+
+            pendingBatchActions.clear();
+            hasGameCheckAnswerInBatch = false;
+          }
+          batchTimeout = null;
+        }, 50); // 50ms batch window
+      } else {
+        // Non-related action - queue immediately
+        queueStateChange(autoSave, state, action);
+      }
+    } catch (error) {
+      logger.error('Persistence middleware error:', error);
+      // Don't throw - keep app working
+    }
+
+    return result;
+  };
 
 // Simplified utilities for debugging and cleanup
 export const persistenceUtils = {
@@ -248,7 +255,7 @@ export const persistenceUtils = {
   },
 
   // Update configuration
-  updateConfig: (config: any) => {
+  updateConfig: (config: Parameters<BackgroundAutoSave['updateConfig']>[0]) => {
     if (backgroundAutoSave) {
       backgroundAutoSave.updateConfig(config);
       logger.debug('🔧 Config updated', config);
@@ -259,7 +266,9 @@ export const persistenceUtils = {
   getAnalytics: () => {
     const status = backgroundAutoSave?.getStatus();
     const analytics =
-      typeof window !== 'undefined' ? (window as any).__SAVE_ANALYTICS__?.getAnalytics() : null;
+      typeof window !== 'undefined'
+        ? (window as DevWindow).__SAVE_ANALYTICS__?.getAnalytics()
+        : null;
 
     return {
       autoSave: status,
@@ -277,7 +286,7 @@ export const persistenceUtils = {
 };
 
 // Setup cross-tab sync (simplified)
-export const setupStorageSync = (store: any) => {
+export const setupStorageSync = (store: Store<RootState>) => {
   const handleStorageChange = (event: StorageEvent) => {
     if (!event.key || !event.newValue) return;
 

@@ -1,5 +1,3 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // TODO: Clean up unused variables and parameters (24 issues identified)
 // This suppression will be removed once unused variables are cleaned up
 // See docs/TYPESCRIPT_STRICT_MODE_PLAN.md for gradual cleanup strategy
@@ -99,11 +97,7 @@ interface Prediction {
 
 export class AdvancedMLModels {
   private churnModel: any = null;
-  private sequenceModel: any = null;
-  private difficultyModel: any = null;
   private readonly CHURN_FEATURE_COUNT = 15;
-  private readonly SEQUENCE_FEATURE_COUNT = 20;
-  private readonly DIFFICULTY_FEATURE_COUNT = 12;
 
   constructor(private storage: any) {
     // Initialize ML models (placeholder for future implementation)
@@ -113,8 +107,6 @@ export class AdvancedMLModels {
   private initializeModels() {
     // Initialize neural networks for each prediction type
     this.churnModel = this.createNeuralNetwork(this.CHURN_FEATURE_COUNT, [10, 8, 1]);
-    this.sequenceModel = this.createNeuralNetwork(this.SEQUENCE_FEATURE_COUNT, [15, 12, 8]);
-    this.difficultyModel = this.createNeuralNetwork(this.DIFFICULTY_FEATURE_COUNT, [8, 6, 3]);
   }
 
   /**
@@ -524,21 +516,6 @@ export class AdvancedMLModels {
     return Math.round(timeframe);
   }
 
-  private generateChurnReasoningAndRecommendations(factors: ChurnRiskFactors): string[] {
-    const reasoning: string[] = [];
-
-    if (factors.sessionFrequencyDecline > 0.5) {
-      reasoning.push('Declining session frequency detected');
-    }
-    if (factors.engagementDropoff > 0.5) {
-      reasoning.push('Engagement levels showing downward trend');
-    }
-    if (factors.difficultyFrustration > 0.5) {
-      reasoning.push('Signs of difficulty-related frustration');
-    }
-
-    return reasoning;
-  }
 
   private calculateAverageSessionGap(sessionStarts: AnalyticsEvent[]): number {
     if (sessionStarts.length < 2) return 0;
@@ -711,7 +688,7 @@ export class AdvancedMLModels {
   }
 
   private calculateOptimalSequence(
-    graph: any,
+    _graph: any,
     profile: any,
     words: string[]
   ): ContentSequenceRecommendation[] {
@@ -887,7 +864,7 @@ export class AdvancedMLModels {
   private calculateOptimalDifficultyCurve(
     metrics: any,
     profile: any,
-    context: PredictionContext
+    _context: PredictionContext
   ): any {
     // Calculate optimal difficulty progression curve
     const currentAccuracy = metrics?.avgAccuracy || 0.7;
@@ -1048,59 +1025,51 @@ export class AdvancedMLModels {
   }
 
   // Placeholder methods for breakthrough prediction
-  private analyzeLearningPatterns(history: AnalyticsEvent[]): any {
+  private analyzeLearningPatterns(_history: AnalyticsEvent[]): any {
     // Implementation would analyze learning patterns
     return {};
   }
 
-  private identifyBreakthroughPatterns(history: AnalyticsEvent[]): any {
+  private identifyBreakthroughPatterns(_history: AnalyticsEvent[]): any {
     // Implementation would identify breakthrough patterns
     return {};
   }
 
   private calculateBreakthroughProbability(
-    patterns: any,
-    breakthroughs: any,
-    context: PredictionContext
+    _patterns: any,
+    _breakthroughs: any,
+    _context: PredictionContext
   ): number {
     // Implementation would calculate breakthrough probability
     return 0.5;
   }
 
-  private estimateOptimalBreakthroughTiming(probability: number, patterns: any): any {
+  private estimateOptimalBreakthroughTiming(_probability: number, _patterns: any): any {
     // Implementation would estimate optimal breakthrough timing
     return {};
   }
 
-  private calculateBreakthroughConfidence(patterns: any, historyLength: number): number {
+  private calculateBreakthroughConfidence(_patterns: any, _historyLength: number): number {
     // Implementation would calculate confidence in breakthrough prediction
     return 0.7;
   }
 
-  private generateBreakthroughReasoning(timing: any, patterns: any): string[] {
+  private generateBreakthroughReasoning(_timing: any, _patterns: any): string[] {
     // Implementation would generate reasoning for breakthrough timing
     return [];
   }
 
-  private identifyOptimalBreakthroughConditions(patterns: any): any[] {
+  private identifyOptimalBreakthroughConditions(_patterns: any): any[] {
     // Implementation would identify optimal breakthrough conditions
     return [];
   }
 
-  private generateBreakthroughInterventions(timing: any): any[] {
+  private generateBreakthroughInterventions(_timing: any): any[] {
     // Implementation would generate breakthrough interventions
     return [];
   }
 
-  private createSequenceModel(): any {
-    // Implementation would create sequence optimization model
-    return {};
-  }
 
-  private createDifficultyModel(): any {
-    // Implementation would create difficulty optimization model
-    return {};
-  }
 
   // Helper methods for user profile analysis
   private inferLearningStyle(history: AnalyticsEvent[]): string {
@@ -1551,115 +1520,8 @@ export class AdvancedMLModels {
   }
 
   // Additional helper methods for breakthrough prediction
-  private analyzeDifficultyProgression(history: AnalyticsEvent[]): number {
-    // Analyze how user handles increasing difficulty over time
-    const difficultyEvents = history
-      .filter(e => e.data?.difficulty !== undefined)
-      .sort((a, b) => a.timestamp - b.timestamp);
 
-    if (difficultyEvents.length < 5) return 0.5; // Default progression
 
-    let progressionScore = 0;
-    let previousDifficulty = difficultyEvents[0].data?.difficulty || 0.5;
 
-    for (let i = 1; i < difficultyEvents.length; i++) {
-      const currentDifficulty = difficultyEvents[i].data?.difficulty || 0.5;
-      const currentSuccess = difficultyEvents[i].data?.isCorrect || false;
 
-      // Reward successful handling of increased difficulty
-      if (currentDifficulty > previousDifficulty && currentSuccess) {
-        progressionScore += 0.1;
-      }
-
-      previousDifficulty = currentDifficulty;
-    }
-
-    return Math.min(1, progressionScore);
-  }
-
-  private calculateMasteryAcceleration(sessions: any[]): number {
-    // Calculate if mastery is accelerating over recent sessions
-    if (sessions.length < 3) return 0.5;
-
-    const accuracyDeltas = [];
-    for (let i = 1; i < sessions.length; i++) {
-      const current =
-        sessions[i].events.filter((e: any) => e.data?.isCorrect).length / sessions[i].events.length;
-      const previous =
-        sessions[i - 1].events.filter((e: any) => e.data?.isCorrect).length /
-        sessions[i - 1].events.length;
-      accuracyDeltas.push(current - previous);
-    }
-
-    // Check if deltas are increasing (acceleration)
-    let accelerationCount = 0;
-    for (let i = 1; i < accuracyDeltas.length; i++) {
-      if (accuracyDeltas[i] > accuracyDeltas[i - 1]) {
-        accelerationCount++;
-      }
-    }
-
-    return accelerationCount / Math.max(1, accuracyDeltas.length - 1);
-  }
-
-  private calculateEngagementLevel(history: AnalyticsEvent[]): number {
-    // Calculate user engagement based on session patterns
-    const sessions = this.groupEventsBySessions(history);
-    const recentSessions = sessions.slice(0, 7); // Last week
-
-    if (recentSessions.length === 0) return 0.3;
-
-    // Factors: frequency, session length, consistency
-    const frequency = recentSessions.length / 7; // Sessions per day
-    const avgSessionLength =
-      recentSessions.reduce((sum, s) => sum + s.eventCount, 0) / recentSessions.length;
-    const consistency = 1 - this.calculateSessionVariance(recentSessions);
-
-    const engagement = frequency * 0.4 + (avgSessionLength / 20) * 0.3 + consistency * 0.3;
-    return Math.min(1, Math.max(0, engagement));
-  }
-
-  private calculateSkillTransferRate(history: AnalyticsEvent[]): number {
-    // Calculate how well skills transfer between different word types
-    const wordCategories = history.reduce(
-      (acc, event) => {
-        const wordId = event.data?.wordId || 'unknown';
-        const category = this.getWordCategory(wordId);
-        const success = event.data?.isCorrect ? 1 : 0;
-
-        if (!acc[category]) acc[category] = { correct: 0, total: 0 };
-        acc[category].correct += success;
-        acc[category].total += 1;
-
-        return acc;
-      },
-      {} as Record<string, { correct: number; total: number }>
-    );
-
-    const categoryAccuracies = Object.values(wordCategories)
-      .filter(cat => cat.total > 2) // At least 3 attempts
-      .map(cat => cat.correct / cat.total);
-
-    if (categoryAccuracies.length < 2) return 0.5; // Default transfer rate
-
-    // Low variance in accuracy across categories indicates good transfer
-    const avgAccuracy =
-      categoryAccuracies.reduce((sum, acc) => sum + acc, 0) / categoryAccuracies.length;
-    const variance =
-      categoryAccuracies.reduce((sum, acc) => sum + Math.pow(acc - avgAccuracy, 2), 0) /
-      categoryAccuracies.length;
-
-    return Math.max(0, Math.min(1, 1 - variance)); // Lower variance = better transfer
-  }
-
-  private calculateSessionVariance(sessions: any[]): number {
-    // Calculate variance in session characteristics
-    const sessionLengths = sessions.map(s => s.eventCount);
-    const avgLength = sessionLengths.reduce((sum, len) => sum + len, 0) / sessionLengths.length;
-    const variance =
-      sessionLengths.reduce((sum, len) => sum + Math.pow(len - avgLength, 2), 0) /
-      sessionLengths.length;
-
-    return Math.sqrt(variance) / Math.max(1, avgLength); // Normalized variance
-  }
 }

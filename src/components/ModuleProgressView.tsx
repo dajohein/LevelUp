@@ -171,9 +171,7 @@ const Button = styled.button`
   }
 `;
 
-interface ModuleProgressViewProps {}
-
-export const ModuleProgressView: React.FC<ModuleProgressViewProps> = () => {
+export const ModuleProgressView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { languageCode, moduleId } = useParams<{ languageCode: string; moduleId: string }>();

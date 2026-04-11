@@ -1,19 +1,70 @@
 import { useState, useEffect } from 'react';
 import { logger } from '../services/logger';
 
+/** Background Sync API — not in standard TypeScript lib. */
+interface SyncManager {
+  register(tag: string): Promise<void>;
+}
+
+/** Extends ServiceWorkerRegistration with the Background Sync API. */
+interface SyncServiceWorkerRegistration extends ServiceWorkerRegistration {
+  readonly sync: SyncManager;
+}
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): void;
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+/** navigator.connection (Network Information API — not in standard TS lib). */
+interface NetworkInformation {
+  effectiveType: string;
+  addEventListener(type: 'change', listener: () => void): void;
+  removeEventListener(type: 'change', listener: () => void): void;
+}
+
+/** navigator.standalone is Safari/iOS only. */
+interface NavigatorIOS extends Navigator {
+  standalone?: boolean;
+}
+
 // PWA installation and service worker management
 export const usePWA = () => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  const registerServiceWorker = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        setSwRegistration(registration);
+
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setUpdateAvailable(true);
+              }
+            });
+          }
+        });
+
+        logger.debug('Service Worker registered successfully');
+      } catch (error) {
+        logger.error('Service Worker registration failed', { error });
+      }
+    }
+  };
 
   useEffect(() => {
     // Check if already installed
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInApp = (window.navigator as any).standalone === true;
+      const isInApp = (window.navigator as NavigatorIOS).standalone === true;
       setIsInstalled(isStandalone || isInApp);
     };
 
@@ -22,7 +73,7 @@ export const usePWA = () => {
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
@@ -45,38 +96,13 @@ export const usePWA = () => {
     };
   }, []);
 
-  const registerServiceWorker = async () => {
-    if ('serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        setSwRegistration(registration);
-
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateAvailable(true);
-              }
-            });
-          }
-        });
-
-        console.log('Service Worker registered successfully');
-      } catch (error) {
-        logger.error('Service Worker registration failed', { error });
-      }
-    }
-  };
-
   const installApp = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === 'accepted') {
-        console.log('PWA installed');
+        logger.debug('PWA installed');
       }
 
       setDeferredPrompt(null);
@@ -115,7 +141,7 @@ export const useNetworkStatus = () => {
 
     // Get connection type if available
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as Navigator & { connection: NetworkInformation }).connection;
       setConnectionType(connection.effectiveType || 'unknown');
 
       const handleConnectionChange = () => {
@@ -152,7 +178,7 @@ export const usePushNotifications = () => {
     }
 
     // Check if VAPID key is configured (you would set this in environment variables)
-    const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     setVapidKeyAvailable(!!vapidKey);
   }, []);
 
@@ -169,7 +195,7 @@ export const usePushNotifications = () => {
     if (!('PushManager' in window) || !registration) return;
 
     // Get VAPID key from environment variables
-    const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
     if (!vapidKey) {
       logger.warn('VAPID key not configured for push notifications');
@@ -183,7 +209,7 @@ export const usePushNotifications = () => {
         applicationServerKey: vapidKey,
       });
       setSubscription(sub);
-      console.log('Push subscription successful');
+      logger.debug('Push subscription successful');
     } catch (error) {
       logger.error('Push subscription failed', { error });
       // Gracefully handle the error - PWA still works without push notifications
@@ -200,13 +226,13 @@ export const useBackgroundSync = () => {
   const registerSync = async (tag: string) => {
     if (
       'serviceWorker' in navigator &&
-      'sync' in (window as any).ServiceWorkerRegistration.prototype
+      'sync' in (window.ServiceWorkerRegistration?.prototype ?? {})
     ) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        await (registration as any).sync.register(tag);
+        await (registration as SyncServiceWorkerRegistration).sync.register(tag);
         setSyncStatus('syncing');
-        console.log(`Background sync registered: ${tag}`);
+        logger.debug(`Background sync registered: ${tag}`);
       } catch (error) {
         logger.error('Background sync registration failed', { error, tag });
         setSyncStatus('error');

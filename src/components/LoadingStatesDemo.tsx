@@ -354,7 +354,7 @@ export const LoadingStatesDemo: React.FC = () => {
             <strong>Minimal loading</strong> for tight spaces or quick operations
           </li>
           <li>
-            <strong>Meaningful text</strong> that describes what's happening
+            <strong>Meaningful text</strong> that describes what&apos;s happening
           </li>
           <li>
             <strong>Consistent timing</strong> - avoid flash of loading for very quick operations

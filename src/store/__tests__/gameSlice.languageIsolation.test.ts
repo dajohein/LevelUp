@@ -120,7 +120,7 @@ describe('gameSlice language isolation', () => {
 
     // Update with a full object should replace, not merge other language
     store.dispatch(updateWordProgress(deProgress));
-    let state = store.getState().game as any;
+    const state = store.getState().game as any;
     expect(Object.keys(state.wordProgress)).toEqual(['de-1']);
 
     // Ensure ES data never appears in DE state

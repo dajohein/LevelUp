@@ -249,7 +249,8 @@ export class AIEnhancedWordService {
       return null;
     }
 
-    let { word, quizMode, type } = currentWordData;
+    const { word, type } = currentWordData;
+    let { quizMode } = currentWordData;
     const progress = (this.state.currentWordIndex / this.state.sessionWords.length) * 100;
 
     // Apply AI decision if available and enabled

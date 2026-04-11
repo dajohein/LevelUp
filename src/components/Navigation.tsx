@@ -74,16 +74,15 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   const backButtonConfig = getBackButtonConfig(location.pathname, language, languageCode, navigate);
 
-  // Use mobile navigation on mobile devices
-  if (isMobile) {
-    return <MobileNavigation showUserProfile={showUserProfile} />;
-  }
-
-  // Desktop navigation
   const { isGlobalView, currentLevel, levelInfo, userProgress, totalXP } = useNavigationProgress(
     language,
     languageCode || null
   );
+
+  // Use mobile navigation on mobile devices
+  if (isMobile) {
+    return <MobileNavigation showUserProfile={showUserProfile} />;
+  }
   const { hasProgress, hasNoProgress } = calculateProgressState(
     isGlobalView,
     showUserProfile,
