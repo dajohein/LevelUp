@@ -308,7 +308,7 @@ export const QuickDashContainer = styled.div`
 `;
 
 export const DeepDiveContainer = styled.div`
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #1565c0 0%, #006064 100%);
   border: 2px solid #0099cc;
   border-radius: 16px;
   padding: ${props => props.theme.spacing.lg};
@@ -321,7 +321,7 @@ export const DeepDiveContainer = styled.div`
 `;
 
 export const StreakChallengeContainer = styled.div<{ streak?: number }>`
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  background: linear-gradient(135deg, #b71c1c 0%, #880e4f 100%);
   border: 2px solid #ff6b6b;
   border-radius: 16px;
   padding: ${props => props.theme.spacing.lg};
@@ -333,7 +333,7 @@ export const StreakChallengeContainer = styled.div<{ streak?: number }>`
 `;
 
 export const PrecisionModeContainer = styled.div`
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
   border: 2px solid #00b4db;
   border-radius: 16px;
   padding: ${props => props.theme.spacing.lg};

@@ -6,6 +6,17 @@ import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
 import { gameServices } from '../services/game';
+import { Word } from '../services/wordService';
+import { WordProgress } from '../store/types';
+import {
+  SessionType,
+  SessionProgress,
+  addCorrectAnswer,
+  addIncorrectAnswer,
+  incrementWordsCompleted,
+} from '../store/sessionSlice';
+import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
+import { AppDispatch } from '../store/store';
 
 // Import styled components from Game.tsx (will need to be shared)
 const QuickDashContainer = styled.div`
@@ -48,10 +59,10 @@ const DeepDiveContainer = styled.div`
 const StreakChallengeContainer = styled.div<{ streak: number }>`
   background: ${props =>
     props.streak > 10
-      ? 'linear-gradient(45deg, #ffd700, #ffed4e)'
+      ? 'linear-gradient(45deg, #b8860b, #9a6f00)'
       : props.streak > 5
-        ? 'linear-gradient(45deg, #ffa500, #ffd700)'
-        : 'linear-gradient(45deg, #4CAF50, #8BC34A)'};
+        ? 'linear-gradient(45deg, #e65100, #bf360c)'
+        : 'linear-gradient(45deg, #2e7d32, #1b5e20)'};
   border-radius: 15px;
   padding: 20px;
   border: 3px solid
@@ -72,7 +83,7 @@ const StreakChallengeContainer = styled.div<{ streak: number }>`
 `;
 
 const PrecisionModeContainer = styled.div`
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
   border-radius: 15px;
   padding: 20px;
   border: 3px solid #2196f3;
@@ -89,7 +100,7 @@ const PrecisionModeContainer = styled.div`
 `;
 
 const FillInTheBlankContainer = styled.div`
-  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
   border-radius: 15px;
   padding: 20px;
   border: 3px solid #9c27b0;
@@ -272,21 +283,21 @@ const BossHealthBar = styled.div<{ health: number }>`
 
 export interface QuizRendererProps {
   // Word and quiz state
-  currentWord: any;
+  currentWord: Word;
   quizMode: string;
   currentOptions: string[];
-  wordProgress: { [key: string]: any };
+  wordProgress: Record<string, WordProgress>;
 
   // Enhanced game state
   isUsingSpacedRepetition: boolean;
-  getCurrentWordInfo: () => any;
+  getCurrentWordInfo: () => (EnhancedWordInfo & { isEnhanced?: boolean }) | null;
   showLearningCard: boolean;
   wordLearningStatus: { isTrulyNewWord: boolean; needsReinforcement: boolean };
 
   // Session state
-  currentSession: any;
-  sessionProgress: any;
-  getSessionStats: () => any;
+  currentSession: SessionType | null;
+  sessionProgress: SessionProgress & { bossHealth?: number; targetWords?: number };
+  getSessionStats: () => { currentIndex?: number; totalWords?: number } | null;
 
   // UI state
   isTransitioning: boolean;
@@ -297,31 +308,31 @@ export interface QuizRendererProps {
   feedbackQuestionKey: string;
 
   // Context
-  contextForWord: any;
+  contextForWord: { sentence: string; translation: string; audio?: string } | null | undefined;
 
   // Timers
-  wordTimer?: any;
-  sessionTimer?: any;
+  wordTimer?: number | ReturnType<typeof setInterval>;
+  sessionTimer?: number | ReturnType<typeof setInterval>;
 
   // Main handlers
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition?: any;
-  handleEnhancedAnswer?: any;
+  handleWordTransition?: () => void;
+  handleEnhancedAnswer?: (isCorrect: boolean) => void;
 
   // Audio handlers
-  playCorrect?: any;
-  playIncorrect?: any;
+  playCorrect?: () => void;
+  playIncorrect?: () => void;
 
   // Redux dispatch and state updates
-  dispatch?: any;
-  incrementWordsCompleted?: any;
-  addCorrectAnswer?: any;
-  addIncorrectAnswer?: any;
-  setLastAnswerCorrect?: any;
-  setFeedbackQuestionKey?: any;
-  setIsTransitioning?: any;
+  dispatch?: AppDispatch;
+  incrementWordsCompleted?: typeof incrementWordsCompleted;
+  addCorrectAnswer?: typeof addCorrectAnswer;
+  addIncorrectAnswer?: typeof addIncorrectAnswer;
+  setLastAnswerCorrect?: (value: boolean | null) => void;
+  setFeedbackQuestionKey?: (key: string) => void;
+  setIsTransitioning?: (value: boolean) => void;
 }
 
 export const QuizRenderer: React.FC<QuizRendererProps> = ({
@@ -423,14 +434,14 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             sessionProgress={
               sessionProgress?.wordsCompleted / Math.max(sessionProgress?.targetWords || 20, 1)
             }
-            context={contextForWord}
+            context={contextForWord ?? undefined}
           />
         ) : quizModeToUse === 'letter-scramble' ? (
           <LetterScrambleQuiz
             key={`ls-${wordToUse.id}-${quizModeToUse}`} // Stable key based on word ID and mode
             word={gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse)} // Always scramble the target language word (German/Spanish)
             definition={gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse)} // Show Dutch translation as hint
-            context={contextForWord}
+            context={contextForWord ?? undefined}
             currentWord={(getSessionStats()?.currentIndex || 0) + 1}
             totalWords={getSessionStats()?.totalWords || 10}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
@@ -454,7 +465,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
-            context={contextForWord}
+            context={contextForWord ?? undefined}
             currentWord={(getSessionStats()?.currentIndex || 0) + 1}
             totalWords={getSessionStats()?.totalWords || 10}
           />
@@ -469,7 +480,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
-            context={contextForWord}
+            context={contextForWord ?? undefined}
           />
         )}
       </>
