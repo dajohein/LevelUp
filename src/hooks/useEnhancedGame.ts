@@ -5,7 +5,7 @@
  * Provides seamless backward compatibility while adding intelligent word grouping
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { enhancedWordService } from '../services/enhancedWordService';
@@ -261,12 +261,25 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
     return enhancedWordService.getLearningAnalytics(languageCode);
   }, [languageCode]);
 
-  // Initialize only when explicitly requested, not automatically on mount
-  // This prevents auto-starting sessions when just navigating to game routes
+  // Auto-initialize enhanced mode for free-play (no active session).
+  // Tracks the last language that was auto-initialized to avoid duplicate inits
+  // and to reset correctly when the user switches languages or completes a session.
+  const autoInitLanguageRef = useRef('');
+
   useEffect(() => {
-    // Don't auto-initialize - let the user explicitly start a session
-    // Enhanced mode should only start when user chooses spaced repetition
-  }, [languageCode, moduleId]); // Dependencies tracked but no auto-init
+    if (currentSession) {
+      // A session just started – clear the ref so we re-init when it ends.
+      autoInitLanguageRef.current = '';
+    } else if (languageCode && autoInitLanguageRef.current !== languageCode) {
+      // Free-play mode and language is ready – initialize the enhanced session.
+      autoInitLanguageRef.current = languageCode;
+      initializeEnhancedSession();
+    }
+    // Note: intentionally omitting `initializeEnhancedSession` from deps to avoid
+    // re-running on every wordProgress update (it changes when wordProgress changes).
+    // The `autoInitLanguageRef` ref guard ensures we only initialize once per language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languageCode, currentSession]);
 
   return {
     // State
