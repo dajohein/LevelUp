@@ -64,6 +64,14 @@ export interface WordSessionTracker {
   maxRecentTracking: number;
 }
 
+export interface WordSessionStats {
+  sessionId: string;
+  usedWordsCount: number;
+  recentWordsCount: number;
+  sessionAgeMinutes: number;
+  maxRecentTracking: number;
+}
+
 /**
  * Centralized Word Selection Manager
  * Replaces scattered word selection logic across all services
@@ -327,9 +335,16 @@ class WordSelectionManager {
     criteria: WordSelectionCriteria,
     _wordProgress: { [key: string]: WordProgress } // Using underscore to indicate intentionally unused
   ): number {
-    let score = word.currentMastery; // Base score from mastery
-
     const progress = word.progress;
+
+    // Words that have never been practiced get a fixed baseline score of 50 (medium priority).
+    // This ensures words that are overdue for spaced-repetition review — which score well
+    // below 50 via the multipliers below — are always shown before introducing new words.
+    if (!progress || !progress.lastPracticed) {
+      return 50;
+    }
+
+    let score = word.currentMastery; // Base score from mastery
 
     // Heavily prioritize struggling words
     if (criteria.prioritizeStruggling && word.currentMastery < 30) {
@@ -337,20 +352,15 @@ class WordSelectionManager {
     }
 
     // Factor in recent performance
-    if (progress) {
-      const errorRate =
-        progress.timesIncorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect);
-      if (errorRate > 0.5) {
-        score *= 0.2; // Very high priority for error-prone words
-      }
-
-      // Time-based priority (words not practiced recently)
-      if (progress.lastPracticed) {
-        const hoursSince =
-          (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60);
-        if (hoursSince > 24) score *= 0.5; // Higher priority for old words
-      }
+    const errorRate =
+      progress.timesIncorrect / Math.max(1, progress.timesCorrect + progress.timesIncorrect);
+    if (errorRate > 0.5) {
+      score *= 0.2; // Very high priority for error-prone words
     }
+
+    // Time-based priority (words not practiced recently)
+    const hoursSince = (Date.now() - new Date(progress.lastPracticed).getTime()) / (1000 * 60 * 60);
+    if (hoursSince > 24) score *= 0.5; // Higher priority for old words
 
     // Cognitive load adjustment
     if (criteria.cognitiveLoad === 'high' && word.currentMastery > 70) {
@@ -400,8 +410,11 @@ class WordSelectionManager {
   /**
    * Generate human-readable selection reason
    */
-  private getSelectionReason(word: Word, _criteria: WordSelectionCriteria): string {
-    const mastery = (word as any).currentMastery || 0;
+  private getSelectionReason(
+    word: Word & { currentMastery?: number },
+    _criteria: WordSelectionCriteria
+  ): string {
+    const mastery = word.currentMastery ?? 0;
 
     if (mastery < 30) return 'Struggling word - needs attention';
     if (mastery < 50) return 'Learning word - building familiarity';
@@ -441,7 +454,7 @@ class WordSelectionManager {
   /**
    * Get session statistics for debugging
    */
-  public getSessionStats(sessionId: string): any {
+  public getSessionStats(sessionId: string): WordSessionStats | null {
     const tracker = this.sessionTrackers.get(sessionId);
     if (!tracker) return null;
 
