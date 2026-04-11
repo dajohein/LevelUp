@@ -56,8 +56,8 @@ jest.mock('../moduleService', () => ({
 
 jest.mock('../masteryService', () => ({
   // Returns the xp value (second argument) as the mastery score, matching the real call signature:
-  // calculateMasteryDecay(lastPracticed: string, xp: number)
-  calculateMasteryDecay: jest.fn((_lastPracticed: string, xp: number) =>
+  // calculateMasteryDecay(lastPracticed: string | undefined, xp: number)
+  calculateMasteryDecay: jest.fn((_lastPracticed: string | undefined, xp: number) =>
     Math.max(0, Math.min(100, xp || 0))
   ),
 }));
@@ -205,7 +205,7 @@ describe('wordSelectionManager', () => {
     beforeEach(() => {
       jest
         .mocked(calculateMasteryDecay)
-        .mockImplementation((_lastPracticed: string, xp: number) =>
+        .mockImplementation((_lastPracticed: string | undefined, xp: number) =>
           Math.max(0, Math.min(100, xp || 0))
         );
     });
