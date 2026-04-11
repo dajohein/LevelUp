@@ -57,8 +57,52 @@
     "react-hooks/config": "off",
     "react-hooks/gating": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-non-null-assertion": "off"
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Property[key.name='quizMode'][value.value='multiple-choice']",
+        "message": "Do not hardcode quizMode: 'multiple-choice'. Use selectQuizMode() from quizModeSelectionUtils.ts so difficulty scales with mastery."
+      },
+      {
+        "selector": "AssignmentExpression[left.property.name='quizMode'][right.value='multiple-choice']",
+        "message": "Do not hardcode quizMode = 'multiple-choice'. Use selectQuizMode() from quizModeSelectionUtils.ts so difficulty scales with mastery."
+      }
+    ]
   },
+  "overrides": [
+    {
+      "files": [
+        "src/services/quizModeSelectionUtils.ts",
+        "src/services/fillInTheBlankService.ts",
+        "src/services/deepDiveService.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": [
+        "src/store/gameSlice.ts",
+        "src/hooks/useAILearning.ts",
+        "src/services/aiEnhancedWordService.ts",
+        "src/services/bossBattleService.ts",
+        "src/services/challengeServiceUtils.ts",
+        "src/services/enhancedWordService.ts",
+        "src/services/precisionModeService.ts",
+        "src/services/quickDashService.ts",
+        "src/services/simpleAILearning.ts",
+        "src/services/streakChallengeService.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    }
+  ],
   "settings": {
     "react": {
       "version": "detect"

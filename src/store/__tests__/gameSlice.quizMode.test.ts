@@ -158,15 +158,20 @@ describe('gameSlice quiz-mode contract', () => {
     });
 
     it('passes the current wordProgress to selectQuizMode', () => {
-      mockSelectQuizMode.mockReturnValue('multiple-choice');
+      // Capture args INSIDE the implementation: Immer revokes the state proxy once
+      // the reducer returns, so Jest's recorded call arguments can no longer be read.
       const progress = makeWordProgress(10);
+      let capturedWordProgressKeys: string[] = [];
+      mockSelectQuizMode.mockImplementation((opts: { wordProgress: Record<string, unknown> }) => {
+        capturedWordProgressKeys = Object.keys(opts.wordProgress);
+        return 'multiple-choice';
+      });
       const store = buildStore(progress);
 
       store.dispatch(nextWord());
 
-      expect(mockSelectQuizMode).toHaveBeenCalledWith(
-        expect.objectContaining({ wordProgress: progress })
-      );
+      expect(mockSelectQuizMode).toHaveBeenCalledTimes(1);
+      expect(capturedWordProgressKeys).toEqual(Object.keys(progress));
     });
 
     it('does nothing when no language is set', () => {
@@ -245,8 +250,17 @@ describe('gameSlice quiz-mode contract', () => {
     });
 
     it('uses selectQuizMode with the current wordProgress when auto-computing', () => {
-      mockSelectQuizMode.mockReturnValue('open-answer');
+      // Capture args inside the implementation for the same Immer-proxy reason above.
       const progress = makeWordProgress(120);
+      let capturedWord: unknown;
+      let capturedWordProgressKeys: string[] = [];
+      mockSelectQuizMode.mockImplementation(
+        (opts: { word: unknown; wordProgress: Record<string, unknown> }) => {
+          capturedWord = opts.word;
+          capturedWordProgressKeys = Object.keys(opts.wordProgress);
+          return 'open-answer';
+        }
+      );
       const store = buildStore(progress);
 
       store.dispatch(
@@ -257,9 +271,8 @@ describe('gameSlice quiz-mode contract', () => {
         })
       );
 
-      expect(mockSelectQuizMode).toHaveBeenCalledWith(
-        expect.objectContaining({ word: TEST_WORD, wordProgress: progress })
-      );
+      expect(capturedWord).toEqual(TEST_WORD);
+      expect(capturedWordProgressKeys).toEqual(Object.keys(progress));
     });
   });
 });
