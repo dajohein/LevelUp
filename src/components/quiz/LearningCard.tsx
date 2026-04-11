@@ -202,9 +202,14 @@ export const LearningCard: React.FC<LearningCardProps> = ({
     if (!autoAdvance) return;
 
     // `remaining` tracks the current countdown value inside this effect closure.
-    // Updating it inside setInterval (not synchronously in the effect body) satisfies
+    // Updating it inside callbacks (not synchronously in the effect body) satisfies
     // the react-hooks/set-state-in-effect lint rule.
     let remaining = autoAdvanceDelay / 1000;
+
+    // Reset the displayed countdown on the next event-loop tick so the UI reflects
+    // the new delay immediately when `autoAdvanceDelay` changes, without calling
+    // setState synchronously in the effect body.
+    const initReset = setTimeout(() => setTimeLeft(remaining), 0);
 
     const timer = setTimeout(() => onContinueRef.current(), autoAdvanceDelay);
 
@@ -214,6 +219,7 @@ export const LearningCard: React.FC<LearningCardProps> = ({
     }, 1000);
 
     return () => {
+      clearTimeout(initReset);
       clearTimeout(timer);
       clearInterval(countdown);
     };

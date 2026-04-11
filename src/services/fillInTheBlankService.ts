@@ -399,7 +399,23 @@ export class FillInTheBlankService {
 
   /**
    * Select a word from an explicit pool, prioritising words that need more practice.
+   *
+   * Scoring constants:
+   * - EASY_XP_CEILING: offset that biases easy-mode scores toward low-XP words
+   * - EASY_ERROR_WEIGHT: extra score per incorrect attempt in easy mode
+   * - HARD_ERROR_WEIGHT: extra score per incorrect attempt in hard mode (less aggressive)
+   * - MEDIUM_XP_TARGET: ideal XP midpoint for balanced-mode scoring
+   * - MEDIUM_ERROR_WEIGHT: extra score per incorrect attempt in medium mode
+   * - TOP_CANDIDATE_COUNT: number of top-scored candidates to randomly sample from
    */
+  private static readonly EASY_XP_CEILING = 200;
+  private static readonly EASY_ERROR_WEIGHT = 10;
+  private static readonly HARD_ERROR_WEIGHT = 5;
+  private static readonly MEDIUM_XP_TARGET = 50;
+  private static readonly MEDIUM_XP_CEILING = 100;
+  private static readonly MEDIUM_ERROR_WEIGHT = 7;
+  private static readonly TOP_CANDIDATE_COUNT = 5;
+
   private selectFromPool(
     pool: Word[],
     wordProgress: { [key: string]: WordProgress },
@@ -415,14 +431,20 @@ export class FillInTheBlankService {
 
       let score: number;
       if (difficulty === 'easy') {
-        // Prefer words with low XP (learning words)
-        score = 200 - xp + timesIncorrect * 10;
+        // Prefer words with low XP (still-learning words)
+        score =
+          FillInTheBlankService.EASY_XP_CEILING -
+          xp +
+          timesIncorrect * FillInTheBlankService.EASY_ERROR_WEIGHT;
       } else if (difficulty === 'hard') {
         // Prefer words with higher XP (mastered words need harder challenges)
-        score = xp + timesIncorrect * 5;
+        score = xp + timesIncorrect * FillInTheBlankService.HARD_ERROR_WEIGHT;
       } else {
-        // Medium: balanced approach
-        score = 100 - Math.abs(xp - 50) + timesIncorrect * 7;
+        // Medium: balanced – score peaks near the MEDIUM_XP_TARGET
+        score =
+          FillInTheBlankService.MEDIUM_XP_CEILING -
+          Math.abs(xp - FillInTheBlankService.MEDIUM_XP_TARGET) +
+          timesIncorrect * FillInTheBlankService.MEDIUM_ERROR_WEIGHT;
       }
 
       return { word, score };
@@ -430,7 +452,7 @@ export class FillInTheBlankService {
 
     // Sort descending by score and pick from top candidates
     scored.sort((a, b) => b.score - a.score);
-    const topCount = Math.min(5, scored.length);
+    const topCount = Math.min(FillInTheBlankService.TOP_CANDIDATE_COUNT, scored.length);
     const topCandidates = scored.slice(0, topCount);
 
     // Pick randomly from top candidates to add variety
