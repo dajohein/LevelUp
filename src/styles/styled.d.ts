@@ -1,5 +1,4 @@
 import '@emotion/react';
-import { Theme as EmotionTheme } from '@emotion/react';
 import { theme } from './theme';
 
 type ThemeType = typeof theme;
@@ -11,7 +10,9 @@ declare module '@emotion/react' {
 }
 
 declare module 'react' {
-  interface FunctionComponent<P = {}> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface FunctionComponent<P = object> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (props: PropsWithChildren<P>, context?: any): ReactElement<any, any> | null;
   }
 }
