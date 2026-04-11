@@ -23,6 +23,12 @@ export interface AnswerValidationResult {
 }
 
 /**
+ * Mastery level below which a word with incorrect answers is considered to
+ * need reinforcement (i.e. the learning card is shown again).
+ */
+const REINFORCEMENT_MASTERY_THRESHOLD = 50;
+
+/**
  * Manages game progress tracking, mastery calculations, and learning analytics.
  * Extracted from Game.tsx to improve separation of concerns.
  */
@@ -176,18 +182,15 @@ export class GameProgressTracker {
       };
     }
 
-    // Check if word is truly new (very low mastery)
-    const isTrulyNewWord = currentMastery < 20;
+    // Word has a progress record — it has been practiced before, so it is not truly new
+    const isTrulyNewWord = false;
 
-    // Check if word needs reinforcement due to mistakes (complex logic preserved)
+    // Check if word needs reinforcement due to wrong answers
     const needsReinforcement =
-      // Recent mistakes: more incorrect than correct answers
+      // More incorrect than correct answers — actively struggling with this word
       currentWordProgress.timesIncorrect > currentWordProgress.timesCorrect ||
-      // Low consecutive correct count (less than 3 in a row)
-      ((currentWordProgress.directions?.['term-to-definition']?.consecutiveCorrect || 0) < 3 &&
-        (currentWordProgress.directions?.['definition-to-term']?.consecutiveCorrect || 0) < 3) ||
-      // Low mastery with some incorrect answers (needs practice)
-      (currentMastery < 50 && currentWordProgress.timesIncorrect > 0);
+      // Has wrong answers and hasn't built enough mastery to overcome them
+      (currentWordProgress.timesIncorrect > 0 && currentMastery < REINFORCEMENT_MASTERY_THRESHOLD);
 
     return {
       currentMastery,

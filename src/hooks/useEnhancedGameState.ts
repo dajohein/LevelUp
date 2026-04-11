@@ -518,7 +518,6 @@ export const useEnhancedGameState = ({
   useEffect(() => {
     if (currentWord) {
       const enhancedWordInfo = getCurrentWordInfo();
-      const wordXP = wordProgress[currentWord.id]?.xp || 0;
 
       // Show learning card for truly new words regardless of spaced repetition mode
       // This ensures new words get proper introduction in both enhanced and session modes
@@ -535,9 +534,8 @@ export const useEnhancedGameState = ({
       ) {
         setShowLearningCard(shouldShowCard);
       }
-      // In session mode, show learning card for truly new words only
-      // FIXED: Also check XP directly to ensure 0 XP words always get learning cards
-      else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordXP === 0)) {
+      // In session mode, show learning card for new words and words needing reinforcement
+      else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement)) {
         setShowLearningCard(true);
       }
       // Default case - no learning card
