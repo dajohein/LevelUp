@@ -6,6 +6,10 @@ import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
 import { gameServices } from '../services/game';
+import { Word } from '../services/wordService';
+import { WordProgress } from '../store/types';
+import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
+import { SessionType, SessionProgress } from '../store/sessionSlice';
 
 // Import styled components from Game.tsx (will need to be shared)
 const QuickDashContainer = styled.div`
@@ -272,21 +276,29 @@ const BossHealthBar = styled.div<{ health: number }>`
 
 export interface QuizRendererProps {
   // Word and quiz state
-  currentWord: any;
+  currentWord: Word | null;
   quizMode: string;
   currentOptions: string[];
-  wordProgress: { [key: string]: any };
+  wordProgress: { [key: string]: WordProgress };
 
   // Enhanced game state
   isUsingSpacedRepetition: boolean;
-  getCurrentWordInfo: () => any;
+  getCurrentWordInfo: () => (EnhancedWordInfo & { isEnhanced?: boolean }) | null;
   showLearningCard: boolean;
   wordLearningStatus: { isTrulyNewWord: boolean; needsReinforcement: boolean };
 
   // Session state
-  currentSession: any;
-  sessionProgress: any;
-  getSessionStats: () => any;
+  currentSession: SessionType | null;
+  sessionProgress: SessionProgress & { bossHealth?: number };
+  getSessionStats: () => {
+    currentIndex: number;
+    totalWords: number;
+    correctAnswers?: number;
+    accuracy?: number;
+    isComplete?: boolean;
+    isEnhanced?: boolean;
+    sessionType?: string;
+  };
 
   // UI state
   isTransitioning: boolean;
@@ -297,31 +309,31 @@ export interface QuizRendererProps {
   feedbackQuestionKey: string;
 
   // Context
-  contextForWord: any;
+  contextForWord: { sentence: string; translation: string } | undefined;
 
   // Timers
-  wordTimer?: any;
-  sessionTimer?: any;
+  wordTimer?: number;
+  sessionTimer?: number;
 
   // Main handlers
   handleSubmit: (answer: string) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
-  handleWordTransition?: any;
-  handleEnhancedAnswer?: any;
+  handleWordTransition?: (...args: unknown[]) => unknown;
+  handleEnhancedAnswer?: (...args: unknown[]) => unknown;
 
   // Audio handlers
-  playCorrect?: any;
-  playIncorrect?: any;
+  playCorrect?: () => void;
+  playIncorrect?: () => void;
 
   // Redux dispatch and state updates
-  dispatch?: any;
-  incrementWordsCompleted?: any;
-  addCorrectAnswer?: any;
-  addIncorrectAnswer?: any;
-  setLastAnswerCorrect?: any;
-  setFeedbackQuestionKey?: any;
-  setIsTransitioning?: any;
+  dispatch?: (...args: unknown[]) => unknown;
+  incrementWordsCompleted?: () => unknown;
+  addCorrectAnswer?: () => unknown;
+  addIncorrectAnswer?: () => unknown;
+  setLastAnswerCorrect?: (correct: boolean | null) => void;
+  setFeedbackQuestionKey?: (key: string) => void;
+  setIsTransitioning?: (transitioning: boolean) => void;
 }
 
 export const QuizRenderer: React.FC<QuizRendererProps> = ({
@@ -371,9 +383,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
     // Only use fill-in-the-blank if the word has context, otherwise respect the original mode
     const hasContext = wordToUse.context && wordToUse.context.sentence;
     if (!hasContext && quizModeToUse === 'fill-in-the-blank') {
-      // If no context available for fill-in-blank, fall back to the word service's recommendation
+      // If no context available for fill-in-blank, fall back based on mastery level.
+      // open-answer requires Tier 3+ (≥50 XP); lower mastery uses multiple-choice.
       const wordXP = wordProgress[wordToUse.id]?.xp || 0;
-      quizModeToUse = wordXP < 20 ? 'multiple-choice' : 'open-answer';
+      quizModeToUse = wordXP >= 50 ? 'open-answer' : 'multiple-choice';
     }
   }
 
