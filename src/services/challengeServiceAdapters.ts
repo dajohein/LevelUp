@@ -56,7 +56,7 @@ class StreakChallengeAdapter implements IChallengeService {
         context.languageCode,
         context.allWords || []
       );
-      console.log(
+      logger.debug(
         `🎯 Streak Challenge: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`
       );
     } else if (result.quizMode === 'letter-scramble') {
@@ -122,7 +122,7 @@ class BossBattleAdapter implements IChallengeService {
         context.languageCode,
         context.allWords || []
       );
-      console.log(
+      logger.debug(
         `🎯 Boss Battle: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`
       );
     } else if (result.quizMode === 'letter-scramble') {
@@ -189,7 +189,7 @@ class PrecisionModeAdapter implements IChallengeService {
         context.languageCode,
         context.allWords || []
       );
-      console.log(
+      logger.debug(
         `🎯 Precision Mode: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`
       );
     } else if (result.quizMode === 'fill-in-the-blank') {
@@ -274,7 +274,7 @@ class QuickDashAdapter implements IChallengeService {
         context.languageCode,
         context.allWords || []
       );
-      console.log(
+      logger.debug(
         `🎯 Quick Dash: Generated ${finalOptions.length} options for "${result.word.term}": [${finalOptions.join(', ')}]`
       );
     } else {
@@ -376,7 +376,7 @@ class DeepDiveAdapter implements IChallengeService {
         `🎯 Enhanced quiz mode: ${result.quizMode} → ${standardQuizMode} for word "${result.word.term}" (mastery: ${masteryLevel})`
       );
 
-      console.log(`🎯 ENHANCED MODE DETECTED:`, {
+      logger.debug(`🎯 ENHANCED MODE DETECTED:`, {
         originalMode: result.quizMode,
         word: result.word.term,
         convertedTo: standardQuizMode,
@@ -490,6 +490,7 @@ class FillInTheBlankAdapter implements IChallengeService {
     }
 
     const result = await fillInTheBlankService.getNextFillInTheBlankWord(
+      allWords,
       context.wordProgress,
       context.wordsCompleted,
       context.targetWords

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useReducer } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { logger } from '../../services/logger';
@@ -326,6 +326,98 @@ const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) =
   );
 };
 
+interface LetterTileState {
+  letter: string;
+  index: number;
+  used: boolean;
+}
+
+interface ScrambleState {
+  userAnswer: string[];
+  availableLetters: LetterTileState[];
+  showResult: boolean;
+  isCorrect: boolean;
+  hintsUsed: number;
+}
+
+type ScrambleAction =
+  | { type: 'RESET'; word: string }
+  | { type: 'ADD_LETTER'; letterIndex: number }
+  | { type: 'REMOVE_LETTER'; answerIndex: number; removedLetter: string }
+  | { type: 'CLEAR' }
+  | { type: 'HINT'; letterIndex: number }
+  | { type: 'SHOW_RESULT'; isCorrect: boolean };
+
+function buildInitialAvailableLetters(word: string): LetterTileState[] {
+  const letters = word
+    .toLowerCase()
+    .split('')
+    .map((letter, index) => ({ letter, index, used: false }));
+  return [...letters].sort(() => Math.random() - 0.5);
+}
+
+function scrambleReducer(state: ScrambleState, action: ScrambleAction): ScrambleState {
+  switch (action.type) {
+    case 'RESET':
+      return {
+        userAnswer: [],
+        availableLetters: buildInitialAvailableLetters(action.word),
+        showResult: false,
+        isCorrect: false,
+        hintsUsed: 0,
+      };
+
+    case 'ADD_LETTER': {
+      const letter = state.availableLetters[action.letterIndex];
+      if (!letter || letter.used) return state;
+      return {
+        ...state,
+        userAnswer: [...state.userAnswer, letter.letter],
+        availableLetters: state.availableLetters.map((l, i) =>
+          i === action.letterIndex ? { ...l, used: true } : l
+        ),
+      };
+    }
+
+    case 'REMOVE_LETTER': {
+      const updated = [...state.availableLetters];
+      const toRestore = updated.find(l => l.letter === action.removedLetter && l.used);
+      if (toRestore) toRestore.used = false;
+      return {
+        ...state,
+        userAnswer: state.userAnswer.filter((_, i) => i !== action.answerIndex),
+        availableLetters: updated,
+      };
+    }
+
+    case 'CLEAR':
+      return {
+        ...state,
+        userAnswer: [],
+        availableLetters: state.availableLetters.map(l => ({ ...l, used: false })),
+      };
+
+    case 'HINT': {
+      const letter = state.availableLetters[action.letterIndex];
+      if (!letter || letter.used) return state;
+      return {
+        ...state,
+        userAnswer: [...state.userAnswer, letter.letter],
+        availableLetters: state.availableLetters.map((l, i) =>
+          i === action.letterIndex ? { ...l, used: true } : l
+        ),
+        hintsUsed: state.hintsUsed + 1,
+      };
+    }
+
+    case 'SHOW_RESULT':
+      return { ...state, showResult: true, isCorrect: action.isCorrect };
+
+    default:
+      return state;
+  }
+}
+
 interface LetterScrambleQuizProps {
   word: string; // The answer the user needs to build
   definition: string; // The question/prompt shown to the user
@@ -352,33 +444,24 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   onAnswer,
   disabled = false,
 }) => {
-  const [userAnswer, setUserAnswer] = useState<string[]>([]);
-  const [availableLetters, setAvailableLetters] = useState<
-    { letter: string; index: number; used: boolean }[]
-  >([]);
-  const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [hintsUsed, setHintsUsed] = useState(0);
+  const [state, dispatch] = useReducer(
+    scrambleReducer,
+    word,
+    (initialWord): ScrambleState => ({
+      userAnswer: [],
+      availableLetters: buildInitialAvailableLetters(initialWord),
+      showResult: false,
+      isCorrect: false,
+      hintsUsed: 0,
+    })
+  );
+
+  const { userAnswer, availableLetters, showResult, isCorrect, hintsUsed } = state;
 
   // Initialize scrambled letters
   useEffect(() => {
     logger.debug('🔄 LetterScrambleQuiz: Resetting for new word:', word, 'definition:', definition);
-    const letters = word
-      .toLowerCase()
-      .split('')
-      .map((letter, index) => ({
-        letter,
-        index,
-        used: false,
-      }));
-
-    // Shuffle the letters
-    const shuffled = [...letters].sort(() => Math.random() - 0.5);
-    setAvailableLetters(shuffled);
-    setUserAnswer([]);
-    setShowResult(false);
-    setIsCorrect(false);
-    setHintsUsed(0);
+    dispatch({ type: 'RESET', word });
     hasCheckedRef.current = false;
     logger.debug('✨ LetterScrambleQuiz: State reset complete');
   }, [word, definition]);
@@ -389,10 +472,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
       if (letter.used) {
         return;
       }
-      setUserAnswer(prev => [...prev, letter.letter]);
-      setAvailableLetters(prev =>
-        prev.map((l, i) => (i === letterIndex ? { ...l, used: true } : l))
-      );
+      dispatch({ type: 'ADD_LETTER', letterIndex });
     },
     [availableLetters]
   );
@@ -400,24 +480,13 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   const removeLetter = useCallback(
     (answerIndex: number) => {
       const removedLetter = userAnswer[answerIndex];
-      setUserAnswer(prev => prev.filter((_, i) => i !== answerIndex));
-
-      // Find the first unused letter tile with this letter and mark it as available
-      setAvailableLetters(prev => {
-        const updatedLetters = [...prev];
-        const letterToRestore = updatedLetters.find(l => l.letter === removedLetter && l.used);
-        if (letterToRestore) {
-          letterToRestore.used = false;
-        }
-        return updatedLetters;
-      });
+      dispatch({ type: 'REMOVE_LETTER', answerIndex, removedLetter });
     },
     [userAnswer]
   );
 
   const clearAnswer = useCallback(() => {
-    setUserAnswer([]);
-    setAvailableLetters(prev => prev.map(l => ({ ...l, used: false })));
+    dispatch({ type: 'CLEAR' });
   }, []);
 
   // Check if a letter at a specific position is correct
@@ -471,10 +540,9 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
     if (availableLetter) {
       const letterIndex = availableLetters.indexOf(availableLetter);
-      addLetter(letterIndex);
-      setHintsUsed(prev => prev + 1);
+      dispatch({ type: 'HINT', letterIndex });
     }
-  }, [word, userAnswer, availableLetters, hintsUsed, addLetter]);
+  }, [word, userAnswer, availableLetters, hintsUsed]);
 
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasCheckedRef = useRef(false);
@@ -506,8 +574,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
         logger.debug('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
 
-        setIsCorrect(correct);
-        setShowResult(true);
+        dispatch({ type: 'SHOW_RESULT', isCorrect: correct });
         onAnswer(correct);
 
         checkTimeoutRef.current = null;
