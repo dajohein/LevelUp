@@ -112,11 +112,21 @@ test(
     await release(root, 'second');
     const second = await emit(root, 'second');
     let deployment = 'first';
+    let networkUnavailable = false;
     const server = createServer(async (request, response) => {
+      // Worker targets can bypass page-level CDP offline emulation.
+      if (networkUnavailable) {
+        request.socket.destroy();
+        return;
+      }
       const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
       const file = pathname === '/' || !path.extname(pathname) ? 'index.html' : pathname.slice(1);
       try {
         const content = await readFile(path.join(root, deployment, file));
+        if (networkUnavailable) {
+          request.socket.destroy();
+          return;
+        }
         const type = file.endsWith('.js')
           ? 'text/javascript'
           : file.endsWith('.css')
@@ -143,6 +153,11 @@ test(
     const origin = `http://127.0.0.1:${server.address().port}`;
     const browser = await openBrowser();
     t.after(() => browser.close());
+    async function offline(enabled) {
+      networkUnavailable = enabled;
+      if (enabled) server.closeAllConnections();
+      await browser.offline(enabled);
+    }
     await browser.navigate(origin);
     await waitFor(() => browser.evaluate("window.release === 'first'"), 'initial application');
     await browser.evaluate(`(async () => {
@@ -166,12 +181,12 @@ test(
     caches.open('levelup-data-v2.0.0-${first.id}'),
     caches.open('unrelated-app-cache')
   ])`);
-    await browser.offline(true);
+    await offline(true);
     await browser.navigate(`${origin}/offline/first`);
     await waitFor(() => browser.evaluate("window.release === 'first'"), 'first offline shell');
     assert.equal(await browser.evaluate('window.loadLazy()'), 'first-lazy');
 
-    await browser.offline(false);
+    await offline(false);
     deployment = 'second';
     await browser.evaluate(
       '(async () => (await navigator.serviceWorker.getRegistration()).update())()'
@@ -193,10 +208,45 @@ test(
         ),
       'updated app'
     );
-    await browser.offline(true);
+    await offline(true);
     await browser.navigate(`${origin}/offline/second`);
     await waitFor(() => browser.evaluate("window.release === 'second'"), 'second offline shell');
     assert.equal(await browser.evaluate('window.loadLazy()'), 'second-lazy');
+
+    // Negative controls must fail despite the fixture server still running.
+    assert.equal(
+      await browser.evaluate(`(async () => {
+        const cache = await caches.open('${secondCache}');
+        const requests = await cache.keys();
+        const lazy = requests.find(request => /\\/lazy-[^/]+\\.js$/.test(new URL(request.url).pathname));
+        return lazy ? cache.delete(lazy) : false;
+      })()`),
+      true,
+      'remove the precached lazy chunk'
+    );
+    await browser.navigate(`${origin}/offline/missing-lazy`);
+    await waitFor(
+      () => browser.evaluate("window.release === 'second'"),
+      'shell without lazy chunk'
+    );
+    assert.equal(
+      await browser.evaluate('window.loadLazy().then(() => false, () => true)'),
+      true,
+      'a missing lazy chunk cannot fall back to the network'
+    );
+    assert.equal(
+      await browser.evaluate(`(async () => {
+        const cache = await caches.open('${secondCache}');
+        return cache.delete('/index.html');
+      })()`),
+      true,
+      'remove the precached shell'
+    );
+    await browser.navigate(`${origin}/offline/missing-shell`);
+    await waitFor(
+      () => browser.evaluate("document.body?.textContent === 'Offline' && !window.release"),
+      'missing shell offline error'
+    );
     assert.equal(await readFile(sourcePath, 'utf8'), template);
   }
 );

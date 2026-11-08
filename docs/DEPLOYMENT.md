@@ -76,6 +76,9 @@ never mutate `public/sw.js`; only deploy a successfully completed output.
 
 Run `npm run test:sw` for fixture builds, failed-build/source-integrity checks,
 and real Chromium install/update/cache cleanup/offline navigation coverage.
+Offline phases reject fixture-server connections as well as emulating page
+offline conditions, so worker fetches cannot silently use the network. Negative
+controls remove the shell and a lazy chunk and verify that offline loading fails.
 The browser test uses `CHROME_BIN` or a system Chrome/Chromium executable; it
 reports a skip when none is installed. Use Node 22.12+ for this build/browser suite. The fixture
 builds do not need git metadata and verify that identical bytes retain the ID,

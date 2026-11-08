@@ -85,6 +85,7 @@ export async function openBrowser() {
     const page = (method, params) => send(method, params, sessionId);
     await page('Page.enable');
     await page('Network.enable');
+    await page('Network.setCacheDisabled', { cacheDisabled: true });
     return {
       async evaluate(expression) {
         const result = await page('Runtime.evaluate', {
