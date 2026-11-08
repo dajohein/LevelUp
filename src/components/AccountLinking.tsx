@@ -125,7 +125,11 @@ const DeviceInfo = styled.div`
   text-align: center;
 `;
 
-export const AccountLinking: React.FC = () => {
+interface AccountLinkingProps {
+  titleId?: string;
+}
+
+export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const [accountCode, setAccountCode] = useState('');
   const [linkCode, setLinkCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -229,7 +233,7 @@ export const AccountLinking: React.FC = () => {
 
   return (
     <Container>
-      <Title>🔗 Link Your Devices</Title>
+      <Title id={titleId}>🔗 Link Your Devices</Title>
 
       {linkedDevices > 1 && (
         <DeviceInfo>✅ Account linked across {linkedDevices} devices</DeviceInfo>
@@ -238,8 +242,8 @@ export const AccountLinking: React.FC = () => {
       <Section>
         <SectionTitle>📱 Share Progress from This Device</SectionTitle>
         <Description>
-          Generate a secure code to link this device&apos;s progress with another device. The code is
-          valid for 1 hour and expires automatically.
+          Generate a secure code to link this device&apos;s progress with another device. The code
+          is valid for 1 hour and expires automatically.
         </Description>
 
         {accountCode ? (
