@@ -24,6 +24,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "test": "jest",
+    "test:sw": "node --test scripts/pwa/*.test.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "icons:generate": "bash scripts/pwa/generate-icons.sh",

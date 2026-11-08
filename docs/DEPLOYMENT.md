@@ -139,29 +139,50 @@ VITE_VAPID_PUBLIC_KEY=BI8OflKtDyI1am3VQ-pZa2qLBiUnXLAoYzkkq233ylHP3U4EC-N7reTeyz
 ## 📱 **Production Cache Management**
 
 ### **For Production Deployments:**
-Use the production build script for automatic cache versioning:
+Use the normal build command for production and preview deployments. This is
+already the command in `vercel.json`; no deployment-setting change is required:
 
-```bash
-# Use this for production deployments
-npm run build:production
-```
-
-This script:
-- ✅ **Auto-updates cache version** based on git commits
-- ✅ **Generates unique cache identifiers** for each deployment  
-- ✅ **Forces cache refresh** on mobile devices
-- ✅ **Prevents stale content** issues
-
-### **Manual Build (Not Recommended for Production):**
 ```bash
 npm run build
 ```
 
+Vite versions only `dist/sw.js`, after writing application output. A SHA-256
+identifier covers the worker template and every other emitted file's relative
+name and bytes, including copied public files. Identical output produces the
+same identifier; changed output produces a different one, even without `.git`
+metadata or when environment variables change the generated application.
+There is no timestamp or commit-history dependency. Failed or interrupted builds
+never mutate `public/sw.js`; only deploy a successfully completed output.
+`npm run build:production` remains a compatibility alias for this same path.
+
 ### **Cache Versioning System:**
-- **Development**: Uses timestamps for immediate cache busting
-- **Production**: Uses git commit hash + version for reliable updates
-- **Mobile devices**: Automatically get updates on next visit
-- **Users see notification**: Can choose to update immediately or later
+- **Development server**: The unbuilt worker uses timestamps for cache busting.
+- **Built output**, including localhost previews: Uses version + content hash.
+- **Offline shell**: Installation precaches HTML, the manifest, and all emitted
+  JavaScript/CSS (including lazy chunks). This adds one download per emitted asset
+  at install; an unavailable asset prevents the new worker from installing.
+- **Activation**: Retains the existing immediate activation/update notification
+  behavior and deletes outdated LevelUp caches, retaining unrelated caches.
+  Offline SPA navigation falls back to the precached index in the current cache.
+
+### **Verify Release Versioning**
+
+Run `npm run test:sw` for fixture builds, failed-build/source-integrity checks,
+and real Chromium install/update/cache cleanup/offline navigation coverage.
+Offline phases reject fixture-server connections as well as emulating page
+offline conditions, so worker fetches cannot silently use the network. Negative
+controls remove the shell and a lazy chunk and verify that offline loading fails.
+The browser test uses `CHROME_BIN` or a system Chrome/Chromium executable; it
+reports a skip when none is installed. Use Node 22.12+ for this build/browser suite. The fixture
+builds do not need git metadata and verify that identical bytes retain the ID,
+while JavaScript, public assets, and worker changes invalidate it.
+
+A maintainer must still verify a hosted Vercel preview: confirm its build log
+runs `npm run build`, fetch `/sw.js` and check that `RELEASE_ID` is a SHA-256 value
+with no template markers, then compare two changed previews. The repository
+configuration uses this path, but dashboard overrides, preview access controls,
+CDN behavior, and the actual hosted output cannot be inferred from local tests.
+Project/dashboard build settings remain owner-controlled and are not changed here.
 
 ### **Troubleshooting Cache Issues:**
 If users report not seeing latest changes:
