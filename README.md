@@ -2,6 +2,8 @@
 
 A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
+Quiz results are announced to screen readers, and learners can expand a persistent review of their most recent answer and correction after the quiz advances. Correct answers move on after a brief 500 ms pause with a small star indicator; incorrect answers retain their longer correction-review time.
+
 The learning-profile reset and device-linking dialogs support keyboard navigation: Tab stays in the
 dialog, Escape closes it, and focus returns to the opener. Reset initially focuses Cancel and cannot
 be dismissed while the reset is running.
