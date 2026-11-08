@@ -16,9 +16,9 @@ This document outlines the mobile improvements made to the LevelUp language lear
 ### 2. **Enhanced Touch Interface**
 - **Touch Targets**: All interactive elements meet minimum 44px touch target requirements
 - **Touch Optimizations**: 
-  - Disabled text selection for better touch interaction
-  - Removed tap highlights and zoom-on-double-tap
-  - Added proper touch-action properties
+  - Learning text remains selectable for copying and lookup
+  - Browser zoom remains available, including pinch and double-tap on content
+  - Tap highlights are removed and touch-action is scoped to interactive controls
 
 ### 3. **Mobile-Optimized Components**
 
@@ -75,7 +75,7 @@ This document outlines the mobile improvements made to the LevelUp language lear
 ### 5. **Progressive Web App (PWA) Enhancements**
 
 #### HTML Meta Tags
-- Enhanced viewport meta tag with `viewport-fit=cover`
+- Enhanced viewport meta tag with `viewport-fit=cover`, without restricting zoom
 - Proper PWA meta tags for mobile browsers
 - Safe area inset CSS variables
 - Mobile-specific optimizations
@@ -160,13 +160,15 @@ Most components now follow this pattern:
 1. Open Developer Tools (F12)
 2. Click the device toggle button
 3. Select different device presets
-4. Test touch interactions and layouts
+4. Test at 320 CSS pixels wide and at 200% browser zoom; check that learning content and actions remain reachable
+5. Select and copy vocabulary, definitions, and examples
 
 ### Real Device Testing
 - Test on actual iOS and Android devices
 - Verify PWA installation works correctly
 - Check touch target sizes and interactions
 - Validate safe area handling on notched devices
+- Verify pinch zoom, double-tap zoom on content, and long-press selection of learning text
 
 ## 🔄 Future Mobile Enhancements
 

@@ -11,10 +11,6 @@ body {
   /* Mobile optimizations */
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  /* Prevent zoom on double tap */
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 html {
