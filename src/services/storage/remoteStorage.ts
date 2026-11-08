@@ -149,7 +149,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
 
     // Try to restore from localStorage
     const stored = localStorage.getItem('levelup_remote_session');
-    if (stored) {
+    if (stored !== null) {
       let session: unknown;
       try {
         session = JSON.parse(stored);

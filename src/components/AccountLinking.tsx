@@ -142,8 +142,9 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const [codeExpires, setCodeExpires] = useState<number | null>(null);
 
   useEffect(() => {
-    // Check current linked devices count
-    checkLinkedDevices();
+    if (environmentConfig.enableRemoteStorage) {
+      checkLinkedDevices();
+    }
   }, []);
 
   useEffect(() => {

@@ -11,15 +11,24 @@ function createResponse(body: any, status = 200) {
 }
 
 // Minimal Vercel-like response wrapper
+interface TestVercelResponse {
+  _status: number;
+  _json: unknown;
+  status(code: number): TestVercelResponse;
+  json(obj: unknown): TestVercelResponse;
+  setHeader(): TestVercelResponse;
+  end(): TestVercelResponse;
+}
+
 function makeVercelResponse() {
-  const res: any = {
+  const res: TestVercelResponse = {
     _status: 200,
     _json: null as any,
     status(code: number) {
       this._status = code;
       return this;
     },
-    json(obj: any) {
+    json(obj: unknown) {
       this._json = obj;
       return this;
     },
@@ -144,6 +153,18 @@ describe('RemoteStorageService integration (local handlers)', () => {
     const actions = fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body as string).action);
     expect(actions).toEqual(['authenticate']);
     expect(localStorage.getItem('levelup_remote_session')).toBe(JSON.stringify(storedSession));
+  });
+
+  it('rejects an empty stored session instead of replacing it with a guest', async () => {
+    localStorage.setItem('levelup_remote_session', '');
+    const fetchMock = global.fetch as jest.Mock;
+    fetchMock.mockClear();
+    const storage = new RemoteStorageService({ retries: 1 });
+
+    await expect(storage.getUserSession()).rejects.toThrow(/invalid|restored/i);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(localStorage.getItem('levelup_remote_session')).toBe('');
   });
 
   it('rejects volatile remote APIs in production', async () => {
