@@ -452,6 +452,26 @@ describe('GameModeHandler', () => {
       expect(result?.translation).toBe('The dog runs.');
     });
 
+    it('preserves authored blank templates and audio for quiz rendering', () => {
+      const word = makeWord({
+        term: 'Hund',
+        definition: 'dog',
+        context: {
+          sentence: 'Der Hund läuft.',
+          translation: 'The dog runs.',
+          sentenceWithBlank: 'Der {BLANK} läuft.',
+          audio: 'hund.mp3',
+        },
+      });
+
+      expect(handler.getContextForDirection(word)).toEqual({
+        sentence: 'Der Hund läuft.',
+        translation: 'The dog runs.',
+        sentenceWithBlank: 'Der {BLANK} läuft.',
+        audio: 'hund.mp3',
+      });
+    });
+
     it('returns undefined when word has no context', () => {
       const word = makeWord({ term: 'Hund', definition: 'dog' });
       expect(handler.getContextForDirection(word)).toBeUndefined();

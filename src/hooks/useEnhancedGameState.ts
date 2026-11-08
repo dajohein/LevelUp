@@ -34,8 +34,15 @@ export interface FeedbackWordInfo {
   context: string;
 }
 
-/** Context (sentence + translation) associated with the current word direction. */
-type ContextForWord = { sentence: string; translation: string } | undefined;
+/** Context associated with the current word direction. */
+type ContextForWord =
+  | {
+      sentence: string;
+      translation: string;
+      sentenceWithBlank?: string | null;
+      audio?: string;
+    }
+  | undefined;
 
 /** Return value of handleEnhancedAnswer. */
 type EnhancedAnswerResult =
@@ -255,12 +262,6 @@ export const useEnhancedGameState = ({
 
       const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
 
-      // For enhanced comprehension modes, any non-empty answer is considered correct
-      // These are open-ended learning exercises, not strict quizzes
-      if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizModeToUse)) {
-        return answer.trim().length > 0; // Accept any meaningful input
-      }
-
       return gameServices.modeHandler.isCorrectAnswer(
         answer,
         wordToUse,
@@ -414,7 +415,14 @@ export const useEnhancedGameState = ({
 
       // CRITICAL: Dispatch game/checkAnswer action to update word progress
       // This ensures word progress is saved and modules show correct completion percentages
-      dispatch(checkAnswer(answer));
+      dispatch(
+        checkAnswer({
+          answer,
+          word: currentWordToUse ?? undefined,
+          quizMode: quizModeToUse,
+          languageCode,
+        })
+      );
 
       // Handle enhanced vs standard game logic
       let isBatchComplete = false;
@@ -539,7 +547,10 @@ export const useEnhancedGameState = ({
         setShowLearningCard(shouldShowCard);
       }
       // In session mode, show learning card for new words and words needing reinforcement
-      else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement)) {
+      else if (
+        isSessionActive &&
+        (wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement)
+      ) {
         setShowLearningCard(true);
       }
       // Default case - no learning card

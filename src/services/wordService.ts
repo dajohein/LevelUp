@@ -7,7 +7,7 @@ import { logger } from './logger';
 interface Context {
   sentence: string;
   translation: string;
-  sentenceWithBlank?: string;
+  sentenceWithBlank?: string | null;
   audio?: string;
 }
 

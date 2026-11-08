@@ -69,6 +69,11 @@ Keep the original `definition` for display, and list each independently valid an
 in the array so open-answer checks accept them without requiring the learner to type
 the entire comma-separated definition.
 
+For authored fill-in-the-blank context, include exactly one `{BLANK}` marker in
+`sentenceWithBlank`. It may appear at the beginning, middle, or end of the sentence;
+the template is rendered as text, not HTML. If omitted or malformed, the quiz safely
+falls back to locating the term in `sentence` or showing a generic completion prompt.
+
 Definition-based distractor matching splits comma-separated alternatives only outside
 parenthetical notes, so explanatory grammar annotations are not mistaken for shared
 translations.

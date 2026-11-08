@@ -151,7 +151,14 @@ export class GameModeHandler {
   /**
    * Get context for word direction (preserving original complexity)
    */
-  getContextForDirection(word: Word): { sentence: string; translation: string } | undefined {
+  getContextForDirection(word: Word):
+    | {
+        sentence: string;
+        translation: string;
+        sentenceWithBlank?: string | null;
+        audio?: string;
+      }
+    | undefined {
     // If word has explicit context field, use it
     if (word.context) {
       if (typeof word.context === 'string') {
@@ -163,6 +170,8 @@ export class GameModeHandler {
       return {
         sentence: word.context.sentence || '', // German sentence as context
         translation: word.context.translation || '', // Dutch translation (revealed after)
+        sentenceWithBlank: word.context.sentenceWithBlank,
+        audio: word.context.audio,
       };
     }
 
