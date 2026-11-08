@@ -20,6 +20,7 @@ export interface Word {
   category?: string;
   forms?: string[];
   synonyms?: string[];
+  acceptedAnswers?: string[];
   level?: number; // Current difficulty level
   mastery?: number; // Current mastery percentage (0-100)
   direction?: 'term-to-definition' | 'definition-to-term'; // Quiz direction
