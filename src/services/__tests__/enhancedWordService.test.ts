@@ -59,7 +59,7 @@ jest.mock('../cacheService', () => ({
   learningCacheService: {
     createLearningSession: jest.fn((_languageCode, words) => ({
       sessionType: 'new',
-      words: words.map((word: any) => ({ word })),
+      words: words.map((word: Word) => ({ word })),
       reviewWords: [],
     })),
     getActiveSession: jest.fn(() => null),
