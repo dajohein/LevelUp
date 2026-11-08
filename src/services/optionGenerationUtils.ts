@@ -8,19 +8,7 @@
 import { Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
 import { logger } from './logger';
-
-const getDefinitionVariants = (definition: string): Set<string> =>
-  new Set(
-    definition
-      .split(',')
-      .map(variant => variant.trim().toLowerCase())
-      .filter(Boolean)
-  );
-
-const hasEquivalentDefinition = (first: string, second: string): boolean => {
-  const firstVariants = getDefinitionVariants(first);
-  return [...getDefinitionVariants(second)].some(variant => firstVariants.has(variant));
-};
+import { hasEquivalentTranslation } from './translationUtils';
 
 /**
  * Generate multiple choice options scoped to the same module as the word
@@ -69,7 +57,7 @@ export function generateModuleScopedOptions(
       if (incorrectOptions.length >= 3) break;
       if (
         candidate.id !== word.id &&
-        !hasEquivalentDefinition(word.definition, candidate.definition)
+        !hasEquivalentTranslation(word.definition, candidate.definition)
       ) {
         const incorrectAnswer =
           direction === 'definition-to-term' ? candidate.term : candidate.definition;

@@ -155,9 +155,9 @@ describe('GameModeHandler', () => {
           acceptedAnswers: ['raar', 'vreemd'],
         });
 
-        expect(handler.isCorrectAnswer('vreemd', word, 'open-answer')).toBe(true);
-        expect(handler.isCorrectAnswer('RAAR', word, 'open-answer')).toBe(true);
-        expect(handler.isCorrectAnswer('apart', word, 'open-answer')).toBe(false);
+        expect(handler.isCorrectAnswer('vreemd', word, 'open-answer', 'de')).toBe(true);
+        expect(handler.isCorrectAnswer('RAAR', word, 'open-answer', 'de')).toBe(true);
+        expect(handler.isCorrectAnswer('apart', word, 'open-answer', 'de')).toBe(false);
       });
 
       it('does not use Dutch alternatives as answers in other quiz directions', () => {
@@ -168,7 +168,7 @@ describe('GameModeHandler', () => {
           acceptedAnswers: ['raar', 'vreemd'],
         });
 
-        expect(handler.isCorrectAnswer('vreemd', word, 'multiple-choice')).toBe(false);
+        expect(handler.isCorrectAnswer('vreemd', word, 'multiple-choice', 'de')).toBe(false);
       });
     });
 

@@ -4,6 +4,7 @@
  */
 import { Word } from '../wordService';
 import { ChallengeResult } from '../challengeServiceInterface';
+import { validateQuizAnswer } from '../quizAnswerValidation';
 
 /** Shape of the enhanced word info returned by the challenge service. */
 interface EnhancedWordInfo {
@@ -121,16 +122,8 @@ export class GameModeHandler {
     }
   }
 
-  isCorrectAnswer(answer: string, word: Word, quizMode: string): boolean {
-    const acceptedAnswers =
-      quizMode === 'open-answer'
-        ? [this.getQuizAnswer(word, quizMode), ...(word.acceptedAnswers ?? [])]
-        : [this.getQuizAnswer(word, quizMode)];
-    const normalizedAnswer = answer.toLowerCase().trim();
-
-    return acceptedAnswers.some(
-      acceptedAnswer => acceptedAnswer.toLowerCase().trim() === normalizedAnswer
-    );
+  isCorrectAnswer(answer: string, word: Word, quizMode: string, languageCode: string): boolean {
+    return validateQuizAnswer(answer, word, quizMode, languageCode).isCorrect;
   }
 
   /**

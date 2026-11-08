@@ -69,6 +69,10 @@ Keep the original `definition` for display, and list each independently valid an
 in the array so open-answer checks accept them without requiring the learner to type
 the entire comma-separated definition.
 
+Definition-based distractor matching splits comma-separated alternatives only outside
+parenthetical notes, so explanatory grammar annotations are not mistaken for shared
+translations.
+
 ## 🔧 Implementation Process
 
 ### Phase 1: Content Analysis

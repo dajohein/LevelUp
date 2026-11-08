@@ -261,9 +261,14 @@ export const useEnhancedGameState = ({
         return answer.trim().length > 0; // Accept any meaningful input
       }
 
-      return gameServices.modeHandler.isCorrectAnswer(answer, wordToUse, quizModeToUse);
+      return gameServices.modeHandler.isCorrectAnswer(
+        answer,
+        wordToUse,
+        quizModeToUse,
+        languageCode
+      );
     },
-    [currentWord, quizMode, getCurrentWordInfo]
+    [currentWord, quizMode, getCurrentWordInfo, languageCode]
   );
 
   // Stable ref to the latest handleWordTransition. handleSubmit reads through this
