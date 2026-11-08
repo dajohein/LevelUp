@@ -27,6 +27,8 @@ jest.mock('../../services/logger', () => ({
 }));
 jest.mock('../../services/masteryService', () => ({
   calculateMasteryGain: jest.fn(() => 0),
+  getMasteryQuizMode: (quizMode: string) =>
+    quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice',
 }));
 jest.mock('../../services/answerValidation', () => ({
   validateAnswer: jest.fn(() => ({

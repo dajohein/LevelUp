@@ -199,7 +199,12 @@ interface FillInTheBlankQuizProps {
   disabled?: boolean;
   level?: number;
   xp?: number;
-  context?: { sentence: string; translation: string; sentenceWithBlank?: string; audio?: string };
+  context?: {
+    sentence: string;
+    translation: string;
+    sentenceWithBlank?: string | null;
+    audio?: string;
+  };
   currentWord?: number;
   totalWords?: number;
 }
@@ -231,7 +236,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     }
 
     // Use explicit blank markers if available (preferred method)
-    if (context.sentenceWithBlank !== undefined) {
+    if (typeof context.sentenceWithBlank === 'string') {
       const parts = context.sentenceWithBlank.split('{BLANK}');
       if (parts.length === 2) {
         return {
@@ -289,7 +294,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
       {context?.sentence && (
         <ContextSection>
           <ContextLabel>Complete the sentence</ContextLabel>
-          <SentenceContainer>
+          <SentenceContainer data-testid="blank-sentence">
             <span>{beforeBlank}</span>
             <BlankSpace isCorrect={isCorrect} isError={isError}>
               {showAnswer ? word : '_____'}

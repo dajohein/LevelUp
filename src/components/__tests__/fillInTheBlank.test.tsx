@@ -44,8 +44,7 @@ describe('fill-in-the-blank rendering', () => {
 
       renderQuizForWord(word);
 
-      const sentence = screen.getByText('_____').parentElement;
-      expect(sentence?.textContent).toBe(expected);
+      expect(screen.getByTestId('blank-sentence')).toHaveTextContent(expected);
     }
   );
 
@@ -62,7 +61,7 @@ describe('fill-in-the-blank rendering', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('_____').parentElement?.textContent).toBe('_____spielt.');
+    expect(screen.getByTestId('blank-sentence')).toHaveTextContent('_____spielt.');
 
     rerender(
       <ThemeProvider theme={theme}>
@@ -76,7 +75,22 @@ describe('fill-in-the-blank rendering', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('_____').parentElement?.textContent).toBe('Der_____');
+    expect(screen.getByTestId('blank-sentence')).toHaveTextContent('Der_____');
+  });
+
+  it('falls back to sentence extraction when an authored template is null', () => {
+    renderQuizForWord({
+      id: 'de-hund',
+      term: 'Hund',
+      definition: 'dog',
+      context: {
+        sentence: 'Der Hund spielt.',
+        translation: 'The dog plays.',
+        sentenceWithBlank: null,
+      },
+    });
+
+    expect(screen.getByTestId('blank-sentence')).toHaveTextContent('Der_____spielt.');
   });
 
   it('falls back safely for malformed templates without revealing the answer', () => {

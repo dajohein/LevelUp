@@ -3,7 +3,7 @@ import {
   selectWordForRegularSession,
   selectWordForMixedPractice,
 } from '../services/wordSelectionManager';
-import { calculateMasteryGain } from '../services/masteryService';
+import { calculateMasteryGain, getMasteryQuizMode } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
@@ -171,7 +171,7 @@ export const gameSlice = createSlice({
       const quizMode = submission.quizMode || state.quizMode;
       const languageCode = submission.languageCode || state.language || 'en';
       const direction = getQuizAnswerDirection(word, quizMode);
-      const masteryMode = quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice';
+      const masteryMode = getMasteryQuizMode(quizMode);
       const validation = validateQuizAnswer(submission.answer, word, quizMode, languageCode);
 
       state.isCorrect = validation.isCorrect;
@@ -319,7 +319,7 @@ export const gameSlice = createSlice({
 
       // Reuse existing checkAnswer logic but keep it self-contained
       const direction = getQuizAnswerDirection(word, quizMode);
-      const masteryMode = quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice';
+      const masteryMode = getMasteryQuizMode(quizMode);
       const validation = validateQuizAnswer(answer, word, quizMode, languageCode);
 
       state.isCorrect = validation.isCorrect;

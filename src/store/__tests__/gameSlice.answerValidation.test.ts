@@ -9,6 +9,8 @@ jest.mock('../../services/logger', () => ({
 }));
 jest.mock('../../services/masteryService', () => ({
   calculateMasteryGain: jest.fn(() => 10),
+  getMasteryQuizMode: (quizMode: string) =>
+    quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice',
 }));
 jest.mock('../../services/wordSelectionManager', () => ({
   selectWordForRegularSession: jest.fn(),

@@ -36,7 +36,12 @@ export interface FeedbackWordInfo {
 
 /** Context associated with the current word direction. */
 type ContextForWord =
-  | { sentence: string; translation: string; sentenceWithBlank?: string; audio?: string }
+  | {
+      sentence: string;
+      translation: string;
+      sentenceWithBlank?: string | null;
+      audio?: string;
+    }
   | undefined;
 
 /** Return value of handleEnhancedAnswer. */

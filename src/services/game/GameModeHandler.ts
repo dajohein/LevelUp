@@ -151,10 +151,13 @@ export class GameModeHandler {
   /**
    * Get context for word direction (preserving original complexity)
    */
-  getContextForDirection(
-    word: Word
-  ):
-    | { sentence: string; translation: string; sentenceWithBlank?: string; audio?: string }
+  getContextForDirection(word: Word):
+    | {
+        sentence: string;
+        translation: string;
+        sentenceWithBlank?: string | null;
+        audio?: string;
+      }
     | undefined {
     // If word has explicit context field, use it
     if (word.context) {
