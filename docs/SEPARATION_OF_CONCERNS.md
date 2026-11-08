@@ -1,5 +1,18 @@
 # Separation of Concerns - Storage Architecture
 
+## Modal interactions
+
+`ModalDialog` wraps the browser's native `showModal()` API for the profile reset and device-link
+dialogs. It names each dialog from its visible heading, keeps keyboard focus inside, and returns
+focus to the opening control on dismissal. Escape closes either dialog; reset also permits backdrop
+dismissal, except while a reset is in progress. Reset initially focuses Cancel and guards against
+duplicate requests and dismissal while the operation is pending. This is UI-only behavior and does
+not change storage or language isolation.
+
+Run `npm test -- --runInBand src/components/__tests__/modalDialogs.test.tsx` for component
+coverage. jsdom substitutes the native dialog methods; verify native focus containment with a real
+browser and perform a separate screen-reader walkthrough on each supported platform. - Storage Architecture
+
 ## 🏗️ **Architecture Overview**
 
 The LevelUp application follows a **layered storage architecture** with clear separation of concerns:

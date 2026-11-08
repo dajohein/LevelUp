@@ -2,6 +2,10 @@
 
 A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
+The learning-profile reset and device-linking dialogs support keyboard navigation: Tab stays in the
+dialog, Escape closes it, and focus returns to the opener. Reset initially focuses Cancel and cannot
+be dismissed while the reset is running.
+
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
 
 ### German vocabulary: Gesundheit
