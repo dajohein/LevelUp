@@ -210,7 +210,7 @@ export const SettingsPage: React.FC = () => {
         <SectionCard>
           <SectionTitle>
             <span>🔗</span>
-            Cross-Device Sync
+            Remote Sync Status
           </SectionTitle>
           <OptionsGrid>
             <MobileButton
@@ -218,7 +218,7 @@ export const SettingsPage: React.FC = () => {
               onClick={() => handleNavigation('/account-linking')}
               fullWidth
             >
-              Link Your Devices
+              Check Sync Availability
             </MobileButton>
           </OptionsGrid>
         </SectionCard>

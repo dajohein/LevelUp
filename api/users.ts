@@ -67,53 +67,56 @@ interface UserResponse {
 // In production, replace with proper database
 const users = new Map<string, any>();
 const sessions = new Map<string, { userId: string; expires: number }>();
-const accountCodes = new Map<string, { 
-  userId: string; 
-  expires: number; 
-  used: boolean;
-  attempts: number;
-  createdAt: number;
-}>();
+const accountCodes = new Map<
+  string,
+  {
+    userId: string;
+    expires: number;
+    used: boolean;
+    attempts: number;
+    createdAt: number;
+  }
+>();
 const rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
 
 // Security constants (env-driven)
 const MAX_CODE_ATTEMPTS = Number(process.env.ACCOUNT_CODE_MAX_ATTEMPTS || 5); // Max attempts per code
 const MAX_RATE_LIMIT_ATTEMPTS = Number(process.env.RATE_LIMIT_MAX_ATTEMPTS || 10); // Max attempts per IP per window
-const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || (60 * 60 * 1000)); // default 1 hour
-const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || (60 * 60 * 1000)); // default 1 hour
+const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60 * 60 * 1000); // default 1 hour
+const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || 60 * 60 * 1000); // default 1 hour
 
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
   // Use crypto.randomBytes for cryptographically secure randomness
   const crypto = require('crypto');
-  
+
   // Generate 6 random bytes and encode as base32-like string
   // This gives us 8 characters from a 32-character alphabet
   const bytes = crypto.randomBytes(6);
-  
+
   // Use a custom alphabet excluding confusing characters (0, O, I, 1, etc.)
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   let result = '';
-  
+
   // Convert bytes to base32-like encoding
   let value = 0;
   let bits = 0;
-  
+
   for (const byte of bytes) {
     value = (value << 8) | byte;
     bits += 8;
-    
+
     while (bits >= 5) {
       result += alphabet[(value >> (bits - 5)) & 31];
       bits -= 5;
     }
   }
-  
+
   // Add remaining bits if any
   if (bits > 0) {
     result += alphabet[(value << (5 - bits)) & 31];
   }
-  
+
   // Return first 8 characters for consistent length
   return result.substring(0, 8);
 }
@@ -136,7 +139,7 @@ function validateSession(token: string): string | null {
 // Helper function to create session
 function createSession(userId: string): string {
   const token = generateSessionToken();
-  const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || (24 * 60 * 60 * 1000));
+  const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || 24 * 60 * 60 * 1000);
   const expires = Date.now() + ttlMs;
   sessions.set(token, { userId, expires });
   return token;
@@ -146,46 +149,51 @@ function createSession(userId: string): string {
 function isRateLimited(identifier: string): boolean {
   const now = Date.now();
   const rateLimit = rateLimitMap.get(identifier);
-  
+
   if (!rateLimit) {
     rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
     return false;
   }
-  
+
   // Reset counter if window expired
   if (now - rateLimit.lastAttempt > RATE_LIMIT_WINDOW) {
     rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
     return false;
   }
-  
+
   // Check if over limit
   if (rateLimit.attempts >= MAX_RATE_LIMIT_ATTEMPTS) {
     return true;
   }
-  
+
   // Increment counter
   rateLimit.attempts++;
   rateLimit.lastAttempt = now;
   rateLimitMap.set(identifier, rateLimit);
-  
+
   return false;
 }
 
 // Helper function to get client identifier (IP-based)
 function getClientIdentifier(req: any): string {
   // In production, use proper IP detection with proxy headers
-  return req.headers['x-forwarded-for'] || 
-         req.headers['x-real-ip'] || 
-         req.connection?.remoteAddress || 
-         req.socket?.remoteAddress ||
-         'unknown';
+  return (
+    req.headers['x-forwarded-for'] ||
+    req.headers['x-real-ip'] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS via environment configuration
   const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
   const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || '*';
+  const corsOrigin =
+    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
+      ? origin
+      : allowedOrigins[0] || '*';
   res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -197,7 +205,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      error: 'Method not allowed. Use POST.'
+      error: 'Method not allowed. Use POST.',
+    });
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      success: false,
+      error: 'Remote accounts are unavailable: this demo backend is process-local and not durable.',
     });
   }
 
@@ -207,8 +222,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: false,
       metadata: {
         timestamp: Date.now(),
-        action: request.action
-      }
+        action: request.action,
+      },
     };
 
     switch (request.action) {
@@ -220,7 +235,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           email: request.userData?.email,
           preferences: request.userData?.preferences || {},
           createdAt: Date.now(),
-          lastActive: Date.now()
+          lastActive: Date.now(),
         };
 
         users.set(userId, user);
@@ -230,7 +245,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.data = {
           userId,
           sessionToken,
-          user
+          user,
         };
         break;
       }
@@ -242,7 +257,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         let userId = request.userId;
-        
+
         // If session token provided, validate and get userId
         if (request.sessionToken && !userId) {
           const validatedUserId = validateSession(request.sessionToken);
@@ -271,7 +286,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         let userId = request.userId;
-        
+
         if (request.sessionToken && !userId) {
           const validatedUserId = validateSession(request.sessionToken);
           if (!validatedUserId) {
@@ -291,7 +306,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const updatedUser = {
           ...user,
           ...request.userData,
-          lastActive: Date.now()
+          lastActive: Date.now(),
         };
 
         users.set(userId!, updatedUser);
@@ -326,7 +341,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.success = true;
         response.data = {
           userId,
-          user
+          user,
         };
         break;
       }
@@ -360,19 +375,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Generate cryptographically secure account code
         const accountCode = generateAccountCode();
         const expires = Date.now() + CODE_EXPIRY; // 1 hour
-        
-        accountCodes.set(accountCode, { 
-          userId, 
-          expires, 
+
+        accountCodes.set(accountCode, {
+          userId,
+          expires,
           used: false,
           attempts: 0,
-          createdAt: Date.now()
+          createdAt: Date.now(),
         });
 
         response.success = true;
-        response.data = { 
+        response.data = {
           accountCode,
-          expiresIn: CODE_EXPIRY / 1000 // Return seconds for client
+          expiresIn: CODE_EXPIRY / 1000, // Return seconds for client
         } as any; // Type assertion for Vercel response compatibility
         break;
       }
@@ -421,7 +436,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Mark code as used and update attempts
         codeData.used = true;
         accountCodes.set(normalizedCode, codeData);
-        
+
         // Clean up the code after successful use (single-use only)
         setTimeout(() => {
           accountCodes.delete(normalizedCode);
@@ -450,7 +465,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           userId: codeData.userId,
           sessionToken: newSessionToken,
           user,
-          linkedDevices
+          linkedDevices,
         };
         break;
       }
@@ -461,7 +476,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json(response);
-
   } catch (error) {
     console.error('User API error:', error);
     return res.status(500).json({
@@ -469,8 +483,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       metadata: {
         timestamp: Date.now(),
-        action: req.body?.action || 'unknown'
-      }
+        action: req.body?.action || 'unknown',
+      },
     });
   }
 }

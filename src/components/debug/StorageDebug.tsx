@@ -129,7 +129,7 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
     try {
       const health = await remoteStorage.healthCheck();
       if (health.success && health.data?.status === 'healthy') {
-        addLog('success', 'Remote storage healthy');
+        addLog('success', 'Remote demo API reachable; data is volatile and not durable');
         setTestResults(prev => ({ ...prev, remote: 'healthy' }));
       } else {
         addLog('error', 'Remote storage unhealthy');
@@ -186,7 +186,11 @@ export const StorageDebug: React.FC<StorageDebugProps> = ({ isVisible, onClose }
         {status && (
           <div>
             <Status status="info">Initialized: {status.initialized ? '✅' : '❌'}</Status>
-            <Status status="info">Remote: {status.remoteEnabled ? '🌐' : '📱'}</Status>
+            <Status status="info">
+              {status.remoteEnabled
+                ? 'Remote demo: enabled (volatile)'
+                : 'Remote sync: unavailable'}
+            </Status>
           </div>
         )}
       </Section>

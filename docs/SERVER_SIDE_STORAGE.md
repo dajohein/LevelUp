@@ -1,52 +1,58 @@
-# Server-Side Storage Implementation
+# Remote Storage Status and Development Demo
 
-This document describes the new server-side storage system for LevelUp, which provides cross-device sync and persistent data storage using Vercel serverless functions.
+The current remote API is a development/demo implementation, not a durable storage service. Its user, session, account-code, and progress records live in process-local Maps, so they can disappear on a restart and are not shared reliably across serverless instances. Production remote account and storage requests are disabled. Learning progress remains local to each device; account linking does not transfer or reconcile progress.
 
 ## 🌟 Features
 
-- **Cross-device synchronization**: Your progress syncs across all your devices
-- **Offline-first architecture**: Works offline, syncs when online
+- **Local-first progress**: Browser progress remains available on the current device
+- **Development demo**: Remote endpoints can be explicitly enabled for local testing only
 - **Language isolation**: Each language's data is stored separately
-- **Automatic user sessions**: Creates guest accounts automatically
 - **Development testing**: Local development server for testing
-- **Zero-configuration deployment**: Works out-of-the-box on Vercel
+- **Production safety**: Volatile remote endpoints return HTTP 503 in production
 
 ## 🏗️ Architecture
 
 ### Storage Tiers
+
 1. **Memory Cache** (fastest) - Recent data
 2. **localStorage** (fast) - Browser storage
 3. **IndexedDB** (medium) - Large browser storage
-4. **Remote Storage** (persistent) - Server-side storage via API
+4. **Remote Storage** (development demo only) - Process-local API storage; not persistent or production-enabled
 
 ### API Endpoints
+
 - `POST /api/storage` - Data operations (get/set/delete/list)
 - `POST /api/users` - User session management
- 
+
 Integration tests (local handlers via stubbed `fetch`):
-- [src/services/storage/__tests__/remoteStorage.integration.test.ts](../src/services/storage/__tests__/remoteStorage.integration.test.ts)
+
+- [src/services/storage/**tests**/remoteStorage.integration.test.ts](../src/services/storage/__tests__/remoteStorage.integration.test.ts)
 
 ## 🚀 Development Setup
 
 ### Quick Start (Recommended)
 
 **Start the complete development environment:**
+
 ```bash
 npm run dev:start    # Starts both API and web servers as background services
 ```
 
 **Check system health:**
+
 ```bash
 npm run health:storage    # Verify the proxied API health endpoint
 ```
 
 **Access your application:**
+
 - **Web App**: http://localhost:5173
-- **API Health**: http://localhost:5173/api/health  
+- **API Health**: http://localhost:5173/api/health
 - **API Status**: http://localhost:5173/api/status
 - **Debug Panel**: Press `Ctrl+Shift+S` in the web app
 
 **Stop development environment:**
+
 ```bash
 npm run dev:stop    # Stops services managed by this checkout
 ```
@@ -58,6 +64,7 @@ own processes. For alternate ports and recovery instructions, see
 ### Alternative Development Commands
 
 **Individual services:**
+
 ```bash
 npm run dev:storage    # API server only (port 3001)
 npm run dev           # Web app only (port 5173)
@@ -65,6 +72,7 @@ npm run dev:full      # Both servers in foreground
 ```
 
 **Server management:**
+
 ```bash
 npm run dev:restart   # Restart entire development environment
 npm run test:storage  # Test storage endpoints
@@ -74,12 +82,14 @@ npm run test:storage  # Test storage endpoints
 
 **Twelve-Factor Logging (Default):**
 Logs stream to stdout for easy aggregation and debugging:
+
 ```bash
 npm run dev:start    # Logs appear in terminal
 ```
 
 **File-based Logging (Optional):**
 Write logs to disk for review:
+
 ```bash
 ./scripts/dev-start.sh --log-files
 tail -f logs/storage.log    # API server logs
@@ -91,13 +101,15 @@ tail -f logs/vite.log       # Vite development server logs
 Configuration is controlled via environment variables to follow Twelve-Factor principles. See `.env.example` for a full list.
 
 **Frontend (Vite):**
+
 - `VITE_API_BASE_URL` — Base URL for API calls (defaults to browser origin)
-- `VITE_ENABLE_REMOTE_STORAGE` — Enable remote storage sync
+- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to the volatile remote demo in development only (default: `false`)
 - `VITE_ENABLE_LOCAL_FALLBACK` — Keep local tiers as fallback
 - `VITE_DEBUG_MODE` — Enable verbose logging in development
 - `VITE_STORAGE_ENDPOINT_STORAGE`, `VITE_STORAGE_ENDPOINT_USERS` — Endpoint paths
 
 **Serverless APIs (Vercel):**
+
 - `CORS_ALLOWED_ORIGINS` — Comma-separated origins (use `*` for all)
 - `SESSION_TOKEN_TTL_MS` — Session token TTL in milliseconds
 - `RATE_LIMIT_MAX_ATTEMPTS`, `RATE_LIMIT_WINDOW_MS` — Rate limit controls
@@ -107,42 +119,44 @@ Set frontend variables in `.env` locally and in Vercel’s Project Settings for 
 
 ## 📚 Usage Examples
 
-### Basic Usage (Automatic)
-The storage system initializes automatically when the app starts:
+### Local-First Usage
+
+The storage system initializes automatically and keeps remote storage disabled by default:
 
 ```typescript
 // Automatically initializes in main.tsx
 import { initializeStorage } from './services/storage/storageInitializer';
 
-// Initialize with remote storage enabled
-await initializeStorage({
-  enableRemoteStorage: true
-});
+await initializeStorage();
 ```
 
+For local API experiments only, set `VITE_ENABLE_REMOTE_STORAGE=true`. The demo API is process-local, can lose data on restart, does not replicate between workers, and must not be used for learning-progress backups or production sync. Production requests are rejected even if the frontend option is set.
+
 ### Manual Storage Operations
+
 ```typescript
 import { enhancedStorage } from './services/storage/enhancedStorage';
 
-// Save word progress (automatically syncs to server)
+// Save word progress locally
 await enhancedStorage.saveWordProgress('de', {
-  'hello': {
+  hello: {
     word: 'hello',
     correctCount: 5,
     incorrectCount: 1,
     lastSeen: Date.now(),
-    proficiencyLevel: 'intermediate'
-  }
+    proficiencyLevel: 'intermediate',
+  },
 });
 
-// Load word progress (tries server first, falls back to local)
+// Load word progress from local storage
 const result = await enhancedStorage.loadWordProgress('de');
 if (result.success) {
-  console.log('Progress loaded:', result.data);
+  console.log('Local progress loaded:', result.data);
 }
 ```
 
 ### Check Storage Status
+
 ```typescript
 import { getStorageStatus } from './services/storage/storageInitializer';
 
@@ -154,6 +168,7 @@ console.log('System initialized:', status.initialized);
 ## 🌐 Deployment
 
 ### Vercel Deployment (Automatic)
+
 The system is configured to work automatically on Vercel:
 
 1. **API Functions**: `api/storage.ts` and `api/users.ts` become serverless functions
@@ -161,17 +176,18 @@ The system is configured to work automatically on Vercel:
 3. **Configuration**: `vercel.json` handles routing
 
 ### Environment Variables (Quick Setup)
+
 Copy `.env.example` to `.env` and adjust as needed:
 
 ```bash
 cp .env.example .env
 ```
 
-Recommended local values:
+Local-first defaults:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:5173
-VITE_ENABLE_REMOTE_STORAGE=true
+VITE_ENABLE_REMOTE_STORAGE=false
 VITE_ENABLE_LOCAL_FALLBACK=true
 VITE_DEBUG_MODE=true
 VITE_STORAGE_ENDPOINT_STORAGE=/api/storage
@@ -183,6 +199,7 @@ On Vercel, set server-side variables (e.g., `CORS_ALLOWED_ORIGINS`) in the proje
 ## 🔧 Configuration
 
 ### Environment-based Settings
+
 Located in `src/config/environment.ts` and driven by `import.meta.env`:
 
 ```typescript
@@ -196,6 +213,7 @@ const env = import.meta.env;
 ```
 
 ### Storage Tier Configuration
+
 ```typescript
 {
   memory: { enabled: true, maxSize: '50MB', ttl: '1h' },
@@ -208,6 +226,7 @@ const env = import.meta.env;
 ## 🐛 Debugging
 
 ### Development Tools
+
 1. **Storage Server Status**: `http://localhost:3001/api/status`
 2. **Health Check**: `http://localhost:3001/api/health`
 3. **Browser DevTools**: Check Network tab for API calls
@@ -216,40 +235,46 @@ const env = import.meta.env;
 ### Common Issues
 
 **"Remote storage unavailable"**
+
 - Check if development server is running (`npm run dev:storage`)
 - Verify API endpoints are accessible
-- System will fall back to local storage
+- Local progress remains available; failed remote recovery does not replace a stored remote session with a new guest
 
 **"CORS errors in development"**
+
 - Development server includes CORS headers
 - Make sure you're using the correct ports
 
 **"Data not syncing"**
-- Check browser Network tab for failed API calls
-- Verify you're online and server is reachable
-- Data will sync when connection is restored
+
+- Remote sync and cross-device progress transfer are not implemented
+- Device linking in development is a demo and does not copy or merge progress
+- Do not use the process-local API as a backup
 
 ## 🔒 Security & Privacy
 
 ### Data Isolation
+
 - Each language's data is completely separate
 - User sessions are isolated by unique IDs
 - No cross-contamination between languages or users
 
-### Guest Accounts
-- Users get automatic guest accounts
-- No personal information required
-- Sessions persist across browser restarts
-- Can upgrade to full accounts later (future feature)
+### Demo Accounts
+
+- Development can create temporary guest sessions
+- Process-local sessions may be lost on restart or a different serverless worker
+- An invalid stored session is reported instead of silently creating a replacement account
 
 ### Data Storage
+
 - **Development**: In-memory storage (resets on server restart)
-- **Production**: Can be easily upgraded to proper database
+- **Production**: Remote account and storage APIs return HTTP 503 until a durable backend is implemented
 - All data is associated with language codes for isolation
 
 ## 📈 Performance
 
 ### Storage Analytics
+
 The system provides detailed analytics:
 
 ```typescript
@@ -259,21 +284,24 @@ console.log('Health score:', analytics.data.health.score);
 ```
 
 ### Optimization Features
+
 - **Compression**: Large data is automatically compressed
 - **Caching**: Intelligent multi-tier caching
-- **Batching**: Multiple operations are batched
-- **Offline Queue**: Operations queue when offline, sync when online
+- **Offline-first local storage**: Browser storage remains the source of progress when offline
 
 ## 🔄 Migration
 
 ### From Local-Only Storage
-The system automatically:
+
+The system keeps browser progress local:
+
 1. Detects existing local data
-2. Maintains local storage as fallback
-3. Gradually migrates to server storage
-4. Preserves all existing progress
+2. Preserves it in browser storage
+3. Does not automatically upload or migrate it to the volatile demo API
+4. Requires an explicit export/import to move data between devices
 
 ### Language Isolation Compliance
+
 - ✅ Maintains strict language separation
 - ✅ Compatible with existing storage patterns
 - ✅ Zero breaking changes to existing code
@@ -282,14 +310,17 @@ The system automatically:
 ## 🚧 Future Enhancements
 
 ### Planned Features
-1. **Database Integration**: Replace in-memory storage with PostgreSQL
+
+1. **Durable shared backend**: Select and implement persistent storage before enabling remote sync
 2. **User Authentication**: Full user accounts with email/password
 3. **Cross-device Notifications**: Progress notifications across devices
 4. **Advanced Analytics**: Detailed learning analytics dashboard
 5. **Backup & Export**: Data export and backup features
 
 ### Backend Options
+
 The current implementation can be easily upgraded to:
+
 - **PostgreSQL** (recommended for production)
 - **MongoDB** (for document-based storage)
 - **Redis** (for session management)
@@ -300,6 +331,7 @@ The current implementation can be easily upgraded to:
 ### Common Issues
 
 **❌ API endpoints return 404:**
+
 ```bash
 # Check if storage server is running
 npm run health:storage
@@ -309,16 +341,19 @@ npm run dev:restart
 ```
 
 **❌ "Failed to fetch" errors:**
+
 - Ensure both servers are running: `ps aux | grep -E "(vite|dev-storage)"`
 - Check Vite proxy configuration in `vite.config.ts`
 - Verify environment detection in browser console
 
 **❌ Cross-language data mixing:**
+
 - Check browser console for language validation logs
 - Verify `languageCode` parameters in API calls
 - Use debug panel (`Ctrl+Shift+S`) to inspect storage state
 
 **❌ GitHub Codespaces port access:**
+
 - Verify port 5173 is exposed and accessible
 - Use Vite proxy URLs: `http://localhost:5173/api/*`
 - Check Codespaces port forwarding settings
@@ -326,6 +361,7 @@ npm run dev:restart
 ### Debug Tools
 
 **Storage Debug Panel:**
+
 ```
 Press Ctrl+Shift+S in the web app to open debug panel
 - View storage tiers and health
@@ -334,6 +370,7 @@ Press Ctrl+Shift+S in the web app to open debug panel
 ```
 
 **Command Line Health Checks:**
+
 ```bash
 # Quick health check
 npm run health:storage
@@ -346,6 +383,7 @@ npm run test:storage
 ```
 
 **Log Analysis:**
+
 ```bash
 # Real-time logs (with --log-files flag)
 tail -f logs/storage.log
@@ -361,6 +399,7 @@ grep -i error logs/*.log
 ### Performance Monitoring
 
 **Check storage health score (should be > 80):**
+
 ```javascript
 // In browser console
 const analytics = await enhancedStorage.getStorageAnalytics();
@@ -368,6 +407,7 @@ console.log('Health score:', analytics.data.health.score);
 ```
 
 **Monitor cache performance (should be > 85% hit rate):**
+
 ```javascript
 // In browser console
 const stats = await enhancedStorage.getStorageAnalytics();
