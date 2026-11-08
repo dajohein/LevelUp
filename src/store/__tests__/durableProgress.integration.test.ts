@@ -61,9 +61,10 @@ describe('durable game and session progress integration', () => {
       setCurrentWord({
         word: { id: 'de-house', term: 'Haus', definition: 'house' },
         options: ['Haus', 'Baum'],
+        quizMode: 'multiple-choice',
       })
     );
-    store.dispatch(checkAnswer('Haus'));
+    store.dispatch(checkAnswer({ answer: 'Haus', progressiveLearning: true }));
 
     store.dispatch(setSessionLanguage('de'));
     store.dispatch(
@@ -88,7 +89,11 @@ describe('durable game and session progress integration', () => {
 
     expect((localStorage.getItem('levelup_game_state') || '').length).toBeLessThan(10 * 1024);
     expect(savedGame).toMatchObject({ language: 'de', correctAnswers: 1, totalAttempts: 1 });
-    expect(savedProgress.de['de-house']).toMatchObject({ wordId: 'de-house', timesCorrect: 1 });
+    expect(savedProgress.de['de-house']).toMatchObject({
+      wordId: 'de-house',
+      timesCorrect: 1,
+      learningMode: 'letter-scramble',
+    });
     expect(savedSession.completedSessionsByLanguage.de).toContain('quick-dash');
     expect(savedSession.sessionProgress).toMatchObject({ correctAnswers: 4, score: 600 });
     expect(savedSession.weeklyChallengeBylanguage.de).toMatchObject({
@@ -109,7 +114,9 @@ describe('durable game and session progress integration', () => {
       language: 'de',
       correctAnswers: 1,
       totalAttempts: 1,
-      wordProgress: { 'de-house': expect.objectContaining({ timesCorrect: 1 }) },
+      wordProgress: {
+        'de-house': expect.objectContaining({ timesCorrect: 1, learningMode: 'letter-scramble' }),
+      },
     });
     expect(reloadedSession.completedSessionsByLanguage.de).toContain('quick-dash');
     expect(reloadedSession.progress).toMatchObject({ correctAnswers: 4, score: 600 });
@@ -140,21 +147,23 @@ describe('durable game and session progress integration', () => {
       setCurrentWord({
         word: { id: 'de-house', term: 'Haus', definition: 'house' },
         options: ['Haus', 'Baum'],
+        quizMode: 'multiple-choice',
       })
     );
-    store.dispatch(checkAnswer('Haus'));
+    store.dispatch(checkAnswer({ answer: 'Haus', progressiveLearning: true }));
 
     store.dispatch(setLanguage('es'));
     expect(store.getState().game.language).toBe('es');
     expect(store.getState().game.wordProgress['de-house']).toBeUndefined();
     expect(
       JSON.parse(localStorage.getItem('levelup_word_progress') || '{}').de['de-house']
-    ).toMatchObject({ wordId: 'de-house', timesCorrect: 1 });
+    ).toMatchObject({ wordId: 'de-house', timesCorrect: 1, learningMode: 'letter-scramble' });
 
     store.dispatch(setLanguage('de'));
     expect(store.getState().game.wordProgress['de-house']).toMatchObject({
       wordId: 'de-house',
       timesCorrect: 1,
+      learningMode: 'letter-scramble',
     });
 
     jest.advanceTimersByTime(50);

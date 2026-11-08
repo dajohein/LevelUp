@@ -236,10 +236,10 @@ export const Game: React.FC = () => {
                       `Failed to get next word from ${currentSession.id} service on skip:`,
                       error
                     );
-                    dispatch(nextWord()); // Fallback
+                    dispatch(nextWord({ progressiveLearning: currentSession.id === 'deep-dive' }));
                   });
               } else {
-                dispatch(nextWord());
+                dispatch(nextWord({ progressiveLearning: currentSession?.id === 'deep-dive' }));
               }
 
               // Increment words completed in session if session is active

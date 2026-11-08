@@ -9,7 +9,11 @@ import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
 import { getCapitalizationFeedback } from '../services/answerValidation';
 import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
-import { selectQuizMode } from '../services/quizModeSelectionUtils';
+import {
+  advanceLearningMode,
+  selectProgressiveQuizMode,
+  selectQuizMode,
+} from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
 import type { GameState } from './types';
 
@@ -18,6 +22,7 @@ interface AnswerSubmission {
   word?: Word;
   quizMode?: string;
   languageCode?: string;
+  progressiveLearning?: boolean;
 }
 
 type CheckAnswerPayload = string | AnswerSubmission;
@@ -85,7 +90,7 @@ export const gameSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    nextWord: state => {
+    nextWord: (state, action: PayloadAction<{ progressiveLearning?: boolean } | undefined>) => {
       if (state.language) {
         // Use centralized word selection - create a unique session ID for game
         const sessionId = `game-session-${state.language}-${state.module || 'all'}`;
@@ -108,7 +113,9 @@ export const gameSlice = createSlice({
         if (result) {
           state.currentWord = result.word;
           state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term); // Convert Word objects to strings
-          state.quizMode = selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
+          state.quizMode = action.payload?.progressiveLearning
+            ? selectProgressiveQuizMode(result.word, state.wordProgress[result.word.id])
+            : selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
           state.isCorrect = null;
           state.lastAnswer = undefined;
           state.capitalizationFeedback = undefined;
@@ -277,6 +284,14 @@ export const gameSlice = createSlice({
         }
       }
 
+      if (submission.progressiveLearning) {
+        updatedProgress.learningMode = advanceLearningMode(
+          word,
+          currentProgress,
+          quizMode,
+          validation.isCorrect
+        );
+      }
       state.wordProgress[wordId] = updatedProgress;
 
       if (validation.isCorrect) {
@@ -403,6 +418,14 @@ export const gameSlice = createSlice({
         }
       }
 
+      if (action.payload.progressiveLearning) {
+        updatedProgress.learningMode = advanceLearningMode(
+          word,
+          currentProgress,
+          quizMode,
+          validation.isCorrect
+        );
+      }
       state.wordProgress[wordId] = updatedProgress;
 
       if (validation.isCorrect) {

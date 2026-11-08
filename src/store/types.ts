@@ -51,6 +51,7 @@ export interface WordProgress {
   learningPhase?: 'introduction' | 'practice' | 'mastery' | 'maintenance';
   tags?: string[];
   customNotes?: string;
+  learningMode?: 'multiple-choice' | 'letter-scramble' | 'fill-in-the-blank';
 }
 
 export interface Module {
