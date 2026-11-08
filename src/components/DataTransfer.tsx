@@ -214,8 +214,18 @@ const StatusMessage = styled.div<{ type: 'success' | 'error' | 'warning' }>`
   gap: 8px;
 `;
 
-export const DataTransfer: React.FC = () => {
+interface DataTransferProps {
+  exportButtonLabel?: string;
+  importButtonLabel?: string;
+}
+
+export const DataTransfer: React.FC<DataTransferProps> = ({
+  exportButtonLabel = 'Export All Data',
+  importButtonLabel = 'Choose Import File',
+}) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<ImportResult | null>(null);
   const [importModal, setImportModal] = useState<{
     isOpen: boolean;
     preview?: any;
@@ -233,10 +243,14 @@ export const DataTransfer: React.FC = () => {
     setIsExporting(true);
     try {
       await dataTransferService.downloadExport();
-      logger.info('✅ Export completed successfully');
+      setExportStatus({ success: true, message: 'Your learning data was downloaded successfully.' });
+      logger.info('Export completed successfully');
     } catch (error) {
-      logger.error('❌ Export failed:', error);
-      alert('Export failed. Please try again.');
+      logger.error('Export failed:', error);
+      setExportStatus({
+        success: false,
+        message: 'Export failed. Please try again.',
+      });
     } finally {
       setIsExporting(false);
     }
@@ -250,6 +264,8 @@ export const DataTransfer: React.FC = () => {
       const preview = await dataTransferService.previewImport(file);
 
       if (preview.success && preview.data) {
+        setExportStatus(null);
+        setImportResult(null);
         setImportModal({
           isOpen: true,
           preview: { file, ...preview.data },
@@ -257,11 +273,17 @@ export const DataTransfer: React.FC = () => {
           mergeMode: true,
         });
       } else {
-        alert(`Invalid file: ${preview.error}`);
+        setExportStatus({
+          success: false,
+          message: `Invalid file: ${preview.error || 'Please choose a valid LevelUp export file.'}`,
+        });
       }
     } catch (error) {
-      logger.error('❌ File preview failed:', error);
-      alert('Could not read the selected file. Please choose a valid LevelUp export file.');
+      logger.error('File preview failed:', error);
+      setExportStatus({
+        success: false,
+        message: 'Could not read the selected file. Please choose a valid LevelUp export file.',
+      });
     }
 
     // Reset file input
@@ -271,8 +293,9 @@ export const DataTransfer: React.FC = () => {
   };
 
   const handleImport = async () => {
-    if (!importModal.preview?.file) return;
+    if (!importModal.preview?.file || isImporting) return;
 
+    setIsImporting(true);
     try {
       const result = await dataTransferService.importData(importModal.preview.file, {
         selectedLanguages: importModal.selectedLanguages,
@@ -281,22 +304,14 @@ export const DataTransfer: React.FC = () => {
       });
 
       setImportResult(result);
-
-      if (result.success && result.importedLanguages && result.importedLanguages.length > 0) {
-        // Close modal and refresh page after successful import
-        setTimeout(() => {
-          setImportModal({ ...importModal, isOpen: false });
-          if (confirm('Import completed! The page will reload to refresh all data.')) {
-            window.location.reload();
-          }
-        }, 2000);
-      }
     } catch (error) {
-      logger.error('❌ Import failed:', error);
+      logger.error('Import failed:', error);
       setImportResult({
         success: false,
         message: 'Import failed due to an unexpected error.',
       });
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -337,6 +352,16 @@ export const DataTransfer: React.FC = () => {
         installations.
       </Description>
 
+      {exportStatus && (
+        <StatusMessage
+          type={exportStatus.success ? 'success' : 'error'}
+          role={exportStatus.success ? 'status' : 'alert'}
+        >
+          {exportStatus.success ? <FaCheckCircle /> : <FaExclamationTriangle />}
+          {exportStatus.message}
+        </StatusMessage>
+      )}
+
       <ActionGrid>
         <ActionCard>
           <ActionTitle>
@@ -349,7 +374,7 @@ export const DataTransfer: React.FC = () => {
           </ActionDescription>
           <Button onClick={handleExport} disabled={isExporting}>
             <FaFileExport />
-            {isExporting ? 'Exporting...' : 'Export All Data'}
+            {isExporting ? 'Exporting...' : exportButtonLabel}
           </Button>
         </ActionCard>
 
@@ -364,7 +389,7 @@ export const DataTransfer: React.FC = () => {
           </ActionDescription>
           <Button onClick={() => fileInputRef.current?.click()}>
             <FaFileImport />
-            Choose Import File
+            {importButtonLabel}
           </Button>
           <HiddenFileInput
             ref={fileInputRef}
@@ -376,11 +401,16 @@ export const DataTransfer: React.FC = () => {
       </ActionGrid>
 
       {/* Import Modal */}
-      <ImportModal isOpen={importModal.isOpen}>
+      <ImportModal
+        isOpen={importModal.isOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="data-transfer-modal-title"
+      >
         <ModalContent>
           <ModalTitle>
             <FaFileImport />
-            Import Progress Data
+            <span id="data-transfer-modal-title">Import Progress Data</span>
           </ModalTitle>
 
           {importModal.preview && (
@@ -455,10 +485,18 @@ export const DataTransfer: React.FC = () => {
               </div>
 
               {importResult && (
-                <StatusMessage type={importResult.success ? 'success' : 'error'}>
+                <StatusMessage
+                  type={importResult.success ? 'success' : 'error'}
+                  role={importResult.success ? 'status' : 'alert'}
+                >
                   {importResult.success ? <FaCheckCircle /> : <FaExclamationTriangle />}
                   <div>
                     <div>{importResult.message}</div>
+                    {importResult.success && (
+                      <div style={{ fontSize: '0.9rem', marginTop: '4px' }}>
+                        Reload the app to show the imported progress.
+                      </div>
+                    )}
                     {importResult.errors && (
                       <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>
                         {importResult.errors.map((error, index) => (
@@ -474,11 +512,20 @@ export const DataTransfer: React.FC = () => {
                 <Button
                   variant="success"
                   onClick={handleImport}
-                  disabled={importModal.selectedLanguages.length === 0 || importResult?.success}
+                  disabled={
+                    importModal.selectedLanguages.length === 0 ||
+                    isImporting ||
+                    importResult?.success
+                  }
                 >
                   <FaUpload />
-                  Import Selected Languages
+                  {isImporting ? 'Importing...' : 'Import Selected Languages'}
                 </Button>
+                {importResult?.success && (
+                  <Button variant="primary" onClick={() => window.location.reload()}>
+                    Reload App
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
                   onClick={() => {
@@ -486,7 +533,7 @@ export const DataTransfer: React.FC = () => {
                     setImportResult(null);
                   }}
                 >
-                  Cancel
+                  {importResult?.success ? 'Close' : 'Cancel'}
                 </Button>
               </ButtonRow>
             </>
