@@ -529,7 +529,7 @@ export const DataTransfer: React.FC<DataTransferProps> = ({
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    setImportModal({ ...importModal, isOpen: false });
+                    setImportModal(prev => ({ ...prev, isOpen: false }));
                     setImportResult(null);
                   }}
                 >

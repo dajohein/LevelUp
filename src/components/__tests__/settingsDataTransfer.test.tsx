@@ -13,7 +13,7 @@ jest.mock('../../services/pwaUpdateManager', () => ({
 }));
 jest.mock('../../services/dataTransferService', () => ({
   dataTransferService: {
-    downloadExport: jest.fn<Promise<void>, []>(),
+    downloadExport: jest.fn<void, []>(),
     previewImport: jest.fn<ReturnType<typeof dataTransferService.previewImport>, [File]>(),
     importData: jest.fn<
       ReturnType<typeof dataTransferService.importData>,
