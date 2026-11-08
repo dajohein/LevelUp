@@ -8,6 +8,8 @@ import { AILearningDashboard } from './AILearningDashboard';
 import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
 import { DataMigrationService } from '../services/dataMigrationService';
+import { learningCacheService } from '../services/cacheService';
+import type { WordProgress } from '../store/types';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -204,7 +206,7 @@ export const LearningStatsPage: React.FC = () => {
   const currentLanguage = useSelector((state: RootState) => state.game.language);
 
   // Load word progress for the current language
-  const wordProgress = useMemo(() => {
+  const wordProgress = useMemo<Record<string, WordProgress>>(() => {
     if (!languageCode) return {};
 
     // If Redux has progress for the current language, use it
@@ -228,61 +230,46 @@ export const LearningStatsPage: React.FC = () => {
 
   // Calculate overall statistics
   const overallStats = useMemo(() => {
-    const totalSessions = Object.values(wordProgress).reduce(
-      (sum: number, progress: any) =>
-        sum + ((progress.timesCorrect || 0) + (progress.timesIncorrect || 0)),
+    const learningAnalytics = languageCode ? learningCacheService.getAnalytics(languageCode) : null;
+    const totalAttempts = Object.values(wordProgress).reduce(
+      (sum, progress) => sum + (progress?.timesCorrect || 0) + (progress?.timesIncorrect || 0),
       0
     );
 
-    const totalWordsLearned = Object.values(wordProgress).filter(
-      (progress: any) => progress.xp > 0
-    ).length;
+    const totalWordsLearned = Object.values(wordProgress).filter(progress => progress.xp > 0).length;
 
     const totalXP = Object.values(wordProgress).reduce(
-      (sum: number, progress: any) => sum + (progress?.xp || 0),
+      (sum, progress) => sum + progress.xp,
       0
     );
 
     const overallAccuracy =
-      totalSessions > 0
+      totalAttempts > 0
         ? (Object.values(wordProgress).reduce(
-            (sum: number, progress: any) => sum + (progress.timesCorrect || 0),
+            (sum, progress) => sum + progress.timesCorrect,
             0
           ) /
-            totalSessions) *
+            totalAttempts) *
           100
         : 0;
 
     const totalWords = modules.reduce((sum, module) => sum + (module.words?.length || 0), 0);
 
-    const completedModules = modules.filter(module => {
-      const stats = getModuleStats(languageCode!, module.id, wordProgress);
-      return stats.completionPercentage >= 80;
-    }).length;
-
-    // Calculate streak (simplified - days with any practice)
-    const recentPractice = Object.values(wordProgress)
-      .filter((progress: any) => progress.lastPracticed)
-      .map((progress: any) => new Date(progress.lastPracticed))
-      .sort((a, b) => b.getTime() - a.getTime());
-
-    const streak =
-      recentPractice.length > 0
-        ? Math.min(
-            7,
-            recentPractice.filter(date => Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000)
-              .length
-          )
-        : 0;
+    const completedModules = languageCode
+      ? modules.filter(module => {
+          const stats = getModuleStats(languageCode, module.id, wordProgress);
+          return stats.completionPercentage >= 80;
+        }).length
+      : 0;
 
     return {
-      totalSessions,
+      totalSessions: learningAnalytics?.totalSessions || 0,
       totalWordsLearned,
       totalXP,
       overallAccuracy,
       totalWords,
       completedModules,
-      streak,
+      streak: learningAnalytics?.learningStreak || 0,
     };
   }, [wordProgress, modules, languageCode]);
 
@@ -344,7 +331,9 @@ export const LearningStatsPage: React.FC = () => {
             </AnalyticCard>
             <AnalyticCard>
               <AnalyticValue>{overallStats.streak}</AnalyticValue>
-              <AnalyticLabel>Day Streak</AnalyticLabel>
+              <AnalyticLabel title="Consecutive completed practice days, using UTC calendar days">
+                Day Streak (UTC)
+              </AnalyticLabel>
             </AnalyticCard>
           </AnalyticsGrid>
         </StatsSection>

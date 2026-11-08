@@ -191,7 +191,7 @@ export const useEnhancedGameState = ({
     getSessionStats,
     forceCompleteSession,
     initializeEnhancedSession,
-  } = useEnhancedGame(languageCode, moduleId);
+  } = useEnhancedGame(languageCode, moduleId, sessionStartTime ?? undefined);
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = useLevelUpDetection();
 
   // Helper functions

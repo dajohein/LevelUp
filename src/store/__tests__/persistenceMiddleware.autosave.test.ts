@@ -4,7 +4,14 @@ import sessionReducer from '../sessionSlice';
 import achievementsReducer from '../achievementsSlice';
 import { persistenceMiddleware, persistenceUtils } from '../persistenceMiddleware';
 import { enhancedStorage } from '../../services/storage/enhancedStorage';
+import { learningCacheService } from '../../services/cacheService';
 import { logger } from '../../services/logger';
+import {
+  addCorrectAnswer,
+  completeSession,
+  setLanguage,
+  startSession,
+} from '../sessionSlice';
 
 jest.mock('../../services/storage/enhancedStorage', () => ({
   enhancedStorage: {
@@ -27,6 +34,7 @@ describe('Persistence middleware autosave failure integration', () => {
     jest.mocked(enhancedStorage.saveGameState).mockResolvedValue({ success: true });
     jest.mocked(enhancedStorage.saveSessionState).mockResolvedValue({ success: true });
     jest.mocked(enhancedStorage.saveAchievements).mockResolvedValue({ success: true });
+    learningCacheService.clearCache();
     persistenceUtils.updateConfig({ enabled: true });
   });
 
@@ -63,5 +71,27 @@ describe('Persistence middleware autosave failure integration', () => {
     expect(logger.debug).not.toHaveBeenCalledWith('🚀 Manual save completed');
     await persistenceUtils.forceSave();
     expect(persistenceUtils.getStatus()).toMatchObject({ pendingChanges: 0, lastError: null });
+  });
+
+  it('records one language-scoped practice session regardless of its answer count', () => {
+    jest.setSystemTime(new Date('2026-11-08T12:00:00.000Z'));
+    const store = configureStore({
+      reducer: { game: gameReducer, session: sessionReducer, achievements: achievementsReducer },
+      middleware: getDefaultMiddleware => getDefaultMiddleware().concat(persistenceMiddleware),
+    });
+
+    store.dispatch(setLanguage('de'));
+    store.dispatch(startSession('quick-dash'));
+    for (let answer = 0; answer < 20; answer++) {
+      store.dispatch(addCorrectAnswer({}));
+    }
+    store.dispatch(completeSession());
+
+    expect(learningCacheService.getAnalytics('de')).toMatchObject({
+      totalSessions: 1,
+      practiceDays: ['2026-11-08'],
+    });
+    expect(learningCacheService.getSessionHistory('de')).toHaveLength(1);
+    expect(learningCacheService.getAnalytics('es')).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ import {
   SessionAnalysis,
 } from './spacedRepetitionService';
 import { logger } from './logger';
+import { calculatePracticeStreak, getUtcCalendarDay } from './practiceMetrics';
 
 // Cache keys for localStorage
 const CACHE_KEYS = {
@@ -58,6 +59,7 @@ interface LearningAnalytics {
     averageAccuracy: number;
     preferredQuizModes: Record<string, number>;
     learningStreak: number;
+    practiceDays: string[];
     lastSessionDate: string;
     weeklyProgress: Array<{
       week: string;
@@ -68,7 +70,7 @@ interface LearningAnalytics {
   };
 }
 
-class LearningCacheService {
+export class LearningCacheService {
   private wordGroupsCache: CachedWordGroups = {};
   private sessionHistory: SessionRecord[] = [];
   private analytics: LearningAnalytics = {};
@@ -281,43 +283,59 @@ class LearningCacheService {
     languageCode: string,
     session: LearningSession,
     performance: SessionAnalysis,
-    wordsStudied: string[]
+    wordsStudied: string[],
+    startTime = Date.now(),
+    endTime = Date.now(),
+    sessionId = `${languageCode}:${startTime}`
   ): void {
-    const sessionRecord: SessionRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    this.recordPracticeSession(
       languageCode,
-      groupId: session.groupId,
-      startTime: new Date().toISOString(),
-      endTime: new Date().toISOString(),
+      sessionId,
+      startTime,
+      endTime,
+      performance,
+      wordsStudied,
+      session.groupId
+    );
+  }
+
+  recordPracticeSession(
+    languageCode: string,
+    sessionId: string,
+    startTime: number,
+    endTime: number,
+    performance: SessionAnalysis,
+    wordsStudied: string[] = [],
+    groupId = 'practice'
+  ): void {
+    const recordId = `${languageCode}:${sessionId}`;
+    if (this.sessionHistory.some(record => record.id === recordId)) return;
+
+    const sessionRecord: SessionRecord = {
+      id: recordId,
+      languageCode,
+      groupId,
+      startTime: new Date(startTime).toISOString(),
+      endTime: new Date(endTime).toISOString(),
       performance,
       wordsStudied,
     };
 
-    // Add to session history
     this.sessionHistory.unshift(sessionRecord);
+    this.sessionHistory = this.sessionHistory.slice(0, CACHE_CONFIG.MAX_SESSION_HISTORY);
 
-    // Trim history to max size
-    if (this.sessionHistory.length > CACHE_CONFIG.MAX_SESSION_HISTORY) {
-      this.sessionHistory = this.sessionHistory.slice(0, CACHE_CONFIG.MAX_SESSION_HISTORY);
-    }
-
-    // Update group last practiced time and session count
     const groupCache = this.wordGroupsCache[languageCode];
-    if (groupCache) {
-      const group = groupCache.groups.find(g => g.id === session.groupId);
-      if (group) {
-        group.lastPracticed = new Date().toISOString();
-        group.sessionCount++;
-      }
+    const group = groupCache?.groups.find(candidate => candidate.id === groupId);
+    if (group) {
+      group.lastPracticed = sessionRecord.endTime;
+      group.sessionCount++;
     }
 
-    // Update analytics
-    this.updateAnalytics(languageCode, performance, wordsStudied);
-
+    this.updateAnalytics(languageCode, performance, getUtcCalendarDay(endTime), sessionRecord.endTime);
     this.saveToStorage();
 
     logger.debug(`📈 Recorded session for ${languageCode}:`, {
-      sessionId: sessionRecord.id,
+      sessionId: recordId,
       wordsLearned: performance.wordsLearned,
       accuracy: Math.round(performance.averageAccuracy * 100),
     });
@@ -329,7 +347,8 @@ class LearningCacheService {
   private updateAnalytics(
     languageCode: string,
     performance: SessionAnalysis,
-    _wordsStudied: string[]
+    practiceDay: string,
+    sessionEndTime: string
   ): void {
     if (!this.analytics[languageCode]) {
       this.analytics[languageCode] = {
@@ -338,6 +357,7 @@ class LearningCacheService {
         averageAccuracy: 0,
         preferredQuizModes: {},
         learningStreak: 0,
+        practiceDays: [],
         lastSessionDate: '',
         weeklyProgress: [],
       };
@@ -351,24 +371,15 @@ class LearningCacheService {
     analytics.averageAccuracy =
       (analytics.averageAccuracy * (analytics.totalSessions - 1) + performance.averageAccuracy) /
       analytics.totalSessions;
-    analytics.lastSessionDate = new Date().toISOString();
-
-    // Update learning streak
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const lastSessionDate = new Date(analytics.lastSessionDate || 0);
-
-    if (
-      lastSessionDate.toDateString() === yesterday.toDateString() ||
-      lastSessionDate.toDateString() === new Date().toDateString()
-    ) {
-      analytics.learningStreak++;
-    } else if (lastSessionDate < yesterday) {
-      analytics.learningStreak = 1;
-    }
+    analytics.lastSessionDate = sessionEndTime;
+    analytics.practiceDays = [...new Set([...(analytics.practiceDays || []), practiceDay])].sort();
+    analytics.learningStreak = calculatePracticeStreak(
+      analytics.practiceDays,
+      new Date(sessionEndTime)
+    );
 
     // Update weekly progress
-    const currentWeek = this.getWeekIdentifier(new Date());
+    const currentWeek = this.getWeekIdentifier(new Date(sessionEndTime));
     let weeklyEntry = analytics.weeklyProgress.find(w => w.week === currentWeek);
 
     if (!weeklyEntry) {
@@ -431,7 +442,15 @@ class LearningCacheService {
    * Get learning analytics for a language
    */
   getAnalytics(languageCode: string) {
-    return this.analytics[languageCode] || null;
+    const analytics = this.analytics[languageCode];
+    if (!analytics) return null;
+
+    const practiceDays = analytics.practiceDays || [];
+    return {
+      ...analytics,
+      practiceDays,
+      learningStreak: calculatePracticeStreak(practiceDays),
+    };
   }
 
   /**
