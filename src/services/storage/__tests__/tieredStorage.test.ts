@@ -164,6 +164,16 @@ describe('TieredStorageService', () => {
       expect(Storage.prototype.setItem).toHaveBeenCalled();
     });
 
+    it('should store normal-priority snapshots in localStorage', async () => {
+      const result = await storage.set(testKey, testData, {
+        priority: 'normal',
+        compress: false,
+      });
+
+      expect(result.success).toBe(true);
+      expect(Storage.prototype.setItem).toHaveBeenCalledWith(testKey, JSON.stringify(testData));
+    });
+
     it('should compress data when compression is enabled', async () => {
       await storage.set(testKey, testData, { compress: true });
 

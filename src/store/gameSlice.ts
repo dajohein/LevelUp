@@ -7,7 +7,8 @@ import { calculateMasteryGain } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
-import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
+import { getCapitalizationFeedback } from '../services/answerValidation';
+import { validateQuizAnswer } from '../services/quizAnswerValidation';
 import { selectQuizMode } from '../services/quizModeSelectionUtils';
 import type { GameState } from './types';
 
@@ -19,12 +20,11 @@ const loadPersistedState = (): Partial<GameState> => {
     // CRITICAL FIX: Don't load mixed wordProgress into global state
     // Instead, load only the current language's progress
     const currentLanguage = savedState.language;
-    let languageSpecificProgress = {};
+    let languageSpecificProgress: GameState['wordProgress'] = {};
 
     if (currentLanguage) {
-      // Load only the current language's progress with automatic migration
+      // Only migrate language-scoped progress; legacy snapshots may contain mixed languages.
       languageSpecificProgress = DataMigrationService.safeLoadWordProgress(currentLanguage);
-      // Removed debug logging to prevent console spam
     }
 
     return {
@@ -35,6 +35,7 @@ const loadPersistedState = (): Partial<GameState> => {
       correctAnswers: savedState.correctAnswers || 0,
       totalAttempts: savedState.totalAttempts || 0,
       quizMode: savedState.quizMode || 'multiple-choice',
+      bestStreak: savedState.bestStreak || 0,
       wordProgress: languageSpecificProgress,
     };
   } catch (error) {
@@ -155,13 +156,13 @@ export const gameSlice = createSlice({
     checkAnswer: (state, action: PayloadAction<string>) => {
       if (!state.currentWord) return;
 
-      // Determine correct answer based on direction
       const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      // Validate answer with language-specific rules
-      const validation = validateAnswer(action.payload, correctAnswer, state.language || 'en');
+      const validation = validateQuizAnswer(
+        action.payload,
+        state.currentWord,
+        state.quizMode,
+        state.language || 'en'
+      );
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = action.payload;
@@ -311,10 +312,12 @@ export const gameSlice = createSlice({
 
       // Reuse existing checkAnswer logic but keep it self-contained
       const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      const validation = validateAnswer(answer, correctAnswer, state.language || 'en');
+      const validation = validateQuizAnswer(
+        answer,
+        state.currentWord,
+        state.quizMode,
+        state.language || 'en'
+      );
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = answer;
@@ -425,18 +428,21 @@ export const gameSlice = createSlice({
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
+      const sameLanguage = state.language === languageCode;
+      if (sameLanguage && state.currentWord) return;
 
-      state.language = languageCode;
-      state.lives = 3;
-      state.score = 0;
-      state.streak = 0;
-      state.isCorrect = null;
-      state.lastAnswer = undefined;
-      state.recentlyUsedWords = []; // Reset recently used words for new language
+      if (!sameLanguage) {
+        state.language = languageCode;
+        state.lives = 3;
+        state.score = 0;
+        state.streak = 0;
+        state.isCorrect = null;
+        state.lastAnswer = undefined;
+        state.recentlyUsedWords = []; // Reset recently used words for new language
 
-      // Load word progress for this language only (no merging) with automatic migration
-      const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
-      state.wordProgress = savedWordProgress;
+        // Load word progress for this language only (no merging) with automatic migration
+        state.wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
+      }
 
       // Initialize first word
       const sessionId = `game-session-${languageCode}-all`;

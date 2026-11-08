@@ -98,6 +98,28 @@ describe('gameSlice language isolation', () => {
     expect(state.language).toBe('de');
   });
 
+  it('same-language selection does not replace newer in-memory progress', async () => {
+    jest.doMock('../../services/storageService', () => {
+      const actual = jest.requireActual('../../services/storageService');
+      return {
+        ...actual,
+        gameStateStorage: {
+          ...actual.gameStateStorage,
+          load: () => ({ language: 'de' }),
+        },
+      };
+    });
+
+    const { default: gameReducer, setLanguage, updateWordProgress } = await import('../gameSlice');
+    const store = configureStore({ reducer: { game: gameReducer } });
+    const latestProgress = makeProgress(['new-answer']);
+
+    store.dispatch(updateWordProgress(latestProgress));
+    store.dispatch(setLanguage('de'));
+
+    expect(store.getState().game.wordProgress).toEqual(latestProgress);
+  });
+
   it('does not merge cross-language progress when updating wordProgress', async () => {
     const deProgress = makeProgress(['de-1']);
     const esProgress = makeProgress(['es-1']);

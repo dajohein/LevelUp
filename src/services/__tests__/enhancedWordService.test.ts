@@ -1,26 +1,67 @@
 import { enhancedWordService } from '../enhancedWordService';
 import { getWordsForLanguage } from '../wordService';
+import type { Word } from '../wordService';
 
 // Mock dependencies to return simple test data
 jest.mock('../wordService', () => ({
   getWordsForLanguage: jest.fn(() => [
     { id: 'word1', term: 'Hund', definition: 'dog', type: 'noun', german: 'Hund', english: 'dog' },
-    { id: 'word2', term: 'Katze', definition: 'cat', type: 'noun', german: 'Katze', english: 'cat' },
-    { id: 'word3', term: 'Haus', definition: 'house', type: 'noun', german: 'Haus', english: 'house' },
+    {
+      id: 'word2',
+      term: 'Katze',
+      definition: 'cat',
+      type: 'noun',
+      german: 'Katze',
+      english: 'cat',
+    },
+    {
+      id: 'word3',
+      term: 'Haus',
+      definition: 'house',
+      type: 'noun',
+      german: 'Haus',
+      english: 'house',
+    },
     { id: 'word4', term: 'Auto', definition: 'car', type: 'noun', german: 'Auto', english: 'car' },
-    { id: 'word5', term: 'Buch', definition: 'book', type: 'noun', german: 'Buch', english: 'book' },
+    {
+      id: 'word5',
+      term: 'Buch',
+      definition: 'book',
+      type: 'noun',
+      german: 'Buch',
+      english: 'book',
+    },
   ]),
 }));
 
 jest.mock('../moduleService', () => ({
   getWordsForModule: jest.fn(() => [
-    { id: 'module1', term: 'Tisch', definition: 'table', type: 'noun', german: 'Tisch', english: 'table' },
-    { id: 'module2', term: 'Stuhl', definition: 'chair', type: 'noun', german: 'Stuhl', english: 'chair' },
+    {
+      id: 'module1',
+      term: 'Tisch',
+      definition: 'table',
+      type: 'noun',
+      german: 'Tisch',
+      english: 'table',
+    },
+    {
+      id: 'module2',
+      term: 'Stuhl',
+      definition: 'chair',
+      type: 'noun',
+      german: 'Stuhl',
+      english: 'chair',
+    },
   ]),
 }));
 
 jest.mock('../cacheService', () => ({
   learningCacheService: {
+    createLearningSession: jest.fn((_languageCode, words) => ({
+      sessionType: 'new',
+      words: words.map((word: Word) => ({ word })),
+      reviewWords: [],
+    })),
     getActiveSession: jest.fn(() => null),
     cacheSession: jest.fn(),
     invalidateSession: jest.fn(),
@@ -32,7 +73,7 @@ jest.mock('../cacheService', () => ({
 }));
 
 jest.mock('../spacedRepetitionService', () => ({
-  interleaveSessionWords: jest.fn((session) => {
+  interleaveSessionWords: jest.fn(session => {
     const words = session.words || [];
     return words.map((w: any) => ({
       word: w.word || w,
@@ -83,6 +124,39 @@ describe('enhancedWordService', () => {
       const hasSession = enhancedWordService.hasActiveSession();
 
       expect(hasSession).toBe(false);
+    });
+
+    it('filters equivalent definition distractors from mixed enhanced sessions', () => {
+      const words: Word[] = [
+        {
+          id: 'erkaltung',
+          term: 'die Erkältung',
+          definition: 'de verkoudheid',
+          direction: 'definition-to-term',
+        },
+        {
+          id: 'schnupfen',
+          term: 'der Schnupfen',
+          definition: 'de verkoudheid',
+          direction: 'definition-to-term',
+        },
+        { id: 'arm', term: 'der Arm', definition: 'de arm', direction: 'definition-to-term' },
+        { id: 'hand', term: 'die Hand', definition: 'de hand', direction: 'definition-to-term' },
+        {
+          id: 'fieber',
+          term: 'das Fieber',
+          definition: 'de koorts',
+          direction: 'definition-to-term',
+        },
+      ];
+      jest.mocked(getWordsForLanguage).mockReturnValueOnce(words);
+
+      expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+      const currentWord = enhancedWordService.getCurrentWord();
+
+      expect(currentWord?.word?.term).toBe('die Erkältung');
+      expect(currentWord?.options).toContain('die Erkältung');
+      expect(currentWord?.options).not.toContain('der Schnupfen');
     });
 
     it('should reset session', () => {

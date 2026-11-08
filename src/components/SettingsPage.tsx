@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from './Navigation';
@@ -6,6 +6,7 @@ import { MobileButton } from './mobile/MobileButton';
 import { AccountLinking } from './AccountLinking';
 import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { logger } from '../services/logger';
+import { ModalDialog } from './ui/ModalDialog';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -98,28 +99,18 @@ const ComingSoon = styled.div`
   font-style: italic;
 `;
 
-const Modal = styled.div<{ isOpen: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: ${props => (props.isOpen ? 'flex' : 'none')};
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: ${props => props.theme.spacing.md};
-`;
-
-const ModalContent = styled.div`
+const Modal = styled(ModalDialog)`
   background: ${props => props.theme.colors.background};
+  border: 0;
+  padding: 0;
   border-radius: ${props => props.theme.borderRadius.lg};
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  position: relative;
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
 `;
 
 const CloseButton = styled.button`
@@ -141,6 +132,8 @@ const CloseButton = styled.button`
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [showAccountLinking, setShowAccountLinking] = useState(false);
+  const accountTitleId = useId();
+  const closeAccountRef = useRef<HTMLButtonElement>(null);
   const [pendingUpdate, setPendingUpdate] = useState<any>(null);
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
 
@@ -295,11 +288,21 @@ export const SettingsPage: React.FC = () => {
         <ComingSoon>More settings and customization options coming soon! 🚀</ComingSoon>
       </Content>
 
-      <Modal isOpen={showAccountLinking}>
-        <ModalContent>
-          <CloseButton onClick={() => setShowAccountLinking(false)}>×</CloseButton>
-          <AccountLinking />
-        </ModalContent>
+      <Modal
+        isOpen={showAccountLinking}
+        onClose={() => setShowAccountLinking(false)}
+        labelledBy={accountTitleId}
+        initialFocusRef={closeAccountRef}
+      >
+        <CloseButton
+          ref={closeAccountRef}
+          type="button"
+          aria-label="Close device linking"
+          onClick={() => setShowAccountLinking(false)}
+        >
+          ×
+        </CloseButton>
+        <AccountLinking titleId={accountTitleId} />
       </Modal>
     </Container>
   );

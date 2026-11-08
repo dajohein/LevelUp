@@ -1,0 +1,50 @@
+name: PR quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Clean install
+        run: npm ci --no-audit --no-fund
+      - name: Type-check app and serverless API
+        run: npm run type-check && npm run type-check:api
+      - name: Test lint regression policy
+        run: npm run test:quality-gate
+      - name: Reject new lint warnings and all errors
+        env:
+          LINT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -n "$LINT_BASE_SHA" ]; then
+            git fetch --no-tags --depth=1 origin "$LINT_BASE_SHA"
+            npm run lint:ci -- --base-ref "$LINT_BASE_SHA"
+          else
+            npm run lint:ci
+          fi
+      - name: Run Jest
+        run: npm test -- --ci --runInBand
+      - name: Build app
+        run: npm run build
