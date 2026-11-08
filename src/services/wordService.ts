@@ -7,6 +7,7 @@ import { logger } from './logger';
 interface Context {
   sentence: string;
   translation: string;
+  sentenceWithBlank?: string;
   audio?: string;
 }
 
@@ -16,6 +17,9 @@ export interface Word {
   definition: string;
   audio?: string;
   context?: Context;
+  category?: string;
+  forms?: string[];
+  synonyms?: string[];
   level?: number; // Current difficulty level
   mastery?: number; // Current mastery percentage (0-100)
   direction?: 'term-to-definition' | 'definition-to-term'; // Quiz direction
