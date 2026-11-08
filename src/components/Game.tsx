@@ -102,6 +102,7 @@ export const Game: React.FC = () => {
     sessionCompleted,
     showLearningCard,
     lastAnswerCorrect,
+    answerSequence,
     setLastAnswerCorrect,
     lastSelectedAnswer,
     feedbackQuestionKey,
@@ -257,6 +258,8 @@ export const Game: React.FC = () => {
       </GameContainer>
       <FeedbackOverlay
         isCorrect={lastAnswerCorrect}
+        answerSequence={answerSequence}
+        selectedAnswer={lastSelectedAnswer}
         correctAnswer={feedbackWordInfo?.correctAnswer || ''}
         originalWord={feedbackWordInfo?.originalWord || ''}
         wordContext={feedbackWordInfo?.context || ''}

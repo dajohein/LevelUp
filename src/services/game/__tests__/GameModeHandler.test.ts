@@ -417,16 +417,20 @@ describe('GameModeHandler', () => {
   // getOptimalTiming
   // ---------------------------------------------------------------------------
   describe('getOptimalTiming', () => {
-    it('returns shorter timing for correct answers', () => {
-      const correctTime = handler.getOptimalTiming('multiple-choice', true);
-      const incorrectTime = handler.getOptimalTiming('multiple-choice', false);
-      expect(correctTime).toBeLessThan(incorrectTime);
+    it.each([
+      'multiple-choice',
+      'letter-scramble',
+      'fill-in-the-blank',
+      'contextual-analysis',
+      'usage-example',
+      'synonym-antonym',
+    ])('uses a brief 500ms delay for correct %s answers', quizMode => {
+      expect(handler.getOptimalTiming(quizMode, true)).toBe(500);
     });
 
-    it('returns longer timing for more complex modes when correct', () => {
-      const mcTime = handler.getOptimalTiming('multiple-choice', true);
-      const contextTime = handler.getOptimalTiming('contextual-analysis', true);
-      expect(mcTime).toBeLessThan(contextTime);
+    it('preserves the longer incorrect-answer review delay', () => {
+      expect(handler.getOptimalTiming('multiple-choice', false)).toBe(3000);
+      expect(handler.getOptimalTiming('contextual-analysis', false)).toBe(5000);
     });
 
     it('falls back to multiple-choice timing for unknown mode', () => {

@@ -292,12 +292,12 @@ export class GameModeHandler {
    */
   getOptimalTiming(quizMode: string, isCorrect: boolean): number {
     const baseTimings: Record<string, { correct: number; incorrect: number }> = {
-      'multiple-choice': { correct: 1200, incorrect: 3000 },
-      'letter-scramble': { correct: 1500, incorrect: 3500 },
-      'fill-in-the-blank': { correct: 2500, incorrect: 4500 },
-      'contextual-analysis': { correct: 3000, incorrect: 5000 },
-      'usage-example': { correct: 3000, incorrect: 5000 },
-      'synonym-antonym': { correct: 2000, incorrect: 4000 },
+      'multiple-choice': { correct: 500, incorrect: 3000 },
+      'letter-scramble': { correct: 500, incorrect: 3500 },
+      'fill-in-the-blank': { correct: 500, incorrect: 4500 },
+      'contextual-analysis': { correct: 500, incorrect: 5000 },
+      'usage-example': { correct: 500, incorrect: 5000 },
+      'synonym-antonym': { correct: 500, incorrect: 4000 },
     };
 
     const timing = baseTimings[quizMode] || baseTimings['multiple-choice'];
