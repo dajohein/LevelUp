@@ -223,6 +223,11 @@ npm run build
 npm run dev:stop
 ```
 
+The managed servers use ports 3001 and 5173 and are scoped to this checkout.
+Startup fails if a port is occupied or either service is unhealthy; it never
+stops an unrelated server. See [development server controls](scripts/README.md)
+for alternate ports, logs, and troubleshooting.
+
 ### 🧪 **Development Mode Features**
 
 When running in development mode (`localhost` or GitHub Codespaces), additional features are available:

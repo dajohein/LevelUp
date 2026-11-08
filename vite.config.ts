@@ -47,7 +47,7 @@ export default defineConfig({
     // Proxy API requests to the storage server
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: `http://localhost:${process.env.LEVELUP_STORAGE_PORT || '3001'}`,
         changeOrigin: true,
         secure: false
       }

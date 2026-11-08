@@ -9,7 +9,10 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3001; // Use different port from Vite dev server
+const PORT = Number(process.env.LEVELUP_STORAGE_PORT || 3001);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('LEVELUP_STORAGE_PORT must be an integer between 1 and 65535');
+}
 
 // Middleware
 app.use(cors());
