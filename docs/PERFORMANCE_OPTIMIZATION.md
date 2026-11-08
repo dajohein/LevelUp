@@ -223,6 +223,8 @@ const [settings, setSettings] = useDebouncedStorage('user-settings', defaults);
 Component/Hook → Redux Action → Persistence Middleware → Storage Orchestrator → Storage
 ```
 
+Game and session snapshots are synchronously written to the same `levelup_*` local-storage keys used during Redux initialization, preventing an asynchronous stale write from replacing a newer snapshot. Enhanced-storage writes use a durable tier instead of memory-only priority, and legacy snapshot keys are migrated on read. Word progress is migrated only from language-scoped storage to avoid importing mixed legacy data. Answer progress is committed under its active language before navigation can replace Redux state; tiered progress saves remain asynchronous. Session completion maps and progress are restored, but an active session is never resumed automatically.
+
 ### **Key Features**
 - **Hash-based deduplication** prevents saving identical data
 - **Priority system**: Immediate (100ms) vs Debounced (1000ms)

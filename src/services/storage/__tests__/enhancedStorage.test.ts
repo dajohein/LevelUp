@@ -290,16 +290,16 @@ describe('EnhancedStorageService', () => {
   });
 
   describe('Game State Operations', () => {
-    it('should save game state with high priority', async () => {
+    it('should save game state to its durable canonical key', async () => {
       const gameState = { currentModule: 'grundwortschatz', score: 100 };
 
       await enhancedStorage.saveGameState(gameState);
 
       expect(asyncStorage.set).toHaveBeenCalledWith(
-        'game_state',
+        'levelup_game_state',
         gameState,
         expect.objectContaining({
-          priority: 'high',
+          priority: 'normal',
           compress: false,
         })
       );
@@ -314,7 +314,19 @@ describe('EnhancedStorageService', () => {
       const result = await enhancedStorage.loadGameState();
 
       expect(result.success).toBe(true);
-      expect(asyncStorage.get).toHaveBeenCalledWith('game_state');
+      expect(asyncStorage.get).toHaveBeenCalledWith('levelup_game_state');
+    });
+
+    it('should read the legacy game-state key when the canonical key is absent', async () => {
+      (asyncStorage.get as jest.Mock)
+        .mockResolvedValueOnce({ success: false })
+        .mockResolvedValueOnce({ success: true, data: { currentModule: 'legacy' } });
+
+      const result = await enhancedStorage.loadGameState();
+
+      expect(result).toEqual({ success: true, data: { currentModule: 'legacy' } });
+      expect(asyncStorage.get).toHaveBeenNthCalledWith(1, 'levelup_game_state');
+      expect(asyncStorage.get).toHaveBeenNthCalledWith(2, 'game_state');
     });
   });
 
@@ -325,10 +337,11 @@ describe('EnhancedStorageService', () => {
       await enhancedStorage.saveSessionState(sessionState);
 
       expect(asyncStorage.set).toHaveBeenCalledWith(
-        'session_state',
+        'levelup_session_state',
         sessionState,
         expect.objectContaining({
           ttl: 30 * 60 * 1000, // 30 minutes
+          priority: 'normal',
         })
       );
     });
@@ -342,7 +355,7 @@ describe('EnhancedStorageService', () => {
       const result = await enhancedStorage.loadSessionState();
 
       expect(result.success).toBe(true);
-      expect(asyncStorage.get).toHaveBeenCalledWith('session_state');
+      expect(asyncStorage.get).toHaveBeenCalledWith('levelup_session_state');
     });
   });
 

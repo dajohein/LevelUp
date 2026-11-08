@@ -19,12 +19,11 @@ const loadPersistedState = (): Partial<GameState> => {
     // CRITICAL FIX: Don't load mixed wordProgress into global state
     // Instead, load only the current language's progress
     const currentLanguage = savedState.language;
-    let languageSpecificProgress = {};
+    let languageSpecificProgress: GameState['wordProgress'] = {};
 
     if (currentLanguage) {
-      // Load only the current language's progress with automatic migration
+      // Only migrate language-scoped progress; legacy snapshots may contain mixed languages.
       languageSpecificProgress = DataMigrationService.safeLoadWordProgress(currentLanguage);
-      // Removed debug logging to prevent console spam
     }
 
     return {
@@ -35,6 +34,7 @@ const loadPersistedState = (): Partial<GameState> => {
       correctAnswers: savedState.correctAnswers || 0,
       totalAttempts: savedState.totalAttempts || 0,
       quizMode: savedState.quizMode || 'multiple-choice',
+      bestStreak: savedState.bestStreak || 0,
       wordProgress: languageSpecificProgress,
     };
   } catch (error) {
@@ -425,6 +425,7 @@ export const gameSlice = createSlice({
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
+      if (state.language === languageCode) return;
 
       state.language = languageCode;
       state.lives = 3;

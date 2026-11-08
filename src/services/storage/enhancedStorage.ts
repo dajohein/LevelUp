@@ -220,33 +220,35 @@ class EnhancedStorageService {
    */
   async saveGameState(gameState: any): Promise<StorageResult<void>> {
     const options: StorageOptions = {
-      priority: 'high', // Game state changes need immediate response
+      priority: 'normal', // Keep snapshots in durable storage, not memory only
       compress: false, // Don't compress for speed
       ttl: 60 * 60 * 1000, // 1 hour
     };
 
-    return await asyncStorage.set('game_state', gameState, options);
+    return await asyncStorage.set('levelup_game_state', gameState, options);
   }
 
   async loadGameState(): Promise<StorageResult<any>> {
-    return await asyncStorage.get('game_state');
+    const result = await asyncStorage.get('levelup_game_state');
+    return result.success ? result : await asyncStorage.get('game_state');
   }
 
   /**
-   * Session operations (short-lived, memory-preferred)
+   * Session snapshots use the same durable key as synchronous Redux hydration.
    */
   async saveSessionState(sessionState: any): Promise<StorageResult<void>> {
     const options: StorageOptions = {
-      priority: 'high',
+      priority: 'normal',
       compress: false,
       ttl: 30 * 60 * 1000, // 30 minutes
     };
 
-    return await asyncStorage.set('session_state', sessionState, options);
+    return await asyncStorage.set('levelup_session_state', sessionState, options);
   }
 
   async loadSessionState(): Promise<StorageResult<any>> {
-    return await asyncStorage.get('session_state');
+    const result = await asyncStorage.get('levelup_session_state');
+    return result.success ? result : await asyncStorage.get('session_state');
   }
 
   /**
