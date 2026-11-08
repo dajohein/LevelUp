@@ -16,6 +16,7 @@ import {
 } from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
 import type { GameState } from './types';
+import { generateModuleScopedOptions } from '../services/optionGenerationUtils';
 
 interface AnswerSubmission {
   answer: string;
@@ -116,6 +117,12 @@ export const gameSlice = createSlice({
           state.quizMode = action.payload?.progressiveLearning
             ? selectProgressiveQuizMode(result.word, state.wordProgress[result.word.id])
             : selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
+          if (action.payload?.progressiveLearning && state.quizMode === 'multiple-choice') {
+            state.currentOptions = generateModuleScopedOptions(result.word, state.language, [
+              result.word,
+              ...result.alternatives,
+            ]);
+          }
           state.isCorrect = null;
           state.lastAnswer = undefined;
           state.capitalizationFeedback = undefined;

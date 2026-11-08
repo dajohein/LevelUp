@@ -34,6 +34,9 @@ fill-in-the-blank. Only a correct answer at the expected stage advances the word
 next encounter; wrong answers and skips leave the stage unchanged. Word selection, session
 targets, XP, directional progress and scoring rules are unchanged. AI support and word
 selection remain available, but AI mode suggestions cannot bypass the sequence.
+The Game selector compares the progress-map reference so updates to an already-tracked
+word reach the next selection. Service-failure fallback recognition choices use the
+same direction-aware option generator as the challenge adapter, including the correct answer.
 
 `WordProgress.learningMode` is persisted by the existing language-scoped storage middleware.
 Legacy records start at multiple choice because XP alone does not prove completion of the
@@ -50,7 +53,7 @@ dispatch(checkAnswer({ answer, word, quizMode: mode, languageCode, progressiveLe
 Verify sequence, mistakes, skips, persistence and language isolation with:
 
 ```bash
-npm test -- --runInBand src/services/__tests__/learningModeProgression.test.ts src/store/__tests__/learningProgression.integration.test.ts src/store/__tests__/durableProgress.integration.test.ts src/services/__tests__/challengeServiceAdapters.test.ts src/hooks/__tests__/useEnhancedGameState.progression.test.tsx
+npm test -- --runInBand src/services/__tests__/learningModeProgression.test.ts src/store/__tests__/learningProgression.integration.test.ts src/store/__tests__/durableProgress.integration.test.ts src/services/__tests__/challengeServiceAdapters.test.ts src/hooks/__tests__/useEnhancedGameState.progression.test.tsx src/components/__tests__/Game.progression.test.tsx
 npm run type-check
 ```
 

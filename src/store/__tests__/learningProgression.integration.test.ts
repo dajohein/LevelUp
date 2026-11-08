@@ -27,6 +27,7 @@ import { deepDiveAdapter } from '../../services/challengeServiceAdapters';
 import { deepDiveService } from '../../services/deepDiveService';
 import { selectWordForMixedPractice } from '../../services/wordSelectionManager';
 import type { GameState, Word } from '../types';
+import { generateModuleScopedOptions } from '../../services/optionGenerationUtils';
 
 const word: Word = {
   id: 'house',
@@ -126,4 +127,36 @@ describe('Start Learning / Deep Dive production progression', () => {
     expect(state.wordProgress.house.learningMode).toBeUndefined();
     expect(state.wordProgress.house.timesCorrect).toBe(1);
   });
+
+  it.each(['term-to-definition', 'definition-to-term'] as const)(
+    'provides a valid correct choice in progressive fallback for %s',
+    direction => {
+      const fallbackWord = { ...word, direction };
+      const distractor = { id: 'tree', term: 'Baum', definition: 'tree' };
+      jest.mocked(selectWordForMixedPractice).mockReturnValue({
+        word: fallbackWord,
+        alternatives: [distractor],
+        selectionReason: 'fallback',
+        metadata: { poolSize: 2, masteryScore: 0, selectionAlgorithm: 'test', exclusionCount: 0 },
+      });
+      jest
+        .mocked(generateModuleScopedOptions)
+        .mockImplementationOnce(
+          jest.requireActual('../../services/optionGenerationUtils').generateModuleScopedOptions
+        );
+      let state = gameReducer(initialState(), nextWord({ progressiveLearning: true }));
+      const answer = direction === 'term-to-definition' ? word.definition : word.term;
+      expect(state.quizMode).toBe('multiple-choice');
+      expect(state.currentOptions).toContain(answer);
+      expect(state.currentOptions).toContain(
+        direction === 'term-to-definition' ? distractor.definition : distractor.term
+      );
+      expect(state.currentOptions).not.toContain(
+        direction === 'term-to-definition' ? word.term : word.definition
+      );
+      state = gameReducer(state, checkAnswer({ answer, progressiveLearning: true }));
+      expect(state.isCorrect).toBe(true);
+      expect(state.wordProgress.house.learningMode).toBe('letter-scramble');
+    }
+  );
 });
