@@ -1,8 +1,77 @@
-import React, { useEffect, useCallback, useRef, useReducer } from 'react';
+import React, { useEffect, useCallback, useRef, useReducer, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { logger } from '../../services/logger';
 import { BrainProgress } from './BrainProgress';
+
+interface GraphemeSegmenter {
+  segment(input: string): Iterable<{ segment: string }>;
+}
+
+type GraphemeSegmenterConstructor = new (
+  locales?: string | string[],
+  options?: { granularity: 'grapheme' }
+) => GraphemeSegmenter;
+
+const Segmenter = (Intl as typeof Intl & { Segmenter?: GraphemeSegmenterConstructor }).Segmenter;
+const graphemeSegmenter = Segmenter ? new Segmenter(undefined, { granularity: 'grapheme' }) : null;
+
+function createUnicodePropertyPattern(source: string): RegExp | null {
+  try {
+    return new RegExp(source, 'u');
+  } catch {
+    return null;
+  }
+}
+
+const combiningMarkPattern = createUnicodePropertyPattern('\\p{M}');
+const letterKeyPattern = createUnicodePropertyPattern('^\\p{L}\\p{M}*$');
+
+function isCombiningMark(character: string): boolean {
+  if (combiningMarkPattern) return combiningMarkPattern.test(character);
+  const codePoint = character.codePointAt(0) ?? 0;
+  return (
+    (codePoint >= 0x0300 && codePoint <= 0x036f) ||
+    (codePoint >= 0x1ab0 && codePoint <= 0x1aff) ||
+    (codePoint >= 0x1dc0 && codePoint <= 0x1dff) ||
+    (codePoint >= 0x20d0 && codePoint <= 0x20ff) ||
+    (codePoint >= 0xfe20 && codePoint <= 0xfe2f)
+  );
+}
+
+function isLetterKey(key: string): boolean {
+  return letterKeyPattern ? letterKeyPattern.test(key) : /^[a-z]$/i.test(key);
+}
+
+export function getScrambleLetters(
+  word: string,
+  segmenter: GraphemeSegmenter | null = graphemeSegmenter
+): string[] {
+  const normalizedWord = word.normalize('NFC');
+  if (segmenter) {
+    return Array.from(segmenter.segment(normalizedWord), ({ segment }) => segment);
+  }
+  return Array.from(normalizedWord).reduce<string[]>((letters, character) => {
+    if (isCombiningMark(character) && letters.length > 0) {
+      letters[letters.length - 1] += character;
+    } else {
+      letters.push(character);
+    }
+    return letters;
+  }, []);
+}
+
+function normalizeScrambleLetter(letter: string): string {
+  return letter.normalize('NFC').toLowerCase();
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  if (target.closest('input, textarea, select, [role="textbox"]')) return true;
+
+  const contentEditable = target.closest('[contenteditable]');
+  return contentEditable !== null && contentEditable.getAttribute('contenteditable') !== 'false';
+}
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -275,10 +344,11 @@ type ScrambleAction =
   | { type: 'SHOW_RESULT'; isCorrect: boolean };
 
 function buildInitialAvailableLetters(word: string): LetterTileState[] {
-  const letters = word
-    .toLowerCase()
-    .split('')
-    .map((letter, index) => ({ letter, index, used: false }));
+  const letters = getScrambleLetters(word).map((letter, index) => ({
+    letter: normalizeScrambleLetter(letter),
+    index,
+    used: false,
+  }));
   return [...letters].sort(() => Math.random() - 0.5);
 }
 
@@ -370,19 +440,17 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   onAnswer,
   disabled = false,
 }) => {
-  const [state, dispatch] = useReducer(
-    scrambleReducer,
-    word,
-    (initialWord): ScrambleState => ({
-      userAnswer: [],
-      availableLetters: buildInitialAvailableLetters(initialWord),
-      showResult: false,
-      isCorrect: false,
-      hintsUsed: 0,
-    })
-  );
+  const [state, dispatch] = useReducer(scrambleReducer, word, (initialWord): ScrambleState => ({
+    userAnswer: [],
+    availableLetters: buildInitialAvailableLetters(initialWord),
+    showResult: false,
+    isCorrect: false,
+    hintsUsed: 0,
+  }));
 
   const { userAnswer, availableLetters, showResult, isCorrect, hintsUsed } = state;
+  const targetLetters = useMemo(() => getScrambleLetters(word), [word]);
+  const inputLocked = disabled || showResult || userAnswer.length >= targetLetters.length;
 
   // Initialize scrambled letters
   useEffect(() => {
@@ -394,26 +462,27 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
   const addLetter = useCallback(
     (letterIndex: number) => {
+      if (inputLocked) return;
       const letter = availableLetters[letterIndex];
-      if (letter.used) {
-        return;
-      }
+      if (!letter || letter.used) return;
       dispatch({ type: 'ADD_LETTER', letterIndex });
     },
-    [availableLetters]
+    [availableLetters, inputLocked]
   );
 
   const removeLetter = useCallback(
     (answerIndex: number) => {
+      if (inputLocked) return;
       const removedLetter = userAnswer[answerIndex];
       dispatch({ type: 'REMOVE_LETTER', answerIndex, removedLetter });
     },
-    [userAnswer]
+    [userAnswer, inputLocked]
   );
 
   const clearAnswer = useCallback(() => {
+    if (inputLocked) return;
     dispatch({ type: 'CLEAR' });
-  }, []);
+  }, [inputLocked]);
 
   // Check if a letter at a specific position is correct
   const getLetterStatus = useCallback(
@@ -423,8 +492,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         return isCorrect ? 'correct' : 'wrong';
       }
 
-      const userLetter = userAnswer[position]?.toLowerCase();
-      const targetLetter = word.toLowerCase()[position];
+      const userLetter = normalizeScrambleLetter(userAnswer[position] ?? '');
+      const targetLetter = normalizeScrambleLetter(targetLetters[position] ?? '');
 
       if (userLetter === targetLetter) {
         return 'correct-position';
@@ -432,22 +501,24 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         return 'wrong-position';
       }
     },
-    [userAnswer, word, showResult, isCorrect]
+    [userAnswer, targetLetters, showResult, isCorrect]
   );
 
   // Keyboard support
   const handleLetterKeyDown = useCallback(
     (e: React.KeyboardEvent, letterIndex: number) => {
+      if (inputLocked) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         addLetter(letterIndex);
       }
     },
-    [addLetter]
+    [addLetter, inputLocked]
   );
 
   const handleAnswerKeyDown = useCallback(
     (e: React.KeyboardEvent, answerIndex: number) => {
+      if (inputLocked) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         if (userAnswer[answerIndex]) {
@@ -455,20 +526,20 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         }
       }
     },
-    [userAnswer, removeLetter]
+    [userAnswer, removeLetter, inputLocked]
   );
 
   const giveHint = useCallback(() => {
-    if (hintsUsed >= word.length || userAnswer.length >= word.length) return;
+    if (inputLocked || hintsUsed >= targetLetters.length) return;
 
-    const correctLetter = word.toLowerCase()[userAnswer.length];
+    const correctLetter = normalizeScrambleLetter(targetLetters[userAnswer.length]);
     const availableLetter = availableLetters.find(l => l.letter === correctLetter && !l.used);
 
     if (availableLetter) {
       const letterIndex = availableLetters.indexOf(availableLetter);
       dispatch({ type: 'HINT', letterIndex });
     }
-  }, [word, userAnswer, availableLetters, hintsUsed]);
+  }, [targetLetters, userAnswer, availableLetters, hintsUsed, inputLocked]);
 
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasCheckedRef = useRef(false);
@@ -482,7 +553,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     }
 
     if (
-      userAnswer.length === word.length &&
+      userAnswer.length === targetLetters.length &&
       !showResult &&
       userAnswer.length > 0 &&
       !disabled &&
@@ -494,8 +565,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         if (hasCheckedRef.current) return;
 
         hasCheckedRef.current = true;
-        const userWord = userAnswer.join('').toLowerCase();
-        const targetWord = word.toLowerCase();
+        const userWord = userAnswer.map(normalizeScrambleLetter).join('');
+        const targetWord = targetLetters.map(normalizeScrambleLetter).join('');
         const correct = userWord === targetWord;
 
         logger.debug('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
@@ -514,38 +585,55 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         checkTimeoutRef.current = null;
       }
     };
-  }, [userAnswer.length, word.length, showResult, disabled, userAnswer, word, onAnswer]);
+  }, [userAnswer.length, targetLetters, showResult, disabled, userAnswer, onAnswer]);
 
   // Keyboard typing support
   useEffect(() => {
-    if (disabled || showResult) return;
+    if (inputLocked) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
+      const isAltGraph = event.getModifierState('AltGraph');
+      if (
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.key === 'Dead' ||
+        event.key === 'Process' ||
+        event.key === 'Unidentified' ||
+        event.metaKey ||
+        (event.shiftKey && event.key.length !== 1) ||
+        (event.ctrlKey && !isAltGraph) ||
+        (event.altKey && !isAltGraph) ||
+        isEditableTarget(event.target)
+      ) {
+        return;
+      }
 
       // Handle backspace to remove last letter
-      if (key === 'backspace') {
-        event.preventDefault();
+      if (event.key.toLowerCase() === 'backspace') {
         if (userAnswer.length > 0) {
+          event.preventDefault();
           const lastIndex = userAnswer.length - 1;
           removeLetter(lastIndex);
         }
         return;
       }
 
-      // Handle letter keys
-      if (key.length === 1 && /[a-zA-Z ]/.test(key)) {
-        event.preventDefault();
-
-        // Find an unused letter that matches the typed key
-        const availableLetter = availableLetters.find(
-          l => l.letter.toLowerCase() === key && !l.used
+      if (
+        (event.key === ' ' || isLetterKey(event.key)) &&
+        !(
+          event.key === ' ' &&
+          event.target instanceof Element &&
+          event.target.closest('[role="button"], button')
+        )
+      ) {
+        const typedLetter = normalizeScrambleLetter(event.key);
+        const letterIndex = availableLetters.findIndex(
+          letter => letter.letter === typedLetter && !letter.used
         );
+        if (letterIndex < 0) return;
 
-        if (availableLetter) {
-          const letterIndex = availableLetters.indexOf(availableLetter);
-          addLetter(letterIndex);
-        }
+        event.preventDefault();
+        addLetter(letterIndex);
       }
     };
 
@@ -556,7 +644,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [availableLetters, userAnswer, disabled, showResult, addLetter, removeLetter]);
+  }, [availableLetters, userAnswer, inputLocked, addLetter, removeLetter]);
 
   // Removed unused variable: progress
 
@@ -566,7 +654,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
 
       <AnswerContainer>
         <AnswerDisplay role="group" aria-label="Answer letters">
-          {Array.from({ length: word.length }, (_, index) => {
+          {Array.from({ length: targetLetters.length }, (_, index) => {
             const status = getLetterStatus(index);
             return (
               <AnswerLetter
@@ -574,13 +662,14 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
                 isCorrect={status === 'correct' || status === 'correct-position'}
                 isWrong={status === 'wrong'}
                 isWrongPosition={status === 'wrong-position'}
-                onClick={() => !disabled && userAnswer[index] && removeLetter(index)}
+                onClick={() => !inputLocked && userAnswer[index] && removeLetter(index)}
                 onKeyDown={e => handleAnswerKeyDown(e, index)}
                 role="button"
                 aria-label={
                   userAnswer[index] ? `Remove letter ${userAnswer[index]}` : 'Empty position'
                 }
-                tabIndex={userAnswer[index] ? 0 : -1}
+                aria-disabled={inputLocked}
+                tabIndex={userAnswer[index] && !inputLocked ? 0 : -1}
               >
                 {userAnswer[index] || '_'}
               </AnswerLetter>
@@ -592,9 +681,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
           {availableLetters.map((letter, index) => (
             <LetterTile
               key={`${letter.letter}-${letter.index}`}
-              isUsed={letter.used}
+              isUsed={letter.used || inputLocked}
               onClick={() => {
-                if (disabled) return;
                 addLetter(index);
               }}
               onKeyDown={e => handleLetterKeyDown(e, index)}
@@ -604,8 +692,8 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
                   ? `Letter ${letter.letter.toUpperCase()} already used`
                   : `Add letter ${letter.letter.toUpperCase()}`
               }
-              aria-disabled={letter.used}
-              tabIndex={letter.used ? -1 : 0}
+              aria-disabled={letter.used || inputLocked}
+              tabIndex={letter.used || inputLocked ? -1 : 0}
             >
               {letter.letter.toUpperCase()}
             </LetterTile>
@@ -613,15 +701,15 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         </LetterPool>
 
         <ActionButtons>
-          <ActionButton variant="clear" onClick={clearAnswer} disabled={disabled}>
+          <ActionButton variant="clear" onClick={clearAnswer} disabled={inputLocked}>
             Clear All
           </ActionButton>
           <ActionButton
             variant="hint"
             onClick={giveHint}
-            disabled={disabled || hintsUsed >= word.length || userAnswer.length >= word.length}
+            disabled={inputLocked || hintsUsed >= targetLetters.length}
           >
-            Hint ({hintsUsed}/{word.length})
+            Hint ({hintsUsed}/{targetLetters.length})
           </ActionButton>
         </ActionButtons>
 
