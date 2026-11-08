@@ -1,0 +1,1340 @@
+{
+  "id": "gesundheit",
+  "name": "Gesundheit",
+  "description": "Körper, Beschwerden und Gesundheit mit Wortschatz, Wiederholung, Sehen, Hören und Lesen.",
+  "icon": "🏥",
+  "difficulty": "beginner",
+  "words": [
+    {
+      "id": "gesundheit:1",
+      "term": "der Arm",
+      "definition": "de arm",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Arme"],
+      "context": {
+        "sentence": "Ich hoffe, dass der Arm bald heilt.",
+        "translation": "Ik hoop dat de arm snel geneest.",
+        "sentenceWithBlank": "Ich hoffe, dass {BLANK} bald heilt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:2",
+      "term": "der Arzt",
+      "definition": "de arts, de dokter",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute untersucht der Arzt meinen Rücken.",
+        "translation": "Vandaag onderzoekt de arts mijn rug.",
+        "sentenceWithBlank": "Heute untersucht {BLANK} meinen Rücken."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:3",
+      "term": "der Bauch",
+      "definition": "de buik",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Essen tut der Bauch weh.",
+        "translation": "Na het eten doet de buik pijn.",
+        "sentenceWithBlank": "Nach dem Essen tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:4",
+      "term": "der Heuschnupfen",
+      "definition": "de hooikoorts",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Im Frühling ist der Heuschnupfen besonders schlimm.",
+        "translation": "In de lente is de hooikoorts bijzonder erg.",
+        "sentenceWithBlank": "Im Frühling ist {BLANK} besonders schlimm."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:5",
+      "term": "der Körper",
+      "definition": "het lichaam",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Sport braucht der Körper Ruhe.",
+        "translation": "Na het sporten heeft het lichaam rust nodig.",
+        "sentenceWithBlank": "Nach dem Sport braucht {BLANK} Ruhe."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:6",
+      "term": "der Magen",
+      "definition": "de maag",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute tut der Magen weh.",
+        "translation": "Vandaag doet de maag pijn.",
+        "sentenceWithBlank": "Heute tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:7",
+      "term": "der Mund",
+      "definition": "de mond",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Beim Zahnarzt bleibt der Mund offen.",
+        "translation": "Bij de tandarts blijft de mond open.",
+        "sentenceWithBlank": "Beim Zahnarzt bleibt {BLANK} offen."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:8",
+      "term": "der Hals",
+      "definition": "de nek",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Schlafen ist der Hals steif.",
+        "translation": "Na het slapen is de nek stijf.",
+        "sentenceWithBlank": "Nach dem Schlafen ist {BLANK} steif."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:9",
+      "term": "der Unfall",
+      "definition": "het ongeluk",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Zum Glück war der Unfall nicht schlimm.",
+        "translation": "Gelukkig was het ongeluk niet erg.",
+        "sentenceWithBlank": "Zum Glück war {BLANK} nicht schlimm."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:10",
+      "term": "der Rücken",
+      "definition": "de rug",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach der Arbeit tut der Rücken weh.",
+        "translation": "Na het werk doet de rug pijn.",
+        "sentenceWithBlank": "Nach der Arbeit tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:11",
+      "term": "der Muskelkater",
+      "definition": "de spierpijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Training ist der Muskelkater stark.",
+        "translation": "Na de training is de spierpijn hevig.",
+        "sentenceWithBlank": "Nach dem Training ist {BLANK} stark."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:12",
+      "term": "der Finger",
+      "definition": "de vinger",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Finger"],
+      "context": {
+        "sentence": "Nach dem Unfall ist der Finger verletzt.",
+        "translation": "Na het ongeluk is de vinger gewond.",
+        "sentenceWithBlank": "Nach dem Unfall ist {BLANK} verletzt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:13",
+      "term": "der Fuß",
+      "definition": "de voet",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Füße"],
+      "context": {
+        "sentence": "Nach dem Laufen tut der Fuß weh.",
+        "translation": "Na het lopen doet de voet pijn.",
+        "sentenceWithBlank": "Nach dem Laufen tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:14",
+      "term": "die Apotheke",
+      "definition": "de apotheek",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute ist die Apotheke geöffnet.",
+        "translation": "Vandaag is de apotheek open.",
+        "sentenceWithBlank": "Heute ist {BLANK} geöffnet."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:15",
+      "term": "die Gesundheit",
+      "definition": "de gezondheid",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Für uns ist die Gesundheit wichtig.",
+        "translation": "Voor ons is de gezondheid belangrijk.",
+        "sentenceWithBlank": "Für uns ist {BLANK} wichtig."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:16",
+      "term": "die Grippe",
+      "definition": "de griep",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Dieses Jahr ist die Grippe weit verbreitet.",
+        "translation": "Dit jaar is de griep wijdverspreid.",
+        "sentenceWithBlank": "Dieses Jahr ist {BLANK} weit verbreitet."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:17",
+      "term": "die Hand",
+      "definition": "de hand",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Hände"],
+      "context": {
+        "sentence": "Nach dem Sturz ist die Hand verletzt.",
+        "translation": "Na de val is de hand gewond.",
+        "sentenceWithBlank": "Nach dem Sturz ist {BLANK} verletzt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:18",
+      "term": "die Nase",
+      "definition": "de neus",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Bei einer Erkältung läuft die Nase.",
+        "translation": "Bij een verkoudheid loopt de neus.",
+        "sentenceWithBlank": "Bei einer Erkältung läuft {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:19",
+      "term": "die Erkältung",
+      "definition": "de verkoudheid",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Zum Glück ist die Erkältung fast vorbei.",
+        "translation": "Gelukkig is de verkoudheid bijna voorbij.",
+        "sentenceWithBlank": "Zum Glück ist {BLANK} fast vorbei."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:20",
+      "term": "die Krankheit",
+      "definition": "de ziekte",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Der Arzt erklärt, wie die Krankheit verläuft.",
+        "translation": "De arts legt uit hoe de ziekte verloopt.",
+        "sentenceWithBlank": "Der Arzt erklärt, wie {BLANK} verläuft."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:21",
+      "term": "das Bein",
+      "definition": "het been",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Beine"],
+      "context": {
+        "sentence": "Nach dem Unfall ist das Bein verletzt.",
+        "translation": "Na het ongeluk is het been gewond.",
+        "sentenceWithBlank": "Nach dem Unfall ist {BLANK} verletzt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:22",
+      "term": "das Gesicht",
+      "definition": "het gezicht",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Sport ist das Gesicht rot.",
+        "translation": "Na het sporten is het gezicht rood.",
+        "sentenceWithBlank": "Nach dem Sport ist {BLANK} rot."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:23",
+      "term": "das Fieber",
+      "definition": "de koorts",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute ist das Fieber gesunken.",
+        "translation": "Vandaag is de koorts gedaald.",
+        "sentenceWithBlank": "Heute ist {BLANK} gesunken."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:24",
+      "term": "das Medikament",
+      "definition": "het medicijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Medikamente"],
+      "context": {
+        "sentence": "Die Ärztin erklärt, wie das Medikament wirkt.",
+        "translation": "De arts legt uit hoe het medicijn werkt.",
+        "sentenceWithBlank": "Die Ärztin erklärt, wie {BLANK} wirkt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:25",
+      "term": "das Auge",
+      "definition": "het oog",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Augen"],
+      "context": {
+        "sentence": "Heute ist das Auge gerötet.",
+        "translation": "Vandaag is het oog rood.",
+        "sentenceWithBlank": "Heute ist {BLANK} gerötet."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:26",
+      "term": "das Ohr",
+      "definition": "het oor",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["die Ohren"],
+      "context": {
+        "sentence": "Seit gestern tut das Ohr weh.",
+        "translation": "Sinds gisteren doet het oor pijn.",
+        "sentenceWithBlank": "Seit gestern tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:27",
+      "term": "das Krankenhaus",
+      "definition": "het ziekenhuis",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Zum Glück ist das Krankenhaus in der Nähe.",
+        "translation": "Gelukkig is het ziekenhuis in de buurt.",
+        "sentenceWithBlank": "Zum Glück ist {BLANK} in der Nähe."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:28",
+      "term": "die Zahnschmerzen",
+      "definition": "de kiespijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Seit gestern sind die Zahnschmerzen stärker.",
+        "translation": "Sinds gisteren is de kiespijn heviger.",
+        "sentenceWithBlank": "Seit gestern sind {BLANK} stärker."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:29",
+      "term": "die Halsschmerzen",
+      "definition": "de keelpijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute sind die Halsschmerzen weniger schlimm.",
+        "translation": "Vandaag is de keelpijn minder erg.",
+        "sentenceWithBlank": "Heute sind {BLANK} weniger schlimm."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:30",
+      "term": "die Schmerzen",
+      "definition": "de pijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Sturz sind die Schmerzen stark.",
+        "translation": "Na de val is de pijn hevig.",
+        "sentenceWithBlank": "Nach dem Sturz sind {BLANK} stark."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:31",
+      "term": "die Rückenschmerzen",
+      "definition": "de rugpijn",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach der Arbeit sind die Rückenschmerzen schlimmer.",
+        "translation": "Na het werk is de rugpijn erger.",
+        "sentenceWithBlank": "Nach der Arbeit sind {BLANK} schlimmer."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:32",
+      "term": "sich verletzen",
+      "definition": "gewond raken",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Beim Sport kann man sich verletzen.",
+        "translation": "Bij het sporten kun je gewond raken.",
+        "sentenceWithBlank": "Beim Sport kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:33",
+      "term": "zum Arzt gehen",
+      "definition": "naar de dokter gaan",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["gegangen"],
+      "context": {
+        "sentence": "Ich muss heute zum Arzt gehen.",
+        "translation": "Ik moet vandaag naar de dokter gaan.",
+        "sentenceWithBlank": "Ich muss heute {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:34",
+      "term": "sich übergeben",
+      "definition": "overgeven",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["übergeben"],
+      "context": {
+        "sentence": "Bei starker Übelkeit kann man sich übergeben.",
+        "translation": "Bij hevige misselijkheid kun je overgeven.",
+        "sentenceWithBlank": "Bei starker Übelkeit kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:35",
+      "term": "wehtun",
+      "definition": "pijn doen",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["wehgetan"],
+      "context": {
+        "sentence": "Ein verletzter Finger kann wehtun.",
+        "translation": "Een gewonde vinger kan pijn doen.",
+        "sentenceWithBlank": "Ein verletzter Finger kann {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:36",
+      "term": "schlafen",
+      "definition": "slapen",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["geschlafen"],
+      "context": {
+        "sentence": "Heute möchte ich früh schlafen.",
+        "translation": "Vandaag wil ik vroeg slapen.",
+        "sentenceWithBlank": "Heute möchte ich früh {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:37",
+      "term": "sich schneiden",
+      "definition": "zich snijden",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["geschnitten"],
+      "context": {
+        "sentence": "Beim Kochen kann man sich schneiden.",
+        "translation": "Bij het koken kun je je snijden.",
+        "sentenceWithBlank": "Beim Kochen kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:38",
+      "term": "sich verbrennen",
+      "definition": "zich branden",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "forms": ["verbrannt"],
+      "context": {
+        "sentence": "Am heißen Herd kann man sich verbrennen.",
+        "translation": "Aan het hete fornuis kun je je branden.",
+        "sentenceWithBlank": "Am heißen Herd kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:39",
+      "term": "sich fühlen",
+      "definition": "zich voelen",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Wie kann man sich fühlen, wenn man krank ist?",
+        "translation": "Hoe kun je je voelen als je ziek bent?",
+        "sentenceWithBlank": "Wie kann man {BLANK}, wenn man krank ist?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:40",
+      "term": "schwitzen",
+      "definition": "zweten",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Beim Laufen muss ich schwitzen.",
+        "translation": "Bij het lopen moet ik zweten.",
+        "sentenceWithBlank": "Beim Laufen muss ich {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:41",
+      "term": "Gute Besserung!",
+      "definition": "Beterschap!",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Meine Freundin sagt: Gute Besserung!",
+        "translation": "Mijn vriendin zegt: Beterschap!",
+        "sentenceWithBlank": "Meine Freundin sagt: {BLANK}"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:42",
+      "term": "froh",
+      "definition": "blij",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich bin froh, dass du wieder gesund bist.",
+        "translation": "Ik ben blij dat je weer gezond bent.",
+        "sentenceWithBlank": "Ich bin {BLANK}, dass du wieder gesund bist."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:43",
+      "term": "schwindlig",
+      "definition": "duizelig",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Aufstehen ist mir schwindlig.",
+        "translation": "Na het opstaan ben ik duizelig.",
+        "sentenceWithBlank": "Nach dem Aufstehen ist mir {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:44",
+      "term": "schlimm",
+      "definition": "erg",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Die Erkältung ist nicht schlimm.",
+        "translation": "De verkoudheid is niet erg.",
+        "sentenceWithBlank": "Die Erkältung ist nicht {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:45",
+      "term": "verletzt",
+      "definition": "gewond",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Unfall ist er verletzt.",
+        "translation": "Na het ongeluk is hij gewond.",
+        "sentenceWithBlank": "Nach dem Unfall ist er {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:46",
+      "term": "gesund",
+      "definition": "gezond",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich bin endlich wieder gesund.",
+        "translation": "Ik ben eindelijk weer gezond.",
+        "sentenceWithBlank": "Ich bin endlich wieder {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:47",
+      "term": "müde",
+      "definition": "moe",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Nach dem Training bin ich müde.",
+        "translation": "Na de training ben ik moe.",
+        "sentenceWithBlank": "Nach dem Training bin ich {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:48",
+      "term": "ziemlich",
+      "definition": "nogal, tamelijk",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute bin ich ziemlich müde.",
+        "translation": "Vandaag ben ik nogal moe.",
+        "sentenceWithBlank": "Heute bin ich {BLANK} müde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:49",
+      "term": "regelmäßig",
+      "definition": "regelmatig",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich gehe regelmäßig spazieren.",
+        "translation": "Ik ga regelmatig wandelen.",
+        "sentenceWithBlank": "Ich gehe {BLANK} spazieren."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:50",
+      "term": "seit",
+      "definition": "sinds",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich bin seit gestern krank.",
+        "translation": "Ik ben sinds gisteren ziek.",
+        "sentenceWithBlank": "Ich bin {BLANK} gestern krank."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:51",
+      "term": "heute Abend",
+      "definition": "vanavond",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich bleibe heute Abend zu Hause.",
+        "translation": "Ik blijf vanavond thuis.",
+        "sentenceWithBlank": "Ich bleibe {BLANK} zu Hause."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:52",
+      "term": "heute Nachmittag",
+      "definition": "vanmiddag",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich gehe heute Nachmittag zum Arzt.",
+        "translation": "Ik ga vanmiddag naar de dokter.",
+        "sentenceWithBlank": "Ich gehe {BLANK} zum Arzt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:53",
+      "term": "erkältet",
+      "definition": "verkouden",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Meine Schwester ist erkältet.",
+        "translation": "Mijn zus is verkouden.",
+        "sentenceWithBlank": "Meine Schwester ist {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:54",
+      "term": "wieder",
+      "definition": "weer",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Ich fühle mich wieder besser.",
+        "translation": "Ik voel me weer beter.",
+        "sentenceWithBlank": "Ich fühle mich {BLANK} besser."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:55",
+      "term": "nervös",
+      "definition": "zenuwachtig",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Vor dem Arztbesuch bin ich nervös.",
+        "translation": "Voor het doktersbezoek ben ik zenuwachtig.",
+        "sentenceWithBlank": "Vor dem Arztbesuch bin ich {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:56",
+      "term": "krank",
+      "definition": "ziek",
+      "direction": "definition-to-term",
+      "category": "Wortschatz",
+      "context": {
+        "sentence": "Heute bin ich krank und bleibe im Bett.",
+        "translation": "Vandaag ben ik ziek en blijf ik in bed.",
+        "sentenceWithBlank": "Heute bin ich {BLANK} und bleibe im Bett."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:57",
+      "term": "der Zahn",
+      "definition": "de tand",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "forms": ["die Zähne"],
+      "context": {
+        "sentence": "Seit gestern tut der Zahn weh.",
+        "translation": "Sinds gisteren doet de tand pijn.",
+        "sentenceWithBlank": "Seit gestern tut {BLANK} weh."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:58",
+      "term": "besuchen",
+      "definition": "bezoeken",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Ich möchte meine Freundin im Krankenhaus besuchen.",
+        "translation": "Ik wil mijn vriendin in het ziekenhuis bezoeken.",
+        "sentenceWithBlank": "Ich möchte meine Freundin im Krankenhaus {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:59",
+      "term": "machen",
+      "definition": "doen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Heute möchte ich Sport machen.",
+        "translation": "Vandaag wil ik aan sport doen.",
+        "sentenceWithBlank": "Heute möchte ich Sport {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:60",
+      "term": "Rad fahren",
+      "definition": "fietsen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Am Wochenende möchte ich Rad fahren.",
+        "translation": "In het weekend wil ik fietsen.",
+        "sentenceWithBlank": "Am Wochenende möchte ich {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:61",
+      "term": "helfen",
+      "definition": "helpen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "forms": ["geholfen"],
+      "context": {
+        "sentence": "Kannst du mir helfen?",
+        "translation": "Kun je mij helpen?",
+        "sentenceWithBlank": "Kannst du mir {BLANK}?"
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:62",
+      "term": "können",
+      "definition": "kunnen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Wir können heute zusammen trainieren.",
+        "translation": "We kunnen vandaag samen trainen.",
+        "sentenceWithBlank": "Wir {BLANK} heute zusammen trainieren."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:63",
+      "term": "laufen",
+      "definition": "lopen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "forms": ["gelaufen"],
+      "context": {
+        "sentence": "Ich möchte jeden Morgen laufen.",
+        "translation": "Ik wil elke ochtend lopen.",
+        "sentenceWithBlank": "Ich möchte jeden Morgen {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:64",
+      "term": "brauchen",
+      "definition": "nodig hebben",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Nach dem Sport brauchen wir Wasser.",
+        "translation": "Na het sporten hebben we water nodig.",
+        "sentenceWithBlank": "Nach dem Sport {BLANK} wir Wasser."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:65",
+      "term": "schreiben",
+      "definition": "schrijven",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "forms": ["geschrieben"],
+      "context": {
+        "sentence": "Ich möchte meiner kranken Freundin schreiben.",
+        "translation": "Ik wil mijn zieke vriendin schrijven.",
+        "sentenceWithBlank": "Ich möchte meiner kranken Freundin {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:66",
+      "term": "wünschen",
+      "definition": "wensen",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Wir wünschen dir gute Besserung.",
+        "translation": "We wensen je beterschap.",
+        "sentenceWithBlank": "Wir {BLANK} dir gute Besserung."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:67",
+      "term": "gestern",
+      "definition": "gisteren",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Ich war gestern beim Arzt.",
+        "translation": "Ik was gisteren bij de dokter.",
+        "sentenceWithBlank": "Ich war {BLANK} beim Arzt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:68",
+      "term": "letzte Woche",
+      "definition": "vorige week",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Ich war letzte Woche krank.",
+        "translation": "Ik was vorige week ziek.",
+        "sentenceWithBlank": "Ich war {BLANK} krank."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:69",
+      "term": "heiß",
+      "definition": "heet",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Der Tee ist noch heiß.",
+        "translation": "De thee is nog heet.",
+        "sentenceWithBlank": "Der Tee ist noch {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:70",
+      "term": "leider",
+      "definition": "helaas",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Ich kann leider nicht mitkommen.",
+        "translation": "Ik kan helaas niet meekomen.",
+        "sentenceWithBlank": "Ich kann {BLANK} nicht mitkommen."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:71",
+      "term": "siebzig",
+      "definition": "70",
+      "direction": "definition-to-term",
+      "category": "Wiederholung",
+      "context": {
+        "sentence": "Mein Großvater ist siebzig Jahre alt.",
+        "translation": "Mijn grootvader is 70 jaar oud.",
+        "sentenceWithBlank": "Mein Großvater ist {BLANK} Jahre alt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:72",
+      "term": "der Schritt",
+      "definition": "de stap",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Nach der Verletzung ist der Schritt noch unsicher.",
+        "translation": "Na de verwonding is de stap nog onzeker.",
+        "sentenceWithBlank": "Nach der Verletzung ist {BLANK} noch unsicher."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:73",
+      "term": "der Versuch",
+      "definition": "de poging",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Diesmal gelingt der Versuch.",
+        "translation": "Deze keer lukt de poging.",
+        "sentenceWithBlank": "Diesmal gelingt {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:74",
+      "term": "sich gewöhnen an",
+      "definition": "wennen aan",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Der Ausdruck „sich gewöhnen an“ passt zum neuen Training.",
+        "translation": "De uitdrukking 'wennen aan' past bij de nieuwe training.",
+        "sentenceWithBlank": "Der Ausdruck „{BLANK}“ passt zum neuen Training."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:75",
+      "term": "die Muskeln",
+      "definition": "de spieren",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Nach dem Training sind die Muskeln müde.",
+        "translation": "Na de training zijn de spieren moe.",
+        "sentenceWithBlank": "Nach dem Training sind {BLANK} müde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:76",
+      "term": "fast",
+      "definition": "bijna",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Ich bin fast am Ziel.",
+        "translation": "Ik ben bijna bij de finish.",
+        "sentenceWithBlank": "Ich bin {BLANK} am Ziel."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:77",
+      "term": "etwas schaffen",
+      "definition": "voor elkaar krijgen",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Mit Geduld kann man etwas schaffen.",
+        "translation": "Met geduld kun je iets voor elkaar krijgen.",
+        "sentenceWithBlank": "Mit Geduld kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:78",
+      "term": "gelingen",
+      "definition": "lukken",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Mit etwas Übung wird es gelingen.",
+        "translation": "Met wat oefening zal het lukken.",
+        "sentenceWithBlank": "Mit etwas Übung wird es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:79",
+      "term": "irgendwann",
+      "definition": "ooit",
+      "direction": "term-to-definition",
+      "category": "Sehen",
+      "context": {
+        "sentence": "Ich möchte irgendwann einen Marathon laufen.",
+        "translation": "Ik wil ooit een marathon lopen.",
+        "sentenceWithBlank": "Ich möchte {BLANK} einen Marathon laufen."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:80",
+      "term": "die Leistung",
+      "definition": "de prestatie",
+      "direction": "term-to-definition",
+      "category": "Hören",
+      "context": {
+        "sentence": "Heute war die Leistung besonders gut.",
+        "translation": "Vandaag was de prestatie bijzonder goed.",
+        "sentenceWithBlank": "Heute war {BLANK} besonders gut."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:81",
+      "term": "das Ziel",
+      "definition": "de finish",
+      "direction": "term-to-definition",
+      "category": "Hören",
+      "context": {
+        "sentence": "Nach fünf Kilometern ist das Ziel erreicht.",
+        "translation": "Na vijf kilometer is de finish bereikt.",
+        "sentenceWithBlank": "Nach fünf Kilometern ist {BLANK} erreicht."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:82",
+      "term": "achten auf",
+      "definition": "letten op",
+      "direction": "term-to-definition",
+      "category": "Hören",
+      "context": {
+        "sentence": "Wir achten auf unsere Gesundheit.",
+        "translation": "We letten op onze gezondheid.",
+        "sentenceWithBlank": "Wir {BLANK} unsere Gesundheit."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:83",
+      "term": "die Strecke",
+      "definition": "de route",
+      "direction": "term-to-definition",
+      "category": "Hören",
+      "context": {
+        "sentence": "Heute führt die Strecke durch den Park.",
+        "translation": "Vandaag loopt de route door het park.",
+        "sentenceWithBlank": "Heute führt {BLANK} durch den Park."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:84",
+      "term": "erschöpft sein",
+      "definition": "uitgeput zijn",
+      "direction": "term-to-definition",
+      "category": "Hören",
+      "context": {
+        "sentence": "Nach einem Marathon kann man erschöpft sein.",
+        "translation": "Na een marathon kun je uitgeput zijn.",
+        "sentenceWithBlank": "Nach einem Marathon kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:85",
+      "term": "sich erholen",
+      "definition": "uitrusten",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Nach dem Training sollte man sich erholen.",
+        "translation": "Na de training zou je moeten uitrusten.",
+        "sentenceWithBlank": "Nach dem Training sollte man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:86",
+      "term": "erklären",
+      "definition": "uitleggen",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Die Ärztin kann die Untersuchung erklären.",
+        "translation": "De arts kan het onderzoek uitleggen.",
+        "sentenceWithBlank": "Die Ärztin kann die Untersuchung {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:87",
+      "term": "sofort",
+      "definition": "meteen",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Nach dem Unfall kam sofort Hilfe.",
+        "translation": "Na het ongeluk kwam meteen hulp.",
+        "sentenceWithBlank": "Nach dem Unfall kam {BLANK} Hilfe."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:88",
+      "term": "das Gehirn",
+      "definition": "de hersenen",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Beim Lernen arbeitet das Gehirn.",
+        "translation": "Bij het leren werken de hersenen.",
+        "sentenceWithBlank": "Beim Lernen arbeitet {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:89",
+      "term": "abspeichern",
+      "definition": "opslaan",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Das Gehirn kann neue Informationen abspeichern.",
+        "translation": "De hersenen kunnen nieuwe informatie opslaan.",
+        "sentenceWithBlank": "Das Gehirn kann neue Informationen {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:90",
+      "term": "bestimmt",
+      "definition": "bepaald",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Die Reihenfolge der Übungen ist genau bestimmt.",
+        "translation": "De volgorde van de oefeningen is precies bepaald.",
+        "sentenceWithBlank": "Die Reihenfolge der Übungen ist genau {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:91",
+      "term": "schlecht gelaunt sein",
+      "definition": "slecht gehumeurd zijn",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Wenn man müde ist, kann man schlecht gelaunt sein.",
+        "translation": "Als je moe bent, kun je slecht gehumeurd zijn.",
+        "sentenceWithBlank": "Wenn man müde ist, kann man {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:92",
+      "term": "während",
+      "definition": "terwijl",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Ich ruhe mich aus, während meine Schwester trainiert.",
+        "translation": "Ik rust uit terwijl mijn zus traint.",
+        "sentenceWithBlank": "Ich ruhe mich aus, {BLANK} meine Schwester trainiert."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:93",
+      "term": "verschwinden",
+      "definition": "verdwijnen",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Die Schmerzen verschwinden langsam.",
+        "translation": "De pijn verdwijnt langzaam.",
+        "sentenceWithBlank": "Die Schmerzen {BLANK} langsam."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:94",
+      "term": "der Muskel",
+      "definition": "de spier",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Nach dem Training ist der Muskel müde.",
+        "translation": "Na de training is de spier moe.",
+        "sentenceWithBlank": "Nach dem Training ist {BLANK} müde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:95",
+      "term": "anschauen",
+      "definition": "bekijken",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Ich möchte das Video über Gesundheit anschauen.",
+        "translation": "Ik wil de video over gezondheid bekijken.",
+        "sentenceWithBlank": "Ich möchte das Video über Gesundheit {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:96",
+      "term": "eine Menge",
+      "definition": "veel",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Heute habe ich eine Menge gelernt.",
+        "translation": "Vandaag heb ik veel geleerd.",
+        "sentenceWithBlank": "Heute habe ich {BLANK} gelernt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:97",
+      "term": "fast",
+      "definition": "bijna",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Die Erkältung ist fast vorbei.",
+        "translation": "De verkoudheid is bijna voorbij.",
+        "sentenceWithBlank": "Die Erkältung ist {BLANK} vorbei."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:98",
+      "term": "der Geruch",
+      "definition": "de geur",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Im Krankenhaus ist der Geruch ungewohnt.",
+        "translation": "In het ziekenhuis is de geur ongewoon.",
+        "sentenceWithBlank": "Im Krankenhaus ist {BLANK} ungewohnt."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:99",
+      "term": "gar nichts",
+      "definition": "helemaal niets",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Mit Schnupfen rieche ich gar nichts.",
+        "translation": "Met een verkoudheid ruik ik helemaal niets.",
+        "sentenceWithBlank": "Mit Schnupfen rieche ich {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:100",
+      "term": "der Schnupfen",
+      "definition": "de verkoudheid",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Heute ist der Schnupfen besonders lästig.",
+        "translation": "Vandaag is de verkoudheid bijzonder vervelend.",
+        "sentenceWithBlank": "Heute ist {BLANK} besonders lästig."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "gesundheit:101",
+      "term": "komisch",
+      "definition": "raar, vreemd",
+      "direction": "term-to-definition",
+      "category": "Lesen",
+      "context": {
+        "sentence": "Heute fühle ich mich komisch.",
+        "translation": "Vandaag voel ik me vreemd.",
+        "sentenceWithBlank": "Heute fühle ich mich {BLANK}."
+      },
+      "synonyms": []
+    }
+  ]
+}

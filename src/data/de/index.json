@@ -30,6 +30,13 @@
       "description": "Umfassende Vokabelliste für den Alltag - Haushalt, Möbel, Farben und mehr",
       "icon": "🏠",
       "difficulty": "intermediate"
+    },
+    {
+      "id": "gesundheit",
+      "name": "Gesundheit",
+      "description": "Körper, Beschwerden und Gesundheit mit Wortschatz, Wiederholung, Sehen, Hören und Lesen.",
+      "icon": "🏥",
+      "difficulty": "beginner"
     }
   ]
 }

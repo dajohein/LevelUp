@@ -4,6 +4,15 @@ A modern, interactive language learning game featuring **three engaging quiz mod
 
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
 
+### German vocabulary: Gesundheit
+
+Select **German → Gesundheit** to practise 101 German/Dutch entries about the body,
+illness, recovery and exercise. The module retains the source groups **Wortschatz**
+(56), **Wiederholung** (15), **Sehen** (8), **Hören** (5) and **Lesen** (17), with
+Dutch-to-German practice for the first two groups and German-to-Dutch practice for
+the last three. Every entry includes a German example and Dutch translation.
+Existing modules and their progress remain unchanged.
+
 ### � **Code Cleanup (October 26, 2025)**
 
 - **Removed obsolete files**: Cleaned up backup directories, old verification files, and unused scripts
