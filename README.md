@@ -360,6 +360,13 @@ npm run dev          # Web app only
 
 ## 🤝 **Contributing**
 
+Pull requests, main pushes and merge-queue entries run the **PR quality gate**:
+clean install on Node 22, app/API type-checks, Jest, build and a non-regressing
+ESLint baseline. Existing warnings remain visible; new warnings and all lint
+errors fail. Formatting enforcement is explicitly deferred while its existing
+baseline is repaired. See [quality gate and owner setup](docs/DEPLOYMENT.md#pull-request-quality-gate)
+for local commands and required-check configuration.
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)

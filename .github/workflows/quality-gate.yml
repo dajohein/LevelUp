@@ -1,0 +1,42 @@
+name: PR quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Clean install
+        run: npm ci --no-audit --no-fund
+      - name: Type-check app and serverless API
+        run: npm run type-check && npm run type-check:api
+      - name: Test lint regression policy
+        run: npm run test:quality-gate
+      - name: Reject new lint warnings and all errors
+        run: npm run lint:ci
+      - name: Run Jest
+        run: npm test -- --ci --runInBand
+      - name: Build app
+        run: npm run build
