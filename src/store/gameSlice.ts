@@ -7,7 +7,8 @@ import { calculateMasteryGain } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
-import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
+import { getCapitalizationFeedback } from '../services/answerValidation';
+import { validateQuizAnswer } from '../services/quizAnswerValidation';
 import { selectQuizMode } from '../services/quizModeSelectionUtils';
 import type { GameState } from './types';
 
@@ -155,13 +156,13 @@ export const gameSlice = createSlice({
     checkAnswer: (state, action: PayloadAction<string>) => {
       if (!state.currentWord) return;
 
-      // Determine correct answer based on direction
       const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      // Validate answer with language-specific rules
-      const validation = validateAnswer(action.payload, correctAnswer, state.language || 'en');
+      const validation = validateQuizAnswer(
+        action.payload,
+        state.currentWord,
+        state.quizMode,
+        state.language || 'en'
+      );
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = action.payload;
@@ -311,10 +312,12 @@ export const gameSlice = createSlice({
 
       // Reuse existing checkAnswer logic but keep it self-contained
       const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      const validation = validateAnswer(answer, correctAnswer, state.language || 'en');
+      const validation = validateQuizAnswer(
+        answer,
+        state.currentWord,
+        state.quizMode,
+        state.language || 'en'
+      );
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = answer;

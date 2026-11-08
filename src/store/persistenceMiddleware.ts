@@ -151,7 +151,9 @@ export const persistenceMiddleware: Middleware<Record<string, never>, RootState>
       // Handle critical actions immediately
       if (CRITICAL_ACTIONS.includes(action.type)) {
         queueStateChange(autoSave, state, action);
-        autoSave.forceSave(); // Immediate save for critical actions
+        void autoSave.forceSave().catch(error => {
+          logger.error('Critical persistence save failed; changes remain queued:', error);
+        });
         return result;
       }
 
@@ -173,6 +175,7 @@ export const persistenceUtils = {
         enabled: false,
         pendingChanges: 0,
         isProcessing: false,
+        lastError: null,
         lastActionTime: 0,
         config: null,
       }
