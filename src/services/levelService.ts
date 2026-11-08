@@ -173,13 +173,16 @@ export const calculateAchievementStats = (wordProgress: Record<string, WordProgr
   const perfectWords = Object.values(wordProgress).filter(p => p.xp >= 100).length;
   const totalXP = calculateTotalXP(wordProgress);
   const currentLevel = calculateCurrentLevel(totalXP);
+  const learningStreak = calculateLearningStreak(
+    learningCacheService.getPracticeDaysAcrossLanguages()
+  );
   return {
     totalWords,
     masteredWords,
     perfectWords,
     totalXP,
     currentLevel,
-    learningStreak: 0,
+    learningStreak,
     masteryRate: totalWords > 0 ? Math.round((masteredWords / totalWords) * 100) : 0,
     perfectRate: totalWords > 0 ? Math.round((perfectWords / totalWords) * 100) : 0,
   };

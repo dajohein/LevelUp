@@ -308,7 +308,7 @@ export class LearningCacheService {
     wordsStudied: string[] = [],
     groupId = 'practice'
   ): void {
-    const recordId = `${languageCode}:${sessionId}`;
+    const recordId = sessionId;
     if (this.sessionHistory.some(record => record.id === recordId)) return;
 
     const sessionRecord: SessionRecord = {
@@ -451,6 +451,10 @@ export class LearningCacheService {
       practiceDays,
       learningStreak: calculatePracticeStreak(practiceDays),
     };
+  }
+
+  getPracticeDaysAcrossLanguages(): string[] {
+    return [...new Set(Object.values(this.analytics).flatMap(analytics => analytics.practiceDays || []))].sort();
   }
 
   /**

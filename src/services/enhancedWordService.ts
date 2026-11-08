@@ -102,7 +102,7 @@ class EnhancedWordService {
         currentWordIndex: 0,
         sessionWords: interleavedWords,
         sessionResults: [],
-        sessionStartTime: sessionStartTime || Date.now(),
+        sessionStartTime: sessionStartTime ?? Date.now(),
       };
 
       logger.debug(`✅ Learning session initialized:`, {

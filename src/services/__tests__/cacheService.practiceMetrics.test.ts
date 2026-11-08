@@ -1,4 +1,7 @@
 import { LearningCacheService } from '../cacheService';
+import { learningCacheService } from '../cacheService';
+import { calculateAchievementStats } from '../levelService';
+import type { LearningSession } from '../spacedRepetitionService';
 import type { SessionAnalysis } from '../spacedRepetitionService';
 
 const analysis: SessionAnalysis = {
@@ -59,5 +62,30 @@ describe('LearningCacheService practice metrics', () => {
       learningStreak: 0,
       practiceDays: ['2026-11-06'],
     });
+  });
+
+  it('uses the fully-qualified session ID as-is for de-duplication across recording paths', () => {
+    const cache = new LearningCacheService();
+    const startTime = Date.now() - 60_000;
+    const session = { groupId: 'practice' } as LearningSession;
+
+    cache.recordSession('de', session, analysis, [], startTime, Date.now(), `de:${startTime}`);
+    cache.recordPracticeSession('de', `de:${startTime}`, startTime, Date.now(), analysis);
+
+    expect(cache.getSessionHistory('de')).toHaveLength(1);
+    expect(cache.getSessionHistory('de')[0].id).toBe(`de:${startTime}`);
+  });
+
+  it('computes overall streak from the union of language-scoped practice days', () => {
+    learningCacheService.clearCache();
+    const day1 = new Date('2026-11-06T12:00:00.000Z').getTime();
+    const day2 = new Date('2026-11-07T12:00:00.000Z').getTime();
+    const day3 = new Date('2026-11-08T12:00:00.000Z').getTime();
+    learningCacheService.recordPracticeSession('de', 'de:day-1', day1, day1, analysis);
+    learningCacheService.recordPracticeSession('de', 'de:day-2', day2, day2, analysis);
+    learningCacheService.recordPracticeSession('es', 'es:day-3', day3, day3, analysis);
+
+    expect(calculateAchievementStats({})).toMatchObject({ learningStreak: 3 });
+    learningCacheService.clearCache();
   });
 });
