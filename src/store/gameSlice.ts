@@ -20,12 +20,11 @@ const loadPersistedState = (): Partial<GameState> => {
     // CRITICAL FIX: Don't load mixed wordProgress into global state
     // Instead, load only the current language's progress
     const currentLanguage = savedState.language;
-    let languageSpecificProgress = {};
+    let languageSpecificProgress: GameState['wordProgress'] = {};
 
     if (currentLanguage) {
-      // Load only the current language's progress with automatic migration
+      // Only migrate language-scoped progress; legacy snapshots may contain mixed languages.
       languageSpecificProgress = DataMigrationService.safeLoadWordProgress(currentLanguage);
-      // Removed debug logging to prevent console spam
     }
 
     return {
@@ -36,6 +35,7 @@ const loadPersistedState = (): Partial<GameState> => {
       correctAnswers: savedState.correctAnswers || 0,
       totalAttempts: savedState.totalAttempts || 0,
       quizMode: savedState.quizMode || 'multiple-choice',
+      bestStreak: savedState.bestStreak || 0,
       wordProgress: languageSpecificProgress,
     };
   } catch (error) {
@@ -428,18 +428,21 @@ export const gameSlice = createSlice({
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
+      const sameLanguage = state.language === languageCode;
+      if (sameLanguage && state.currentWord) return;
 
-      state.language = languageCode;
-      state.lives = 3;
-      state.score = 0;
-      state.streak = 0;
-      state.isCorrect = null;
-      state.lastAnswer = undefined;
-      state.recentlyUsedWords = []; // Reset recently used words for new language
+      if (!sameLanguage) {
+        state.language = languageCode;
+        state.lives = 3;
+        state.score = 0;
+        state.streak = 0;
+        state.isCorrect = null;
+        state.lastAnswer = undefined;
+        state.recentlyUsedWords = []; // Reset recently used words for new language
 
-      // Load word progress for this language only (no merging) with automatic migration
-      const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
-      state.wordProgress = savedWordProgress;
+        // Load word progress for this language only (no merging) with automatic migration
+        state.wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
+      }
 
       // Initialize first word
       const sessionId = `game-session-${languageCode}-all`;

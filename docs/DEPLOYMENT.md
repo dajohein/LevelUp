@@ -45,6 +45,16 @@ Identical source-line diagnostics within the same file share a count; this is
 not an AST-level identity check. All errors and parser failures always fail.
 The policy tests cover these matching and failure behaviors.
 
+Pull-request and merge-queue checks compare against the exact event base commit,
+linting its `src` contents with the same ESLint configuration as the candidate.
+This prevents already-merged warnings absent from the static snapshot from being
+misattributed to another PR, while still rejecting every new occurrence, changed
+diagnostic and error. Missing or invalid base commits fail closed; the workflow
+fetches the immutable base SHA rather than a moving branch name. Pushes to `main`
+and ordinary local `lint:ci` runs retain the static-baseline policy above. To
+reproduce a PR check locally, run `npm run lint:ci -- --base-ref <full-base-SHA>`.
+Neither comparison updates or expands the committed baseline.
+
 After fixing warnings, run `npm run lint:baseline:prune` and commit the
 reductions with the fixes. Pruning first checks for regressions and cannot add
 allowances. Once pruned, reintroducing the removed warning fails. Until pruning,
