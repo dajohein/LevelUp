@@ -1,5 +1,18 @@
 import type { Word } from './wordService';
-import { validateAnswer } from './answerValidation';
+import { validateAnswer, type AnswerValidation } from './answerValidation';
+
+const openEndedModes = ['contextual-analysis', 'usage-example', 'synonym-antonym'];
+
+export const getQuizAnswerDirection = (
+  word: Word,
+  quizMode: string
+): NonNullable<Word['direction']> => {
+  if (quizMode === 'fill-in-the-blank') {
+    return 'definition-to-term';
+  }
+
+  return word.direction || 'definition-to-term';
+};
 
 /**
  * Validate the answer for the active quiz mode, including optional open-answer
@@ -10,7 +23,16 @@ export const validateQuizAnswer = (
   word: Word,
   quizMode: string,
   languageCode: string
-) => {
+): AnswerValidation => {
+  if (openEndedModes.includes(quizMode)) {
+    const isCorrect = answer.trim().length > 0;
+    return {
+      isCorrect,
+      capitalizationCorrect: true,
+      capitalizationPenalty: 1,
+    };
+  }
+
   const direction = word.direction || 'definition-to-term';
   const correctAnswer =
     quizMode === 'fill-in-the-blank'
@@ -24,7 +46,7 @@ export const validateQuizAnswer = (
     validateAnswer(
       answer.trim(),
       candidate.trim(),
-      index > 0 && word.direction === 'term-to-definition' ? 'nl' : languageCode
+      index > 0 && direction === 'term-to-definition' ? 'nl' : languageCode
     )
   );
 

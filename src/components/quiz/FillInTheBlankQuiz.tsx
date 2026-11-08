@@ -231,7 +231,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     }
 
     // Use explicit blank markers if available (preferred method)
-    if (context.sentenceWithBlank) {
+    if (context.sentenceWithBlank !== undefined) {
       const parts = context.sentenceWithBlank.split('{BLANK}');
       if (parts.length === 2) {
         return {
@@ -271,7 +271,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
 
     // Final fallback: show instruction without revealing answer
     return {
-      beforeBlank: 'Complete the German sentence:',
+      beforeBlank: 'Complete the sentence:',
       afterBlank: '',
     };
   };
@@ -286,15 +286,15 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
 
       {questionWord && <QuestionPrompt>{questionWord}</QuestionPrompt>}
 
-      {context?.sentence && beforeBlank && afterBlank && (
+      {context?.sentence && (
         <ContextSection>
           <ContextLabel>Complete the sentence</ContextLabel>
           <SentenceContainer>
-            <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
+            <span>{beforeBlank}</span>
             <BlankSpace isCorrect={isCorrect} isError={isError}>
               {showAnswer ? word : '_____'}
             </BlankSpace>
-            <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
+            <span>{afterBlank}</span>
           </SentenceContainer>
         </ContextSection>
       )}
