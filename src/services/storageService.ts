@@ -106,8 +106,23 @@ const isLocalStorageAvailable = (): boolean => {
 const lastSaveData: { [key: string]: any } = {};
 const lastSaveTime: { [key: string]: number } = {};
 const SAVE_DEBOUNCE_MS = 100; // Prevent saves within 100ms of same data
+const progressRevisions = new Map<string, number>();
 
 export const wordProgressStorage = {
+  getRevision: (languageCode: string): number => {
+    if (!progressRevisions.has(languageCode)) progressRevisions.set(languageCode, 0);
+    return progressRevisions.get(languageCode) ?? 0;
+  },
+
+  has: (languageCode: string): boolean => {
+    if (!isLocalStorageAvailable()) return false;
+    const data = safeJSONParse<PersistentWordProgress>(
+      localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
+      {}
+    );
+    return Object.prototype.hasOwnProperty.call(data, languageCode);
+  },
+
   save: (languageCode: string, wordProgress: { [key: string]: WordProgress }): void => {
     if (!isLocalStorageAvailable()) return;
 
@@ -132,6 +147,7 @@ export const wordProgressStorage = {
       existingData[languageCode] = wordProgress;
 
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+      progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
 
       // Update cache to prevent future duplicates
       lastSaveData[languageCode] = dataHash;
@@ -193,8 +209,16 @@ export const wordProgressStorage = {
         );
         delete existingData[languageCode];
         localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+        progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
+        delete lastSaveData[languageCode];
+        delete lastSaveTime[languageCode];
       } else {
         localStorage.removeItem(STORAGE_KEYS.WORD_PROGRESS);
+        for (const [language, revision] of progressRevisions) {
+          progressRevisions.set(language, revision + 1);
+          delete lastSaveData[language];
+          delete lastSaveTime[language];
+        }
       }
     } catch (error) {
       logger.error('Failed to clear word progress:', error);
@@ -257,6 +281,7 @@ export const wordProgressStorage = {
 
       // Save back to localStorage
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+      progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
 
       logger.debug(`💾 Saved raw data for ${languageCode}`);
     } catch (error) {

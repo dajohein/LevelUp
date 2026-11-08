@@ -120,6 +120,15 @@ describe('durable game and session progress integration', () => {
     });
     expect(reloadedSession.isSessionActive).toBe(false);
     expect(reloadedSession.currentSession).toBeNull();
+
+    expect(reloadedGame.currentWord).toBeNull();
+    const { setLanguage: continueLanguage } = await import('../gameSlice');
+    reloadedStore.dispatch(continueLanguage('de'));
+    expect(reloadedStore.getState().game.currentWord).not.toBeNull();
+    expect(reloadedStore.getState().game.currentOptions.length).toBeGreaterThan(0);
+    expect(reloadedStore.getState().game.wordProgress).toEqual(reloadedGame.wordProgress);
+    expect(reloadedStore.getState().game.score).toBe(reloadedGame.score);
+    expect(reloadedStore.getState().game.totalAttempts).toBe(reloadedGame.totalAttempts);
   });
 
   it('preserves pending answers across language switches and rapid switches back', async () => {

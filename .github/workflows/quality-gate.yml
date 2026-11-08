@@ -35,7 +35,15 @@ jobs:
       - name: Test lint regression policy
         run: npm run test:quality-gate
       - name: Reject new lint warnings and all errors
-        run: npm run lint:ci
+        env:
+          LINT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -n "$LINT_BASE_SHA" ]; then
+            git fetch --no-tags --depth=1 origin "$LINT_BASE_SHA"
+            npm run lint:ci -- --base-ref "$LINT_BASE_SHA"
+          else
+            npm run lint:ci
+          fi
       - name: Run Jest
         run: npm test -- --ci --runInBand
       - name: Build app

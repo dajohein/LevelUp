@@ -3,6 +3,7 @@ import { smartCache } from '../cache';
 import { asyncStorage } from '../asyncStorage';
 import { remoteStorage } from '../remoteStorage';
 import { WordProgress } from '../../../store/types';
+import { wordProgressStorage } from '../../storageService';
 
 // Mock dependencies
 jest.mock('../cache');
@@ -29,6 +30,8 @@ describe('EnhancedStorageService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    wordProgressStorage.clear();
+    localStorage.clear();
 
     // Setup default mock implementations
     (asyncStorage.set as jest.Mock).mockResolvedValue({ success: true });
@@ -53,6 +56,122 @@ describe('EnhancedStorageService', () => {
   });
 
   describe('Word Progress Operations', () => {
+    it('retains the latest Redux answer through an in-flight save and rapid language navigation', async () => {
+      jest.useFakeTimers();
+      const [{ configureStore }, game, session, achievements, middleware] = await Promise.all([
+        import('@reduxjs/toolkit'),
+        import('../../../store/gameSlice'),
+        import('../../../store/sessionSlice'),
+        import('../../../store/achievementsSlice'),
+        import('../../../store/persistenceMiddleware'),
+      ]);
+      let completeOlder!: (result: { success: boolean }) => void;
+      let completeNewer!: (result: { success: boolean }) => void;
+      const olderWrite = new Promise<{ success: boolean }>(resolve => {
+        completeOlder = resolve;
+      });
+      const newerWrite = new Promise<{ success: boolean }>(resolve => {
+        completeNewer = resolve;
+      });
+      try {
+        const store = configureStore({
+          reducer: {
+            game: game.default,
+            session: session.default,
+            achievements: achievements.default,
+          },
+          middleware: getDefaultMiddleware =>
+            getDefaultMiddleware().concat(middleware.persistenceMiddleware),
+        });
+        store.dispatch(game.setLanguage('de'));
+        store.dispatch(
+          game.setCurrentWord({
+            word: { id: 'de-house', term: 'Haus', definition: 'house' },
+            options: ['Haus'],
+          })
+        );
+        store.dispatch(game.checkAnswer('Haus'));
+        jest
+          .mocked(asyncStorage.set)
+          .mockReturnValueOnce(olderWrite)
+          .mockReturnValueOnce(newerWrite);
+        const flush = middleware.persistenceUtils.forceSave();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(asyncStorage.set).toHaveBeenCalledWith(
+          'word_progress_de',
+          expect.any(Object),
+          expect.any(Object)
+        );
+        store.dispatch(game.checkAnswer('Haus'));
+        const latest = store.getState().game.wordProgress['de-house'];
+        completeOlder({ success: true });
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(wordProgressStorage.loadRaw('de')['de-house']).toEqual(latest);
+        store.dispatch(game.setLanguage('es'));
+        expect(store.getState().game.wordProgress['de-house']).toBeUndefined();
+        store.dispatch(game.setLanguage('de'));
+        expect(store.getState().game.wordProgress['de-house']).toEqual(latest);
+
+        completeNewer({ success: true });
+        await flush;
+      } finally {
+        completeOlder({ success: true });
+        completeNewer({ success: true });
+        await middleware.persistenceUtils.cleanup();
+        jest.useRealTimers();
+      }
+    });
+
+    it('preserves a newer synchronous checkpoint when an older provider write finishes', async () => {
+      const initial = { ...mockWordProgress['word-1'], timesCorrect: 1, xp: 10 };
+      const latest = { ...initial, timesCorrect: 2, xp: 20 };
+      wordProgressStorage.save('de', { 'word-1': initial });
+      let completeWrite!: (result: { success: boolean }) => void;
+      const providerWrite = new Promise<{ success: boolean }>(resolve => {
+        completeWrite = resolve;
+      });
+      jest.mocked(asyncStorage.set).mockReturnValueOnce(providerWrite);
+      const save = enhancedStorage.saveWordProgress('de', { 'word-1': initial });
+      await Promise.resolve();
+      expect(asyncStorage.set).toHaveBeenCalled();
+      wordProgressStorage.save('de', { 'word-1': latest });
+      wordProgressStorage.save('es', mockWordProgress);
+
+      completeWrite({ success: true });
+      await expect(save).resolves.toMatchObject({ success: true });
+
+      expect(wordProgressStorage.loadRaw('de')['word-1']).toMatchObject(latest);
+      expect(wordProgressStorage.load('es')).toEqual(mockWordProgress);
+      jest.mocked(smartCache.get).mockResolvedValue({ 'word-1': initial });
+      jest.mocked(asyncStorage.get).mockResolvedValue({
+        success: true,
+        data: { 'word-1': initial },
+      });
+      await expect(enhancedStorage.loadWordProgress('de')).resolves.toMatchObject({
+        success: true,
+        data: { 'word-1': latest },
+      });
+      expect(asyncStorage.get).not.toHaveBeenCalled();
+    });
+
+    it('does not discard a provider write because a different language changed', async () => {
+      let completeWrite!: (result: { success: boolean }) => void;
+      const providerWrite = new Promise<{ success: boolean }>(resolve => {
+        completeWrite = resolve;
+      });
+      jest.mocked(asyncStorage.set).mockReturnValueOnce(providerWrite);
+      const save = enhancedStorage.saveWordProgress('de', mockWordProgress);
+      await Promise.resolve();
+      expect(asyncStorage.set).toHaveBeenCalled();
+      wordProgressStorage.save('es', mockWordProgress);
+      completeWrite({ success: true });
+      await save;
+
+      expect(wordProgressStorage.load('de')).toEqual(mockWordProgress);
+      expect(wordProgressStorage.load('es')).toEqual(mockWordProgress);
+    });
+
     it('should save word progress with language code', async () => {
       const result = await enhancedStorage.saveWordProgress('de', mockWordProgress);
 
@@ -147,10 +266,42 @@ describe('EnhancedStorageService', () => {
     });
 
     it('should clear word progress for language', async () => {
+      wordProgressStorage.save('de', mockWordProgress);
+      wordProgressStorage.save('es', mockWordProgress);
       await enhancedStorage.clearWordProgress('de');
 
       expect(asyncStorage.delete).toHaveBeenCalledWith('word_progress_de');
       expect(smartCache.invalidate).toHaveBeenCalledWith('word_progress_de');
+      expect(wordProgressStorage.has('de')).toBe(false);
+      expect(wordProgressStorage.load('es')).toEqual(mockWordProgress);
+
+      wordProgressStorage.save('de', mockWordProgress);
+      expect(wordProgressStorage.load('de')).toEqual(mockWordProgress);
+    });
+
+    it('reads a newer checkpoint committed while the provider read is pending', async () => {
+      let completeRead!: (result: {
+        success: boolean;
+        data: Record<string, WordProgress>;
+      }) => void;
+      const providerRead = new Promise<{
+        success: boolean;
+        data: Record<string, WordProgress>;
+      }>(resolve => {
+        completeRead = resolve;
+      });
+      jest.mocked(asyncStorage.get).mockReturnValueOnce(providerRead);
+      const load = enhancedStorage.loadWordProgress('de');
+      await Promise.resolve();
+      expect(asyncStorage.get).toHaveBeenCalledWith('word_progress_de');
+      const latest = { ...mockWordProgress['word-1'], timesCorrect: 10 };
+      wordProgressStorage.save('de', { 'word-1': latest });
+      completeRead({ success: true, data: mockWordProgress });
+
+      await expect(load).resolves.toMatchObject({
+        success: true,
+        data: { 'word-1': latest },
+      });
     });
   });
 

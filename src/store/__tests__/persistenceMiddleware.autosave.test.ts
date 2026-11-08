@@ -41,8 +41,8 @@ describe('Persistence middleware autosave failure integration', () => {
       reducer: { game: gameReducer, session: sessionReducer, achievements: achievementsReducer },
       middleware: getDefaultMiddleware => getDefaultMiddleware().concat(persistenceMiddleware),
     });
-    jest.mocked(enhancedStorage.saveGameState).mockRejectedValueOnce(new Error('Offline'));
-    const action = { type: 'game/setLanguage', payload: 'de' };
+    jest.mocked(enhancedStorage.saveAchievements).mockRejectedValueOnce(new Error('Offline'));
+    const action = { type: 'achievements/unlockAchievement', payload: 'first-answer' };
 
     expect(store.dispatch(action)).toEqual(action);
     await jest.advanceTimersByTimeAsync(0);
@@ -55,7 +55,7 @@ describe('Persistence middleware autosave failure integration', () => {
       pendingChanges: 1,
       lastError: expect.stringContaining('Offline'),
     });
-    jest.mocked(enhancedStorage.saveGameState).mockResolvedValueOnce({
+    jest.mocked(enhancedStorage.saveAchievements).mockResolvedValueOnce({
       success: false,
       error: 'Quota exceeded',
     });

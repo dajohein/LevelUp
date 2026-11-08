@@ -1,5 +1,6 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { ESLint } = require('eslint');
 
 const baselinePath = path.join(__dirname, 'lint-baseline.json');
@@ -54,13 +55,39 @@ function compareWarnings(results, baseline, cwd) {
   return { current, regressions, errors, warnings, resolved: allowed - retained };
 }
 
+async function baselineFromCommit(eslint, commit, cwd) {
+  if (!/^[0-9a-f]{40}$/.test(commit)) {
+    throw new Error('Lint base must be a full commit SHA.');
+  }
+  const git = args => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  git(['cat-file', '-e', `${commit}^{commit}`]);
+  const files = git(['ls-tree', '-rz', '--name-only', commit, '--', 'src'])
+    .split('\0')
+    .filter(file => /\.tsx?$/.test(file));
+  const results = [];
+  for (const file of files) {
+    const source = git(['show', `${commit}:${file}`]);
+    results.push(...(await eslint.lintText(source, { filePath: path.join(cwd, file) })));
+  }
+  const report = compareWarnings(results, { version: 1, warnings: {} }, cwd);
+  return { version: 1, warnings: report.current };
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  if (args.length > 1 || (args.length === 1 && args[0] !== '--prune')) {
-    throw new Error('Usage: node scripts/check-lint-baseline.cjs [--prune]');
+  const useBase = args.length === 2 && args[0] === '--base-ref';
+  if (!useBase && !(args.length === 0 || (args.length === 1 && args[0] === '--prune'))) {
+    throw new Error(
+      'Usage: node scripts/check-lint-baseline.cjs [--prune | --base-ref COMMIT_SHA]'
+    );
   }
-  const baseline = JSON.parse(await fs.readFile(baselinePath, 'utf8'));
+  let baseline = JSON.parse(await fs.readFile(baselinePath, 'utf8'));
+  compareWarnings([], baseline, process.cwd());
   const eslint = new ESLint({ extensions: ['.ts', '.tsx'] });
+  if (useBase) {
+    baseline = await baselineFromCommit(eslint, args[1], process.cwd());
+    console.log(`Comparing lint warnings against base commit ${args[1]}.`);
+  }
   const results = await eslint.lintFiles(['src']);
   const report = compareWarnings(results, baseline, process.cwd());
   const formatter = await eslint.loadFormatter('stylish');
@@ -89,7 +116,7 @@ async function main() {
   }
 }
 
-module.exports = { warningKey, compareWarnings };
+module.exports = { warningKey, compareWarnings, baselineFromCommit };
 
 if (require.main === module) {
   main().catch(error => {

@@ -428,19 +428,21 @@ export const gameSlice = createSlice({
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
-      if (state.language === languageCode) return;
+      const sameLanguage = state.language === languageCode;
+      if (sameLanguage && state.currentWord) return;
 
-      state.language = languageCode;
-      state.lives = 3;
-      state.score = 0;
-      state.streak = 0;
-      state.isCorrect = null;
-      state.lastAnswer = undefined;
-      state.recentlyUsedWords = []; // Reset recently used words for new language
+      if (!sameLanguage) {
+        state.language = languageCode;
+        state.lives = 3;
+        state.score = 0;
+        state.streak = 0;
+        state.isCorrect = null;
+        state.lastAnswer = undefined;
+        state.recentlyUsedWords = []; // Reset recently used words for new language
 
-      // Load word progress for this language only (no merging) with automatic migration
-      const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
-      state.wordProgress = savedWordProgress;
+        // Load word progress for this language only (no merging) with automatic migration
+        state.wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
+      }
 
       // Initialize first word
       const sessionId = `game-session-${languageCode}-all`;
