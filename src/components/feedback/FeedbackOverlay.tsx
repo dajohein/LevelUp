@@ -108,6 +108,17 @@ const RewardIndicator = styled.div`
   font-weight: bold;
 `;
 
+const RewardFeedback = styled.p`
+  margin: 0 0 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background-color: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: min(20rem, 75vw);
+`;
+
 const FeedbackIcon = styled.div<{ isCorrect: boolean }>`
   font-size: ${props => (props.isCorrect ? '2rem' : '4rem')};
   margin-bottom: ${props => (props.isCorrect ? '0.5rem' : '1rem')};
@@ -231,7 +242,10 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
       {isCorrect !== null && (
         <Overlay isCorrect={isCorrect} show={show} aria-hidden="true">
           {isCorrect ? (
-            <RewardIndicator>★</RewardIndicator>
+            <>
+              <RewardIndicator>★</RewardIndicator>
+              {capitalizationFeedback && <RewardFeedback>{capitalizationFeedback}</RewardFeedback>}
+            </>
           ) : (
             <FeedbackCard isCorrect={false}>
               <FeedbackIcon isCorrect={false}>❌</FeedbackIcon>

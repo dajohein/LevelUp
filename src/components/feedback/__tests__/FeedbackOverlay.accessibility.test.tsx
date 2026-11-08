@@ -52,15 +52,27 @@ describe('FeedbackOverlay accessibility', () => {
   });
 
   it('announces correct answers with text rather than relying on color or sound', () => {
-    renderFeedback({
+    const { rerender } = renderFeedback({
       isCorrect: true,
       answerSequence: 1,
       selectedAnswer: 'Hund',
       correctAnswer: 'Hund',
+      capitalizationFeedback: 'Remember to capitalize German nouns.',
     });
 
     expect(screen.getByRole('status')).toHaveTextContent('Answer 1: Correct.');
-    expect(screen.getByText('★')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Remember to capitalize German nouns.');
+    const reward = screen.getByText('★');
+    expect(reward.parentElement).toHaveTextContent('Remember to capitalize German nouns.');
+    expect(screen.getAllByText('Remember to capitalize German nouns.')).toHaveLength(2);
     expect(screen.queryByText('🎉')).not.toBeInTheDocument();
+
+    rerender(
+      <ThemeProvider theme={theme}>
+        <FeedbackOverlay isCorrect={null} answerSequence={1} selectedAnswer="" />
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByText('Review previous answer'));
+    expect(screen.getByText('Remember to capitalize German nouns.')).toBeVisible();
   });
 });

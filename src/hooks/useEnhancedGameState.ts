@@ -78,9 +78,10 @@ export interface GameHandlers {
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
     transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
-    additionalData?: unknown,
-    wasAnswerCorrect?: boolean,
-    transitionId?: number
+    options?: {
+      additionalData?: unknown;
+      transitionId?: number;
+    }
   ) => Promise<void>;
   handleContinueFromLearningCard: () => void;
   checkAnswerCorrectness: (answer: string) => boolean;
@@ -290,15 +291,15 @@ export const useEnhancedGameState = ({
   const handleWordTransition = useCallback(
     async (
       transitionType: 'enhanced' | 'standard' | 'quiz' | 'batch-complete' = 'standard',
-      additionalData?: unknown,
-      wasAnswerCorrect = false,
-      transitionId?: number
+      {
+        additionalData,
+        transitionId,
+      }: {
+        additionalData?: unknown;
+        transitionId?: number;
+      } = {}
     ) => {
       try {
-        if (!wasAnswerCorrect) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
         if (transitionId !== undefined && transitionId !== transitionIdRef.current) return;
 
         if (transitionType === 'enhanced') {
@@ -503,12 +504,9 @@ export const useEnhancedGameState = ({
       transitionTimeoutRef.current = setTimeout(
         () => {
           transitionTimeoutRef.current = null;
-          handleWordTransitionRef.current?.(
-            transitionType,
-            undefined,
-            validationResult.isCorrect,
-            transitionId
-          );
+          handleWordTransitionRef.current?.(transitionType, {
+            transitionId,
+          });
         },
         gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
       );

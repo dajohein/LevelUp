@@ -428,9 +428,13 @@ describe('GameModeHandler', () => {
       expect(handler.getOptimalTiming(quizMode, true)).toBe(500);
     });
 
-    it('preserves the longer incorrect-answer review delay', () => {
-      expect(handler.getOptimalTiming('multiple-choice', false)).toBe(3000);
-      expect(handler.getOptimalTiming('contextual-analysis', false)).toBe(5000);
+    it('includes the full incorrect-answer review delay in one timing value', () => {
+      expect(handler.getOptimalTiming('multiple-choice', false)).toBe(5000);
+      expect(handler.getOptimalTiming('letter-scramble', false)).toBe(5500);
+      expect(handler.getOptimalTiming('fill-in-the-blank', false)).toBe(6500);
+      expect(handler.getOptimalTiming('contextual-analysis', false)).toBe(7000);
+      expect(handler.getOptimalTiming('usage-example', false)).toBe(7000);
+      expect(handler.getOptimalTiming('synonym-antonym', false)).toBe(6000);
     });
 
     it('falls back to multiple-choice timing for unknown mode', () => {

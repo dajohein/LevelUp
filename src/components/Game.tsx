@@ -42,6 +42,7 @@ export const Game: React.FC = () => {
       left.currentWord?.id === right.currentWord?.id &&
       left.quizMode === right.quizMode &&
       left.language === right.language &&
+      left.capitalizationFeedback === right.capitalizationFeedback &&
       Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
   );
 
