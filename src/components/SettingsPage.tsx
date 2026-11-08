@@ -7,6 +7,7 @@ import { AccountLinking } from './AccountLinking';
 import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { logger } from '../services/logger';
 import { ModalDialog } from './ui/ModalDialog';
+import { DataTransfer } from './DataTransfer';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -144,13 +145,7 @@ export const SettingsPage: React.FC = () => {
   }, []);
 
   const handleNavigation = (path: string) => {
-    if (path === '/export') {
-      // Trigger data export
-      logger.info('Export data functionality coming soon');
-    } else if (path === '/import') {
-      // Trigger data import
-      logger.info('Import data functionality coming soon');
-    } else if (path === '/install') {
+    if (path === '/install') {
       // Trigger PWA install
       window.location.reload();
     } else if (path === '/account-linking') {
@@ -205,10 +200,11 @@ export const SettingsPage: React.FC = () => {
             <MobileButton variant="secondary" onClick={() => navigate('/profile')} fullWidth>
               View Profile & Progress
             </MobileButton>
-            <MobileButton variant="outline" onClick={() => handleNavigation('/export')} fullWidth>
-              Export Learning Data
-            </MobileButton>
           </OptionsGrid>
+          <DataTransfer
+            exportButtonLabel="Export Learning Data"
+            importButtonLabel="Import from Device"
+          />
         </SectionCard>
 
         <SectionCard>
@@ -223,9 +219,6 @@ export const SettingsPage: React.FC = () => {
               fullWidth
             >
               Link Your Devices
-            </MobileButton>
-            <MobileButton variant="outline" onClick={() => handleNavigation('/import')} fullWidth>
-              Import from Device
             </MobileButton>
           </OptionsGrid>
         </SectionCard>
