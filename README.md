@@ -157,7 +157,7 @@ window.testPerformanceFix();
 ### **Triple Quiz System**
 
 - **📝 Multiple Choice**: Visual recognition for beginners (up to 50 XP)
-- **🔤 Letter Scramble**: Interactive word building with real-time feedback
+- **🔤 Letter Scramble**: Interactive word building with real-time feedback and accented-letter keyboard input
 - **✍️ Open-Ended**: Advanced recall testing for mastery (50+ XP)
 - **Intelligent mode selection** based on word complexity and user mastery
 - **German case sensitivity** with partial credit system
@@ -291,7 +291,7 @@ src/
 - **Responsive Design**: Optimized layouts for mobile, tablet, and desktop
 - **Touch Interface**: Native touch gestures and haptic feedback
 - **PWA Ready**: Service worker, offline support, and app-like experience
-- **Keyboard Support**: Full keyboard navigation in Letter Scramble mode
+- **Keyboard Support**: Type accented letters in Letter Scramble mode; browser shortcuts and input fields remain unaffected
 - **Real-time Feedback**: Smooth animations and visual feedback
 
 ## 🔧 **Advanced Features**
