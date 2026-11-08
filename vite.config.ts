@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import removeConsole from 'vite-plugin-remove-console';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { serviceWorkerVersioning } from './scripts/service-worker-versioning.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +16,7 @@ export default defineConfig({
     removeConsole({
       includes: ['log', 'debug', 'info'],
     }),
+    serviceWorkerVersioning(),
   ],
   resolve: {
     alias: {

@@ -24,6 +24,7 @@ import {
   SessionAnalysis,
 } from './spacedRepetitionService';
 import { logger } from './logger';
+import { hasEquivalentTranslation } from './translationUtils';
 
 // Enhanced word service state
 interface EnhancedWordServiceState {
@@ -355,12 +356,18 @@ class EnhancedWordService {
 
     // Filter out the correct answer and get random incorrect options
     const incorrectOptions = allWords
-      .filter(w => w.id !== targetWord.id)
+      .filter(
+        word =>
+          word.id !== targetWord.id &&
+          !hasEquivalentTranslation(targetWord.definition, word.definition)
+      )
       .map(w => (direction === 'definition-to-term' ? w.term : w.definition))
-      .filter(option => option !== correctAnswer);
+      .filter(option => option.trim().toLowerCase() !== correctAnswer.trim().toLowerCase());
 
     // Shuffle and take 3 incorrect options
-    const shuffledIncorrect = incorrectOptions.sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffledIncorrect = [...new Set(incorrectOptions)]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
 
     // Create options array with correct answer in random position
     const options = [...shuffledIncorrect];

@@ -4,6 +4,7 @@
  */
 import { Word } from '../wordService';
 import { ChallengeResult } from '../challengeServiceInterface';
+import { validateQuizAnswer } from '../quizAnswerValidation';
 
 /** Shape of the enhanced word info returned by the challenge service. */
 interface EnhancedWordInfo {
@@ -53,6 +54,10 @@ export class GameModeHandler {
    * Get the question text based on quiz mode and word direction
    */
   getQuizQuestion(word: Word, quizMode: string): string {
+    if (quizMode === 'fill-in-the-blank') {
+      return word.definition;
+    }
+
     // For enhanced quiz modes, provide context-specific prompts
     if (quizMode === 'contextual-analysis') {
       const baseQuestion = this.isUnidirectionalMode(quizMode)
@@ -115,6 +120,10 @@ export class GameModeHandler {
       // Bidirectional modes follow word direction
       return this.getAnswerWord(word);
     }
+  }
+
+  isCorrectAnswer(answer: string, word: Word, quizMode: string, languageCode: string): boolean {
+    return validateQuizAnswer(answer, word, quizMode, languageCode).isCorrect;
   }
 
   /**
