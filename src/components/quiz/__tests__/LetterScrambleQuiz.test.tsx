@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@emotion/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { LetterScrambleQuiz } from '../LetterScrambleQuiz';
+import { getScrambleLetters, LetterScrambleQuiz } from '../LetterScrambleQuiz';
 import { theme } from '../../../styles/theme';
 
 function renderQuiz(word: string) {
@@ -53,6 +53,10 @@ describe('LetterScrambleQuiz keyboard input', () => {
     expect(onAnswer).toHaveBeenCalledWith(true);
   });
 
+  it('keeps combining marks attached in the parse-safe segmenter fallback', () => {
+    expect(getScrambleLetters('pin\u0303a', null)).toEqual(['p', 'i', 'ñ', 'a']);
+  });
+
   it('uses duplicate letters one at a time and preserves modified and composing input', () => {
     const onAnswer = renderQuiz('llama');
 
@@ -81,6 +85,11 @@ describe('LetterScrambleQuiz keyboard input', () => {
     jest.useFakeTimers();
     const onAnswer = renderQuiz('ab');
     typeLetters('a', 'b');
+
+    const removeButton = screen.getByRole('button', { name: 'Remove letter a' });
+    expect(removeButton).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(removeButton);
+    expect(removeButton).toHaveTextContent('a');
 
     expect(fireEvent.keyDown(document, { key: 'Backspace' })).toBe(true);
     act(() => jest.advanceTimersByTime(300));
