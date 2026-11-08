@@ -11,6 +11,10 @@ The workspace-local supervisor tracks only processes it starts. It waits up to
 failed start stops its own processes and returns a nonzero exit code.
 Occupied ports are errors, not an instruction to stop other processes.
 Starting again while this workspace's servers are running is also an error.
+Managed process groups have a persistent ownership anchor: shutdown waits for
+their descendants and escalates to SIGKILL if they ignore SIGTERM. If ownership
+cannot be verified, the supervisor remains available instead of signalling an
+unverified group. Logging failures also stop the managed services.
 
 **Logging (Twelve-Factor):**
 - By default, logs stream to stdout (standard output)

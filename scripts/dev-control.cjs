@@ -169,39 +169,71 @@ async function supervise(token) {
   let stopping = false;
   const children = [];
   let failure;
-  const fail = error => { if (!failure) failure = error; };
+  const report = message => {
+    try { fs.writeSync(2, `${message}\n`); } catch (error) {
+      if (error.code !== 'EPIPE' && error.code !== 'EBADF') throw error;
+    }
+  };
+  const fail = error => {
+    if (failure) return;
+    failure = error;
+    if (ready && !stopping) {
+      report(failure.message);
+      void cleanup();
+    }
+  };
+
+  function groupMembers(child) {
+    if (!child.pid) return [];
+    const result = spawnSync('ps', ['-eo', 'pid=,pgid=,stat='], { encoding: 'utf8' });
+    if (result.error || result.status !== 0) {
+      throw new Error(`Cannot inspect development process group ${child.pid}: ${result.error?.message || result.stderr}`);
+    }
+    return result.stdout.split('\n').map(line => line.trim().split(/\s+/))
+      .filter(([pid, pgid, stat]) => Number(pgid) === child.pid && Number(pid) !== child.pid && stat && !stat.startsWith('Z'));
+  }
 
   function signalChild(child, signal) {
-    if (child.exitCode !== null || child.signalCode !== null || !child.pid) return;
+    if (!child.pid) return false;
     const result = spawnSync('ps', ['-p', String(child.pid), '-o', 'args='], { encoding: 'utf8' });
     if (result.error || (result.status !== 0 && result.status !== 1)) {
-      console.error(`Cannot verify development process PID ${child.pid}; it was not signalled.`);
-      return;
+      throw new Error(`Cannot verify development process PID ${child.pid}; it was not signalled.`);
     }
-    if (result.status !== 0 || !result.stdout.includes(child.ownerMarker)) return;
-    try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') console.error(error); }
+    if (result.status !== 0 || !result.stdout.includes(child.ownerMarker)) return false;
+    try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+    return true;
   }
 
   async function cleanup() {
     if (stopping) return;
     stopping = true;
-    for (const child of children) signalChild(child, 'SIGTERM');
-    const deadline = Date.now() + 3000;
-    while (children.some(child => child.exitCode === null && child.signalCode === null) && Date.now() < deadline) {
-      await delay(50);
-    }
-    for (const child of children) signalChild(child, 'SIGKILL');
-    const killDeadline = Date.now() + 2000;
-    while (children.some(child => child.exitCode === null && child.signalCode === null) && Date.now() < killDeadline) {
-      await delay(50);
-    }
-    if (children.some(child => child.exitCode === null && child.signalCode === null)) {
-      console.error('Some development processes did not stop; the supervisor remains available for another stop attempt.');
+    try {
+      for (const child of children) {
+        if (!signalChild(child, 'SIGTERM') && groupMembers(child).length) {
+          throw new Error(`Cannot verify process group ${child.pid}; its remaining processes were not signalled.`);
+        }
+      }
+      const deadline = Date.now() + 3000;
+      while (children.some(child => groupMembers(child).length) && Date.now() < deadline) {
+        await delay(50);
+      }
+      for (const child of children) {
+        if (groupMembers(child).length && !signalChild(child, 'SIGKILL')) {
+          throw new Error(`Cannot verify process group ${child.pid}; its remaining processes were not signalled.`);
+        }
+      }
+      const killDeadline = Date.now() + 2000;
+      while (children.some(child => groupMembers(child).length) && Date.now() < killDeadline) {
+        await delay(50);
+      }
+      if (children.some(child => groupMembers(child).length)) throw new Error('Some development processes did not stop.');
+      for (const child of children) signalChild(child, 'SIGKILL');
+      try { removeState(token); } catch (error) { report(error.message); }
+      process.exit(failure ? 1 : 0);
+    } catch (error) {
+      report(`${error.message} The supervisor remains available for another stop attempt.`);
       stopping = false;
-      return;
     }
-    try { removeState(token); } catch (error) { console.error(error.message); }
-    process.exit(failure ? 1 : 0);
   }
 
   process.on('SIGTERM', () => { void cleanup(); });
@@ -210,12 +242,20 @@ async function supervise(token) {
   const config = await new Promise(resolve => process.once('message', resolve));
   const { storage, vite } = config.ports;
   const logs = config.logFiles ? path.join(root, 'logs') : null;
-  if (logs) fs.mkdirSync(logs, { recursive: true });
+  try {
+    if (logs) fs.mkdirSync(logs, { recursive: true });
+  } catch (error) {
+    fail(new Error(`Cannot create log directory ${logs}: ${error.message}`));
+    if (process.connected) process.send({ type: 'error', message: failure.message });
+    await cleanup();
+    return;
+  }
+  if (!logs) process.stdout.on('error', error => fail(new Error(`Cannot write development output: ${error.message}`)));
 
   function launch(name, args, marker) {
     const ownerMarker = `levelup-${token}-${name}`;
-    const child = spawn(process.execPath, [`--title=${ownerMarker}`, ...args], {
-      cwd: root, detached: true, stdio: ['ignore', 'pipe', 'pipe'],
+    const child = spawn(process.execPath, [`--title=${ownerMarker}`, path.join(root, 'scripts', 'dev-service.cjs'), ...args], {
+      cwd: root, detached: true, stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     });
     child.ownerMarker = ownerMarker;
     children.push(child);
@@ -231,13 +271,15 @@ async function supervise(token) {
     child.stdout.on('data', forward);
     child.stderr.on('data', forward);
     child.on('error', error => fail(new Error(`${name} failed to start: ${error.message}`)));
+    child.on('message', message => {
+      if (message.type === 'error') fail(new Error(`${name} failed to start: ${message.message}`));
+      if (message.type === 'exit' && !stopping) {
+        fail(new Error(`${name} exited (${message.signal || message.code}); check logs and port availability`));
+      }
+    });
     child.on('exit', (code, signal) => {
       if (!stopping) {
-        fail(new Error(`${name} exited (${signal || code}); check logs and port availability`));
-        if (ready) {
-          console.error(failure.message);
-          void cleanup();
-        }
+        fail(new Error(`${name} process-group anchor exited (${signal || code})`));
       }
     });
     return () => listening;

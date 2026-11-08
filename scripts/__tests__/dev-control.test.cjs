@@ -1,7 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
@@ -23,12 +24,13 @@ function workspace() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'levelup-controls-'));
   fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
   fs.mkdirSync(path.join(root, 'node_modules', 'vite', 'bin'), { recursive: true });
-  for (const file of ['dev-control.cjs', 'dev-start.sh', 'dev-stop.sh', 'dev-restart.sh']) {
+  for (const file of ['dev-control.cjs', 'dev-service.cjs', 'dev-start.sh', 'dev-stop.sh', 'dev-restart.sh']) {
     fs.copyFileSync(path.join(source, file), path.join(root, 'scripts', file));
   }
   fs.writeFileSync(path.join(root, 'scripts', 'dev-storage-server.cjs'), `
     const http = require('node:http');
     require('node:fs').writeFileSync('storage-fixture.pid', String(process.pid));
+    process.on('SIGUSR1', () => console.log('fixture log after readiness'));
     http.createServer((req, res) => {
       res.writeHead(process.env.FIXTURE_UNHEALTHY === 'http' ? 503 : 200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({status: process.env.FIXTURE_UNHEALTHY ? 'unhealthy' : 'healthy'}));
@@ -48,20 +50,38 @@ function workspace() {
   return root;
 }
 
-async function run(root, command, env, args = []) {
+async function run(root, command, env, args = [], timeout = 10000) {
   const output = path.join(root, `output-${Date.now()}-${Math.random()}`);
   const fd = fs.openSync(output, 'w');
   const child = spawn('bash', [path.join(root, 'scripts', `dev-${command}.sh`), ...args], {
     cwd: root, env: { ...process.env, ...env }, stdio: ['ignore', fd, fd],
   });
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, timeout);
   const code = await new Promise((resolve, reject) => {
     child.once('error', reject);
     child.once('exit', resolve);
   });
+  clearTimeout(timer);
   fs.closeSync(fd);
   const text = fs.readFileSync(output, 'utf8');
   fs.unlinkSync(output);
-  return { code, text };
+  return { code, text, timedOut };
+}
+
+async function waitForStopped(root) {
+  const state = path.join(root, '.levelup-dev', 'supervisor.json');
+  const deadline = Date.now() + 8000;
+  while (fs.existsSync(state) && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  assert.equal(fs.existsSync(state), false, 'supervisor did not finish cleanup');
+}
+
+async function assertPortFree(port) {
+  const probe = net.createServer();
+  await new Promise((resolve, reject) => probe.once('error', reject).listen(Number(port), resolve));
+  await new Promise(resolve => probe.close(resolve));
 }
 
 async function health(root, env) {
@@ -232,4 +252,108 @@ test('devcontainer post-create hook preserves installation failure', async t => 
     child.once('exit', resolve);
   });
   assert.equal(code, 42);
+});
+
+test('stop kills a TERM-resistant descendant after its service leader exits', async t => {
+  const root = workspace();
+  const env = {
+    ...await config(), FIXTURE_CHILD_PORT: String(await freePort()),
+    FIXTURE_MARKER: `levelup-test-${crypto.randomBytes(16).toString('hex')}`,
+  };
+  const fixture = path.join(root, 'scripts', 'dev-storage-server.cjs');
+  fs.appendFileSync(fixture, `
+    const child = require('node:child_process').spawn(process.execPath, ['--title=' + process.env.FIXTURE_MARKER, '-e',
+      "process.on('SIGTERM', () => {}); require('node:net').createServer().listen(Number(process.env.FIXTURE_CHILD_PORT), () => require('node:fs').writeFileSync('descendant.pid', String(process.pid)))"
+    ], { stdio: 'ignore' });
+  `);
+  t.after(async () => {
+    await run(root, 'stop', env);
+    const pidFile = path.join(root, 'descendant.pid');
+    if (fs.existsSync(pidFile)) {
+      const pid = Number(fs.readFileSync(pidFile, 'utf8'));
+      const info = spawnSync('ps', ['-p', String(pid), '-o', 'args='], { encoding: 'utf8' });
+      if (info.status === 0 && info.stdout.trim() === env.FIXTURE_MARKER) {
+        try { process.kill(pid, 'SIGKILL'); } catch (error) {
+          if (error.code !== 'ESRCH') throw error;
+        }
+      }
+    }
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  assert.equal((await run(root, 'start', env)).code, 0);
+  const deadline = Date.now() + 3000;
+  while (!fs.existsSync(path.join(root, 'descendant.pid')) && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
+  assert.ok(fs.existsSync(path.join(root, 'descendant.pid')));
+  const result = await run(root, 'stop', env);
+  assert.equal(result.code, 0, result.text);
+  try {
+    await assertPortFree(env.FIXTURE_CHILD_PORT);
+  } catch (error) {
+    const pid = fs.readFileSync(path.join(root, 'descendant.pid'), 'utf8');
+    const info = spawnSync('ps', ['-p', pid, '-o', 'pid,ppid,pgid,sid,stat,args'], { encoding: 'utf8' });
+    throw new Error(`${error.message}\nstop output: ${result.text}\n${info.stdout}`);
+  }
+  assert.equal(fs.existsSync(path.join(root, '.levelup-dev', 'supervisor.json')), false);
+});
+
+test('closed stdout after readiness cleans up managed services', async t => {
+  const root = workspace();
+  const env = await config();
+  t.after(async () => {
+    await run(root, 'stop', env);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const child = spawn('bash', [path.join(root, 'scripts', 'dev-start.sh')], {
+    cwd: root, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  child.stdout.resume();
+  child.stderr.resume();
+  const code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
+  assert.equal(code, 0);
+  child.stdout.destroy();
+  process.kill(Number(fs.readFileSync(path.join(root, 'storage-fixture.pid'), 'utf8')), 'SIGUSR1');
+  await waitForStopped(root);
+  await assertPortFree(env.LEVELUP_STORAGE_PORT);
+  await assertPortFree(env.LEVELUP_VITE_PORT);
+});
+
+test('file logging failure after readiness cleans up managed services', async t => {
+  const root = workspace();
+  const env = await config();
+  fs.mkdirSync(path.join(root, 'logs'));
+  const fifo = path.join(root, 'logs', 'storage.log');
+  const mkfifo = spawnSync('mkfifo', [fifo]);
+  assert.equal(mkfifo.status, 0);
+  const reader = spawn('cat', [fifo], { stdio: 'ignore' });
+  t.after(async () => {
+    reader.kill();
+    await run(root, 'stop', env);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  assert.equal((await run(root, 'start', env, ['--log-files'])).code, 0);
+  reader.kill('SIGTERM');
+  await new Promise(resolve => reader.once('exit', resolve));
+  process.kill(Number(fs.readFileSync(path.join(root, 'storage-fixture.pid'), 'utf8')), 'SIGUSR1');
+  await waitForStopped(root);
+  await assertPortFree(env.LEVELUP_STORAGE_PORT);
+  await assertPortFree(env.LEVELUP_VITE_PORT);
+});
+
+test('invalid log directory fails promptly and releases the control lock', async t => {
+  const root = workspace();
+  const env = await config();
+  t.after(async () => {
+    await run(root, 'stop', env);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  fs.writeFileSync(path.join(root, 'logs'), 'not a directory');
+  const result = await run(root, 'start', env, ['--log-files'], 5000);
+  assert.equal(result.timedOut, false);
+  assert.equal(result.code, 1);
+  assert.match(result.text, /Cannot create log directory/);
+  assert.equal(fs.existsSync(path.join(root, '.levelup-dev', 'lock')), false);
+  assert.equal(fs.existsSync(path.join(root, '.levelup-dev', 'supervisor.json')), false);
+  assert.equal((await run(root, 'start', env)).code, 0);
 });
