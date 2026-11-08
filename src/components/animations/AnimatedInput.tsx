@@ -13,7 +13,7 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const InputWrapper = styled.form<{ isError?: boolean }>`
+const InputWrapper = styled.div<{ 'data-error'?: 'true' }>`
   position: relative;
   width: 100%;
   max-width: 400px;
@@ -25,7 +25,7 @@ const InputWrapper = styled.form<{ isError?: boolean }>`
   `}
 
   ${props =>
-    props.isError &&
+    props['data-error'] === 'true' &&
     css`
       animation: ${shake} 0.3s ease-in-out;
     `}
@@ -139,6 +139,11 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
+    hasSubmittedRef.current = false;
+    setHasSubmitted(false);
+  }, [value]);
+
+  useEffect(() => {
     if (!disabled) {
       hasSubmittedRef.current = false;
       setHasSubmitted(false);
@@ -154,20 +159,12 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    hasSubmittedRef.current = false;
+    setHasSubmitted(false);
     onChange(newValue);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (
-      e.key === 'Enter' &&
-      (isComposingRef.current || e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229)
-    ) {
-      e.preventDefault();
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     const trimmedValue = value.trim();
     if (disabled || hasSubmittedRef.current || !trimmedValue || isComposingRef.current) return;
 
@@ -176,10 +173,19 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
     onSubmit(trimmedValue);
   };
 
-  const inputDisabled = disabled || hasSubmitted;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+
+    if (isComposingRef.current || e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    handleSubmit();
+  };
 
   return (
-    <InputWrapper isError={isError} onSubmit={handleSubmit}>
+    <InputWrapper data-error={isError ? 'true' : undefined}>
       <StyledInput
         ref={inputRef}
         type="text"
@@ -195,14 +201,18 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
         placeholder={placeholder}
         isCorrect={isCorrect}
         isError={isError}
-        disabled={inputDisabled}
+        disabled={disabled}
         aria-label="Answer input"
         aria-invalid={isError}
         aria-describedby={hint ? 'hint-text' : undefined}
         autoComplete="off"
         spellCheck={false}
       />
-      <SubmitButton type="submit" disabled={inputDisabled || !value.trim()}>
+      <SubmitButton
+        type="button"
+        onClick={handleSubmit}
+        disabled={disabled || hasSubmitted || !value.trim()}
+      >
         Submit answer
       </SubmitButton>
       {hint && (
