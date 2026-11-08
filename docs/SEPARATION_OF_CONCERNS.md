@@ -7,11 +7,12 @@ dialogs. It names each dialog from its visible heading, keeps keyboard focus ins
 focus to the opening control on dismissal. Escape closes either dialog; reset also permits backdrop
 dismissal, except while a reset is in progress. Reset initially focuses Cancel and guards against
 duplicate requests and dismissal while the operation is pending. This is UI-only behavior and does
-not change storage or language isolation.
+not change storage or language isolation. Dialog content stays mounted while closed so an in-flight
+device-link request continues to disable account operations if the dialog is reopened.
 
 Run `npm test -- --runInBand src/components/__tests__/modalDialogs.test.tsx` for component
 coverage. jsdom substitutes the native dialog methods; verify native focus containment with a real
-browser and perform a separate screen-reader walkthrough on each supported platform. - Storage Architecture
+browser and perform a separate screen-reader walkthrough on each supported platform.
 
 ## 🏗️ **Architecture Overview**
 

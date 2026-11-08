@@ -8,6 +8,7 @@ import { SettingsPage } from '../SettingsPage';
 import { UserProfilePage } from '../UserProfilePage';
 import { theme } from '../../styles/theme';
 import { useUserLearningProfile } from '../../hooks/useUserLearningProfile';
+import { remoteStorage } from '../../services/storage/remoteStorage';
 
 jest.mock('../Navigation', () => ({ Navigation: () => null }));
 jest.mock('../DirectionalStats', () => ({ DirectionalStats: () => null }));
@@ -22,7 +23,7 @@ jest.mock('../../services/pwaUpdateManager', () => ({
   pwaUpdateManager: { getPendingUpdate: () => null },
 }));
 jest.mock('../../services/storage/remoteStorage', () => ({
-  remoteStorage: { getLinkedDevicesCount: async () => 1 },
+  remoteStorage: { getLinkedDevicesCount: async () => 1, linkDeviceWithCode: jest.fn() },
 }));
 
 const mockProfile = jest.mocked(useUserLearningProfile);
@@ -133,6 +134,51 @@ describe('accessible dialogs', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Close device linking' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
+  });
+
+  it('keeps an in-flight link disabled across dismissal until it settles', async () => {
+    let finishLink!: (result: { success: boolean; linkedDevices: number }) => void;
+    const linkDevice = jest.mocked(remoteStorage.linkDeviceWithCode);
+    linkDevice.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishLink = resolve;
+        })
+    );
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <SettingsPage />
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    const opener = screen.getByRole('button', { name: 'Link Your Devices' });
+    await user.click(opener);
+    let dialog = screen.getByRole('dialog', { name: /Link Your Devices/ });
+    await user.type(within(dialog).getByRole('textbox'), 'A3B7K9M2');
+    await user.click(within(dialog).getByRole('button', { name: 'Link This Device' }));
+    expect(linkDevice).toHaveBeenCalledTimes(1);
+    expect(linkDevice).toHaveBeenCalledWith('A3B7K9M2');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Close device linking' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(opener);
+    dialog = screen.getByRole('dialog', { name: /Link Your Devices/ });
+    expect(within(dialog).getByRole('button', { name: /Linking/ })).toBeDisabled();
+    await user.clear(within(dialog).getByRole('textbox'));
+    await user.type(within(dialog).getByRole('textbox'), 'B4C8L0N3');
+    await user.click(within(dialog).getByRole('button', { name: /Linking/ }));
+    expect(linkDevice).toHaveBeenCalledTimes(1);
+
+    await user.click(within(dialog).getByRole('button', { name: 'Close device linking' }));
+    await act(async () => finishLink({ success: true, linkedDevices: 2 }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(opener);
+    dialog = screen.getByRole('dialog', { name: /Link Your Devices/ });
+    expect(within(dialog).getByText(/Success! This device is now linked/)).toBeInTheDocument();
+    await user.type(within(dialog).getByRole('textbox'), 'B4C8L0N3');
+    expect(within(dialog).getByRole('button', { name: 'Link This Device' })).toBeEnabled();
   });
 
   it('runs only one reset when confirmation is triggered repeatedly before state updates', async () => {

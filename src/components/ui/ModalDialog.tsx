@@ -28,31 +28,45 @@ export const ModalDialog: React.FC<ModalDialogProps> = ({
   children,
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
-    if (!isOpen || !dialog) return;
+    if (!dialog) return;
 
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (!isOpen) {
+      if (openerRef.current?.isConnected) openerRef.current.focus();
+      openerRef.current = null;
+      return;
+    }
+
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.showModal();
     initialFocusRef.current?.focus();
 
     return () => {
       if (dialog.open) dialog.close();
-      if (opener?.isConnected) opener.focus();
     };
   }, [isOpen, initialFocusRef]);
+
+  useLayoutEffect(
+    () => () => {
+      if (openerRef.current?.isConnected) openerRef.current.focus();
+      openerRef.current = null;
+    },
+    []
+  );
 
   useLayoutEffect(() => {
     if (isOpen && dismissDisabled) dialogRef.current?.focus();
   }, [isOpen, dismissDisabled]);
 
-  if (!isOpen) return null;
-
   return (
     <dialog
       ref={dialogRef}
       className={className}
+      hidden={!isOpen}
       aria-modal="true"
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
