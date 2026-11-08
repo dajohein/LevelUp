@@ -8,6 +8,12 @@ The learning-profile reset and device-linking dialogs support keyboard navigatio
 dialog, Escape closes it, and focus returns to the opener. Reset initially focuses Cancel and cannot
 be dismissed while the reset is running.
 
+**Start Learning / Deep Dive** follows a per-word sequence: Multiple Choice, Letter Scramble,
+then Fill in the Blank. A correct answer advances that word for its next encounter; mistakes
+and skips do not advance it. Words without sentence context use Open Answer after Letter Scramble.
+Free-play and other challenges retain their adaptive modes. See
+[learning progression](docs/AI_ADAPTIVE_LEARNING.md#start-learning--deep-dive-progression).
+
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
 
 ### German vocabulary: Gesundheit

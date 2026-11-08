@@ -23,6 +23,44 @@ The AI-Powered Adaptive Learning Engine revolutionizes the learning experience b
 
 ## 🔧 Technical Architecture
 
+### Start Learning / Deep Dive progression
+
+Module **Start Learning** starts a Deep Dive session. Its production path is
+`Game` -> `useEnhancedGameState` -> `challengeServiceManager` -> `deepDiveAdapter`,
+not `GameModeHandler`'s recommendation list.
+
+Deep Dive uses a deterministic per-word sequence: multiple choice -> letter scramble ->
+fill-in-the-blank. Only a correct answer at the expected stage advances the word for its
+next encounter; wrong answers and skips leave the stage unchanged. Word selection, session
+targets, XP, directional progress and scoring rules are unchanged. AI support and word
+selection remain available, but AI mode suggestions cannot bypass the sequence.
+The Game selector compares the progress-map reference so updates to an already-tracked
+word reach the next selection. Service-failure fallback recognition choices use the
+same direction-aware option generator as the challenge adapter, including the correct answer.
+
+`WordProgress.learningMode` is persisted by the existing language-scoped storage middleware.
+Legacy records start at multiple choice because XP alone does not prove completion of the
+earlier modes. The last stage remains fill-in-the-blank; words without a sentence use
+open-answer at that stage. Free-play, spaced-repetition reviews and other challenges keep
+their existing mode selection and do not advance this marker.
+
+```typescript
+const mode = selectProgressiveQuizMode(word, wordProgress[word.id]);
+// The production submission opts in only for Deep Dive:
+dispatch(checkAnswer({ answer, word, quizMode: mode, languageCode, progressiveLearning: true }));
+```
+
+Verify sequence, mistakes, skips, persistence and language isolation with:
+
+```bash
+npm test -- --runInBand src/services/__tests__/learningModeProgression.test.ts src/store/__tests__/learningProgression.integration.test.ts src/store/__tests__/durableProgress.integration.test.ts src/services/__tests__/challengeServiceAdapters.test.ts src/hooks/__tests__/useEnhancedGameState.progression.test.tsx src/components/__tests__/Game.progression.test.tsx
+npm run type-check
+```
+
+Selection and advancement are constant-time lookups in the existing per-language word
+progress, with no additional storage requests or changes to word-selection/review scheduling.
+The regression benchmark requires 10,000 selections and advances to finish within 250 ms.
+
 ### **Core Components**
 
 1. **`AIAdaptiveLearningEngine`** (`src/services/adaptiveLearningEngine.ts`)

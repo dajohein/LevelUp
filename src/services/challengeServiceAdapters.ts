@@ -13,7 +13,6 @@ import {
   ChallengeContext,
   ChallengeResult,
   CompletionResult,
-  StandardQuizMode,
 } from './challengeServiceInterface';
 import { streakChallengeService } from './streakChallengeService';
 import { bossBattleService } from './bossBattleService';
@@ -24,6 +23,7 @@ import { fillInTheBlankService } from './fillInTheBlankService';
 // Removed unused imports to reduce lint noise
 import { generateModuleScopedOptions, generateScrambledVersions } from './optionGenerationUtils';
 import { logger } from './logger';
+import { selectProgressiveQuizMode } from './quizModeSelectionUtils';
 
 /**
  * Adapter for Streak Challenge Service
@@ -337,110 +337,16 @@ class DeepDiveAdapter implements IChallengeService {
       true // ✅ aiEnhancementsEnabled: boolean
     );
 
-    // Handle specialized quiz modes - improve variety while maintaining compatibility
-    let standardQuizMode: StandardQuizMode;
+    // Deep Dive powers Start Learning: AI may select words/support, but cannot skip stages.
+    const standardQuizMode = selectProgressiveQuizMode(
+      result.word,
+      context.wordProgress[result.word.id]
+    );
     let finalOptions: string[] = [];
-
-    if (
-      ['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(
-        result.quizMode as string
-      )
-    ) {
-      // Check word mastery level to avoid giving difficult modes to low-mastery words.
-      // Thresholds align with quizModeSelectionUtils:
-      //   Tier 1 (0–20 XP):   multiple-choice only
-      //   Tier 2 (21–50 XP):  multiple-choice / letter-scramble / fill-in-the-blank
-      //   Tier 3+ (51+ XP):   open-answer allowed
-      const wordProgress = context.wordProgress[result.word.id];
-      const masteryLevel = wordProgress?.xp || 0;
-      const canUseOpenAnswer = masteryLevel >= 50; // Tier 3+
-      const canUseFillInBlank = masteryLevel >= 20; // Tier 2+
-
-      // For enhanced modes, use varied quiz types but respect mastery level
-      const enhancedModeMapping: { [key: string]: StandardQuizMode } = {
-        'contextual-analysis': canUseFillInBlank
-          ? Math.random() > 0.5
-            ? 'multiple-choice'
-            : 'fill-in-the-blank'
-          : 'multiple-choice',
-        'usage-example': canUseOpenAnswer
-          ? Math.random() > 0.3
-            ? 'open-answer'
-            : 'multiple-choice'
-          : 'multiple-choice',
-        'synonym-antonym': canUseFillInBlank
-          ? Math.random() > 0.4
-            ? 'letter-scramble'
-            : 'multiple-choice'
-          : 'multiple-choice',
-      };
-
-      standardQuizMode = enhancedModeMapping[result.quizMode as string] || 'multiple-choice';
-
-      logger.debug(
-        `🎯 Enhanced quiz mode: ${result.quizMode} → ${standardQuizMode} for word "${result.word.term}" (mastery: ${masteryLevel})`
-      );
-
-      logger.debug(`🎯 ENHANCED MODE DETECTED:`, {
-        originalMode: result.quizMode,
-        word: result.word.term,
-        convertedTo: standardQuizMode,
-        aiEnhanced: result.aiEnhanced,
-        masteryLevel,
-        canUseOpenAnswer,
-        canUseFillInBlank,
-      });
-
-      // Generate appropriate options based on the converted mode
-      if (standardQuizMode === 'multiple-choice') {
-        finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
-      } else if (standardQuizMode === 'fill-in-the-blank') {
-        // For fill-in-the-blank, provide the full definition as a single option
-        finalOptions = [result.word.definition];
-      } else {
-        // For open-answer and letter-scramble, no options needed
-        finalOptions = [];
-      }
-    } else if (
-      ['multiple-choice', 'letter-scramble', 'open-answer', 'fill-in-the-blank'].includes(
-        result.quizMode as string
-      )
-    ) {
-      standardQuizMode = result.quizMode as StandardQuizMode;
-
-      // Generate appropriate options based on the quiz mode
-      if (standardQuizMode === 'multiple-choice') {
-        finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
-      } else if (standardQuizMode === 'letter-scramble') {
-        // Determine difficulty based on challenge context
-        const difficultyMap: { [key: string]: 'easy' | 'medium' | 'hard' | 'boss' } = {
-          'deep-dive': 'medium', // Deep learning = moderate scrambling
-          streak: 'easy', // Streak building = easier scrambling
-          'quick-dash': 'hard', // Speed challenge = harder scrambling
-          'boss-battle': 'boss', // Boss battle = maximum scrambling
-          precision: 'hard', // Precision = hard scrambling
-        };
-
-        const sessionType = context.metadata?.sessionType || 'medium';
-        const scrambleDifficulty = difficultyMap[sessionType] || 'medium';
-
-        finalOptions = [
-          result.word.term,
-          ...generateScrambledVersions(result.word.term, scrambleDifficulty),
-        ];
-      } else {
-        // For open-answer and fill-in-the-blank, no options needed
-        finalOptions = [];
-      }
-
-      logger.debug(`🎯 Standard quiz mode: ${result.quizMode} for word "${result.word.term}"`);
-    } else {
-      standardQuizMode = 'multiple-choice';
+    if (standardQuizMode === 'multiple-choice') {
       finalOptions = generateModuleScopedOptions(result.word, context.languageCode, allWords);
-
-      logger.debug(
-        `🎯 Fallback quiz mode: ${result.quizMode} → multiple-choice for word "${result.word.term}"`
-      );
+    } else if (standardQuizMode === 'letter-scramble') {
+      finalOptions = [result.word.term, ...generateScrambledVersions(result.word.term, 'medium')];
     }
 
     return {

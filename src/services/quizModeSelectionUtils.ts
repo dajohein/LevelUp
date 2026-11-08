@@ -19,6 +19,40 @@ export type StandardQuizMode =
   | 'fill-in-the-blank';
 
 /**
+ * Select the next standard learning stage from this language's word progress.
+ * Legacy progress starts at recognition because XP cannot prove which modes were completed.
+ * @param word - Word to practise, including optional sentence context.
+ * @param progress - Language-scoped progress for this word.
+ * @returns The required stage, or open recall when sentence context is unavailable.
+ */
+export function selectProgressiveQuizMode(word: Word, progress?: WordProgress): StandardQuizMode {
+  const mode = progress?.learningMode ?? 'multiple-choice';
+  if (mode === 'fill-in-the-blank' && !word.context?.sentence?.trim()) {
+    return 'open-answer';
+  }
+  return mode;
+}
+
+/**
+ * Advance only after a correct answer at the required learning stage.
+ * @param word - Word being answered.
+ * @param progress - Language-scoped progress before recording the answer.
+ * @param quizMode - Mode actually presented.
+ * @param isCorrect - Validated correctness, using existing answer rules.
+ * @returns The next stage; mistakes and unrelated modes leave it unchanged.
+ */
+export function advanceLearningMode(
+  word: Word,
+  progress: WordProgress,
+  quizMode: string,
+  isCorrect: boolean
+): NonNullable<WordProgress['learningMode']> {
+  const mode = progress.learningMode ?? 'multiple-choice';
+  if (!isCorrect || quizMode !== selectProgressiveQuizMode(word, progress)) return mode;
+  return mode === 'multiple-choice' ? 'letter-scramble' : 'fill-in-the-blank';
+}
+
+/**
  * Convert word XP to mastery tier for consistent quiz mode selection
  */
 export function getWordMasteryTier(xp: number): number {
@@ -34,10 +68,7 @@ export function getWordMasteryTier(xp: number): number {
  * Generate quiz mode based on mastery tier with progressive difficulty
  * This is the baseline logic used across different challenge types
  */
-export function generateQuizModeForMastery(
-  tier: number,
-  allowOpenAnswer = true
-): StandardQuizMode {
+export function generateQuizModeForMastery(tier: number, allowOpenAnswer = true): StandardQuizMode {
   // Tier 1 (0-20 XP): New/learning words - ONLY easy modes
   if (tier === 1) {
     return Math.random() < 0.8 ? 'multiple-choice' : 'letter-scramble';

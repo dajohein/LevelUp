@@ -365,7 +365,7 @@ export const useEnhancedGameState = ({
             }
           } else {
             submissionGuardRef.current = false;
-            dispatch(nextWord());
+            dispatch(nextWord({ progressiveLearning: currentSession.id === 'deep-dive' }));
           }
         } else {
           submissionGuardRef.current = false;
@@ -377,7 +377,7 @@ export const useEnhancedGameState = ({
           sessionId: currentSession?.id,
           error,
         });
-        dispatch(nextWord());
+        dispatch(nextWord({ progressiveLearning: currentSession?.id === 'deep-dive' }));
       }
     },
     [
@@ -452,6 +452,7 @@ export const useEnhancedGameState = ({
           word: currentWordToUse ?? undefined,
           quizMode: quizModeToUse,
           languageCode,
+          progressiveLearning: currentSession?.id === 'deep-dive',
         })
       );
 
@@ -682,12 +683,12 @@ export const useEnhancedGameState = ({
         )
         .then(success => {
           if (!success) {
-            dispatch(nextWord());
+            dispatch(nextWord({ progressiveLearning: currentSession.id === 'deep-dive' }));
           }
         })
         .catch(error => {
           logger.error('Failed to initialize session', { error });
-          dispatch(nextWord());
+          dispatch(nextWord({ progressiveLearning: currentSession.id === 'deep-dive' }));
         });
     }
   }, [dispatch, languageCode, isSessionActive, isUsingSpacedRepetition, currentSession]);

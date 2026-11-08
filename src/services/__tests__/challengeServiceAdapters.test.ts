@@ -387,7 +387,7 @@ describe('Challenge Service Adapters', () => {
 
       expect(result.metadata?.enhancementLevel).toBe('advanced');
       expect(result.metadata?.originalQuizMode).toBe('contextual-analysis');
-      expect(['multiple-choice', 'fill-in-the-blank']).toContain(result.quizMode);
+      expect(result.quizMode).toBe('multiple-choice');
     });
 
     it('should record completion with deep dive service', () => {
