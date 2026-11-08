@@ -38,7 +38,11 @@ function getEnv(name: string): string | undefined {
   if (w && w.__APP_ENV && typeof w.__APP_ENV[name] !== 'undefined') {
     return w.__APP_ENV[name];
   }
-  if (typeof process !== 'undefined' && (process as any).env && typeof (process as any).env[name] !== 'undefined') {
+  if (
+    typeof process !== 'undefined' &&
+    (process as any).env &&
+    typeof (process as any).env[name] !== 'undefined'
+  ) {
     return (process as any).env[name];
   }
   return undefined;
@@ -46,8 +50,11 @@ function getEnv(name: string): string | undefined {
 
 // Get configuration based on environment variables (with safe defaults)
 export function getEnvironmentConfig(): EnvironmentConfig {
-  const apiBaseUrl = getEnv('VITE_API_BASE_URL') || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
-  const enableRemoteStorage = parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), true);
+  const apiBaseUrl =
+    getEnv('VITE_API_BASE_URL') ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+  const enableRemoteStorage =
+    parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), false) && process.env.NODE_ENV !== 'production';
   const enableLocalFallback = parseBool(getEnv('VITE_ENABLE_LOCAL_FALLBACK'), true);
   const debugMode = parseBool(getEnv('VITE_DEBUG_MODE'), false);
 

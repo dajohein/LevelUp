@@ -123,28 +123,24 @@ window.testPerformanceFix();
 
 ## 🚀 **Enterprise-Grade Storage + Enhanced Analytics (COMPLETE!)**
 
-### ✨ **Enterprise-Grade Storage & Cross-Device Sync**
+### ✨ **Local-First Learning Progress**
 
-- **🌐 Server-Side Storage**: Cross-device sync with Vercel serverless functions
-- **🔄 Backend Migration Ready**: Zero-code-change transition with validation and backup
+- **📱 Reliable Local Progress**: Learning progress is stored on this device
+- **🌐 Remote Sync**: Not available; the existing API uses volatile process memory and is disabled in production
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
 - **🎯 Storage Analytics**: Comprehensive monitoring with 0-100 health scoring
-- **⚙️ Production-Ready**: Enterprise architecture with comprehensive error handling
 
-### 🌐 **Cross-Device Synchronization**
+### 🌐 **Remote Storage Status**
 
-- **Persistent Progress**: Your learning progress syncs across all devices
-- **Offline-First**: Works offline, syncs when online
-- **Zero-Config Deployment**: Ready for Vercel with serverless functions
-- **Development Tools**: Complete dev environment with `npm run dev:start`
-- **Language Isolation**: Server enforces strict language data separation
-- **Debug Panel**: Press `Ctrl+Shift+S` for real-time storage monitoring
+- **Local-first**: Progress remains available on this device
+- **Demo only**: Remote account and storage endpoints are opt-in for development and are not durable
+- **No progress transfer**: Device linking does not sync or reconcile learning progress
+- **Production behavior**: Remote account and storage endpoints return unavailable until durable shared storage is implemented
 
 ### 📈 **Performance Achievements**
 
-- **Cross-device sync** with automatic user session management
 - **50x storage capacity** increase with IndexedDB integration
 - **90% faster** analytics processing with intelligent caching
 - **85%+ cache hit rate** with predictive warming and optimization
@@ -216,7 +212,7 @@ git clone https://github.com/dajohein/LevelUp.git
 cd LevelUp
 npm install
 
-# Development (with server-side storage)
+# Development (local-first storage; optional volatile API demo)
 npm run dev:start         # Complete development environment (web + API)
 npm run health:storage    # Verify API health
 
@@ -270,7 +266,7 @@ Key tests:
 
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides
-- **Server-Side Storage**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Cross-device sync setup
+- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and development-only API demo
 
 ## 🎮 How to Use
 
@@ -319,12 +315,12 @@ The application implements **strict language separation** to prevent data contam
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
-### **Server-Side Storage**
+### **Remote Storage Demo**
 
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
-- **Config**: [src/config/environment.ts](src/config/environment.ts) toggles remote vs local
+- **Capability**: The process-local API is opt-in for development only; production rejects remote requests. It does not provide durable or cross-device progress sync.
 
 ### **Performance Monitoring**
 
@@ -404,4 +400,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**🎯 Ready to level up your language learning?** Start with `npm run dev:start` and explore the enhanced learning experience with cross-device sync!
+**🎯 Ready to level up your language learning?** Start with `npm run dev:start` and explore the local-first learning experience!

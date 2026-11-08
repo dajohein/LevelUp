@@ -1,7 +1,7 @@
 /**
  * Account Linking Component
  *
- * Allows users to link devices using account codes for cross-device sync
+ * Exposes development-only account linking without claiming progress sync
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,6 +9,7 @@ import styled from '@emotion/styled';
 import { LoadingButton } from './feedback/UnifiedLoading';
 import { remoteStorage } from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
+import { environmentConfig } from '../config/environment';
 
 const Container = styled.div`
   max-width: 500px;
@@ -206,7 +207,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       setLinkedDevices(result.linkedDevices);
       setLinkCode('');
       setMessage({
-        text: `Success! This device is now linked. Total devices: ${result.linkedDevices}`,
+        text: `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`,
         type: 'success',
       });
     } catch (error) {
@@ -233,17 +234,23 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
   return (
     <Container>
-      <Title id={titleId}>🔗 Link Your Devices</Title>
+      <Title id={titleId}>🔗 Device Linking (Demo Only)</Title>
 
       {linkedDevices > 1 && (
-        <DeviceInfo>✅ Account linked across {linkedDevices} devices</DeviceInfo>
+        <DeviceInfo>Account session linked across {linkedDevices} devices</DeviceInfo>
       )}
+
+      <StatusMessage type="info">
+        {environmentConfig.enableRemoteStorage
+          ? 'Demo only: remote account and progress data is stored in process memory and can disappear when the server restarts. Linking identifies an account but does not transfer or reconcile progress. Your local progress remains saved on this device.'
+          : 'Remote sync is unavailable. Progress is saved on this device only; linking is disabled until durable remote storage is available.'}
+      </StatusMessage>
 
       <Section>
         <SectionTitle>📱 Share Progress from This Device</SectionTitle>
         <Description>
-          Generate a secure code to link this device&apos;s progress with another device. The code
-          is valid for 1 hour and expires automatically.
+          Generate a code to link this device&apos;s demo account. This does not sync or copy
+          learning progress.
         </Description>
 
         {accountCode ? (
@@ -259,6 +266,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
           <LoadingButton
             onClick={generateCode}
             isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
             loadingText="Generating..."
             style={{
               padding: '12px 24px',
@@ -281,7 +289,9 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
       <Section>
         <SectionTitle>💻 Link to Existing Account</SectionTitle>
-        <Description>Enter an account code from another device to sync your progress.</Description>
+        <Description>
+          Enter an account code to link a demo account. Progress is not transferred.
+        </Description>
 
         <Input
           type="text"
@@ -289,13 +299,14 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
           value={linkCode}
           onChange={e => setLinkCode(e.target.value.toUpperCase())}
           maxLength={8}
+          disabled={!environmentConfig.enableRemoteStorage}
         />
 
         <LoadingButton
           onClick={linkDevice}
           isLoading={loading}
           loadingText="Linking..."
-          disabled={!linkCode.trim()}
+          disabled={!environmentConfig.enableRemoteStorage || !linkCode.trim()}
           style={{
             padding: '12px 24px',
             fontSize: '16px',

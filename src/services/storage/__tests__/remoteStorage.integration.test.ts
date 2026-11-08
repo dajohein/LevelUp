@@ -1,4 +1,4 @@
-import { remoteStorage } from '../remoteStorage';
+import { remoteStorage, RemoteStorageService } from '../remoteStorage';
 
 // Stub fetch to call local API handlers directly
 function createResponse(body: any, status = 200) {
@@ -15,10 +15,20 @@ function makeVercelResponse() {
   const res: any = {
     _status: 200,
     _json: null as any,
-    status(code: number) { this._status = code; return this; },
-    json(obj: any) { this._json = obj; return this; },
-    setHeader() { return this; },
-    end() { return this; },
+    status(code: number) {
+      this._status = code;
+      return this;
+    },
+    json(obj: any) {
+      this._json = obj;
+      return this;
+    },
+    setHeader() {
+      return this;
+    },
+    end() {
+      return this;
+    },
   };
   return res;
 }
@@ -120,5 +130,54 @@ describe('RemoteStorageService integration (local handlers)', () => {
     expect(res.success).toBe(false);
     expect(res.error).toMatch(/Remote storage unavailable/);
     expect(res.metadata?.offline).toBe(true);
+  });
+
+  it('does not silently replace a lost remote session with a new guest', async () => {
+    const storedSession = { userId: 'old-user', sessionToken: 'expired-token', isGuest: false };
+    localStorage.setItem('levelup_remote_session', JSON.stringify(storedSession));
+    const fetchMock = global.fetch as jest.Mock;
+    fetchMock.mockClear();
+    const storage = new RemoteStorageService({ retries: 1 });
+
+    await expect(storage.getUserSession()).rejects.toThrow();
+
+    const actions = fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body as string).action);
+    expect(actions).toEqual(['authenticate']);
+    expect(localStorage.getItem('levelup_remote_session')).toBe(JSON.stringify(storedSession));
+  });
+
+  it('rejects volatile remote APIs in production', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    try {
+      const storageResponse = await global.fetch('http://localhost/api/storage', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'set',
+          userId: 'user',
+          languageCode: 'de',
+          key: 'word_progress_de',
+          data: { hello: { correctCount: 1 } },
+        }),
+      });
+      const usersResponse = await global.fetch('http://localhost/api/users', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'create' }),
+      });
+
+      expect(storageResponse.status).toBe(503);
+      expect(await storageResponse.json()).toMatchObject({
+        success: false,
+        error: expect.stringMatching(/not durable/i),
+      });
+      expect(usersResponse.status).toBe(503);
+      expect(await usersResponse.json()).toMatchObject({
+        success: false,
+        error: expect.stringMatching(/not durable/i),
+      });
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 });

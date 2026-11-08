@@ -30,8 +30,8 @@ describe('TieredStorageService', () => {
     // Setup mocks
     mockCacheGet = jest.fn();
     mockCacheSet = jest.fn();
-    mockCompressionCompress = jest.fn((data) => JSON.stringify(data));
-    mockCompressionDecompress = jest.fn((data) => JSON.parse(data));
+    mockCompressionCompress = jest.fn(data => JSON.stringify(data));
+    mockCompressionDecompress = jest.fn(data => JSON.parse(data));
     mockIndexedDBGet = jest.fn();
     mockIndexedDBSet = jest.fn();
     mockIndexedDBDelete = jest.fn().mockResolvedValue({ success: true });
@@ -72,14 +72,22 @@ describe('TieredStorageService', () => {
       expect(customStorage).toBeDefined();
     });
 
-    it('should enable remote tier in production', () => {
+    it('keeps the volatile remote tier disabled in production', async () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
-      const prodStorage = new TieredStorageService();
-      expect(prodStorage).toBeDefined();
+      try {
+        const prodStorage = new TieredStorageService();
+        mockCacheGet.mockResolvedValue(undefined);
+        Storage.prototype.getItem = jest.fn(() => null);
+        mockIndexedDBGet.mockResolvedValue({ success: false });
 
-      process.env.NODE_ENV = originalEnv;
+        await prodStorage.get('test-key');
+
+        expect(mockRemoteGet).not.toHaveBeenCalled();
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
   });
 
@@ -99,7 +107,7 @@ describe('TieredStorageService', () => {
 
     it('should try localStorage when cache miss', async () => {
       mockCacheGet.mockResolvedValue(undefined);
-      
+
       // Mock localStorage
       Storage.prototype.getItem = jest.fn(() => JSON.stringify(testData));
 
@@ -234,8 +242,9 @@ describe('TieredStorageService', () => {
 
       expect(mockCacheInvalidate).toHaveBeenCalledWith(`tier_location_${testKey}`);
       expect(result.metadata?.deletedFromTiers).toEqual(
-        expect.arrayContaining(['memory', 'local', 'indexedDB', 'remote'])
+        expect.arrayContaining(['memory', 'local', 'indexedDB'])
       );
+      expect(mockRemoteDelete).not.toHaveBeenCalled();
     });
   });
 
@@ -261,7 +270,7 @@ describe('TieredStorageService', () => {
         value: 5,
         configurable: true,
       });
-      Storage.prototype.key = jest.fn((index) => `key-${index}`);
+      Storage.prototype.key = jest.fn(index => `key-${index}`);
 
       const size = await storage.getSize();
 
@@ -272,8 +281,8 @@ describe('TieredStorageService', () => {
     it('should get storage analytics', async () => {
       const analytics = await storage.getAnalytics();
 
-        expect(analytics).toBeDefined();
-        // Analytics structure varies by implementation
+      expect(analytics).toBeDefined();
+      // Analytics structure varies by implementation
     });
 
     it('should surface analytics errors gracefully when IndexedDB stats fail', async () => {
@@ -310,9 +319,7 @@ describe('TieredStorageService', () => {
     it('should compress large data automatically', async () => {
       await storage.set(testKey, largeData, { compress: true });
 
-      expect(mockCompressionCompress).toHaveBeenCalledWith(
-        expect.objectContaining(largeData)
-      );
+      expect(mockCompressionCompress).toHaveBeenCalledWith(expect.objectContaining(largeData));
     });
 
     it('should decompress on retrieval', async () => {
@@ -380,7 +387,7 @@ describe('TieredStorageService', () => {
       const results = await Promise.all(promises);
 
       expect(results).toHaveLength(10);
-      results.forEach((result) => {
+      results.forEach(result => {
         expect(result).toBeDefined();
       });
     });
