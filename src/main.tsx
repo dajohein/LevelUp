@@ -24,10 +24,8 @@ import './index.css';
 // This avoids direct import.meta.env usage in shared modules used by tests.
 (window as any).__APP_ENV = import.meta.env;
 
-// Initialize the enhanced storage system with server-side support
-initializeStorage({
-  enableRemoteStorage: true,
-}).catch(error => {
+// Remote storage is opt-in for volatile development/demo environments only.
+initializeStorage().catch(error => {
   logger.warn('Storage initialization failed, falling back to local storage', { error });
 });
 

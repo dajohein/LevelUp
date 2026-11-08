@@ -66,7 +66,7 @@ const DEFAULT_TIERED_CONFIG: TieredStorageConfig = {
     remote: {
       maxSize: 1024 * 1024 * 1024, // 1GB
       ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
-      enabled: true, // ✅ ENABLED - Vercel backend ready!
+      enabled: false,
       priority: 1,
     },
     archive: {
@@ -83,11 +83,6 @@ export class TieredStorageService implements TieredStorageProvider {
 
   constructor(config: Partial<TieredStorageConfig> = {}) {
     this.config = { ...DEFAULT_TIERED_CONFIG, ...config };
-
-    // Enable remote tier in production or when explicitly enabled
-    if (process.env.NODE_ENV === 'production' || config.tiers?.remote?.enabled) {
-      this.config.tiers.remote!.enabled = true;
-    }
   }
 
   /**

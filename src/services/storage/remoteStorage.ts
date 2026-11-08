@@ -87,24 +87,27 @@ export class RemoteStorageService implements AsyncStorageProvider {
     sessionToken: string;
   }): Promise<RemoteUserSession> {
     if (existingSession) {
-      // Validate existing session
-      try {
-        const result = await this.apiCall('/api/users', {
-          action: 'authenticate',
-          sessionToken: existingSession.sessionToken,
-        });
-
-        if (result.success) {
-          this.userSession = {
-            userId: result.data.userId,
-            sessionToken: existingSession.sessionToken,
-            isGuest: false,
-          };
-          return this.userSession;
-        }
-      } catch (error) {
-        logger.warn('Failed to validate existing session:', error);
+      if (!existingSession.userId || !existingSession.sessionToken) {
+        throw new Error('Stored remote session is invalid; local progress was preserved');
       }
+
+      const result = await this.apiCall('/api/users', {
+        action: 'authenticate',
+        sessionToken: existingSession.sessionToken,
+      });
+
+      if (!result.success || !result.data?.userId) {
+        throw new Error(
+          'Stored remote session could not be restored; local progress was preserved'
+        );
+      }
+
+      this.userSession = {
+        userId: result.data.userId,
+        sessionToken: existingSession.sessionToken,
+        isGuest: false,
+      };
+      return this.userSession;
     }
 
     // Create new user session
@@ -145,14 +148,36 @@ export class RemoteStorageService implements AsyncStorageProvider {
     }
 
     // Try to restore from localStorage
-    try {
-      const stored = localStorage.getItem('levelup_remote_session');
-      if (stored) {
-        const session = JSON.parse(stored);
-        return await this.initializeUser(session);
+    const stored = localStorage.getItem('levelup_remote_session');
+    if (stored !== null) {
+      let session: unknown;
+      try {
+        session = JSON.parse(stored);
+      } catch (error) {
+        logger.error(
+          'Stored remote session could not be parsed; local progress was preserved:',
+          error
+        );
+        throw new Error(
+          'Stored remote session could not be restored; local progress was preserved'
+        );
       }
-    } catch (error) {
-      logger.warn('Failed to restore session from localStorage:', error);
+
+      if (
+        typeof session !== 'object' ||
+        session === null ||
+        !('userId' in session) ||
+        typeof session.userId !== 'string' ||
+        !('sessionToken' in session) ||
+        typeof session.sessionToken !== 'string'
+      ) {
+        throw new Error('Stored remote session is invalid; local progress was preserved');
+      }
+
+      return await this.initializeUser({
+        userId: session.userId,
+        sessionToken: session.sessionToken,
+      });
     }
 
     // Create new session

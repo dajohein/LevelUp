@@ -34,20 +34,26 @@ function parseBool(value: string | undefined, defaultValue: boolean): boolean {
 // Safe environment reader: prefers window.__APP_ENV (set in main.tsx),
 // falls back to process.env for tests and Node contexts.
 function getEnv(name: string): string | undefined {
-  const w: any = typeof window !== 'undefined' ? (window as any) : undefined;
+  const w =
+    typeof window !== 'undefined'
+      ? (window as Window & { __APP_ENV?: Record<string, string | undefined> })
+      : undefined;
   if (w && w.__APP_ENV && typeof w.__APP_ENV[name] !== 'undefined') {
     return w.__APP_ENV[name];
   }
-  if (typeof process !== 'undefined' && (process as any).env && typeof (process as any).env[name] !== 'undefined') {
-    return (process as any).env[name];
+  if (typeof process !== 'undefined' && typeof process.env?.[name] !== 'undefined') {
+    return process.env[name];
   }
   return undefined;
 }
 
 // Get configuration based on environment variables (with safe defaults)
 export function getEnvironmentConfig(): EnvironmentConfig {
-  const apiBaseUrl = getEnv('VITE_API_BASE_URL') || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
-  const enableRemoteStorage = parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), true);
+  const apiBaseUrl =
+    getEnv('VITE_API_BASE_URL') ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+  const enableRemoteStorage =
+    parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), false) && process.env.NODE_ENV !== 'production';
   const enableLocalFallback = parseBool(getEnv('VITE_ENABLE_LOCAL_FALLBACK'), true);
   const debugMode = parseBool(getEnv('VITE_DEBUG_MODE'), false);
 
@@ -83,8 +89,11 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   };
 }
 
-// Export the current environment config
-export const environmentConfig = getEnvironmentConfig();
+// Resolve values on access so consumers imported before main.tsx bootstraps __APP_ENV
+// still see the Vite configuration when they initialize or render.
+export const environmentConfig = new Proxy({} as EnvironmentConfig, {
+  get: (_target, property: keyof EnvironmentConfig) => getEnvironmentConfig()[property],
+});
 
 // Helper to get test config (used in tests)
 export const getTestConfig = (): EnvironmentConfig => ({

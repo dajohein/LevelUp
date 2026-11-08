@@ -1,6 +1,6 @@
 /**
  * Vercel Serverless API for User Data Storage
- * 
+ *
  * Provides secure, scalable storage for user progress with language isolation
  * Compatible with existing enhanced storage architecture
  */
@@ -78,7 +78,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS configuration via environment (Twelve-Factor)
   const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
   const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || '*';
+  const corsOrigin =
+    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
+      ? origin
+      : allowedOrigins[0] || '*';
   res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -90,19 +93,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      error: 'Method not allowed. Use POST.'
+      error: 'Method not allowed. Use POST.',
+    });
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({
+      success: false,
+      error: 'Remote storage is unavailable: this demo backend is process-local and not durable.',
     });
   }
 
   try {
     const request: StorageRequest = req.body;
-    const defaultCompress = (process.env.STORAGE_COMPRESS_DEFAULT === 'true');
-    
+    const defaultCompress = process.env.STORAGE_COMPRESS_DEFAULT === 'true';
+
     // Validate required fields
     if (!request.userId) {
       return res.status(400).json({
         success: false,
-        error: 'userId is required'
+        error: 'userId is required',
       });
     }
 
@@ -110,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (request.languageCode && !isValidLanguageCode(request.languageCode)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid language code format'
+        error: 'Invalid language code format',
       });
     }
 
@@ -118,8 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: false,
       metadata: {
         timestamp: Date.now(),
-        tier: 'remote'
-      }
+        tier: 'remote',
+      },
     };
 
     switch (request.action) {
@@ -131,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
         const stored = storage.get(storageKey);
-        
+
         if (stored) {
           response.success = true;
           response.data = request.options?.compress ? decompressData(stored.data) : stored.data;
@@ -140,7 +150,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             tier: 'remote' as const,
             size: JSON.stringify(stored.data).length,
             compressed: stored.compressed,
-            languageCode: request.languageCode
+            languageCode: request.languageCode,
           };
         } else {
           response.error = 'Data not found';
@@ -158,24 +168,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
-        
+
         const storedItem = {
           data: dataToStore,
           compressed: compress,
           timestamp: Date.now(),
           ttl: request.options?.ttl,
-          languageCode: request.languageCode
+          languageCode: request.languageCode,
         };
 
         storage.set(storageKey, storedItem);
-        
+
         response.success = true;
         response.metadata = {
           timestamp: Date.now(),
           tier: 'remote' as const,
           size: JSON.stringify(dataToStore).length,
           compressed: compress,
-          languageCode: request.languageCode
+          languageCode: request.languageCode,
         };
         break;
       }
@@ -189,13 +199,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
         const existed = storage.has(storageKey);
         storage.delete(storageKey);
-        
+
         response.success = true;
         response.data = { deleted: existed };
         response.metadata = {
           timestamp: Date.now(),
           tier: 'remote' as const,
-          languageCode: request.languageCode
+          languageCode: request.languageCode,
         };
         break;
       }
@@ -208,20 +218,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const prefix = `user:${request.userId}:lang:${request.languageCode}:`;
         const keys: string[] = [];
-        
+
         for (const [key] of storage) {
           if (key.startsWith(prefix)) {
             keys.push(key.substring(prefix.length));
           }
         }
-        
+
         response.success = true;
         response.data = keys;
         response.metadata = {
           timestamp: Date.now(),
           tier: 'remote' as const,
           size: keys.length,
-          languageCode: request.languageCode
+          languageCode: request.languageCode,
         };
         break;
       }
@@ -232,7 +242,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json(response);
-
   } catch (error) {
     console.error('Storage API error:', error);
     return res.status(500).json({
@@ -240,8 +249,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       metadata: {
         timestamp: Date.now(),
-        tier: 'remote'
-      }
+        tier: 'remote',
+      },
     });
   }
 }
