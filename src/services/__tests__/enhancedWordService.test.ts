@@ -1,5 +1,6 @@
 import { enhancedWordService } from '../enhancedWordService';
 import { getWordsForLanguage } from '../wordService';
+import { learningCacheService } from '../cacheService';
 import type { Word } from '../wordService';
 
 // Mock dependencies to return simple test data
@@ -116,6 +117,27 @@ describe('enhancedWordService', () => {
       const result = enhancedWordService.initializeLearningSession('de');
 
       expect(result).toBe(false);
+    });
+
+    it('preserves a zero session start timestamp when completing a session', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(500);
+
+      try {
+        expect(enhancedWordService.initializeLearningSession('de', undefined, {}, 0)).toBe(true);
+        enhancedWordService.forceCompleteSession();
+
+        expect(jest.mocked(learningCacheService.recordSession)).toHaveBeenCalledWith(
+          'de',
+          expect.anything(),
+          expect.anything(),
+          [],
+          0,
+          500,
+          'de:0'
+        );
+      } finally {
+        nowSpy.mockRestore();
+      }
     });
   });
 

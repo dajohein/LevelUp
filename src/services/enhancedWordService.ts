@@ -62,7 +62,8 @@ class EnhancedWordService {
   initializeLearningSession(
     languageCode: string,
     moduleId?: string,
-    wordProgress: { [key: string]: WordProgress } = {}
+    wordProgress: { [key: string]: WordProgress } = {},
+    sessionStartTime?: number
   ): boolean {
     try {
       logger.debug(
@@ -101,7 +102,7 @@ class EnhancedWordService {
         currentWordIndex: 0,
         sessionWords: interleavedWords,
         sessionResults: [],
-        sessionStartTime: Date.now(),
+        sessionStartTime: sessionStartTime ?? Date.now(),
       };
 
       logger.debug(`✅ Learning session initialized:`, {
@@ -221,11 +222,21 @@ class EnhancedWordService {
     const wordsStudied = this.state.sessionResults.map(r => r.wordId);
 
     // Record session in cache
+    const languageCode = this.getCurrentLanguageCode();
+    if (!languageCode) {
+      logger.error('Cannot record a completed session without a language code');
+      return performance;
+    }
+
+    const endTime = Date.now();
     learningCacheService.recordSession(
-      this.getCurrentLanguageCode(),
+      languageCode,
       this.state.currentSession,
       performance,
-      wordsStudied
+      wordsStudied,
+      this.state.sessionStartTime,
+      endTime,
+      `${languageCode}:${this.state.sessionStartTime}`
     );
 
     logger.debug(`🏁 Session completed:`, {
@@ -392,8 +403,8 @@ class EnhancedWordService {
   /**
    * Helper to get current language code (would need to be passed or stored)
    */
-  private getCurrentLanguageCode(): string {
-    return this.state.currentLanguageCode || 'de'; // Default fallback
+  private getCurrentLanguageCode(): string | null {
+    return this.state.currentLanguageCode;
   }
 
   /**

@@ -16,6 +16,7 @@ import {
   sessionStateStorage,
   wordProgressStorage,
 } from '../services/storageService';
+import { learningCacheService } from '../services/cacheService';
 
 /** Dev-only window extensions for debugging the persistence layer. */
 interface DevWindow extends Window {
@@ -120,6 +121,32 @@ const persistDurableSnapshot = (state: RootState, actionType: string): void => {
 
   if (actionType.startsWith('session/')) {
     sessionStateStorage.save(createSessionSnapshot(state.session));
+
+    if (
+      actionType === 'session/completeSession' &&
+      state.session.currentLanguage &&
+      state.session.currentSession &&
+      state.session.sessionStartTime > 0
+    ) {
+      const progress = state.session.progress;
+      const totalAnswers = progress.correctAnswers + progress.incorrectAnswers;
+      learningCacheService.recordPracticeSession(
+        state.session.currentLanguage,
+        `${state.session.currentLanguage}:${state.session.sessionStartTime}`,
+        state.session.sessionStartTime,
+        Date.now(),
+        {
+          groupId: state.session.currentSession.id,
+          wordsLearned: progress.wordsCompleted,
+          averageAccuracy: totalAnswers > 0 ? progress.correctAnswers / totalAnswers : 0,
+          fastestModeCompletion: '',
+          strugglingWords: [],
+          recommendations: [],
+        },
+        [],
+        state.session.currentSession.id
+      );
+    }
   }
 };
 

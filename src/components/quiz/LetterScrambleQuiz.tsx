@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useRef, useReducer } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { logger } from '../../services/logger';
+import { BrainProgress } from './BrainProgress';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -250,81 +251,6 @@ const ActionButton = styled.button<{ variant?: 'clear' | 'hint' }>`
     }
   `}
 `;
-
-const BrainProgressContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${props => props.theme.spacing.md};
-  margin-top: ${props => props.theme.spacing.md};
-  font-size: 0.9rem;
-  color: ${props => props.theme.colors.textSecondary};
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-    gap: ${props => props.theme.spacing.sm};
-  }
-`;
-
-const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
-  width: 24px;
-  height: 24px;
-  position: relative;
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    width: 20px;
-    height: 20px;
-  }
-
-  &::before {
-    content: '🧠';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    filter: ${props =>
-      props.filled
-        ? 'none'
-        : props.partial
-          ? 'brightness(0.7) saturate(0.8)'
-          : 'grayscale(1) brightness(0.4)'};
-    transform: ${props => (props.filled || props.partial ? 'scale(1.1)' : 'scale(1)')};
-  }
-`;
-
-const BrainContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
-  // Calculate progress within current level (0-100%)
-  const progressInLevel = xp % 100;
-
-  // Calculate how many brains should be filled
-  const brain1Filled = progressInLevel >= 33;
-  const brain2Filled = progressInLevel >= 66;
-  const brain3Filled = progressInLevel >= 99;
-
-  const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
-  const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
-  const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;
-
-  return (
-    <BrainProgressContainer>
-      <span>Level {level}</span>
-      <BrainContainer>
-        <BrainIcon filled={brain1Filled} partial={brain1Partial} />
-        <BrainIcon filled={brain2Filled} partial={brain2Partial} />
-        <BrainIcon filled={brain3Filled} partial={brain3Partial} />
-      </BrainContainer>
-      <span>{xp} XP</span>
-    </BrainProgressContainer>
-  );
-};
 
 interface LetterTileState {
   letter: string;

@@ -1,5 +1,7 @@
 import { WordProgress } from '../store/types';
 import { getModulesForLanguage } from './moduleService';
+import { learningCacheService } from './cacheService';
+import { calculatePracticeStreak } from './practiceMetrics';
 
 // Level progression constants
 export const LEVEL_CONFIG = {
@@ -120,43 +122,8 @@ export const getLevelInfo = (level: number) => {
   return LEVEL_TITLES[1];
 };
 
-// Calculate learning streak (consecutive days with progress)
-export const calculateLearningStreak = (wordProgress: Record<string, WordProgress>): number => {
-  const progressDates = Object.values(wordProgress)
-    .map(progress => progress.lastPracticed)
-    .filter(Boolean)
-    .map(date => new Date(date!).toDateString())
-    .filter((date, index, array) => array.indexOf(date) === index) // Remove duplicates
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // Sort by date descending
-
-  if (progressDates.length === 0) return 0;
-
-  let streak = 1;
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-
-  // Check if user practiced today or yesterday (to allow for timezone differences)
-  if (progressDates[0] !== today && progressDates[0] !== yesterday) {
-    return 0;
-  }
-
-  // Count consecutive days
-  for (let i = 1; i < progressDates.length; i++) {
-    const currentDate = new Date(progressDates[i - 1]);
-    const previousDate = new Date(progressDates[i]);
-    const dayDifference = Math.floor(
-      (currentDate.getTime() - previousDate.getTime()) / (24 * 60 * 60 * 1000)
-    );
-
-    if (dayDifference === 1) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-};
+export const calculateLearningStreak = (practiceDays: readonly string[]): number =>
+  calculatePracticeStreak(practiceDays);
 
 // Calculate various achievement metrics for a specific language
 export const calculateLanguageAchievementStats = (
@@ -182,7 +149,8 @@ export const calculateLanguageAchievementStats = (
 
   const languageXP = calculateLanguageXP(wordProgress, languageCode);
   const currentLevel = calculateCurrentLevel(languageXP);
-  const learningStreak = calculateLearningStreak(languageProgress);
+  const practiceDays = learningCacheService.getAnalytics(languageCode)?.practiceDays || [];
+  const learningStreak = calculateLearningStreak(practiceDays);
 
   return {
     totalWords,
@@ -205,8 +173,9 @@ export const calculateAchievementStats = (wordProgress: Record<string, WordProgr
   const perfectWords = Object.values(wordProgress).filter(p => p.xp >= 100).length;
   const totalXP = calculateTotalXP(wordProgress);
   const currentLevel = calculateCurrentLevel(totalXP);
-  const learningStreak = calculateLearningStreak(wordProgress);
-
+  const learningStreak = calculateLearningStreak(
+    learningCacheService.getPracticeDaysAcrossLanguages()
+  );
   return {
     totalWords,
     masteredWords,

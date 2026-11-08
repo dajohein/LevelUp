@@ -34,7 +34,11 @@ export interface EnhancedGameState {
   recommendations: string[];
 }
 
-export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
+export const useEnhancedGame = (
+  languageCode: string,
+  moduleId?: string,
+  sessionStartTime?: number
+) => {
   const { wordProgress } = useSelector((state: RootState) => state.game);
   const { currentSession, progress: sessionProgress } = useSelector(
     (state: RootState) => state.session
@@ -76,7 +80,8 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
       const success = enhancedWordService.initializeLearningSession(
         languageCode,
         moduleId,
-        wordProgress
+        wordProgress,
+        sessionStartTime
       );
 
       if (success) {
@@ -104,7 +109,7 @@ export const useEnhancedGame = (languageCode: string, moduleId?: string) => {
       setEnhancedState(prev => ({ ...prev, isUsingSpacedRepetition: false }));
       return false;
     }
-  }, [languageCode, moduleId, wordProgress, currentSession]);
+  }, [languageCode, moduleId, wordProgress, currentSession, sessionStartTime]);
 
   /**
    * Handle answer submission in the learning system

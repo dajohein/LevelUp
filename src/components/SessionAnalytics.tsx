@@ -220,9 +220,8 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   const [sessionData, setSessionData] = useState<SessionRecord[]>([]);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
-  const { wordProgress, totalAttempts, correctAnswers, streak } = useSelector(
-    (state: RootState) => state.game
-  );
+  const wordProgress = useSelector((state: RootState) => state.game.wordProgress);
+  const currentLanguage = useSelector((state: RootState) => state.game.language);
 
   // Only reload analytics when truly necessary and cache the results
   useEffect(() => {
@@ -253,17 +252,31 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
   // Derive analytics from Redux wordProgress when cache has no data
   const derivedAnalytics = useMemo(() => {
     const languageWordList = allLanguageWords[languageCode]?.words || [];
+    const languageProgress = currentLanguage === languageCode ? wordProgress : {};
     const wordsWithProgress = languageWordList.filter(
-      word => wordProgress[word.id] && wordProgress[word.id].xp > 0
+      word => languageProgress[word.id] && languageProgress[word.id].xp > 0
     );
 
     if (wordsWithProgress.length === 0) return null;
 
+    const { totalAttempts, correctAnswers } = languageWordList.reduce(
+      (totals, word) => {
+        const progress = languageProgress[word.id];
+        if (progress) {
+          totals.totalAttempts += (progress.timesCorrect || 0) + (progress.timesIncorrect || 0);
+          totals.correctAnswers += progress.timesCorrect || 0;
+        }
+        return totals;
+      },
+      { totalAttempts: 0, correctAnswers: 0 }
+    );
+    const storedAnalytics = learningCacheService.getAnalytics(languageCode);
+
     return {
-      totalSessions: totalAttempts > 0 ? Math.max(1, Math.floor(totalAttempts / 10)) : 0,
+      totalSessions: storedAnalytics?.totalSessions || 0,
       totalWordsLearned: wordsWithProgress.length,
       averageAccuracy: totalAttempts > 0 ? correctAnswers / totalAttempts : 0,
-      learningStreak: streak,
+      learningStreak: storedAnalytics?.learningStreak || 0,
       preferredQuizModes: {} as Record<string, number>,
       lastSessionDate: '',
       weeklyProgress: [] as Array<{
@@ -273,7 +286,7 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
         accuracyRate: number;
       }>,
     };
-  }, [languageCode, wordProgress, totalAttempts, correctAnswers, streak]);
+  }, [languageCode, wordProgress, currentLanguage]);
 
   const effectiveAnalytics = analytics || derivedAnalytics;
 
@@ -348,7 +361,9 @@ export const SessionAnalytics: React.FC<SessionAnalyticsProps> = ({
           </TrendStat>
           <StatCard>
             <StatValue>{effectiveAnalytics.learningStreak}</StatValue>
-            <StatLabel>Day Streak</StatLabel>
+            <StatLabel title="Consecutive completed practice days, using UTC calendar days">
+              Day Streak (UTC)
+            </StatLabel>
           </StatCard>
         </StatsGrid>
       )}
