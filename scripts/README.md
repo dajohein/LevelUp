@@ -6,6 +6,11 @@ This directory contains scripts for development server management and language v
 
 ### `dev-start.sh`
 Starts both storage server and Vite dev server as background services.
+The workspace-local supervisor tracks only processes it starts. It waits up to
+15 seconds for the storage API, web server, and proxied API health check; a
+failed start stops its own processes and returns a nonzero exit code.
+Occupied ports are errors, not an instruction to stop other processes.
+Starting again while this workspace's servers are running is also an error.
 
 **Logging (Twelve-Factor):**
 - By default, logs stream to stdout (standard output)
@@ -23,7 +28,8 @@ npm run dev:start
 ```
 
 ### `dev-stop.sh`
-Stops all development servers.
+Stops only the services started by `dev-start.sh` in this checkout. Manually
+started services and other worktrees are not managed.
 **Usage:**
 ```bash
 npm run dev:stop
@@ -38,6 +44,45 @@ Restarts the development environment.
 npm run dev:restart
 # or
 ./scripts/dev-restart.sh
+```
+
+Both commands resolve the workspace from the script location, not the current
+directory. `dev:restart` accepts `--log-files` when invoked directly as
+`./scripts/dev-restart.sh --log-files`.
+
+### Ports, health, and recovery
+
+The default storage and Vite ports are 3001 and 5173. To run multiple
+workspaces at once, choose distinct ports and use the same environment for
+start, restart, and health checks:
+
+```bash
+export LEVELUP_STORAGE_PORT=3002 LEVELUP_VITE_PORT=5174
+npm run dev:start
+npm run health:storage
+npm run dev:stop
+```
+
+`health:storage` requires a successful HTTP response with `status: "healthy"`
+through the Vite proxy; it returns nonzero on errors, invalid responses, or
+timeouts. Each HTTP request has a one-second timeout. Set
+`LEVELUP_DEV_TIMEOUT_MS` (1–120000, default 15000) to adjust the startup
+deadline.
+
+The supervisor record and control lock are stored under the ignored
+`.levelup-dev/` directory. Stale PID records are discarded without signalling
+the recorded process. If a control command was forcibly terminated and left a
+lock behind, first confirm that no start/stop command is running in this
+workspace, then remove the empty `.levelup-dev/lock` directory and retry. A
+forcibly killed supervisor may leave its children running; inspect and stop
+those specific processes manually rather than killing processes by name.
+Process identity verification uses `ps`; the supervisor and process-group
+cleanup require a Unix-like environment.
+
+Run the isolated process and HTTP regression checks with:
+
+```bash
+npm run test:dev-controls
 ```
 
 ### `dev-storage-server.cjs`

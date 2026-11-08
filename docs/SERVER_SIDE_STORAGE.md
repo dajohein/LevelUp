@@ -37,7 +37,7 @@ npm run dev:start    # Starts both API and web servers as background services
 
 **Check system health:**
 ```bash
-npm run health:storage    # Verify all endpoints are working
+npm run health:storage    # Verify the proxied API health endpoint
 ```
 
 **Access your application:**
@@ -48,8 +48,12 @@ npm run health:storage    # Verify all endpoints are working
 
 **Stop development environment:**
 ```bash
-npm run dev:stop    # Stops all background services
+npm run dev:stop    # Stops services managed by this checkout
 ```
+
+Startup fails on occupied ports or unhealthy services and cleans up only its
+own processes. For alternate ports and recovery instructions, see
+[development server controls](../scripts/README.md).
 
 ### Alternative Development Commands
 

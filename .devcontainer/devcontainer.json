@@ -123,7 +123,7 @@
   },
 
   // Lifecycle hooks
-  "postCreateCommand": "npm ci && npm run health:storage || echo 'Development environment ready. Start with: npm run dev:start'",
+  "postCreateCommand": "npm ci",
   
   "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
   

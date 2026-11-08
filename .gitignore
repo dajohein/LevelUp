@@ -31,3 +31,4 @@ Thumbs.db*.log
 storage.log
 vite.log
 logs/
+.levelup-dev/
