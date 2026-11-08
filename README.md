@@ -17,6 +17,15 @@ Dutch-to-German practice for the first two groups and German-to-Dutch practice f
 the last three. Every entry includes a German example and Dutch translation.
 Existing modules and their progress remain unchanged.
 
+### Keyboard-accessible navigation
+
+Desktop **User navigation** and mobile **Navigation** open with Enter or Space.
+Tab moves through ordinary navigation links; Escape closes the disclosure and
+returns focus to its trigger. Closed panels are hidden from keyboard and
+screen-reader navigation, and compact profile actions retain descriptive names.
+See [navigation verification](docs/MOBILE_OPTIMIZATION.md#navigation-accessibility)
+for interaction tests and manual checks.
+
 ### � **Code Cleanup (October 26, 2025)**
 
 - **Removed obsolete files**: Cleaned up backup directories, old verification files, and unused scripts

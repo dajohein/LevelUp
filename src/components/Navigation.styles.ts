@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import { NavigationLink } from './ui/NavigationLink';
 
 // Constants for better maintainability
 export const Z_INDEX = {
@@ -26,6 +27,12 @@ export const NavigationBar = styled.nav`
   padding: 0 ${props => props.theme.spacing.xl};
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: ${Z_INDEX.NAVIGATION};
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid ${props => props.theme.colors.text};
+    outline-offset: 3px;
+  }
 
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     height: 60px;
@@ -148,7 +155,9 @@ export const AppTitle = styled.div`
   }
 `;
 
-export const UserProfileCompact = styled.div`
+export const UserProfileCompact = styled.button`
+  font: inherit;
+  color: inherit;
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
@@ -276,6 +285,10 @@ export const UserXP = styled.div`
 `;
 
 export const DropdownMenu = styled.div<{ isOpen: boolean }>`
+  &[hidden] {
+    display: none;
+  }
+
   position: absolute;
   top: 100%;
   right: 0;
@@ -298,7 +311,9 @@ export const DropdownMenu = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-export const DropdownItem = styled.button`
+export const DropdownItem = styled(NavigationLink)`
+  box-sizing: border-box;
+  text-decoration: none;
   width: 100%;
   padding: 12px 16px;
   border: none;
@@ -329,7 +344,7 @@ export const DropdownItem = styled.button`
   }
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.3);
+    box-shadow: inset 0 0 0 2px ${props => props.theme.colors.text};
   }
 `;
 
