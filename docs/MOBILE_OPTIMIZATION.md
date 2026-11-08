@@ -28,6 +28,51 @@ This document outlines the mobile improvements made to the LevelUp language lear
 - Back button transforms to icon-only on small screens
 - User profile stats hidden on mobile, showing only avatar
 
+#### Navigation accessibility
+
+Desktop and mobile navigation use non-modal disclosures, not ARIA application
+menus or modal dialogs. Native buttons expose a stable name, `aria-expanded` and
+`aria-controls`; opening focuses the first navigation link. Links retain normal
+Tab/Shift+Tab order and browser link behavior. Escape or the mobile close control
+dismisses the panel and returns focus. Moving focus outside closes it without
+stealing focus. Outside clicks, link activation (including the current route),
+route changes and switching to desktop/mobile also dismiss the panel.
+
+Closed panels use HTML `hidden` with an explicit CSS override, excluding their
+contents from both focus and accessibility navigation. The mobile panel has a
+named region and a close button; its backdrop remains a pointer dismissal aid,
+not an assertion that background content is modal/inert. Compact profile links
+and icon-only back buttons have explicit action names. Focus outlines use theme
+text colors, and language links retain the active route's language scope. No
+storage or progress behavior changes.
+
+Run the focused interaction suite:
+
+```sh
+npm test -- --runInBand src/components/__tests__/Navigation.accessibility.test.tsx
+npm run type-check
+```
+
+Manual browser/screen-reader checklist: at desktop (1024px), tablet (600px) and
+mobile (375px) widths, Tab to the trigger, open with both Enter and Space, verify
+the expanded announcement and first-link focus, reach all links with Tab and
+Shift+Tab, and dismiss with Escape. Confirm focus returns, closed links are not
+announced or tabbable, and compact profile/back actions retain their names.
+Check link destinations, backdrop/close dismissal, resize behavior, zoom and
+visible focus. Repeat with NVDA/Firefox and VoiceOver/Safari.
+
+Remote Chromium checks on November 8, 2026 verified desktop Enter opening,
+first-link focus, visible 2px focus outlines and Escape focus return at 1280px;
+mobile Space/Enter opening, Escape focus return, drawer bounds and Shift+Tab
+dismissal to the visible compact profile link at 375px; and the icon-only back
+button's accessible name and focus outline at 600px. Navigation worked despite
+the preview's unavailable storage API and blocked analytics scripts.
+
+The automated suite runs in jsdom. NVDA/Firefox, VoiceOver/Safari, real-device
+touch, zoom and native screen-reader announcements were not verified in this
+Linux environment and remain manual checks. No storage changes or background
+timers are introduced; disclosure event listeners exist only while open.
+
 #### Game Interface (`Game.tsx`)
 - Adjusted container padding and spacing for mobile
 - Better scroll handling with overflow management
