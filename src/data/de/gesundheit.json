@@ -1327,6 +1327,7 @@
       "id": "gesundheit:101",
       "term": "komisch",
       "definition": "raar, vreemd",
+      "acceptedAnswers": ["raar", "vreemd"],
       "direction": "term-to-definition",
       "category": "Lesen",
       "context": {

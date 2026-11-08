@@ -261,10 +261,9 @@ export const useEnhancedGameState = ({
         return answer.trim().length > 0; // Accept any meaningful input
       }
 
-      const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
-      return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+      return gameServices.modeHandler.isCorrectAnswer(answer, wordToUse, quizModeToUse);
     },
-    [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]
+    [currentWord, quizMode, getCurrentWordInfo]
   );
 
   // Stable ref to the latest handleWordTransition. handleSubmit reads through this

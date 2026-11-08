@@ -108,6 +108,10 @@ describe('GameModeHandler', () => {
       expect(handler.getQuizQuestion(wordTTD, 'multiple-choice')).toBe('Hund');
     });
 
+    it('uses the Dutch definition as the fill-in prompt regardless of translation direction', () => {
+      expect(handler.getQuizQuestion(wordTTD, 'fill-in-the-blank')).toBe('dog');
+    });
+
     it('returns definition for default direction (no direction field) in multiple-choice', () => {
       const word = makeWord({ term: 'Hund', definition: 'dog' });
       expect(handler.getQuizQuestion(word, 'multiple-choice')).toBe('dog');
@@ -140,6 +144,32 @@ describe('GameModeHandler', () => {
         direction: 'definition-to-term',
       });
       expect(handler.getQuizAnswer(word, 'fill-in-the-blank')).toBe('Hund');
+    });
+
+    describe('isCorrectAnswer', () => {
+      it('accepts individual alternative translations in open-answer mode', () => {
+        const word = makeWord({
+          term: 'komisch',
+          definition: 'raar, vreemd',
+          direction: 'term-to-definition',
+          acceptedAnswers: ['raar', 'vreemd'],
+        });
+
+        expect(handler.isCorrectAnswer('vreemd', word, 'open-answer')).toBe(true);
+        expect(handler.isCorrectAnswer('RAAR', word, 'open-answer')).toBe(true);
+        expect(handler.isCorrectAnswer('apart', word, 'open-answer')).toBe(false);
+      });
+
+      it('does not use Dutch alternatives as answers in other quiz directions', () => {
+        const word = makeWord({
+          term: 'komisch',
+          definition: 'raar, vreemd',
+          direction: 'term-to-definition',
+          acceptedAnswers: ['raar', 'vreemd'],
+        });
+
+        expect(handler.isCorrectAnswer('vreemd', word, 'multiple-choice')).toBe(false);
+      });
     });
 
     it('returns term for definition-to-term direction in unidirectional modes', () => {

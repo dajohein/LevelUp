@@ -59,9 +59,15 @@ This guide documents the standardized approach for creating and maintaining lang
       "translation": "Dutch translation of the sentence",
       "sentenceWithBlank": "Sentence with {BLANK} for practice"
    },
-   "synonyms": ["alternative1", "alternative2"] // Related expressions
+   "synonyms": ["alternative1", "alternative2"], // Related expressions
+   "acceptedAnswers": ["alternative answer"] // Optional accepted open-answer variants
 }
 ```
+
+Use `acceptedAnswers` when one displayed definition lists multiple valid translations.
+Keep the original `definition` for display, and list each independently valid answer
+in the array so open-answer checks accept them without requiring the learner to type
+the entire comma-separated definition.
 
 ## 🔧 Implementation Process
 

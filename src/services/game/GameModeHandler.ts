@@ -53,6 +53,10 @@ export class GameModeHandler {
    * Get the question text based on quiz mode and word direction
    */
   getQuizQuestion(word: Word, quizMode: string): string {
+    if (quizMode === 'fill-in-the-blank') {
+      return word.definition;
+    }
+
     // For enhanced quiz modes, provide context-specific prompts
     if (quizMode === 'contextual-analysis') {
       const baseQuestion = this.isUnidirectionalMode(quizMode)
@@ -115,6 +119,18 @@ export class GameModeHandler {
       // Bidirectional modes follow word direction
       return this.getAnswerWord(word);
     }
+  }
+
+  isCorrectAnswer(answer: string, word: Word, quizMode: string): boolean {
+    const acceptedAnswers =
+      quizMode === 'open-answer'
+        ? [this.getQuizAnswer(word, quizMode), ...(word.acceptedAnswers ?? [])]
+        : [this.getQuizAnswer(word, quizMode)];
+    const normalizedAnswer = answer.toLowerCase().trim();
+
+    return acceptedAnswers.some(
+      acceptedAnswer => acceptedAnswer.toLowerCase().trim() === normalizedAnswer
+    );
   }
 
   /**

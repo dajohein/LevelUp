@@ -9,6 +9,19 @@ import { Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
 import { logger } from './logger';
 
+const getDefinitionVariants = (definition: string): Set<string> =>
+  new Set(
+    definition
+      .split(',')
+      .map(variant => variant.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+const hasEquivalentDefinition = (first: string, second: string): boolean => {
+  const firstVariants = getDefinitionVariants(first);
+  return [...getDefinitionVariants(second)].some(variant => firstVariants.has(variant));
+};
+
 /**
  * Generate multiple choice options scoped to the same module as the word
  * @param word - The target word for the question
@@ -51,31 +64,35 @@ export function generateModuleScopedOptions(
   const incorrectOptions: string[] = [];
   const shuffledWords = [...moduleWords].sort(() => 0.5 - Math.random());
 
-  for (const candidate of shuffledWords) {
-    if (candidate.id !== word.id && incorrectOptions.length < 3) {
-      const incorrectAnswer =
-        direction === 'definition-to-term' ? candidate.term : candidate.definition;
-      if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
-        incorrectOptions.push(incorrectAnswer);
+  const addIncorrectOptions = (candidates: Word[]) => {
+    for (const candidate of candidates) {
+      if (incorrectOptions.length >= 3) break;
+      if (
+        candidate.id !== word.id &&
+        !hasEquivalentDefinition(word.definition, candidate.definition)
+      ) {
+        const incorrectAnswer =
+          direction === 'definition-to-term' ? candidate.term : candidate.definition;
+        if (
+          incorrectAnswer.toLowerCase().trim() !== correctAnswer.toLowerCase().trim() &&
+          !incorrectOptions.some(
+            option => option.toLowerCase().trim() === incorrectAnswer.toLowerCase().trim()
+          )
+        ) {
+          incorrectOptions.push(incorrectAnswer);
+        }
       }
     }
-  }
+  };
+
+  addIncorrectOptions(shuffledWords);
 
   // If still not enough options, pad with remaining words from allWords
   if (incorrectOptions.length < 3) {
     const remainingWords = allWords.filter(
       w => w.id !== word.id && !moduleWords.some(mw => mw.id === w.id)
     );
-
-    for (const candidate of remainingWords) {
-      if (incorrectOptions.length < 3) {
-        const incorrectAnswer =
-          direction === 'definition-to-term' ? candidate.term : candidate.definition;
-        if (incorrectAnswer !== correctAnswer && !incorrectOptions.includes(incorrectAnswer)) {
-          incorrectOptions.push(incorrectAnswer);
-        }
-      }
-    }
+    addIncorrectOptions(remainingWords);
   }
 
   console.log(
@@ -88,16 +105,8 @@ export function generateModuleScopedOptions(
   // Ensure we have exactly 3 incorrect options before adding the correct one
   while (options.length < 3) {
     // Fallback: duplicate some options if needed (shouldn't happen but safety check)
-    const fallbackWords = allWords.filter(w => w.id !== word.id);
-    for (const candidate of fallbackWords) {
-      if (options.length < 3) {
-        const incorrectAnswer =
-          direction === 'definition-to-term' ? candidate.term : candidate.definition;
-        if (incorrectAnswer !== correctAnswer && !options.includes(incorrectAnswer)) {
-          options.push(incorrectAnswer);
-        }
-      }
-    }
+    addIncorrectOptions(allWords.filter(w => w.id !== word.id));
+    options.splice(0, options.length, ...incorrectOptions);
     break; // Prevent infinite loop
   }
 
@@ -107,10 +116,10 @@ export function generateModuleScopedOptions(
 
   // Final safety check: ensure we have exactly 4 options
   if (options.length !== 4) {
-    logger.warn('Option generation mismatch', { 
-      expected: 4, 
-      actual: options.length, 
-      word: word.term 
+    logger.warn('Option generation mismatch', {
+      expected: 4,
+      actual: options.length,
+      word: word.term,
     });
     // Emergency fallback: pad or trim to exactly 4
     while (options.length < 4) {
