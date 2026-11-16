@@ -128,7 +128,7 @@ window.testPerformanceFix();
 ### ✨ **Local-First Learning Progress**
 
 - **📱 Reliable Local Progress**: Learning progress is stored on this device
-- **🌐 Remote Sync**: Not available; the existing API uses volatile process memory and is disabled in production
+- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API stores users and progress in Upstash Redis (Vercel Marketplace)
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
@@ -137,9 +137,9 @@ window.testPerformanceFix();
 ### 🌐 **Remote Storage Status**
 
 - **Local-first**: Progress remains available on this device
-- **Demo only**: Remote account and storage endpoints are opt-in for development and are not durable
+- **Opt-in**: Remote account and storage endpoints are off by default; enable with `VITE_ENABLE_REMOTE_STORAGE=true`
 - **No progress transfer**: Device linking does not sync or reconcile learning progress
-- **Production behavior**: Remote account and storage endpoints return unavailable until durable shared storage is implemented
+- **Production behavior**: The API needs a connected Redis store (`KV_REST_API_URL`/`KV_REST_API_TOKEN`) and `SESSION_SECRET`; without Redis it fails closed (HTTP 500)
 
 ### 📈 **Performance Achievements**
 

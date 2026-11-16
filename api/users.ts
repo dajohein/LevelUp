@@ -33,6 +33,7 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 import { randomBytes, randomUUID } from 'crypto';
+import { getDb, KEY_PREFIX } from './_db.js';
 import { createSessionToken, verifySessionToken, resolveCorsOrigin } from './_auth.js';
 
 interface UserRequest {
@@ -64,20 +65,16 @@ interface UserResponse {
   };
 }
 
-// Simple in-memory storage for development
-// In production, replace with proper database
-const users = new Map<string, any>();
-const accountCodes = new Map<
-  string,
-  {
-    userId: string;
-    expires: number;
-    used: boolean;
-    attempts: number;
-    createdAt: number;
-  }
->();
-const rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
+// Redis layout (see _db.ts):
+//   levelup:user:<id>           -> user profile (JSON)
+//   levelup:code:<CODE>         -> { userId, used, createdAt }, expires via TTL
+//   levelup:usercode:<id>       -> the user's current unused code (so a new one replaces it)
+//   levelup:codeattempts:<CODE> -> failed/total link attempts for one code (TTL)
+//   levelup:rl:<bucket>         -> fixed-window rate-limit counter (TTL)
+const userKey = (id: string) => `${KEY_PREFIX}user:${id}`;
+const codeKey = (code: string) => `${KEY_PREFIX}code:${code}`;
+const userCodeKey = (id: string) => `${KEY_PREFIX}usercode:${id}`;
+const codeAttemptsKey = (code: string) => `${KEY_PREFIX}codeattempts:${code}`;
 
 // Security constants (env-driven)
 const MAX_CODE_ATTEMPTS = Number(process.env.ACCOUNT_CODE_MAX_ATTEMPTS || 5); // Max attempts per code
@@ -130,33 +127,15 @@ function createSession(userId: string): string {
   return createSessionToken(userId, ttlMs);
 }
 
-// Helper function to check rate limiting
-function isRateLimited(identifier: string): boolean {
-  const now = Date.now();
-  const rateLimit = rateLimitMap.get(identifier);
-
-  if (!rateLimit) {
-    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
-    return false;
+// Fixed-window rate limit: allows MAX_RATE_LIMIT_ATTEMPTS per window per identifier
+async function isRateLimited(identifier: string): Promise<boolean> {
+  const db = await getDb();
+  const key = `${KEY_PREFIX}rl:${identifier}`;
+  const attempts = await db.incr(key);
+  if (attempts === 1) {
+    await db.expire(key, Math.ceil(RATE_LIMIT_WINDOW / 1000));
   }
-
-  // Reset counter if window expired
-  if (now - rateLimit.lastAttempt > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
-    return false;
-  }
-
-  // Check if over limit
-  if (rateLimit.attempts >= MAX_RATE_LIMIT_ATTEMPTS) {
-    return true;
-  }
-
-  // Increment counter
-  rateLimit.attempts++;
-  rateLimit.lastAttempt = now;
-  rateLimitMap.set(identifier, rateLimit);
-
-  return false;
+  return attempts > MAX_RATE_LIMIT_ATTEMPTS;
 }
 
 // Helper function to get client identifier (IP-based)
@@ -189,14 +168,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(503).json({
-      success: false,
-      error: 'Remote accounts are unavailable: this demo backend is process-local and not durable.',
-    });
-  }
-
   try {
+    const db = await getDb();
     const request: UserRequest = req.body;
     const response: UserResponse = {
       success: false,
@@ -218,7 +191,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastActive: Date.now(),
         };
 
-        users.set(userId, user);
+        await db.set(userKey(userId), user);
         const sessionToken = createSession(userId);
 
         response.success = true;
@@ -237,7 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = users.get(userId);
+        const user = await db.get<any>(userKey(userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -255,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = users.get(userId);
+        const user = await db.get<any>(userKey(userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -269,7 +242,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastActive: Date.now(),
         };
 
-        users.set(userId, updatedUser);
+        await db.set(userKey(userId), updatedUser);
 
         response.success = true;
         response.data = { user: updatedUser };
@@ -288,7 +261,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = users.get(userId);
+        const user = await db.get<any>(userKey(userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -296,7 +269,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Update last active
         user.lastActive = Date.now();
-        users.set(userId, user);
+        await db.set(userKey(userId), user);
 
         response.success = true;
         response.data = {
@@ -320,29 +293,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Check rate limiting for code generation
         const clientId = getClientIdentifier(req);
-        if (isRateLimited(`generate_${clientId}`)) {
+        if (await isRateLimited(`generate_${clientId}`)) {
           response.error = 'Too many code generation attempts. Please try again later.';
           return res.status(429).json(response);
         }
 
-        // Invalidate any existing unused codes for this user (security best practice)
-        for (const [code, data] of accountCodes.entries()) {
-          if (data.userId === userId && !data.used) {
-            accountCodes.delete(code);
-          }
+        // Invalidate any existing unused code for this user (security best practice)
+        const previousCode = await db.get<string>(userCodeKey(userId));
+        if (previousCode) {
+          await db.del(codeKey(previousCode), codeAttemptsKey(previousCode));
         }
 
-        // Generate cryptographically secure account code
         const accountCode = generateAccountCode();
-        const expires = Date.now() + CODE_EXPIRY; // 1 hour
-
-        accountCodes.set(accountCode, {
-          userId,
-          expires,
-          used: false,
-          attempts: 0,
-          createdAt: Date.now(),
-        });
+        const expirySeconds = Math.ceil(CODE_EXPIRY / 1000);
+        await db.set(
+          codeKey(accountCode),
+          { userId, used: false, createdAt: Date.now() },
+          { ex: expirySeconds }
+        );
+        await db.set(userCodeKey(userId), accountCode, { ex: expirySeconds });
 
         response.success = true;
         response.data = {
@@ -363,28 +332,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Check rate limiting for link attempts
         const clientId = getClientIdentifier(req);
-        if (isRateLimited(`link_${clientId}`)) {
+        if (await isRateLimited(`link_${clientId}`)) {
           response.error = 'Too many linking attempts. Please try again later.';
           return res.status(429).json(response);
         }
 
-        const codeData = accountCodes.get(normalizedCode);
+        const codeData = await db.get<{ userId: string; used: boolean }>(codeKey(normalizedCode));
         if (!codeData) {
-          response.error = 'Invalid account code';
+          // Unknown or expired (TTL elapsed)
+          response.error = 'Invalid or expired account code';
           return res.status(400).json(response);
         }
 
         // Check code-specific attempt limit
-        codeData.attempts = (codeData.attempts || 0) + 1;
-        if (codeData.attempts > MAX_CODE_ATTEMPTS) {
-          accountCodes.delete(normalizedCode);
-          response.error = 'Too many attempts for this code. Code has been invalidated.';
-          return res.status(400).json(response);
+        const codeAttempts = await db.incr(codeAttemptsKey(normalizedCode));
+        if (codeAttempts === 1) {
+          await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY / 1000));
         }
-
-        if (codeData.expires < Date.now()) {
-          accountCodes.delete(normalizedCode);
-          response.error = 'Account code has expired';
+        if (codeAttempts > MAX_CODE_ATTEMPTS) {
+          await db.del(codeKey(normalizedCode), codeAttemptsKey(normalizedCode));
+          response.error = 'Too many attempts for this code. Code has been invalidated.';
           return res.status(400).json(response);
         }
 
@@ -393,17 +360,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        // Mark code as used and update attempts
-        codeData.used = true;
-        accountCodes.set(normalizedCode, codeData);
+        // Single use: consume the code now
+        // DEL is atomic: only one concurrent request can consume the code
+        const consumed = await db.del(codeKey(normalizedCode));
+        if (!consumed) {
+          response.error = 'Account code has already been used';
+          return res.status(400).json(response);
+        }
+        await db.del(userCodeKey(codeData.userId), codeAttemptsKey(normalizedCode));
 
-        // Clean up the code after successful use (single-use only)
-        setTimeout(() => {
-          accountCodes.delete(normalizedCode);
-        }, 5000); // 5 second grace period for response
-
-        // Get the user associated with the code
-        const user = users.get(codeData.userId);
+        const user = await db.get<any>(userKey(codeData.userId));
         if (!user) {
           response.error = 'Associated user not found';
           return res.status(404).json(response);

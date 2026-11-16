@@ -22,7 +22,9 @@ describe('session tokens', () => {
   it('rejects expired, tampered and malformed tokens', () => {
     expect(verifySessionToken(createSessionToken('u1', 1000, Date.now() - 5000))).toBeNull();
     const [payload, sig] = createSessionToken('u1', 1000).split('.');
-    const forged = Buffer.from(JSON.stringify({ u: 'victim', e: Date.now() + 1e6 })).toString('base64url');
+    const forged = Buffer.from(JSON.stringify({ u: 'victim', e: Date.now() + 1e6 })).toString(
+      'base64url'
+    );
     expect(verifySessionToken(`${forged}.${sig}`)).toBeNull();
     expect(verifySessionToken(`${payload}.`)).toBeNull();
     expect(verifySessionToken('garbage')).toBeNull();
@@ -51,7 +53,13 @@ describe('storage handler auth', () => {
   });
   it("rejects a valid token for a different user's data", async () => {
     const token = createSessionToken('attacker', 10000);
-    const res = await call({ action: 'get', userId: 'victim', sessionToken: token, languageCode: 'es', key: 'k' });
+    const res = await call({
+      action: 'get',
+      userId: 'victim',
+      sessionToken: token,
+      languageCode: 'es',
+      key: 'k',
+    });
     expect(res.statusCode).toBe(401);
   });
   it('allows set/get for the token owner', async () => {

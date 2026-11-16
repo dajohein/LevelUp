@@ -21,6 +21,7 @@ interface VercelResponse {
 }
 
 import { verifySessionToken, resolveCorsOrigin } from './_auth.js';
+import { getDb, KEY_PREFIX } from './_db.js';
 
 // Types for API requests/responses
 interface StorageRequest {
@@ -49,13 +50,14 @@ interface StorageResponse {
   };
 }
 
-// Simple in-memory storage for development/testing
-// In production, this would be replaced with a proper database
-const storage = new Map<string, any>();
-
-// Helper function to generate storage key with language isolation
-function getStorageKey(userId: string, languageCode: string, key: string): string {
-  return `user:${userId}:lang:${languageCode}:${key}`;
+// Redis layout (see _db.ts):
+//   levelup:data:<userId>:<lang>:<key>  -> stored item (JSON)
+//   levelup:idx:<userId>:<lang>         -> set of keys, so `list` needs no SCAN
+function dataKey(userId: string, languageCode: string, key: string): string {
+  return `${KEY_PREFIX}data:${userId}:${languageCode}:${key}`;
+}
+function indexKey(userId: string, languageCode: string): string {
+  return `${KEY_PREFIX}idx:${userId}:${languageCode}`;
 }
 
 // Helper function to validate language code
@@ -95,13 +97,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(503).json({
-      success: false,
-      error: 'Remote storage is unavailable: this demo backend is process-local and not durable.',
-    });
-  }
-
   try {
     const request: StorageRequest = req.body;
     const defaultCompress = process.env.STORAGE_COMPRESS_DEFAULT === 'true';
@@ -131,6 +126,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    const db = await getDb();
     const response: StorageResponse = {
       success: false,
       metadata: {
@@ -146,12 +142,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
-        const stored = storage.get(storageKey);
+        const stored = await db.get<any>(
+          dataKey(request.userId, request.languageCode, request.key)
+        );
 
         if (stored) {
           response.success = true;
-          response.data = request.options?.compress ? decompressData(stored.data) : stored.data;
+          response.data = stored.compressed ? decompressData(stored.data) : stored.data;
           response.metadata = {
             timestamp: Date.now(),
             tier: 'remote' as const,
@@ -172,7 +169,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
 
@@ -184,7 +180,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           languageCode: request.languageCode,
         };
 
-        storage.set(storageKey, storedItem);
+        const ttlSeconds = request.options?.ttl ? Math.ceil(request.options.ttl / 1000) : undefined;
+        const redisKey = dataKey(request.userId, request.languageCode, request.key);
+        if (ttlSeconds) {
+          await db.set(redisKey, storedItem, { ex: ttlSeconds });
+        } else {
+          await db.set(redisKey, storedItem);
+        }
+        await db.sadd(indexKey(request.userId, request.languageCode), request.key);
 
         response.success = true;
         response.metadata = {
@@ -203,9 +206,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
-        const existed = storage.has(storageKey);
-        storage.delete(storageKey);
+        const existed =
+          (await db.del(dataKey(request.userId, request.languageCode, request.key))) > 0;
+        await db.srem(indexKey(request.userId, request.languageCode), request.key);
 
         response.success = true;
         response.data = { deleted: existed };
@@ -223,14 +226,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const prefix = `user:${request.userId}:lang:${request.languageCode}:`;
-        const keys: string[] = [];
-
-        for (const [key] of storage) {
-          if (key.startsWith(prefix)) {
-            keys.push(key.substring(prefix.length));
-          }
-        }
+        const keys = await db.smembers(indexKey(request.userId, request.languageCode));
 
         response.success = true;
         response.data = keys;
