@@ -212,6 +212,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
       const result = await this.apiCall('/api/storage', {
         action: 'get',
         userId: session.userId,
+        sessionToken: session.sessionToken,
         languageCode,
         key,
         options: {
@@ -281,6 +282,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
       const result = await this.apiCall('/api/storage', {
         action: 'set',
         userId: session.userId,
+        sessionToken: session.sessionToken,
         languageCode,
         key,
         data: processedData,
@@ -341,6 +343,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
       const result = await this.apiCall('/api/storage', {
         action: 'delete',
         userId: session.userId,
+        sessionToken: session.sessionToken,
         languageCode,
         key,
       });
@@ -512,6 +515,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
       const result = await this.apiCall('/api/storage', {
         action: 'list',
         userId: session.userId,
+        sessionToken: session.sessionToken,
         languageCode,
       });
 
@@ -610,8 +614,6 @@ export class RemoteStorageService implements AsyncStorageProvider {
         action: 'generateCode',
         sessionToken: session.sessionToken,
       };
-
-      logger.info('Request data:', requestData);
 
       const result = await this.apiCall('/api/users', requestData);
 

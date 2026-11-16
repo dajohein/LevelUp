@@ -20,10 +20,13 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 
+import { verifySessionToken, resolveCorsOrigin } from './_auth.js';
+
 // Types for API requests/responses
 interface StorageRequest {
   action: 'get' | 'set' | 'delete' | 'list';
   userId: string;
+  sessionToken?: string;
   languageCode?: string;
   key?: string;
   data?: any;
@@ -76,10 +79,8 @@ function decompressData(data: string): any {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS configuration via environment (Twelve-Factor)
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
-  const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || '*';
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -103,6 +104,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({
         success: false,
         error: 'userId is required'
+      });
+    }
+
+    // Authenticate: the session token must be valid and belong to the requested userId
+    const authedUserId = verifySessionToken(request.sessionToken);
+    if (!authedUserId || authedUserId !== request.userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or missing session token'
       });
     }
 

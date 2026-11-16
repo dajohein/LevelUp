@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      # --max-warnings is a ratchet: lower it in package.json as warnings are fixed
+      - run: npm run lint
+      - run: npm test -- --ci
+      - run: node scripts/validate-languages.cjs
+      - run: npm run build
