@@ -4,6 +4,7 @@
  */
 import { Word } from '../wordService';
 import { ChallengeResult } from '../challengeServiceInterface';
+import { validateQuizAnswer } from '../quizAnswerValidation';
 
 /** Shape of the enhanced word info returned by the challenge service. */
 interface EnhancedWordInfo {
@@ -53,6 +54,10 @@ export class GameModeHandler {
    * Get the question text based on quiz mode and word direction
    */
   getQuizQuestion(word: Word, quizMode: string): string {
+    if (quizMode === 'fill-in-the-blank') {
+      return word.definition;
+    }
+
     // For enhanced quiz modes, provide context-specific prompts
     if (quizMode === 'contextual-analysis') {
       const baseQuestion = this.isUnidirectionalMode(quizMode)
@@ -117,6 +122,10 @@ export class GameModeHandler {
     }
   }
 
+  isCorrectAnswer(answer: string, word: Word, quizMode: string, languageCode: string): boolean {
+    return validateQuizAnswer(answer, word, quizMode, languageCode).isCorrect;
+  }
+
   /**
    * Get question word based on word direction (bidirectional modes)
    */
@@ -142,7 +151,14 @@ export class GameModeHandler {
   /**
    * Get context for word direction (preserving original complexity)
    */
-  getContextForDirection(word: Word): { sentence: string; translation: string } | undefined {
+  getContextForDirection(word: Word):
+    | {
+        sentence: string;
+        translation: string;
+        sentenceWithBlank?: string | null;
+        audio?: string;
+      }
+    | undefined {
     // If word has explicit context field, use it
     if (word.context) {
       if (typeof word.context === 'string') {
@@ -154,6 +170,8 @@ export class GameModeHandler {
       return {
         sentence: word.context.sentence || '', // German sentence as context
         translation: word.context.translation || '', // Dutch translation (revealed after)
+        sentenceWithBlank: word.context.sentenceWithBlank,
+        audio: word.context.audio,
       };
     }
 
@@ -274,12 +292,12 @@ export class GameModeHandler {
    */
   getOptimalTiming(quizMode: string, isCorrect: boolean): number {
     const baseTimings: Record<string, { correct: number; incorrect: number }> = {
-      'multiple-choice': { correct: 1200, incorrect: 3000 },
-      'letter-scramble': { correct: 1500, incorrect: 3500 },
-      'fill-in-the-blank': { correct: 2500, incorrect: 4500 },
-      'contextual-analysis': { correct: 3000, incorrect: 5000 },
-      'usage-example': { correct: 3000, incorrect: 5000 },
-      'synonym-antonym': { correct: 2000, incorrect: 4000 },
+      'multiple-choice': { correct: 500, incorrect: 5000 },
+      'letter-scramble': { correct: 500, incorrect: 5500 },
+      'fill-in-the-blank': { correct: 500, incorrect: 6500 },
+      'contextual-analysis': { correct: 500, incorrect: 7000 },
+      'usage-example': { correct: 500, incorrect: 7000 },
+      'synonym-antonym': { correct: 500, incorrect: 6000 },
     };
 
     const timing = baseTimings[quizMode] || baseTimings['multiple-choice'];

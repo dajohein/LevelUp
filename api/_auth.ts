@@ -49,7 +49,10 @@ export function verifySessionToken(token: unknown, now = Date.now()): string | n
 
 /** Fixed CORS policy: only echo origins on the allow-list ('*' only if explicitly configured). */
 export function resolveCorsOrigin(origin: string | undefined): string | null {
-  const allowed = (process.env.CORS_ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const allowed = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
   if (allowed.includes('*')) return '*';
   if (origin && allowed.includes(origin)) return origin;
   return null;

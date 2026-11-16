@@ -184,7 +184,7 @@ function GameComponent({ languageCode }: { languageCode: string }) {
 
 1. **Advanced Analytics Dashboard** - Visual component for storage analytics
 2. **Backend API Integration** - When backend services are ready
-3. **Cross-device Synchronization** - Multi-device progress sync
+3. **Durable remote synchronization** - Not available until a shared persistent backend and reconciliation are implemented
 4. **Component Storybook** - Visual component documentation
 5. **Performance Monitoring** - Real-time performance widgets
 
@@ -444,7 +444,7 @@ const MyFeature: React.FC<Props> = ({ languageCode }) => {
 
 1. **Advanced Analytics Dashboard** - Visual component for storage analytics
 2. **Backend API Integration** - When backend services are ready
-3. **Cross-device Synchronization** - Multi-device progress sync
+3. **Durable remote synchronization** - Not available until a shared persistent backend and reconciliation are implemented
 4. **Component Storybook** - Visual component documentation
 5. **Performance Monitoring** - Real-time performance widgets
 

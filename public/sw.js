@@ -1,23 +1,17 @@
 // Service Worker for LevelUp PWA
 // Implements offline functionality, caching, and background sync
 
-// Dynamic cache versioning system
-// This will be automatically updated during build process
+// Vite replaces these declarations only in build output.
 const CACHE_VERSION = '2.0.0'; // Incremented for boss battle & streak challenge updates
-const BUILD_TIMESTAMP = '__BUILD_TIMESTAMP__'; // Replaced during build
-const FEATURES_HASH = '__FEATURES_HASH__'; // Hash of recent features for cache invalidation
+const RELEASE_ID = 'development'; // __RELEASE_ID__
+const BUILD_ASSETS = []; // __BUILD_ASSETS__
 
-const isDevelopment = self.location.hostname === 'localhost' || 
-                     self.location.hostname === '127.0.0.1' ||
-                     self.location.hostname.includes('app.github.dev') ||
-                     self.location.hostname.includes('gitpod.io') ||
-                     self.location.hostname.includes('codespaces');
+const isDevelopment = RELEASE_ID === 'development';
 
-// Production: Use version + features hash for cache busting
-// Development: Use timestamp for immediate cache invalidation
+// Built workers use stable content identifiers even on local preview hosts.
 const cacheIdentifier = isDevelopment 
   ? Date.now().toString()
-  : `${CACHE_VERSION}-${FEATURES_HASH}`;
+  : `${CACHE_VERSION}-${RELEASE_ID}`;
 
 const CACHE_NAME = `levelup-v${cacheIdentifier}`;
 const OFFLINE_CACHE = `levelup-offline-v${cacheIdentifier}`;
@@ -28,7 +22,7 @@ const STATIC_RESOURCES = [
   '/',
   '/index.html',
   '/manifest.json',
-  // Add other critical static resources
+  ...BUILD_ASSETS,
 ];
 
 // API endpoints that should be cached
@@ -52,7 +46,7 @@ self.addEventListener('install', (event) => {
           console.log('[ServiceWorker] Development mode: cache busting enabled');
         }
         
-        return cache.addAll(STATIC_RESOURCES);
+        return cache.addAll(STATIC_RESOURCES.map(url => new Request(url, { cache: 'reload' })));
       })
       .then(() => {
         // Force activation of new service worker
@@ -351,7 +345,8 @@ async function networkFirstForNavigation(request) {
     }
     
     // Fallback to index.html for SPA routing
-    const indexPage = await cache.match('/');
+    const shellCache = await caches.open(CACHE_NAME);
+    const indexPage = await shellCache.match('/index.html');
     return indexPage || new Response('Offline', { status: 503 });
   }
 }

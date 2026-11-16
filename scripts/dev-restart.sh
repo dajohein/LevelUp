@@ -1,15 +1,5 @@
 #!/bin/bash
-
-# LevelUp Development Server Restart Script
-# Restarts both storage server and Vite dev server
-
-echo "🔄 Restarting LevelUp development environment..."
-
-# Stop servers
-./scripts/dev-stop.sh
-
-# Wait a moment
-sleep 1
-
-# Start servers
-./scripts/dev-start.sh
+set -e
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+"$SCRIPT_DIR/dev-stop.sh"
+exec "$SCRIPT_DIR/dev-start.sh" "$@"

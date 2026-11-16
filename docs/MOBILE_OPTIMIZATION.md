@@ -16,9 +16,9 @@ This document outlines the mobile improvements made to the LevelUp language lear
 ### 2. **Enhanced Touch Interface**
 - **Touch Targets**: All interactive elements meet minimum 44px touch target requirements
 - **Touch Optimizations**: 
-  - Disabled text selection for better touch interaction
-  - Removed tap highlights and zoom-on-double-tap
-  - Added proper touch-action properties
+  - Learning text remains selectable for copying and lookup
+  - Browser zoom remains available, including pinch and double-tap on content
+  - Tap highlights are removed and touch-action is scoped to interactive controls
 
 ### 3. **Mobile-Optimized Components**
 
@@ -27,6 +27,51 @@ This document outlines the mobile improvements made to the LevelUp language lear
 - Simplified layout on mobile with condensed elements
 - Back button transforms to icon-only on small screens
 - User profile stats hidden on mobile, showing only avatar
+
+#### Navigation accessibility
+
+Desktop and mobile navigation use non-modal disclosures, not ARIA application
+menus or modal dialogs. Native buttons expose a stable name, `aria-expanded` and
+`aria-controls`; opening focuses the first navigation link. Links retain normal
+Tab/Shift+Tab order and browser link behavior. Escape or the mobile close control
+dismisses the panel and returns focus. Moving focus outside closes it without
+stealing focus. Outside clicks, link activation (including the current route),
+route changes and switching to desktop/mobile also dismiss the panel.
+
+Closed panels use HTML `hidden` with an explicit CSS override, excluding their
+contents from both focus and accessibility navigation. The mobile panel has a
+named region and a close button; its backdrop remains a pointer dismissal aid,
+not an assertion that background content is modal/inert. Compact profile links
+and icon-only back buttons have explicit action names. Focus outlines use theme
+text colors, and language links retain the active route's language scope. No
+storage or progress behavior changes.
+
+Run the focused interaction suite:
+
+```sh
+npm test -- --runInBand src/components/__tests__/Navigation.accessibility.test.tsx
+npm run type-check
+```
+
+Manual browser/screen-reader checklist: at desktop (1024px), tablet (600px) and
+mobile (375px) widths, Tab to the trigger, open with both Enter and Space, verify
+the expanded announcement and first-link focus, reach all links with Tab and
+Shift+Tab, and dismiss with Escape. Confirm focus returns, closed links are not
+announced or tabbable, and compact profile/back actions retain their names.
+Check link destinations, backdrop/close dismissal, resize behavior, zoom and
+visible focus. Repeat with NVDA/Firefox and VoiceOver/Safari.
+
+Remote Chromium checks on November 8, 2026 verified desktop Enter opening,
+first-link focus, visible 2px focus outlines and Escape focus return at 1280px;
+mobile Space/Enter opening, Escape focus return, drawer bounds and Shift+Tab
+dismissal to the visible compact profile link at 375px; and the icon-only back
+button's accessible name and focus outline at 600px. Navigation worked despite
+the preview's unavailable storage API and blocked analytics scripts.
+
+The automated suite runs in jsdom. NVDA/Firefox, VoiceOver/Safari, real-device
+touch, zoom and native screen-reader announcements were not verified in this
+Linux environment and remain manual checks. No storage changes or background
+timers are introduced; disclosure event listeners exist only while open.
 
 #### Game Interface (`Game.tsx`)
 - Adjusted container padding and spacing for mobile
@@ -75,7 +120,7 @@ This document outlines the mobile improvements made to the LevelUp language lear
 ### 5. **Progressive Web App (PWA) Enhancements**
 
 #### HTML Meta Tags
-- Enhanced viewport meta tag with `viewport-fit=cover`
+- Enhanced viewport meta tag with `viewport-fit=cover`, without restricting zoom
 - Proper PWA meta tags for mobile browsers
 - Safe area inset CSS variables
 - Mobile-specific optimizations
@@ -160,13 +205,15 @@ Most components now follow this pattern:
 1. Open Developer Tools (F12)
 2. Click the device toggle button
 3. Select different device presets
-4. Test touch interactions and layouts
+4. Test at 320 CSS pixels wide and at 200% browser zoom; check that learning content and actions remain reachable
+5. Select and copy vocabulary, definitions, and examples
 
 ### Real Device Testing
 - Test on actual iOS and Android devices
 - Verify PWA installation works correctly
 - Check touch target sizes and interactions
 - Validate safe area handling on notched devices
+- Verify pinch zoom, double-tap zoom on content, and long-press selection of learning text
 
 ## 🔄 Future Mobile Enhancements
 

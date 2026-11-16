@@ -12,6 +12,7 @@ import deGrundwortschatz from '../data/de/grundwortschatz.json';
 import deGrammatikGrundlagen from '../data/de/grammatik-grundlagen.json';
 import deGrammatikHerhaling from '../data/de/grammatik-herhaling.json';
 import deNiederlandischDeutschVokabeln from '../data/de/niederlandisch-deutsch-vokabeln.json';
+import deGesundheit from '../data/de/gesundheit.json';
 import esVocabularioBasico from '../data/es/vocabulario-basico.json';
 import esFrasesClave from '../data/es/frases-clave.json';
 import esComidaYBebidas from '../data/es/comida-y-bebidas.json';
@@ -32,6 +33,7 @@ const moduleRegistry: Record<string, Record<string, Module>> = {
     'grammatik-grundlagen': deGrammatikGrundlagen as Module,
     'grammatik-herhaling': deGrammatikHerhaling as Module,
     'niederlandisch-deutsch-vokabeln': deNiederlandischDeutschVokabeln as Module,
+    gesundheit: deGesundheit as Module,
   },
   es: {
     'vocabulario-basico': esVocabularioBasico as Module,

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 
@@ -13,23 +13,51 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const InputWrapper = styled.div<{ isError?: boolean }>`
+const InputWrapper = styled.div<{ 'data-error'?: 'true' }>`
   position: relative;
   width: 100%;
   max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing.sm};
   ${css`
     animation: ${fadeIn} 0.3s ease-out;
   `}
 
   ${props =>
-    props.isError &&
+    props['data-error'] === 'true' &&
     css`
       animation: ${shake} 0.3s ease-in-out;
     `}
 `;
 
+const SubmitButton = styled.button`
+  min-height: ${props => props.theme.touchTarget.minimum};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.md};
+  background-color: ${props => props.theme.colors.primary};
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: ${props => props.theme.colors.secondary};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
 const StyledInput = styled.input<{ isCorrect?: boolean; isError?: boolean }>`
   width: 100%;
+  box-sizing: border-box;
   padding: ${props => props.theme.spacing.md};
   font-size: ${props => props.theme.typography.body.fontSize};
   border: 2px solid
@@ -106,6 +134,21 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
   autoFocus = true,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isComposingRef = useRef(false);
+  const hasSubmittedRef = useRef(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  useEffect(() => {
+    hasSubmittedRef.current = false;
+    setHasSubmitted(false);
+  }, [value]);
+
+  useEffect(() => {
+    if (!disabled) {
+      hasSubmittedRef.current = false;
+      setHasSubmitted(false);
+    }
+  }, [disabled]);
 
   // Focus input when enabled and autoFocus is true
   useEffect(() => {
@@ -116,24 +159,45 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    hasSubmittedRef.current = false;
+    setHasSubmitted(false);
     onChange(newValue);
   };
 
+  const handleSubmit = () => {
+    const trimmedValue = value.trim();
+    if (disabled || hasSubmittedRef.current || !trimmedValue || isComposingRef.current) return;
+
+    hasSubmittedRef.current = true;
+    setHasSubmitted(true);
+    onSubmit(trimmedValue);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !disabled && value.trim()) {
+    if (e.key !== 'Enter') return;
+
+    if (isComposingRef.current || e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) {
       e.preventDefault();
-      onSubmit(value.trim());
+      return;
     }
+    e.preventDefault();
+    handleSubmit();
   };
 
   return (
-    <InputWrapper isError={isError}>
+    <InputWrapper data-error={isError ? 'true' : undefined}>
       <StyledInput
         ref={inputRef}
         type="text"
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onCompositionStart={() => {
+          isComposingRef.current = true;
+        }}
+        onCompositionEnd={() => {
+          isComposingRef.current = false;
+        }}
         placeholder={placeholder}
         isCorrect={isCorrect}
         isError={isError}
@@ -144,6 +208,13 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
         autoComplete="off"
         spellCheck={false}
       />
+      <SubmitButton
+        type="button"
+        onClick={handleSubmit}
+        disabled={disabled || hasSubmitted || !value.trim()}
+      >
+        Submit answer
+      </SubmitButton>
       {hint && (
         <HintText id="hint-text" isError={isError} role="alert" aria-live="polite">
           {hint}

@@ -42,6 +42,7 @@ export const Game: React.FC = () => {
       left.currentWord?.id === right.currentWord?.id &&
       left.quizMode === right.quizMode &&
       left.language === right.language &&
+      left.capitalizationFeedback === right.capitalizationFeedback &&
       Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
   );
 
@@ -102,6 +103,7 @@ export const Game: React.FC = () => {
     sessionCompleted,
     showLearningCard,
     lastAnswerCorrect,
+    answerSequence,
     setLastAnswerCorrect,
     lastSelectedAnswer,
     feedbackQuestionKey,
@@ -257,6 +259,8 @@ export const Game: React.FC = () => {
       </GameContainer>
       <FeedbackOverlay
         isCorrect={lastAnswerCorrect}
+        answerSequence={answerSequence}
+        selectedAnswer={lastSelectedAnswer}
         correctAnswer={feedbackWordInfo?.correctAnswer || ''}
         originalWord={feedbackWordInfo?.originalWord || ''}
         wordContext={feedbackWordInfo?.context || ''}

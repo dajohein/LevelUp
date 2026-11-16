@@ -1,5 +1,5 @@
-import { createSessionToken, verifySessionToken, resolveCorsOrigin } from '../_auth';
-import handler from '../storage';
+import { createSessionToken, verifySessionToken, resolveCorsOrigin } from '../_auth.js';
+import handler from '../storage.js';
 
 function mockRes() {
   const res: any = { headers: {} as Record<string, string>, statusCode: 0, body: undefined };

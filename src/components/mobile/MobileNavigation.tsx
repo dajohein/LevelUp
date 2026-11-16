@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { useNavigationDisclosure } from '../../hooks/useNavigationDisclosure';
+import { NavigationLink } from '../ui/NavigationLink';
+
+const NavigationContainer = styled.div`
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid ${props => props.theme.colors.text};
+    outline-offset: 3px;
+  }
+`;
 
 // Animations
 const slideInFromTop = keyframes`
@@ -175,7 +185,9 @@ const RightSection = styled.div`
 `;
 
 // User Profile Button
-const UserProfileButton = styled.button`
+const UserProfileButton = styled(NavigationLink)`
+  box-sizing: border-box;
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.xs};
@@ -268,11 +280,18 @@ const MobileMenuOverlay = styled.div<{ isOpen: boolean }>`
 
 // Mobile Menu Panel
 const MobileMenuPanel = styled.div<{ isOpen: boolean }>`
+  &[hidden] {
+    display: none;
+  }
+
   position: fixed;
   top: 0;
   right: 0;
   width: 280px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
   height: 100vh;
+  height: 100dvh;
   background: ${props => props.theme.colors.surface};
   border-left: 1px solid rgba(76, 175, 80, 0.2);
   transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(100%)')};
@@ -301,7 +320,9 @@ const MenuSectionTitle = styled.h3`
   padding: 0 ${props => props.theme.spacing.sm};
 `;
 
-const MenuItem = styled.button`
+const MenuItem = styled(NavigationLink)`
+  box-sizing: border-box;
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
@@ -334,14 +355,25 @@ const MenuIcon = styled.span`
   text-align: center;
 `;
 
+const MenuCloseButton = styled.button`
+  font: inherit;
+  background: transparent;
+  color: ${props => props.theme.colors.text};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: ${props => props.theme.spacing.sm};
+  min-height: ${props => props.theme.touchTarget.minimum};
+  cursor: pointer;
+`;
+
 interface MobileNavigationProps {
   showUserProfile?: boolean;
 }
 
 export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProfile = true }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
+  const { isOpen, setIsOpen, close, panelId, containerRef, triggerRef, panelRef } =
+    useNavigationDisclosure(location.key);
   const { languageCode } = useParams<{ languageCode: string }>();
 
   // Get language info
@@ -354,25 +386,25 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProf
     ? languageConfig[languageCode as keyof typeof languageConfig]
     : null;
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-
   // Menu items
-  const menuItems = [{ icon: '🏠', label: 'Home', onClick: () => navigate('/') }];
+  const menuItems = [{ icon: '🏠', label: 'Home', to: '/' }];
 
   return (
-    <>
-      <MobileNavigationBar>
+    <NavigationContainer ref={containerRef}>
+      <MobileNavigationBar aria-label="Main navigation">
         <LeftSection>
           <HamburgerButton
-            isOpen={isMobileMenuOpen}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            ref={triggerRef}
+            type="button"
+            isOpen={isOpen}
+            onClick={() => setIsOpen(open => !open)}
+            aria-label="Navigation"
+            aria-expanded={isOpen}
+            aria-controls={panelId}
           >
-            <span />
-            <span />
-            <span />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </HamburgerButton>
         </LeftSection>
 
@@ -394,7 +426,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProf
 
         <RightSection>
           {showUserProfile && (
-            <UserProfileButton onClick={() => navigate('/profile')}>
+            <UserProfileButton to="/profile" aria-label="View Profile">
               <UserAvatar levelColor="#4CAF50">🎯</UserAvatar>
               <UserStats>
                 <UserLevel>Profile</UserLevel>
@@ -406,14 +438,21 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProf
       </MobileNavigationBar>
 
       {/* Mobile Menu */}
-      <MobileMenuOverlay isOpen={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen(false)} />
+      <MobileMenuOverlay isOpen={isOpen} aria-hidden="true" onClick={close} />
 
-      <MobileMenuPanel isOpen={isMobileMenuOpen}>
+      <MobileMenuPanel
+        ref={panelRef}
+        id={panelId}
+        isOpen={isOpen}
+        hidden={!isOpen}
+        role="region"
+        aria-label="Navigation links"
+      >
         <MenuSection>
           <MenuSectionTitle>Navigation</MenuSectionTitle>
           {menuItems.map((item, index) => (
-            <MenuItem key={index} onClick={item.onClick}>
-              <MenuIcon>{item.icon}</MenuIcon>
+            <MenuItem key={index} to={item.to} onClick={close}>
+              <MenuIcon aria-hidden="true">{item.icon}</MenuIcon>
               {item.label}
             </MenuItem>
           ))}
@@ -422,12 +461,12 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProf
         {languageCode && (
           <MenuSection>
             <MenuSectionTitle>Language Actions</MenuSectionTitle>
-            <MenuItem onClick={() => navigate(`/language/${languageCode}`)}>
-              <MenuIcon>📚</MenuIcon>
+            <MenuItem to={`/language/${languageCode}`} onClick={close}>
+              <MenuIcon aria-hidden="true">📚</MenuIcon>
               View Modules
             </MenuItem>
-            <MenuItem onClick={() => navigate(`/sessions/${languageCode}`)}>
-              <MenuIcon>🎯</MenuIcon>
+            <MenuItem to={`/sessions/${languageCode}`} onClick={close}>
+              <MenuIcon aria-hidden="true">🎯</MenuIcon>
               Quick Practice
             </MenuItem>
           </MenuSection>
@@ -435,16 +474,19 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ showUserProf
 
         <MenuSection>
           <MenuSectionTitle>Account</MenuSectionTitle>
-          <MenuItem onClick={() => navigate('/profile')}>
-            <MenuIcon>👤</MenuIcon>
+          <MenuItem to="/profile" onClick={close}>
+            <MenuIcon aria-hidden="true">👤</MenuIcon>
             View Profile
           </MenuItem>
-          <MenuItem onClick={() => navigate('/settings')}>
-            <MenuIcon>⚙️</MenuIcon>
+          <MenuItem to="/settings" onClick={close}>
+            <MenuIcon aria-hidden="true">⚙️</MenuIcon>
             Settings
           </MenuItem>
         </MenuSection>
+        <MenuCloseButton type="button" onClick={close}>
+          Close navigation
+        </MenuCloseButton>
       </MobileMenuPanel>
-    </>
+    </NavigationContainer>
   );
 };

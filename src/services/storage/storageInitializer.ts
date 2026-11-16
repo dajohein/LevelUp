@@ -59,7 +59,7 @@ class StorageInitializer {
       if (userId && sessionToken) {
         session = await remoteStorage.initializeUser({ userId, sessionToken });
       } else {
-        session = await remoteStorage.initializeUser();
+        session = await remoteStorage.getUserSession();
       }
 
       logger.info(`📡 Remote storage initialized (${session.isGuest ? 'guest' : 'user'} session)`);

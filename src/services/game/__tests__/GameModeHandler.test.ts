@@ -108,6 +108,10 @@ describe('GameModeHandler', () => {
       expect(handler.getQuizQuestion(wordTTD, 'multiple-choice')).toBe('Hund');
     });
 
+    it('uses the Dutch definition as the fill-in prompt regardless of translation direction', () => {
+      expect(handler.getQuizQuestion(wordTTD, 'fill-in-the-blank')).toBe('dog');
+    });
+
     it('returns definition for default direction (no direction field) in multiple-choice', () => {
       const word = makeWord({ term: 'Hund', definition: 'dog' });
       expect(handler.getQuizQuestion(word, 'multiple-choice')).toBe('dog');
@@ -140,6 +144,32 @@ describe('GameModeHandler', () => {
         direction: 'definition-to-term',
       });
       expect(handler.getQuizAnswer(word, 'fill-in-the-blank')).toBe('Hund');
+    });
+
+    describe('isCorrectAnswer', () => {
+      it('accepts individual alternative translations in open-answer mode', () => {
+        const word = makeWord({
+          term: 'komisch',
+          definition: 'raar, vreemd',
+          direction: 'term-to-definition',
+          acceptedAnswers: ['raar', 'vreemd'],
+        });
+
+        expect(handler.isCorrectAnswer('vreemd', word, 'open-answer', 'de')).toBe(true);
+        expect(handler.isCorrectAnswer('RAAR', word, 'open-answer', 'de')).toBe(true);
+        expect(handler.isCorrectAnswer('apart', word, 'open-answer', 'de')).toBe(false);
+      });
+
+      it('does not use Dutch alternatives as answers in other quiz directions', () => {
+        const word = makeWord({
+          term: 'komisch',
+          definition: 'raar, vreemd',
+          direction: 'term-to-definition',
+          acceptedAnswers: ['raar', 'vreemd'],
+        });
+
+        expect(handler.isCorrectAnswer('vreemd', word, 'multiple-choice', 'de')).toBe(false);
+      });
     });
 
     it('returns term for definition-to-term direction in unidirectional modes', () => {
@@ -387,16 +417,24 @@ describe('GameModeHandler', () => {
   // getOptimalTiming
   // ---------------------------------------------------------------------------
   describe('getOptimalTiming', () => {
-    it('returns shorter timing for correct answers', () => {
-      const correctTime = handler.getOptimalTiming('multiple-choice', true);
-      const incorrectTime = handler.getOptimalTiming('multiple-choice', false);
-      expect(correctTime).toBeLessThan(incorrectTime);
+    it.each([
+      'multiple-choice',
+      'letter-scramble',
+      'fill-in-the-blank',
+      'contextual-analysis',
+      'usage-example',
+      'synonym-antonym',
+    ])('uses a brief 500ms delay for correct %s answers', quizMode => {
+      expect(handler.getOptimalTiming(quizMode, true)).toBe(500);
     });
 
-    it('returns longer timing for more complex modes when correct', () => {
-      const mcTime = handler.getOptimalTiming('multiple-choice', true);
-      const contextTime = handler.getOptimalTiming('contextual-analysis', true);
-      expect(mcTime).toBeLessThan(contextTime);
+    it('includes the full incorrect-answer review delay in one timing value', () => {
+      expect(handler.getOptimalTiming('multiple-choice', false)).toBe(5000);
+      expect(handler.getOptimalTiming('letter-scramble', false)).toBe(5500);
+      expect(handler.getOptimalTiming('fill-in-the-blank', false)).toBe(6500);
+      expect(handler.getOptimalTiming('contextual-analysis', false)).toBe(7000);
+      expect(handler.getOptimalTiming('usage-example', false)).toBe(7000);
+      expect(handler.getOptimalTiming('synonym-antonym', false)).toBe(6000);
     });
 
     it('falls back to multiple-choice timing for unknown mode', () => {
@@ -420,6 +458,26 @@ describe('GameModeHandler', () => {
       expect(result).toBeDefined();
       expect(result?.sentence).toBe('Der Hund läuft.');
       expect(result?.translation).toBe('The dog runs.');
+    });
+
+    it('preserves authored blank templates and audio for quiz rendering', () => {
+      const word = makeWord({
+        term: 'Hund',
+        definition: 'dog',
+        context: {
+          sentence: 'Der Hund läuft.',
+          translation: 'The dog runs.',
+          sentenceWithBlank: 'Der {BLANK} läuft.',
+          audio: 'hund.mp3',
+        },
+      });
+
+      expect(handler.getContextForDirection(word)).toEqual({
+        sentence: 'Der Hund läuft.',
+        translation: 'The dog runs.',
+        sentenceWithBlank: 'Der {BLANK} läuft.',
+        audio: 'hund.mp3',
+      });
     });
 
     it('returns undefined when word has no context', () => {

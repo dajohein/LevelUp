@@ -59,9 +59,24 @@ This guide documents the standardized approach for creating and maintaining lang
       "translation": "Dutch translation of the sentence",
       "sentenceWithBlank": "Sentence with {BLANK} for practice"
    },
-   "synonyms": ["alternative1", "alternative2"] // Related expressions
+   "synonyms": ["alternative1", "alternative2"], // Related expressions
+   "acceptedAnswers": ["alternative answer"] // Optional accepted open-answer variants
 }
 ```
+
+Use `acceptedAnswers` when one displayed definition lists multiple valid translations.
+Keep the original `definition` for display, and list each independently valid answer
+in the array so open-answer checks accept them without requiring the learner to type
+the entire comma-separated definition.
+
+For authored fill-in-the-blank context, include exactly one `{BLANK}` marker in
+`sentenceWithBlank`. It may appear at the beginning, middle, or end of the sentence;
+the template is rendered as text, not HTML. If omitted or malformed, the quiz safely
+falls back to locating the term in `sentence` or showing a generic completion prompt.
+
+Definition-based distractor matching splits comma-separated alternatives only outside
+parenthetical notes, so explanatory grammar annotations are not mistaken for shared
+translations.
 
 ## 🔧 Implementation Process
 
@@ -194,6 +209,48 @@ This guide documents the standardized approach for creating and maintaining lang
 ```
 
 ## 🛠 Tools and Validation
+
+### German Gesundheit module
+
+`src/data/de/gesundheit.json` contains all 101 supplied health vocabulary entries,
+registered in `src/data/de/index.json` and the German registry in
+`src/services/moduleService.ts`. No storage or language-selection changes are needed.
+Word IDs are `gesundheit:1` through `gesundheit:101`, avoiding collisions with
+existing German progress IDs.
+
+The source categories and order are preserved: Wortschatz (1–56), Wiederholung
+(57–71), Sehen (72–79), Hören (80–84), Lesen (85–101). The first 71 entries use
+`definition-to-term`; the last 30 use `term-to-definition`. Both occurrences of
+`fast` remain separate source entries with distinct IDs.
+
+Compound source labels such as `der Arm - die Arme` use the singular or infinitive
+as the quiz `term`. Their supplied plural or participle is retained in optional
+`forms` metadata, not as a synonym or an alternative correct answer. This keeps
+answers focused rather than requiring a hyphen-separated list. This metadata is
+content-only and does not change the quiz UI. The accidental Dutch label
+`vorige Woche` is corrected to German `letzte Woche`; its Dutch definition remains
+`vorige week`. Other definitions, including the source-specific meanings of
+`der Hals`, `das Ziel` and `bestimmt`, are retained.
+
+Example sentences are authored for this module, with Dutch translations and one
+`{BLANK}` matching the German term. Source sentences were not present in the
+forwarded vocabulary payload. The module uses the existing static imports and
+direct registry lookup without additional requests, storage writes or background
+work.
+
+```typescript
+import { getWordsForModule } from '../src/services/moduleService';
+
+const healthWords = getWordsForModule('de', 'gesundheit'); // 101 entries
+```
+
+Validate content, registration, context reconstruction, unique IDs and language
+isolation with:
+
+```bash
+npm test -- --runInBand src/services/__tests__/gesundheit.test.ts src/services/__tests__/moduleService.test.ts
+npm run type-check
+```
 
 ### Automated Quality Checks
 

@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { MobileNavigation } from './mobile/MobileNavigation';
 import { useViewport } from '../hooks/useViewport';
 import { useNavigationProgress } from '../hooks/useNavigationProgress';
+import { useNavigationDisclosure } from '../hooks/useNavigationDisclosure';
 import { getBackButtonConfig, calculateProgressState } from '../utils/navigationLogic';
 import {
   NavigationBar,
@@ -44,33 +45,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   const gameState = useSelector((state: RootState) => state.game);
   const language = languageCode || gameState.language;
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isDropdownOpen]);
+  const { isOpen, setIsOpen, close, panelId, containerRef, triggerRef, panelRef } =
+    useNavigationDisclosure(`${location.key}:${isMobile}`);
 
   const backButtonConfig = getBackButtonConfig(location.pathname, language, languageCode, navigate);
 
@@ -90,19 +66,10 @@ export const Navigation: React.FC<NavigationProps> = ({
     languageCode || null
   );
 
-  const handleProfileClick = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const handleDropdownItemClick = (action: () => void) => {
-    action();
-    setIsDropdownOpen(false);
-  };
-
   return (
-    <NavigationBar>
+    <NavigationBar aria-label="Main navigation">
       {backButtonConfig && (
-        <BackButton onClick={backButtonConfig.onClick}>
+        <BackButton onClick={backButtonConfig.onClick} aria-label={backButtonConfig.label}>
           ← <span>{backButtonConfig.label}</span>
         </BackButton>
       )}
@@ -118,12 +85,14 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       <RightSection>
         {(hasProgress || hasNoProgress) && (
-          <ProfileMenuContainer ref={dropdownRef}>
+          <ProfileMenuContainer ref={containerRef}>
             <UserProfileCompact
-              onClick={handleProfileClick}
-              aria-expanded={isDropdownOpen}
-              aria-haspopup="true"
-              aria-label="User profile menu"
+              ref={triggerRef}
+              type="button"
+              onClick={() => setIsOpen(open => !open)}
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+              aria-label="User navigation"
             >
               <UserAvatar levelColor={hasProgress ? levelInfo.color : '#4caf50'}>
                 {hasProgress ? levelInfo.emoji : '👤'}
@@ -137,31 +106,19 @@ export const Navigation: React.FC<NavigationProps> = ({
               </UserStats>
             </UserProfileCompact>
 
-            <DropdownMenu isOpen={isDropdownOpen} role="menu" aria-label="User navigation menu">
-              <DropdownItem
-                onClick={() => handleDropdownItemClick(() => navigate('/profile'))}
-                role="menuitem"
-              >
+            <DropdownMenu ref={panelRef} id={panelId} isOpen={isOpen} hidden={!isOpen}>
+              <DropdownItem to="/profile" onClick={close}>
                 👤 Profile
               </DropdownItem>
-              <DropdownItem
-                onClick={() => handleDropdownItemClick(() => navigate('/settings'))}
-                role="menuitem"
-              >
+              <DropdownItem to="/settings" onClick={close}>
                 ⚙️ Settings
               </DropdownItem>
-              <DropdownDivider role="separator" />
-              <DropdownItem
-                onClick={() => handleDropdownItemClick(() => navigate('/developer-dashboard'))}
-                role="menuitem"
-              >
+              <DropdownDivider aria-hidden="true" />
+              <DropdownItem to="/developer-dashboard" onClick={close}>
                 🛠️ Developer Dashboard
               </DropdownItem>
-              <DropdownDivider role="separator" />
-              <DropdownItem
-                onClick={() => handleDropdownItemClick(() => navigate('/'))}
-                role="menuitem"
-              >
+              <DropdownDivider aria-hidden="true" />
+              <DropdownItem to="/" onClick={close}>
                 🌍 Change Language
               </DropdownItem>
             </DropdownMenu>

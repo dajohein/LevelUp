@@ -104,6 +104,7 @@ class StorageCoordinator {
       enabled: false,
       pendingChanges: 0,
       isProcessing: false,
+      lastError: null,
       lastActionTime: 0,
       config: null,
     };

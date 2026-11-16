@@ -2,6 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { AnimatedInput } from '../animations/AnimatedInput';
+import { BrainProgress } from './BrainProgress';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -112,81 +113,6 @@ const QuestionPrompt = styled.div`
 
 // Removed unused styled component: InstructionText
 
-const BrainProgressContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${props => props.theme.spacing.md};
-  margin-top: ${props => props.theme.spacing.md};
-  font-size: 0.9rem;
-  color: ${props => props.theme.colors.textSecondary};
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-    gap: ${props => props.theme.spacing.sm};
-  }
-`;
-
-const BrainIcon = styled.div<{ filled: boolean; partial?: boolean }>`
-  width: 24px;
-  height: 24px;
-  position: relative;
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    width: 20px;
-    height: 20px;
-  }
-
-  &::before {
-    content: '🧠';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    filter: ${props =>
-      props.filled
-        ? 'none'
-        : props.partial
-          ? 'brightness(0.7) saturate(0.8)'
-          : 'grayscale(1) brightness(0.4)'};
-    transform: ${props => (props.filled || props.partial ? 'scale(1.1)' : 'scale(1)')};
-  }
-`;
-
-const BrainContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const BrainProgress: React.FC<{ xp: number; level: number }> = ({ xp, level }) => {
-  // Calculate progress within current level (0-100%)
-  const progressInLevel = xp % 100;
-
-  // Calculate how many brains should be filled
-  const brain1Filled = progressInLevel >= 33;
-  const brain2Filled = progressInLevel >= 66;
-  const brain3Filled = progressInLevel >= 99;
-
-  const brain1Partial = progressInLevel >= 10 && progressInLevel < 33;
-  const brain2Partial = progressInLevel >= 40 && progressInLevel < 66;
-  const brain3Partial = progressInLevel >= 80 && progressInLevel < 99;
-
-  return (
-    <BrainProgressContainer>
-      <span>Level {level}</span>
-      <BrainContainer>
-        <BrainIcon filled={brain1Filled} partial={brain1Partial} />
-        <BrainIcon filled={brain2Filled} partial={brain2Partial} />
-        <BrainIcon filled={brain3Filled} partial={brain3Partial} />
-      </BrainContainer>
-      <span>{xp} XP</span>
-    </BrainProgressContainer>
-  );
-};
-
 interface FillInTheBlankQuizProps {
   word: string;
   questionWord?: string; // The Dutch word to translate
@@ -199,7 +125,12 @@ interface FillInTheBlankQuizProps {
   disabled?: boolean;
   level?: number;
   xp?: number;
-  context?: { sentence: string; translation: string; sentenceWithBlank?: string; audio?: string };
+  context?: {
+    sentence: string;
+    translation: string;
+    sentenceWithBlank?: string | null;
+    audio?: string;
+  };
   currentWord?: number;
   totalWords?: number;
 }
@@ -231,7 +162,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
     }
 
     // Use explicit blank markers if available (preferred method)
-    if (context.sentenceWithBlank) {
+    if (typeof context.sentenceWithBlank === 'string') {
       const parts = context.sentenceWithBlank.split('{BLANK}');
       if (parts.length === 2) {
         return {
@@ -271,7 +202,7 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
 
     // Final fallback: show instruction without revealing answer
     return {
-      beforeBlank: 'Complete the German sentence:',
+      beforeBlank: 'Complete the sentence:',
       afterBlank: '',
     };
   };
@@ -286,15 +217,15 @@ const FillInTheBlankQuizComponent: React.FC<FillInTheBlankQuizProps> = ({
 
       {questionWord && <QuestionPrompt>{questionWord}</QuestionPrompt>}
 
-      {context?.sentence && beforeBlank && afterBlank && (
+      {context?.sentence && (
         <ContextSection>
           <ContextLabel>Complete the sentence</ContextLabel>
-          <SentenceContainer>
-            <span dangerouslySetInnerHTML={{ __html: beforeBlank }} />
+          <SentenceContainer data-testid="blank-sentence">
+            <span>{beforeBlank}</span>
             <BlankSpace isCorrect={isCorrect} isError={isError}>
               {showAnswer ? word : '_____'}
             </BlankSpace>
-            <span dangerouslySetInnerHTML={{ __html: afterBlank }} />
+            <span>{afterBlank}</span>
           </SentenceContainer>
         </ContextSection>
       )}

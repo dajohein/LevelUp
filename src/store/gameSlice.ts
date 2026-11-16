@@ -3,13 +3,24 @@ import {
   selectWordForRegularSession,
   selectWordForMixedPractice,
 } from '../services/wordSelectionManager';
-import { calculateMasteryGain } from '../services/masteryService';
+import { calculateMasteryGain, getMasteryQuizMode } from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
-import { validateAnswer, getCapitalizationFeedback } from '../services/answerValidation';
+import { getCapitalizationFeedback } from '../services/answerValidation';
+import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
 import { selectQuizMode } from '../services/quizModeSelectionUtils';
+import type { Word } from '../services/wordService';
 import type { GameState } from './types';
+
+interface AnswerSubmission {
+  answer: string;
+  word?: Word;
+  quizMode?: string;
+  languageCode?: string;
+}
+
+type CheckAnswerPayload = string | AnswerSubmission;
 
 // Load persisted game state
 const loadPersistedState = (): Partial<GameState> => {
@@ -19,12 +30,11 @@ const loadPersistedState = (): Partial<GameState> => {
     // CRITICAL FIX: Don't load mixed wordProgress into global state
     // Instead, load only the current language's progress
     const currentLanguage = savedState.language;
-    let languageSpecificProgress = {};
+    let languageSpecificProgress: GameState['wordProgress'] = {};
 
     if (currentLanguage) {
-      // Load only the current language's progress with automatic migration
+      // Only migrate language-scoped progress; legacy snapshots may contain mixed languages.
       languageSpecificProgress = DataMigrationService.safeLoadWordProgress(currentLanguage);
-      // Removed debug logging to prevent console spam
     }
 
     return {
@@ -35,6 +45,7 @@ const loadPersistedState = (): Partial<GameState> => {
       correctAnswers: savedState.correctAnswers || 0,
       totalAttempts: savedState.totalAttempts || 0,
       quizMode: savedState.quizMode || 'multiple-choice',
+      bestStreak: savedState.bestStreak || 0,
       wordProgress: languageSpecificProgress,
     };
   } catch (error) {
@@ -152,31 +163,31 @@ export const gameSlice = createSlice({
         state.recentlyUsedWords = updatedRecent;
       }
     },
-    checkAnswer: (state, action: PayloadAction<string>) => {
-      if (!state.currentWord) return;
-
-      // Determine correct answer based on direction
-      const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      // Validate answer with language-specific rules
-      const validation = validateAnswer(action.payload, correctAnswer, state.language || 'en');
+    checkAnswer: (state, action: PayloadAction<CheckAnswerPayload>) => {
+      const submission =
+        typeof action.payload === 'string' ? { answer: action.payload } : action.payload;
+      const word = submission.word || state.currentWord;
+      if (!word) return;
+      const quizMode = submission.quizMode || state.quizMode;
+      const languageCode = submission.languageCode || state.language || 'en';
+      const direction = getQuizAnswerDirection(word, quizMode);
+      const masteryMode = getMasteryQuizMode(quizMode);
+      const validation = validateQuizAnswer(submission.answer, word, quizMode, languageCode);
 
       state.isCorrect = validation.isCorrect;
-      state.lastAnswer = action.payload;
+      state.lastAnswer = submission.answer;
       state.totalAttempts += 1;
 
       // Store capitalization feedback for languages that require it
-      if (state.language === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, state.language);
+      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
+        const feedback = getCapitalizationFeedback(validation, languageCode);
         state.capitalizationFeedback = feedback || undefined;
       } else {
         state.capitalizationFeedback = undefined;
       }
 
       // Update word progress with enhanced directional tracking
-      const wordId = state.currentWord.id;
+      const wordId = word.id;
       const currentProgress = state.wordProgress[wordId] || {
         wordId,
         xp: 0,
@@ -212,7 +223,7 @@ export const gameSlice = createSlice({
       const newMastery = calculateMasteryGain(
         currentProgress.xp,
         validation.isCorrect,
-        state.quizMode
+        masteryMode
       );
 
       // Update overall progress (maintaining backward compatibility)
@@ -234,7 +245,7 @@ export const gameSlice = createSlice({
           const directionalMastery = calculateMasteryGain(
             directionData.xp,
             validation.isCorrect,
-            state.quizMode
+            masteryMode
           );
 
           // Update directional stats
@@ -271,11 +282,11 @@ export const gameSlice = createSlice({
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
         const modeMultiplier =
-          state.quizMode === 'open-answer'
+          quizMode === 'open-answer'
             ? 2
-            : state.quizMode === 'letter-scramble'
+            : quizMode === 'letter-scramble'
               ? 1.5
-              : state.quizMode === 'fill-in-the-blank'
+              : quizMode === 'fill-in-the-blank'
                 ? 1.7
                 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
@@ -299,37 +310,32 @@ export const gameSlice = createSlice({
      * Session updates should be handled by dispatching handleAnswerSubmission separately
      * This reduces the number of actions but keeps concerns separated
      */
-    submitAnswer: (
-      state,
-      action: PayloadAction<{
-        answer: string;
-      }>
-    ) => {
-      if (!state.currentWord) return;
-
+    submitAnswer: (state, action: PayloadAction<AnswerSubmission>) => {
       const { answer } = action.payload;
+      const word = action.payload.word || state.currentWord;
+      if (!word) return;
+      const quizMode = action.payload.quizMode || state.quizMode;
+      const languageCode = action.payload.languageCode || state.language || 'en';
 
       // Reuse existing checkAnswer logic but keep it self-contained
-      const direction = state.currentWord.direction || 'definition-to-term';
-      const correctAnswer =
-        direction === 'definition-to-term' ? state.currentWord.term : state.currentWord.definition;
-
-      const validation = validateAnswer(answer, correctAnswer, state.language || 'en');
+      const direction = getQuizAnswerDirection(word, quizMode);
+      const masteryMode = getMasteryQuizMode(quizMode);
+      const validation = validateQuizAnswer(answer, word, quizMode, languageCode);
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = answer;
       state.totalAttempts += 1;
 
       // Store capitalization feedback for languages that require it
-      if (state.language === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, state.language);
+      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
+        const feedback = getCapitalizationFeedback(validation, languageCode);
         state.capitalizationFeedback = feedback || undefined;
       } else {
         state.capitalizationFeedback = undefined;
       }
 
       // Update word progress with enhanced directional tracking
-      const wordId = state.currentWord.id;
+      const wordId = word.id;
       const currentProgress = state.wordProgress[wordId] || {
         wordId,
         xp: 0,
@@ -359,7 +365,7 @@ export const gameSlice = createSlice({
       const masteryGain = calculateMasteryGain(
         currentProgress.xp,
         validation.isCorrect,
-        state.quizMode
+        masteryMode
       );
 
       const newMastery = currentProgress.xp + masteryGain;
@@ -383,7 +389,7 @@ export const gameSlice = createSlice({
           const directionalMastery = calculateMasteryGain(
             directionData.xp,
             validation.isCorrect,
-            state.quizMode
+            masteryMode
           );
 
           // Update directional stats
@@ -402,11 +408,11 @@ export const gameSlice = createSlice({
       if (validation.isCorrect) {
         // Update score based on streak, quiz mode, and capitalization penalty
         const modeMultiplier =
-          state.quizMode === 'open-answer'
+          quizMode === 'open-answer'
             ? 2
-            : state.quizMode === 'letter-scramble'
+            : quizMode === 'letter-scramble'
               ? 1.5
-              : state.quizMode === 'fill-in-the-blank'
+              : quizMode === 'fill-in-the-blank'
                 ? 1.7
                 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
@@ -425,18 +431,21 @@ export const gameSlice = createSlice({
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
+      const sameLanguage = state.language === languageCode;
+      if (sameLanguage && state.currentWord) return;
 
-      state.language = languageCode;
-      state.lives = 3;
-      state.score = 0;
-      state.streak = 0;
-      state.isCorrect = null;
-      state.lastAnswer = undefined;
-      state.recentlyUsedWords = []; // Reset recently used words for new language
+      if (!sameLanguage) {
+        state.language = languageCode;
+        state.lives = 3;
+        state.score = 0;
+        state.streak = 0;
+        state.isCorrect = null;
+        state.lastAnswer = undefined;
+        state.recentlyUsedWords = []; // Reset recently used words for new language
 
-      // Load word progress for this language only (no merging) with automatic migration
-      const savedWordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
-      state.wordProgress = savedWordProgress;
+        // Load word progress for this language only (no merging) with automatic migration
+        state.wordProgress = DataMigrationService.safeLoadWordProgress(languageCode);
+      }
 
       // Initialize first word
       const sessionId = `game-session-${languageCode}-all`;

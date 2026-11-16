@@ -84,6 +84,12 @@ export const wordProgressStorage = {
 };
 ```
 
+### 4. Language-Scoped Practice Metrics
+
+Completed practice sessions are recorded with their language code and a stable session identifier. Session totals and practice-day history are read from those records, never inferred from answer attempts or word timestamps. Streaks count consecutive **UTC calendar days** containing a completed session; XP mastery indicators are capped at 100 XP while the quiz continues to show the separate level.
+
+Keep practice records language-scoped and preserve their UTC day keys across reloads. When no completed-session record exists, show zero recorded sessions/days rather than estimating from progress data.
+
 ## Key Architectural Decisions
 
 ### 1. Language Isolation at Multiple Levels

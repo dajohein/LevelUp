@@ -202,8 +202,8 @@ const initialState: SessionState = {
   progress: persistedSessionState.progress || defaultProgress,
   isSessionActive: persistedSessionState.isSessionActive || false,
   sessionStartTime: persistedSessionState.sessionStartTime || 0,
-  completedSessionsByLanguage: {},
-  weeklyChallengeBylanguage: {},
+  completedSessionsByLanguage: persistedSessionState.completedSessionsByLanguage || {},
+  weeklyChallengeBylanguage: persistedSessionState.weeklyChallengeBylanguage || {},
 };
 
 const sessionSlice = createSlice({

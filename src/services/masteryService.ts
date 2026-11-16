@@ -75,6 +75,13 @@ export const calculateMasteryDecay = (
 // Calculate mastery gain based on current mastery and answer correctness
 import { QuizMode } from '../store/types';
 
+/**
+ * Mastery currently gives open-answer its own progression rate; other quiz modes
+ * use the standard rate. Keep this mapping explicit for non-Redux quiz modes.
+ */
+export const getMasteryQuizMode = (quizMode: string): QuizMode =>
+  quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice';
+
 export const calculateMasteryGain = (
   currentMastery: number,
   isCorrect: boolean,

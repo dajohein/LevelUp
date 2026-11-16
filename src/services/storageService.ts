@@ -24,11 +24,12 @@ interface PersistentWordProgress {
 }
 
 interface PersistentGameState {
-  language: string;
+  language: string | null;
   module: string | null; // Current module ID for module-specific practice
-  wordProgress: { [key: string]: WordProgress };
+  wordProgress?: { [key: string]: WordProgress };
   score: number;
   streak: number;
+  bestStreak?: number;
   correctAnswers: number;
   totalAttempts: number;
   quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
@@ -105,8 +106,23 @@ const isLocalStorageAvailable = (): boolean => {
 const lastSaveData: { [key: string]: any } = {};
 const lastSaveTime: { [key: string]: number } = {};
 const SAVE_DEBOUNCE_MS = 100; // Prevent saves within 100ms of same data
+const progressRevisions = new Map<string, number>();
 
 export const wordProgressStorage = {
+  getRevision: (languageCode: string): number => {
+    if (!progressRevisions.has(languageCode)) progressRevisions.set(languageCode, 0);
+    return progressRevisions.get(languageCode) ?? 0;
+  },
+
+  has: (languageCode: string): boolean => {
+    if (!isLocalStorageAvailable()) return false;
+    const data = safeJSONParse<PersistentWordProgress>(
+      localStorage.getItem(STORAGE_KEYS.WORD_PROGRESS),
+      {}
+    );
+    return Object.prototype.hasOwnProperty.call(data, languageCode);
+  },
+
   save: (languageCode: string, wordProgress: { [key: string]: WordProgress }): void => {
     if (!isLocalStorageAvailable()) return;
 
@@ -131,6 +147,7 @@ export const wordProgressStorage = {
       existingData[languageCode] = wordProgress;
 
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+      progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
 
       // Update cache to prevent future duplicates
       lastSaveData[languageCode] = dataHash;
@@ -192,8 +209,16 @@ export const wordProgressStorage = {
         );
         delete existingData[languageCode];
         localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+        progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
+        delete lastSaveData[languageCode];
+        delete lastSaveTime[languageCode];
       } else {
         localStorage.removeItem(STORAGE_KEYS.WORD_PROGRESS);
+        for (const [language, revision] of progressRevisions) {
+          progressRevisions.set(language, revision + 1);
+          delete lastSaveData[language];
+          delete lastSaveTime[language];
+        }
       }
     } catch (error) {
       logger.error('Failed to clear word progress:', error);
@@ -256,6 +281,7 @@ export const wordProgressStorage = {
 
       // Save back to localStorage
       localStorage.setItem(STORAGE_KEYS.WORD_PROGRESS, safeJSONStringify(existingData));
+      progressRevisions.set(languageCode, wordProgressStorage.getRevision(languageCode) + 1);
 
       logger.debug(`💾 Saved raw data for ${languageCode}`);
     } catch (error) {
@@ -280,25 +306,47 @@ export const gameStateStorage = {
   load: (): Partial<PersistentGameState> => {
     if (!isLocalStorageAvailable()) return {};
 
-    return safeJSONParse<Partial<PersistentGameState>>(
-      localStorage.getItem(STORAGE_KEYS.GAME_STATE),
-      {}
-    );
+    const storedState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+    const legacyState = storedState ? null : localStorage.getItem('game_state');
+    const gameState = safeJSONParse<Partial<PersistentGameState>>(storedState || legacyState, {});
+
+    if (!storedState && legacyState && Object.keys(gameState).length > 0) {
+      gameStateStorage.save(gameState);
+    }
+
+    return gameState;
   },
 
   clear: (): void => {
     if (!isLocalStorageAvailable()) return;
     localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
+    localStorage.removeItem('game_state');
   },
 };
 
 // Session State Storage
 export const sessionStateStorage = {
-  save: (sessionState: Partial<PersistentSessionState>): void => {
+  save: (
+    sessionState: Partial<PersistentSessionState> & {
+      currentLanguage?: string;
+      progress?: object;
+      isSessionActive?: boolean;
+      sessionStartTime?: number;
+    }
+  ): void => {
     if (!isLocalStorageAvailable()) return;
 
     try {
-      localStorage.setItem(STORAGE_KEYS.SESSION_STATE, safeJSONStringify(sessionState));
+      const snapshot: Partial<PersistentSessionState> = {
+        language: sessionState.currentLanguage ?? sessionState.language ?? '',
+        currentSession: null,
+        sessionProgress: sessionState.progress ?? sessionState.sessionProgress ?? {},
+        sessionTimer: sessionState.sessionStartTime ?? sessionState.sessionTimer ?? 0,
+        isActive: false,
+        completedSessionsByLanguage: sessionState.completedSessionsByLanguage ?? {},
+        weeklyChallengeBylanguage: sessionState.weeklyChallengeBylanguage ?? {},
+      };
+      localStorage.setItem(STORAGE_KEYS.SESSION_STATE, safeJSONStringify(snapshot));
     } catch (error) {
       logger.error('Failed to save session state:', error);
     }
@@ -307,15 +355,32 @@ export const sessionStateStorage = {
   load: (): Partial<PersistentSessionState> => {
     if (!isLocalStorageAvailable()) return {};
 
-    return safeJSONParse<Partial<PersistentSessionState>>(
-      localStorage.getItem(STORAGE_KEYS.SESSION_STATE),
-      {}
-    );
+    const storedState = localStorage.getItem(STORAGE_KEYS.SESSION_STATE);
+    const legacyState = storedState ? null : localStorage.getItem('session_state');
+    const savedState = safeJSONParse<
+      Partial<PersistentSessionState> & {
+        currentLanguage?: string;
+        progress?: object;
+      }
+    >(storedState || legacyState, {});
+
+    if (!storedState && legacyState && Object.keys(savedState).length > 0) {
+      sessionStateStorage.save(savedState);
+    }
+
+    return {
+      ...savedState,
+      language: savedState.language ?? savedState.currentLanguage,
+      sessionProgress: savedState.sessionProgress ?? savedState.progress,
+      currentSession: null,
+      isActive: false,
+    };
   },
 
   clear: (): void => {
     if (!isLocalStorageAvailable()) return;
     localStorage.removeItem(STORAGE_KEYS.SESSION_STATE);
+    localStorage.removeItem('session_state');
   },
 };
 

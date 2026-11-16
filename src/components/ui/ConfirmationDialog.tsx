@@ -3,10 +3,11 @@
  * Reusable dialog for destructive actions that require user confirmation
  */
 
-import React from 'react';
+import React, { useId, useRef } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';
+import { ModalDialog } from './ModalDialog';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -20,47 +21,34 @@ interface ConfirmationDialogProps {
   isLoading?: boolean;
 }
 
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
-
 const slideIn = keyframes`
   from { 
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: scale(0.95);
   }
   to { 
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 `;
 
-const Overlay = styled.div<{ isOpen: boolean }>`
-  display: ${(props: { isOpen: boolean }) => (props.isOpen ? 'block' : 'none')};
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  animation: ${fadeIn} 0.2s ease-out;
-`;
-
-const Dialog = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+const Dialog = styled(ModalDialog)`
   background: white;
+  border: 0;
+  padding: 0;
   border-radius: 12px;
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 400px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   animation: ${slideIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 `;
 
 const Header = styled.div`
@@ -70,13 +58,14 @@ const Header = styled.div`
   justify-content: space-between;
 `;
 
-const Title = styled.div`
+const Title = styled.h2`
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 600;
   font-size: 18px;
   color: #1f2937;
+  margin: 0;
 `;
 
 const CloseButton = styled.button`
@@ -182,11 +171,9 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   destructive = false,
   isLoading = false,
 }) => {
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  const titleId = useId();
+  const messageId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const handleConfirm = () => {
     if (!isLoading) {
@@ -194,40 +181,56 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <Overlay isOpen={isOpen} onClick={handleOverlayClick}>
-      <Dialog>
-        <Header>
-          <Title>
-            {destructive && (
-              <FaExclamationTriangle style={{ color: '#dc2626', fontSize: '18px' }} />
-            )}
-            {title}
-          </Title>
-          <CloseButton onClick={onClose} disabled={isLoading}>
-            <FaTimes />
-          </CloseButton>
-        </Header>
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy={titleId}
+      describedBy={messageId}
+      initialFocusRef={cancelRef}
+      dismissDisabled={isLoading}
+      closeOnBackdrop
+    >
+      <Header>
+        <Title id={titleId}>
+          {destructive && <FaExclamationTriangle style={{ color: '#dc2626', fontSize: '18px' }} />}
+          {title}
+        </Title>
+        <CloseButton type="button" aria-label="Close dialog" onClick={onClose} disabled={isLoading}>
+          <FaTimes />
+        </CloseButton>
+      </Header>
 
-        <Content>
-          <Message>{message}</Message>
-        </Content>
+      <Content>
+        <Message id={messageId}>{message}</Message>
+      </Content>
 
-        <Actions>
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-            {cancelText}
-          </Button>
-          <Button
-            variant={destructive ? 'destructive' : 'primary'}
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
-            {isLoading ? <LoadingSpinner /> : confirmText}
-          </Button>
-        </Actions>
-      </Dialog>
-    </Overlay>
+      <Actions>
+        <Button
+          ref={cancelRef}
+          type="button"
+          variant="secondary"
+          onClick={onClose}
+          disabled={isLoading}
+        >
+          {cancelText}
+        </Button>
+        <Button
+          type="button"
+          variant={destructive ? 'destructive' : 'primary'}
+          onClick={handleConfirm}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <LoadingSpinner aria-hidden="true" />
+              {confirmText}
+            </>
+          ) : (
+            confirmText
+          )}
+        </Button>
+      </Actions>
+    </Dialog>
   );
 };

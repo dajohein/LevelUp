@@ -2,7 +2,31 @@
 
 A modern, interactive language learning game featuring **three engaging quiz modes**: Multiple Choice for recognition, Letter Scramble for interactive spelling, and Open-Ended for mastery testing. Built with React, TypeScript, and Redux, it uses scientifically-proven spaced repetition and active recall methods with real-time feedback and keyboard support for an optimal learning experience.
 
+Quiz results are announced to screen readers, and learners can expand a persistent review of their most recent answer and correction after the quiz advances. Correct answers move on after a brief 500 ms pause with a small star indicator; incorrect answers retain their longer correction-review time.
+
+The learning-profile reset and device-linking dialogs support keyboard navigation: Tab stays in the
+dialog, Escape closes it, and focus returns to the opener. Reset initially focuses Cancel and cannot
+be dismissed while the reset is running.
+
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
+
+### German vocabulary: Gesundheit
+
+Select **German → Gesundheit** to practise 101 German/Dutch entries about the body,
+illness, recovery and exercise. The module retains the source groups **Wortschatz**
+(56), **Wiederholung** (15), **Sehen** (8), **Hören** (5) and **Lesen** (17), with
+Dutch-to-German practice for the first two groups and German-to-Dutch practice for
+the last three. Every entry includes a German example and Dutch translation.
+Existing modules and their progress remain unchanged.
+
+### Keyboard-accessible navigation
+
+Desktop **User navigation** and mobile **Navigation** open with Enter or Space.
+Tab moves through ordinary navigation links; Escape closes the disclosure and
+returns focus to its trigger. Closed panels are hidden from keyboard and
+screen-reader navigation, and compact profile actions retain descriptive names.
+See [navigation verification](docs/MOBILE_OPTIMIZATION.md#navigation-accessibility)
+for interaction tests and manual checks.
 
 ### � **Code Cleanup (October 26, 2025)**
 
@@ -101,28 +125,24 @@ window.testPerformanceFix();
 
 ## 🚀 **Enterprise-Grade Storage + Enhanced Analytics (COMPLETE!)**
 
-### ✨ **Enterprise-Grade Storage & Cross-Device Sync**
+### ✨ **Local-First Learning Progress**
 
-- **🌐 Server-Side Storage**: Cross-device sync with Vercel serverless functions
-- **🔄 Backend Migration Ready**: Zero-code-change transition with validation and backup
+- **📱 Reliable Local Progress**: Learning progress is stored on this device
+- **🌐 Remote Sync**: Not available; the existing API uses volatile process memory and is disabled in production
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
 - **🎯 Storage Analytics**: Comprehensive monitoring with 0-100 health scoring
-- **⚙️ Production-Ready**: Enterprise architecture with comprehensive error handling
 
-### 🌐 **Cross-Device Synchronization**
+### 🌐 **Remote Storage Status**
 
-- **Persistent Progress**: Your learning progress syncs across all devices
-- **Offline-First**: Works offline, syncs when online
-- **Zero-Config Deployment**: Ready for Vercel with serverless functions
-- **Development Tools**: Complete dev environment with `npm run dev:start`
-- **Language Isolation**: Server enforces strict language data separation
-- **Debug Panel**: Press `Ctrl+Shift+S` for real-time storage monitoring
+- **Local-first**: Progress remains available on this device
+- **Demo only**: Remote account and storage endpoints are opt-in for development and are not durable
+- **No progress transfer**: Device linking does not sync or reconcile learning progress
+- **Production behavior**: Remote account and storage endpoints return unavailable until durable shared storage is implemented
 
 ### 📈 **Performance Achievements**
 
-- **Cross-device sync** with automatic user session management
 - **50x storage capacity** increase with IndexedDB integration
 - **90% faster** analytics processing with intelligent caching
 - **85%+ cache hit rate** with predictive warming and optimization
@@ -144,7 +164,7 @@ window.testPerformanceFix();
 ### **Triple Quiz System**
 
 - **📝 Multiple Choice**: Visual recognition for beginners (up to 50 XP)
-- **🔤 Letter Scramble**: Interactive word building with real-time feedback
+- **🔤 Letter Scramble**: Interactive word building with real-time feedback and accented-letter keyboard input
 - **✍️ Open-Ended**: Advanced recall testing for mastery (50+ XP)
 - **Intelligent mode selection** based on word complexity and user mastery
 - **German case sensitivity** with partial credit system
@@ -194,7 +214,7 @@ git clone https://github.com/dajohein/LevelUp.git
 cd LevelUp
 npm install
 
-# Development (with server-side storage)
+# Development (local-first storage; optional volatile API demo)
 npm run dev:start         # Complete development environment (web + API)
 npm run health:storage    # Verify API health
 
@@ -209,6 +229,11 @@ npm run build
 # Stop development
 npm run dev:stop
 ```
+
+The managed servers use ports 3001 and 5173 and are scoped to this checkout.
+Startup fails if a port is occupied or either service is unhealthy; it never
+stops an unrelated server. See [development server controls](scripts/README.md)
+for alternate ports, logs, and troubleshooting.
 
 ### 🧪 **Development Mode Features**
 
@@ -243,7 +268,7 @@ Key tests:
 
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides
-- **Server-Side Storage**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Cross-device sync setup
+- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and development-only API demo
 
 ## 🎮 How to Use
 
@@ -278,7 +303,7 @@ src/
 - **Responsive Design**: Optimized layouts for mobile, tablet, and desktop
 - **Touch Interface**: Native touch gestures and haptic feedback
 - **PWA Ready**: Service worker, offline support, and app-like experience
-- **Keyboard Support**: Full keyboard navigation in Letter Scramble mode
+- **Keyboard Support**: Type accented letters in Letter Scramble mode; browser shortcuts and input fields remain unaffected
 - **Real-time Feedback**: Smooth animations and visual feedback
 
 ## 🔧 **Advanced Features**
@@ -292,12 +317,12 @@ The application implements **strict language separation** to prevent data contam
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
-### **Server-Side Storage**
+### **Remote Storage Demo**
 
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
-- **Config**: [src/config/environment.ts](src/config/environment.ts) toggles remote vs local
+- **Capability**: The process-local API is opt-in for development only; production rejects remote requests. It does not provide durable or cross-device progress sync.
 
 ### **Performance Monitoring**
 
@@ -351,6 +376,13 @@ npm run dev          # Web app only
 
 ## 🤝 **Contributing**
 
+Pull requests, main pushes and merge-queue entries run the **PR quality gate**:
+clean install on Node 22, app/API type-checks, Jest, build and a non-regressing
+ESLint baseline. Existing warnings remain visible; new warnings and all lint
+errors fail. Formatting enforcement is explicitly deferred while its existing
+baseline is repaired. See [quality gate and owner setup](docs/DEPLOYMENT.md#pull-request-quality-gate)
+for local commands and required-check configuration.
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
@@ -370,4 +402,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**🎯 Ready to level up your language learning?** Start with `npm run dev:start` and explore the enhanced learning experience with cross-device sync!
+**🎯 Ready to level up your language learning?** Start with `npm run dev:start` and explore the local-first learning experience!

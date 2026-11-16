@@ -34,8 +34,15 @@ export interface FeedbackWordInfo {
   context: string;
 }
 
-/** Context (sentence + translation) associated with the current word direction. */
-type ContextForWord = { sentence: string; translation: string } | undefined;
+/** Context associated with the current word direction. */
+type ContextForWord =
+  | {
+      sentence: string;
+      translation: string;
+      sentenceWithBlank?: string | null;
+      audio?: string;
+    }
+  | undefined;
 
 /** Return value of handleEnhancedAnswer. */
 type EnhancedAnswerResult =
@@ -56,6 +63,7 @@ export interface GameState {
   sessionCompleted: boolean;
   showLearningCard: boolean;
   lastAnswerCorrect: boolean | null;
+  answerSequence: number;
   setLastAnswerCorrect: (correct: boolean | null) => void;
   lastSelectedAnswer: string;
   setLastSelectedAnswer: (answer: string) => void;
@@ -70,7 +78,10 @@ export interface GameHandlers {
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
     transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
-    additionalData?: unknown
+    options?: {
+      additionalData?: unknown;
+      transitionId?: number;
+    }
   ) => Promise<void>;
   handleContinueFromLearningCard: () => void;
   checkAnswerCorrectness: (answer: string) => boolean;
@@ -172,6 +183,7 @@ export const useEnhancedGameState = ({
 
   // Feedback state for enhanced learning system
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState<boolean | null>(null);
+  const [answerSequence, setAnswerSequence] = useState(0);
   const [lastSelectedAnswer, setLastSelectedAnswer] = useState<string>('');
   const [feedbackQuestionKey, setFeedbackQuestionKey] = useState<string>('');
   const [feedbackWordInfo, setFeedbackWordInfo] = useState<{
@@ -181,6 +193,9 @@ export const useEnhancedGameState = ({
   } | null>(null);
 
   const previousWordRef = useRef<string>('');
+  const submissionGuardRef = useRef(false);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionIdRef = useRef(0);
 
   // Enhanced integrations
   const { playCorrect, playIncorrect } = useAudio();
@@ -191,7 +206,7 @@ export const useEnhancedGameState = ({
     getSessionStats,
     forceCompleteSession,
     initializeEnhancedSession,
-  } = useEnhancedGame(languageCode, moduleId);
+  } = useEnhancedGame(languageCode, moduleId, sessionStartTime ?? undefined);
   const { showLevelUp, newLevel, totalXP, closeLevelUp } = useLevelUpDetection();
 
   // Helper functions
@@ -255,16 +270,14 @@ export const useEnhancedGameState = ({
 
       const quizModeToUse = enhancedWordInfo?.quizMode || quizMode;
 
-      // For enhanced comprehension modes, any non-empty answer is considered correct
-      // These are open-ended learning exercises, not strict quizzes
-      if (['contextual-analysis', 'usage-example', 'synonym-antonym'].includes(quizModeToUse)) {
-        return answer.trim().length > 0; // Accept any meaningful input
-      }
-
-      const correctAnswer = getQuizAnswer(wordToUse, quizModeToUse);
-      return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+      return gameServices.modeHandler.isCorrectAnswer(
+        answer,
+        wordToUse,
+        quizModeToUse,
+        languageCode
+      );
     },
-    [currentWord, quizMode, getCurrentWordInfo, getQuizAnswer]
+    [currentWord, quizMode, getCurrentWordInfo, languageCode]
   );
 
   // Stable ref to the latest handleWordTransition. handleSubmit reads through this
@@ -278,16 +291,23 @@ export const useEnhancedGameState = ({
   const handleWordTransition = useCallback(
     async (
       transitionType: 'enhanced' | 'standard' | 'quiz' | 'batch-complete' = 'standard',
-      additionalData?: unknown
+      {
+        additionalData,
+        transitionId,
+      }: {
+        additionalData?: unknown;
+        transitionId?: number;
+      } = {}
     ) => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (transitionId !== undefined && transitionId !== transitionIdRef.current) return;
 
         if (transitionType === 'enhanced') {
           const result = additionalData;
           if (result && typeof result === 'object' && 'isComplete' in result && result.isComplete) {
             setSessionCompleted(true);
           } else {
+            submissionGuardRef.current = false;
             setIsTransitioning(false);
             setWordTimer(0);
             setWordStartTime(Date.now());
@@ -299,6 +319,7 @@ export const useEnhancedGameState = ({
         if (transitionType === 'batch-complete') {
           dispatch(nextWord()); // Keep Redux in sync with a fresh word (used as fallback)
           initializeEnhancedSession(); // Start the next 5–7 word batch
+          submissionGuardRef.current = false;
           setIsTransitioning(false);
           setWordTimer(0);
           setWordStartTime(Date.now());
@@ -328,7 +349,10 @@ export const useEnhancedGameState = ({
 
             const result = await challengeServiceManager.getNextWord(currentSession.id, context);
 
+            if (transitionId !== undefined && transitionId !== transitionIdRef.current) return;
+
             if (result.word) {
+              submissionGuardRef.current = false;
               dispatch(
                 setCurrentWord({
                   word: result.word,
@@ -336,12 +360,19 @@ export const useEnhancedGameState = ({
                   quizMode: result.quizMode,
                 })
               );
+            } else {
+              submissionGuardRef.current = false;
             }
           } else {
+            submissionGuardRef.current = false;
             dispatch(nextWord());
           }
+        } else {
+          submissionGuardRef.current = false;
         }
       } catch (error) {
+        if (transitionId !== undefined && transitionId !== transitionIdRef.current) return;
+        submissionGuardRef.current = false;
         logger.error(`Failed to get next word from ${currentSession?.id} service:`, {
           sessionId: currentSession?.id,
           error,
@@ -372,6 +403,8 @@ export const useEnhancedGameState = ({
   // Main submission handler
   const handleSubmit = useCallback(
     (answer: string) => {
+      if (submissionGuardRef.current) return;
+
       const enhancedWordInfo = getCurrentWordInfo();
       const currentWordToUse = gameServices.modeHandler.getCurrentWord(
         enhancedWordInfo,
@@ -392,10 +425,13 @@ export const useEnhancedGameState = ({
         checkAnswerCorrectness,
         (mode: string) => gameServices.modeHandler.isUnidirectionalMode(mode)
       );
+      submissionGuardRef.current = true;
+      const transitionId = ++transitionIdRef.current;
 
       // Update feedback state
       setFeedbackWordInfo(validationResult.feedbackInfo);
       setLastAnswerCorrect(validationResult.isCorrect);
+      setAnswerSequence(sequence => sequence + 1);
       setLastSelectedAnswer(answer);
       setFeedbackQuestionKey(
         gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
@@ -410,7 +446,14 @@ export const useEnhancedGameState = ({
 
       // CRITICAL: Dispatch game/checkAnswer action to update word progress
       // This ensures word progress is saved and modules show correct completion percentages
-      dispatch(checkAnswer(answer));
+      dispatch(
+        checkAnswer({
+          answer,
+          word: currentWordToUse ?? undefined,
+          quizMode: quizModeToUse,
+          languageCode,
+        })
+      );
 
       // Handle enhanced vs standard game logic
       let isBatchComplete = false;
@@ -457,9 +500,13 @@ export const useEnhancedGameState = ({
       // wordProgress change; including it here would force handleSubmit to also
       // re-create after every answer without any benefit).
       const transitionType = isBatchComplete ? 'batch-complete' : 'standard';
-      setTimeout(
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+      transitionTimeoutRef.current = setTimeout(
         () => {
-          handleWordTransitionRef.current?.(transitionType);
+          transitionTimeoutRef.current = null;
+          handleWordTransitionRef.current?.(transitionType, {
+            transitionId,
+          });
         },
         gameServices.modeHandler.getOptimalTiming(quizModeToUse, validationResult.isCorrect)
       );
@@ -506,6 +553,13 @@ export const useEnhancedGameState = ({
     }`;
 
     if (previousWordRef.current && previousWordRef.current !== currentQuestionKey) {
+      transitionIdRef.current += 1;
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = null;
+      }
+      submissionGuardRef.current = false;
+      setIsTransitioning(false);
       setLastAnswerCorrect(null);
       setLastSelectedAnswer('');
       setFeedbackQuestionKey('');
@@ -513,6 +567,14 @@ export const useEnhancedGameState = ({
     }
     previousWordRef.current = currentQuestionKey;
   }, [currentWord, getCurrentWordInfo, getQuestionWord]);
+
+  useEffect(
+    () => () => {
+      transitionIdRef.current += 1;
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    },
+    []
+  );
 
   // Learning card display logic
   useEffect(() => {
@@ -535,7 +597,10 @@ export const useEnhancedGameState = ({
         setShowLearningCard(shouldShowCard);
       }
       // In session mode, show learning card for new words and words needing reinforcement
-      else if (isSessionActive && (wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement)) {
+      else if (
+        isSessionActive &&
+        (wordLearningStatus.isTrulyNewWord || wordLearningStatus.needsReinforcement)
+      ) {
         setShowLearningCard(true);
       }
       // Default case - no learning card
@@ -729,6 +794,7 @@ export const useEnhancedGameState = ({
       sessionCompleted,
       showLearningCard,
       lastAnswerCorrect,
+      answerSequence,
       setLastAnswerCorrect,
       lastSelectedAnswer,
       setLastSelectedAnswer,

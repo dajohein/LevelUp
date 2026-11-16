@@ -447,6 +447,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             onAnswerChange={setInputValue}
             onSubmit={handleOpenQuestionSubmit}
             isCorrect={currentAnswerCorrect === true}
+            isError={currentAnswerCorrect === false}
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
@@ -462,6 +463,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             onAnswerChange={setInputValue}
             onSubmit={handleOpenQuestionSubmit}
             isCorrect={currentAnswerCorrect === true}
+            isError={currentAnswerCorrect === false}
             disabled={isTransitioning}
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}

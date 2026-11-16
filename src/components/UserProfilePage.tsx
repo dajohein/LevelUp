@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { FaUser, FaChartLine, FaTrophy, FaClock, FaBrain, FaSync, FaTrash } from 'react-icons/fa';
 import { Navigation } from './Navigation';
@@ -360,6 +360,7 @@ export const UserProfilePage: React.FC = () => {
 
   // State for confirmation dialog
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const resetInFlight = useRef(false);
 
   // Get learning profile for AI insights section
   const {
@@ -426,11 +427,15 @@ export const UserProfilePage: React.FC = () => {
   };
 
   const handleResetProfile = async () => {
+    if (resetInFlight.current) return;
+    resetInFlight.current = true;
     try {
       await resetProfile();
       setShowResetDialog(false);
     } catch (error) {
       console.error('Failed to reset profile:', error);
+    } finally {
+      resetInFlight.current = false;
     }
   };
 
@@ -696,7 +701,9 @@ export const UserProfilePage: React.FC = () => {
       {/* Confirmation Dialog for Reset */}
       <ConfirmationDialog
         isOpen={showResetDialog}
-        onClose={() => setShowResetDialog(false)}
+        onClose={() => {
+          if (!resetInFlight.current) setShowResetDialog(false);
+        }}
         onConfirm={handleResetProfile}
         title="Reset Learning Profile"
         message="Are you sure you want to reset your AI learning profile? This will permanently delete all your personalized insights, learning patterns, and AI coaching data. This action cannot be undone."

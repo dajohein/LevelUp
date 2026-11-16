@@ -515,7 +515,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       <StatsGrid>
         <StatCard highlight={stats.learningStreak > 0}>
           <StatValue color="#f59e0b">{stats.learningStreak}</StatValue>
-          <StatLabel>Day Streak</StatLabel>
+          <StatLabel title="Consecutive completed practice days, using UTC calendar days">
+            Day Streak (UTC)
+          </StatLabel>
         </StatCard>
         <StatCard>
           <StatValue color="#10b981">{stats.masteredWords}</StatValue>
