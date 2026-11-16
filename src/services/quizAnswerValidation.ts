@@ -50,7 +50,12 @@ export const validateQuizAnswer = (
     )
   );
 
+  // Prefer the best correct match: exact spelling, then variant spelling, then capitalization errors
   return (
+    validations.find(
+      validation =>
+        validation.isCorrect && validation.capitalizationCorrect && !validation.closeMatch
+    ) ??
     validations.find(validation => validation.isCorrect && validation.capitalizationCorrect) ??
     validations.find(validation => validation.isCorrect) ??
     validations[0]

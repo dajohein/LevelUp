@@ -48,7 +48,7 @@ describe('gameSlice answer validation', () => {
     expect(state.wordProgress[healthWord.id].directions?.['term-to-definition']?.timesCorrect).toBe(
       1
     );
-    expect(state.capitalizationFeedback).toBeUndefined();
+    expect(state.spellingFeedback).toBeUndefined();
   };
 
   it('persists accepted open-answer translations through checkAnswer', () => {
@@ -192,5 +192,27 @@ describe('gameSlice answer validation', () => {
     expect(result.lives).toBe(3);
     expect(result.wordProgress[word.id].timesCorrect).toBe(1);
     expect(result.wordProgress[word.id].timesIncorrect).toBe(0);
+  });
+
+  it('accepts a missing accent with reduced score and shows the canonical spelling', () => {
+    const word = {
+      id: 'es:cafe',
+      term: 'café',
+      definition: 'koffie',
+      direction: 'definition-to-term' as const,
+    };
+    let state = gameReducer(undefined, { type: 'test/initialize' });
+    state = { ...state, language: 'es', lives: 3, score: 0, streak: 0 };
+    state = gameReducer(state, setCurrentWord({ word, options: [], quizMode: 'open-answer' }));
+
+    const exact = gameReducer(state, checkAnswer('café'));
+    const variant = gameReducer(state, checkAnswer('cafe'));
+
+    expect(variant.isCorrect).toBe(true);
+    expect(variant.lives).toBe(3);
+    expect(variant.spellingFeedback).toContain('café');
+    expect(exact.spellingFeedback).toBeUndefined();
+    expect(variant.score).toBeLessThan(exact.score);
+    expect(variant.score).toBeGreaterThan(0);
   });
 });

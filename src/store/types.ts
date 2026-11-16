@@ -27,6 +27,12 @@ export interface LegacyWordProgress {
 }
 
 // Enhanced WordProgress with backward compatibility
+/** Optional context for an answer submission. */
+export interface SubmitOptions {
+  /** Hints used; an assisted answer is still correct but earns no mastery. */
+  hintsUsed?: number;
+}
+
 export interface WordProgress {
   wordId: string;
 
@@ -110,7 +116,7 @@ export interface GameState {
   lastWordId?: string; // Track last word to prevent immediate repetition
   recentlyUsedWords?: string[]; // Track recently used words to prevent repetition
   wordProgress: { [key: string]: WordProgress }; // Track progress per word
-  capitalizationFeedback?: string; // Feedback for language-specific capitalization errors
+  spellingFeedback?: string; // Feedback for capitalization errors or accepted spelling variants
 }
 
 export interface Achievement {

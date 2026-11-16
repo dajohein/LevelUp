@@ -1,6 +1,20 @@
 // Language-specific configuration for answer validation and other rules
 
+/**
+ * How strictly spelling variants are matched. Variants that are accepted score slightly less
+ * and the learner is shown the canonical spelling.
+ */
+export interface SpellingRules {
+  /** Treat accented letters as their base letters (é = e). */
+  foldAccents: boolean;
+  /** Letters that are distinct in the language and must never be folded (e.g. Spanish ñ). */
+  preserve?: string[];
+  /** Standard transliterations accepted for letters, applied to both sides (e.g. German ä → ae). */
+  transliterations?: Record<string, string>;
+}
+
 export interface LanguageRules {
+  spelling?: SpellingRules;
   caseSensitive: boolean;
   capitalizationRequired: boolean;
   articles?: string[];
@@ -22,6 +36,11 @@ const defaultRules: LanguageRules = {
 const languageRulesConfig: Record<string, LanguageRules> = {
   // German-specific rules
   de: {
+    // ä/ö/ü/ß change the word (schon ≠ schön), so only the standard ae/oe/ue/ss spellings are accepted
+    spelling: {
+      foldAccents: false,
+      transliterations: { ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' },
+    },
     caseSensitive: true,
     capitalizationRequired: true,
     articles: ['der', 'die', 'das', 'den', 'dem', 'des'],
@@ -39,6 +58,15 @@ const languageRulesConfig: Record<string, LanguageRules> = {
 
   // Spanish rules (case-insensitive)
   es: {
+    // ñ is a different letter (año ≠ ano); other accents may be omitted
+    spelling: { foldAccents: true, preserve: ['ñ'] },
+    caseSensitive: false,
+    capitalizationRequired: false,
+  },
+
+  // Dutch (used for answers in the learner's own language)
+  nl: {
+    spelling: { foldAccents: true },
     caseSensitive: false,
     capitalizationRequired: false,
   },
