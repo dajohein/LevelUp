@@ -157,7 +157,7 @@ window.testPerformanceFix();
 - **Smart word grouping** (5-7 words) for better focus and retention
 - **Mixed quiz modes** within sessions for engaging variety
 - **Four learning phases**: Introduction → Learning → Consolidation → Mastery
-- **AI Learning Coach** with real-time behavioral analytics and personalized coaching
+- **Adaptive practice**: spaced repetition with mode adaptation based on recent performance (see docs/ADAPTIVE_LEARNING.md)
 - **User Learning Profiles** automatically saved and synchronized across devices
 - **Personalized analytics** and ML-powered learning recommendations
 
