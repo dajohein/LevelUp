@@ -52,4 +52,11 @@ describe('hints and mastery', () => {
 
     expect(wrong.wordProgress[word.id].xp).toBeLessThan(xpBefore);
   });
+
+  it('a re-queued retry is practice: correct, but no mastery', () => {
+    const retry = gameReducer(start(), checkAnswer({ answer: 'Hund', isRetry: true }));
+
+    expect(retry.isCorrect).toBe(true);
+    expect(retry.wordProgress[word.id].xp).toBe(0);
+  });
 });

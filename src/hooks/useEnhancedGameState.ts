@@ -453,6 +453,7 @@ export const useEnhancedGameState = ({
           quizMode: quizModeToUse,
           languageCode,
           hintsUsed: options?.hintsUsed,
+          isRetry: options?.isRetry ?? enhancedWordInfo?.isRetry,
         })
       );
 

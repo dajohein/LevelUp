@@ -18,6 +18,8 @@ export interface EnhancedWordInfo {
   options: string[];
   isReviewWord: boolean;
   wordType: 'group' | 'review';
+  /** True when this is a re-queued retry of a word missed earlier in the session. */
+  isRetry?: boolean;
 }
 
 export interface EnhancedGameState {

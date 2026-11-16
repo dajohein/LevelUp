@@ -141,6 +141,41 @@ describe('enhancedWordService', () => {
     });
   });
 
+  describe('Missed-word re-queue', () => {
+    it('brings a missed word back once, flagged as a retry, and extends the session', () => {
+      expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+      const first = enhancedWordService.getCurrentWord();
+      expect(first?.isRetry).toBe(false);
+      const missedId = first?.word?.id;
+
+      const seen: Array<{ id?: string; isRetry: boolean }> = [];
+      let step = enhancedWordService.recordAnswer(false);
+      while (!step.isSessionComplete && step.nextWord) {
+        seen.push({ id: step.nextWord.word?.id, isRetry: step.nextWord.isRetry });
+        step = enhancedWordService.recordAnswer(true);
+      }
+
+      // 5 original words + exactly one retry of the missed word, in recognition mode
+      expect(seen).toHaveLength(5);
+      expect(seen.filter(entry => entry.isRetry)).toEqual([{ id: missedId, isRetry: true }]);
+    });
+
+    it('does not queue another retry when the retry is also missed', () => {
+      expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+      let step = enhancedWordService.recordAnswer(false);
+      let count = 1;
+      while (!step.isSessionComplete) {
+        count++;
+        step = enhancedWordService.recordAnswer(false);
+        if (count > 20) break;
+      }
+
+      // 5 words + 5 single retries = 10 answers, never an endless loop
+      expect(count).toBeLessThanOrEqual(10);
+      expect(step.isSessionComplete).toBe(true);
+    });
+  });
+
   describe('Session State', () => {
     it('should report no active session initially', () => {
       const hasSession = enhancedWordService.hasActiveSession();
