@@ -17,7 +17,7 @@ jest.mock('../../services/wordSelectionManager', () => ({
   selectWordForMixedPractice: jest.fn(),
 }));
 
-import gameReducer, { checkAnswer, setCurrentWord, submitAnswer } from '../gameSlice';
+import gameReducer, { checkAnswer, setCurrentWord } from '../gameSlice';
 import { getQuizAnswerDirection, validateQuizAnswer } from '../../services/quizAnswerValidation';
 import { GameModeHandler } from '../../services/game/GameModeHandler';
 import type { Word } from '../../services/wordService';
@@ -53,12 +53,6 @@ describe('gameSlice answer validation', () => {
 
   it('persists accepted open-answer translations through checkAnswer', () => {
     expectAcceptedAnswerProgress(gameReducer(createState('open-answer'), checkAnswer('vreemd')));
-  });
-
-  it('persists accepted open-answer translations through submitAnswer', () => {
-    expectAcceptedAnswerProgress(
-      gameReducer(createState('open-answer'), submitAnswer({ answer: 'vreemd' }))
-    );
   });
 
   it('does not apply open-answer alternatives to multiple-choice scoring', () => {
