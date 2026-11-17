@@ -207,13 +207,6 @@ export const DeveloperDashboard: React.FC = () => {
                   Interactive demo of all loading states, skeletons, and transitions
                 </FeatureDescription>
               </FeatureButton>
-
-              <FeatureButton color="#4a90e2" onClick={() => navigate('/simple-ai-demo')}>
-                <FeatureTitle>🤖 Simple AI Demo</FeatureTitle>
-                <FeatureDescription>
-                  AI learning coach demonstration with analytics and insights
-                </FeatureDescription>
-              </FeatureButton>
             </ButtonGrid>
           </Section>
 

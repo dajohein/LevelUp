@@ -17,10 +17,42 @@ import {
   LearningStatsPageLazy,
 } from './utils/lazyComponents';
 
-const LoadingStatesDemoLazy = React.lazy(() => import('./components/LoadingStatesDemo'));
-const ComponentLibraryDemoLazy = React.lazy(() => import('./components/ComponentLibraryDemo'));
-const AdvancedAISystemDemoLazy = React.lazy(() => import('./components/AdvancedAISystemDemo'));
-const DeveloperDashboardLazy = React.lazy(() => import('./components/DeveloperDashboard'));
+// Dev-only pages. `import.meta.env.DEV` is a build-time constant, so in production
+// builds these dynamic imports (and their chunks) are dropped entirely.
+const LoadingStatesDemoLazy = import.meta.env.DEV
+  ? React.lazy(() => import('./components/LoadingStatesDemo'))
+  : null;
+const ComponentLibraryDemoLazy = import.meta.env.DEV
+  ? React.lazy(() => import('./components/ComponentLibraryDemo'))
+  : null;
+const DeveloperDashboardLazy = import.meta.env.DEV
+  ? React.lazy(() => import('./components/DeveloperDashboard'))
+  : null;
+
+const devPages = [
+  {
+    path: 'developer-dashboard',
+    Page: DeveloperDashboardLazy,
+    text: 'Loading Developer Dashboard...',
+  },
+  { path: 'loading-demo', Page: LoadingStatesDemoLazy, text: 'Loading demo...' },
+  { path: 'components-demo', Page: ComponentLibraryDemoLazy, text: 'Loading component library...' },
+];
+
+const devRoutes = devPages.flatMap(({ path, Page, text }) =>
+  Page
+    ? [
+        {
+          path,
+          element: (
+            <LazyWrapper loadingText={text}>
+              <Page />
+            </LazyWrapper>
+          ),
+        },
+      ]
+    : []
+);
 
 import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
@@ -100,46 +132,7 @@ export const router = createBrowserRouter([
         path: 'overview/:language',
         element: <LanguageOverview />,
       },
-      {
-        path: 'developer-dashboard',
-        element: (
-          <LazyWrapper loadingText="Loading Developer Dashboard...">
-            <DeveloperDashboardLazy />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'loading-demo',
-        element: (
-          <LazyWrapper loadingText="Loading demo...">
-            <LoadingStatesDemoLazy />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'components-demo',
-        element: (
-          <LazyWrapper loadingText="Loading component library...">
-            <ComponentLibraryDemoLazy />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'simple-ai-demo',
-        element: (
-          <LazyWrapper loadingText="Loading Advanced AI System demo...">
-            <AdvancedAISystemDemoLazy languageCode="de" />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'ai-system-demo',
-        element: (
-          <LazyWrapper loadingText="Loading Advanced AI System demo...">
-            <AdvancedAISystemDemoLazy languageCode="de" />
-          </LazyWrapper>
-        ),
-      },
+      ...devRoutes,
       // TEMPORARILY DISABLED - AI DEMO NEEDS REFACTORING
       // {
       //   path: 'ai-demo',

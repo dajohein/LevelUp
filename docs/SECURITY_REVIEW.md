@@ -133,7 +133,7 @@ catch (error) {
 
 ## ✅ **Final Status**
 
-The server-side storage endpoints use process-local in-memory Maps and are **not production-ready**. Production requests are disabled until durable shared storage and sync behavior are implemented:
+The server-side storage endpoints persist users, progress, account codes and rate-limit counters in Upstash Redis and authenticate every call with HMAC-signed session tokens (`SESSION_SECRET`). Outside production without Redis they fall back to a process-local in-memory store; production fails closed. Cross-device progress merging is not implemented yet:
 
 - 🔒 **Secure**: Input validation, error handling, data isolation
 - 🏗️ **Compliant**: Maintains language isolation and type safety
@@ -141,4 +141,4 @@ The server-side storage endpoints use process-local in-memory Maps and are **not
 - 🛠️ **Maintainable**: Comprehensive logging and debugging tools
 - 📚 **Documented**: Complete implementation and usage guides
 
-**Do not enable remote storage in production.** See [Remote Storage Status and Development Demo](SERVER_SIDE_STORAGE.md) for current behavior.
+See [Remote Storage Status and Development Demo](SERVER_SIDE_STORAGE.md) for current behavior.
