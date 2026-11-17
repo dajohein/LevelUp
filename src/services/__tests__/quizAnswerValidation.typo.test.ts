@@ -185,4 +185,42 @@ describe('typo tolerance in typed quiz modes', () => {
     (getWordsForLanguage as jest.Mock).mockReturnValue([sea]);
     expect(validateQuizAnswer('el mir', sea, 'open-answer', 'pt').isCorrect).toBe(false);
   });
+
+  it('accepts a missing ñ as a typo: Spanish and Dutch folding use separate indexes', () => {
+    const spanish: Word = {
+      id: 'ñ:1',
+      term: 'español',
+      definition: 'Spaans',
+      direction: 'definition-to-term',
+    };
+    (getWordsForLanguage as jest.Mock).mockReturnValue([spanish]);
+    // If the Dutch-folded form 'espanol' were in the Spanish index, this would be rejected
+    expect(validateQuizAnswer('espanol', spanish, 'open-answer', 'es')).toMatchObject({
+      isCorrect: true,
+      closeMatch: 'typo',
+      matchedAnswer: 'español',
+    });
+  });
+
+  it('rejects an answer that is a form or synonym of another word', () => {
+    const simpatico: Word = {
+      id: 's:1',
+      term: 'simpático',
+      definition: 'aardig',
+      direction: 'definition-to-term',
+      forms: ['simpática', 'simpáticos'],
+    };
+    const amable: Word = {
+      id: 's:2',
+      term: 'agradable',
+      definition: 'prettig',
+      direction: 'definition-to-term',
+      synonyms: ['simpatiquísimo'],
+    };
+    (getWordsForLanguage as jest.Mock).mockReturnValue([simpatico, amable]);
+    // a different grammatical form is a wrong answer, not a spelling slip
+    expect(validateQuizAnswer('simpática', simpatico, 'open-answer', 'es').isCorrect).toBe(false);
+    // a genuine slip is still forgiven
+    expect(validateQuizAnswer('simpátco', simpatico, 'open-answer', 'es').closeMatch).toBe('typo');
+  });
 });

@@ -22,20 +22,27 @@ const typedModes = ['open-answer', 'fill-in-the-blank'];
 
 const knownWordsCache = new Map<string, Set<string>>();
 
-/** Clears the per-language known-word cache (tests, or after course data is reloaded). */
+/** Clears the known-word cache (tests, or after course data is reloaded). */
 export const resetKnownWordsCache = (): void => knownWordsCache.clear();
 
 /**
- * Every word of the course, from every field. Which field holds the course language and which
- * the Dutch side is not consistent across the course files (some store the German in `definition`),
- * so the sides are not told apart: a typo that happens to be any other word of the course is
- * rejected. Each word is stored under both normalizations a candidate may use.
+ * Every word of the course, from every field that holds a real word (term, definition, accepted
+ * answers, forms, synonyms), normalized for `normalizeLanguage`.
+ *
+ * One index per normalization: Dutch folding turns Spanish `ñ` into `n`, which Spanish matching
+ * deliberately keeps apart, so a single shared set would wrongly treat `espanol` as a known word.
+ * The caller queries the index that matches the language it normalized the answer with.
+ *
+ * Which field holds the course language and which the Dutch side is not consistent across the
+ * course files (some store the German in `definition`), so the sides are not told apart: a typo
+ * that happens to be any other word of the course is rejected.
  *
  * Throws if the course has no words: with nothing to check against we cannot rule out that an
  * answer is another word, so the caller must fail closed (and an empty result is not cached).
  */
-const getKnownWords = (languageCode: string): Set<string> => {
-  const cached = knownWordsCache.get(languageCode);
+const getKnownWords = (languageCode: string, normalizeLanguage: string): Set<string> => {
+  const cacheKey = `${languageCode}|${normalizeLanguage}`;
+  const cached = knownWordsCache.get(cacheKey);
   if (cached) return cached;
 
   const words = getWordsForLanguage(languageCode);
@@ -46,18 +53,18 @@ const getKnownWords = (languageCode: string): Set<string> => {
   // into another real word ("die Maus" -> "das Maus" for "das Haus") is caught too
   const add = (text: string | undefined) => {
     if (!text) return;
-    for (const language of [languageCode, 'nl']) {
-      const normalized = normalizeForMatching(text, language);
-      known.add(normalized);
-      normalized.split(/\s+/).forEach(token => token && known.add(token));
-    }
+    const normalized = normalizeForMatching(text, normalizeLanguage);
+    known.add(normalized);
+    normalized.split(/\s+/).forEach(token => token && known.add(token));
   };
   for (const word of words) {
     add(word.term);
     add(word.definition);
     word.acceptedAnswers?.forEach(add);
+    word.forms?.forEach(add);
+    word.synonyms?.forEach(add);
   }
-  knownWordsCache.set(languageCode, known);
+  knownWordsCache.set(cacheKey, known);
   return known;
 };
 
@@ -70,9 +77,9 @@ const findTypoMatch = (
   candidates: Array<{ text: string; language: string }>,
   languageCode: string
 ): AnswerValidation | null => {
-  let known: Set<string>;
   try {
-    known = getKnownWords(languageCode);
+    // Build every index first so a failure disables typo tolerance as a whole
+    for (const { language } of candidates) getKnownWords(languageCode, language);
   } catch (error) {
     // Fail closed, but not silently: otherwise typo tolerance would just stop working unnoticed
     logger.warn(`Typo tolerance disabled for "${languageCode}":`, error);
@@ -80,6 +87,7 @@ const findTypoMatch = (
   }
 
   for (const { text, language } of candidates) {
+    const known = getKnownWords(languageCode, language);
     if (isTypo(answer, text, language, normalized => known.has(normalized))) {
       return {
         isCorrect: true,
