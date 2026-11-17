@@ -132,6 +132,16 @@ describe('users API hardening', () => {
     ).toBe(400);
   });
 
+  it('enforces the preferences limit in UTF-8 bytes', async () => {
+    const ip = { 'x-forwarded-for': '35.0.0.1' };
+    // 6,000 characters but ~18,000 bytes
+    const res = await callUsers(
+      { action: 'create', userData: { preferences: { x: '界'.repeat(6000) } } },
+      ip
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
   it('linkDevice returns one generic error for malformed, unknown and non-string codes', async () => {
     const ip = { 'x-forwarded-for': '33.0.0.1' };
     const bodies = await Promise.all(
@@ -212,6 +222,18 @@ describe('storage API hardening', () => {
       action: 'set',
       key: 'big',
       data: 'x'.repeat(1024 * 1024 + 1),
+      options: { compress: false },
+    });
+    expect(res.statusCode).toBe(413);
+  });
+
+  it('enforces the value limit in UTF-8 bytes, not UTF-16 code units', async () => {
+    // 400,000 characters but 1,200,000 bytes
+    const res = await callStorage({
+      ...base,
+      action: 'set',
+      key: 'wide',
+      data: '界'.repeat(400000),
       options: { compress: false },
     });
     expect(res.statusCode).toBe(413);

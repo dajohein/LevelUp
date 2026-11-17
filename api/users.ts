@@ -173,7 +173,7 @@ function validateUserData(userData: UserRequest['userData']): string | null {
     return `email must be a string of at most ${MAX_EMAIL_LENGTH} characters`;
   if (
     preferences !== undefined &&
-    JSON.stringify(preferences ?? null).length > MAX_PREFERENCES_BYTES
+    Buffer.byteLength(JSON.stringify(preferences ?? null), 'utf8') > MAX_PREFERENCES_BYTES
   )
     return 'preferences are too large';
   return null;

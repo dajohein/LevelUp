@@ -278,3 +278,14 @@ describe('beginner decay interval', () => {
     expect(calculateMasteryDecay(hoursAgo(48), 20)).toBeCloseTo(12.8, 5);
   });
 });
+
+describe('decay with unusable timestamps', () => {
+  it.each(['not a date', '', 'undefined'])('leaves mastery unchanged for %p', bad => {
+    expect(calculateMasteryDecay(bad, 80)).toBe(80);
+  });
+
+  it('never raises mastery for a timestamp in the future', () => {
+    const future = new Date(Date.now() + 30 * 24 * 3_600_000).toISOString();
+    expect(calculateMasteryDecay(future, 50)).toBe(50);
+  });
+});

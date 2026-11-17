@@ -74,4 +74,11 @@ describe('isTypo', () => {
     expect(isTypo('musca', 'música', 'es', unknown)).toBe(true);
     expect(isTypo('músca', 'música', 'es', unknown)).toBe(true);
   });
+
+  it('counts letters, not spaces or punctuation, toward the minimum length', () => {
+    // "el mar" has six characters but only five letters
+    expect(isTypo('el mir', 'el mar', 'es', unknown)).toBe(false);
+    expect(isTypo('el mara', 'el mar', 'es', unknown)).toBe(false);
+    expect(isTypo('el marx', 'el marr', 'es', unknown)).toBe(true); // six letters
+  });
 });

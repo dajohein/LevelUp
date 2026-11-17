@@ -44,8 +44,10 @@ export const matchAnswer = (answer: string, expected: string, languageCode: stri
     : 'none';
 };
 
-/** Shortest expected answer (after normalization) for which a one-letter slip is forgiven. */
+/** Fewest letters (spaces and punctuation do not count) in an expected answer for a slip to be forgiven. */
 export const MIN_TYPO_LENGTH = 6;
+
+const countLetters = (text: string): number => (text.match(/\p{L}/gu) ?? []).length;
 
 /**
  * True when `a` and `b` differ by exactly one edit: an inserted, deleted or substituted letter,
@@ -79,7 +81,7 @@ export const isTypo = (
   isKnownWord: (normalizedAnswer: string) => boolean
 ): boolean => {
   const normalizedExpected = normalizeForMatching(expected, languageCode);
-  if (normalizedExpected.length < MIN_TYPO_LENGTH) return false;
+  if (countLetters(normalizedExpected) < MIN_TYPO_LENGTH) return false;
   const normalizedAnswer = normalizeForMatching(answer, languageCode);
   if (!isOneEditApart(normalizedAnswer, normalizedExpected)) return false;
   return !isKnownWord(normalizedAnswer);

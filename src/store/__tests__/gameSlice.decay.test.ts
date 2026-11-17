@@ -93,4 +93,36 @@ describe('mastery decay is applied before an answer changes it', () => {
     ];
     expect(direction?.xp).toBeCloseTo(82.5, 5);
   });
+
+  it('an invalid imported timestamp never turns mastery into NaN', () => {
+    const state = answer(progressWith(80, 'garbage'), 'perro');
+    const progress = state.wordProgress[word.id];
+    expect(Number.isFinite(progress.xp)).toBe(true);
+    expect(progress.xp).toBeCloseTo(90.5, 5);
+  });
+
+  it('a future timestamp does not inflate mastery, even for an assisted answer', () => {
+    const future = new Date(NOW.getTime() + 20 * 24 * 3_600_000).toISOString();
+    const state = answer(progressWith(80, future), 'perro', { hintsUsed: 1 });
+    expect(state.wordProgress[word.id].xp).toBe(80);
+  });
+
+  it('invalid directional timestamps stay finite too', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 1,
+          timesIncorrect: 0,
+          xp: 60,
+          lastPracticed: 'garbage',
+          consecutiveCorrect: 1,
+        },
+      },
+    };
+    const direction = answer(progress, 'perro').wordProgress[word.id].directions?.[
+      'definition-to-term'
+    ];
+    expect(Number.isFinite(direction?.xp)).toBe(true);
+  });
 });

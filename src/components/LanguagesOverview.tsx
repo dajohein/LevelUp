@@ -381,17 +381,21 @@ export const LanguagesOverview: React.FC = () => {
             achievements, and level up your skills across multiple languages!
           </Subtitle>
 
-          {overallStats.totalXP > 0 && (
+          {(overallStats.totalXP > 0 || overallStats.totalDue > 0) && (
             <StatsOverview>
-              <StatBadge>
-                <span>🏆</span>
-                {overallStats.totalXP.toLocaleString()} XP
-              </StatBadge>
-              <StatBadge>
-                <span>🌍</span>
-                {overallStats.languagesStarted} Language
-                {overallStats.languagesStarted !== 1 ? 's' : ''}
-              </StatBadge>
+              {overallStats.totalXP > 0 && (
+                <>
+                  <StatBadge>
+                    <span>🏆</span>
+                    {overallStats.totalXP.toLocaleString()} XP
+                  </StatBadge>
+                  <StatBadge>
+                    <span>🌍</span>
+                    {overallStats.languagesStarted} Language
+                    {overallStats.languagesStarted !== 1 ? 's' : ''}
+                  </StatBadge>
+                </>
+              )}
               {overallStats.totalDue > 0 && (
                 <StatBadge>
                   <span>🔄</span>
@@ -465,7 +469,6 @@ export const LanguagesOverview: React.FC = () => {
                         <BrainProgress progress={overallProgress} />
                       </QuickStats>
                       <ModuleCount>{practicedWords} words learned</ModuleCount>
-                      {dueWords > 0 && <DueLabel>🔄 {dueWords} due for review</DueLabel>}
                     </ProgressSection>
                   ) : (
                     <ProgressSection>
@@ -479,6 +482,8 @@ export const LanguagesOverview: React.FC = () => {
                       </ModuleCount>
                     </ProgressSection>
                   )}
+                  {/* Independent of XP: failed or assisted answers can leave practiced words at 0 xp */}
+                  {dueWords > 0 && <DueLabel>🔄 {dueWords} due for review</DueLabel>}
                 </CardContent>
               </LanguageCard>
             );

@@ -33,6 +33,12 @@ export const calculateMasteryDecay = (
     (Date.now() - new Date(lastPracticed).getTime()) / (1000 * 60 * 60)
   );
 
+  // An unparseable timestamp (imported or corrupted data) gives NaN, and a future one a negative
+  // elapsed time that would *raise* mastery. Neither is evidence of decay.
+  if (!Number.isFinite(hoursSinceLastPractice) || hoursSinceLastPractice <= 0) {
+    return currentMastery;
+  }
+
   // Determine decay rate based on current mastery level
   let decayRate: number;
   if (currentMastery >= MASTERY_LEVELS.ADVANCED) {

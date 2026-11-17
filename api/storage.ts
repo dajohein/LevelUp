@@ -214,7 +214,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
-        if (JSON.stringify(dataToStore).length > MAX_VALUE_BYTES) {
+        if (Buffer.byteLength(JSON.stringify(dataToStore), 'utf8') > MAX_VALUE_BYTES) {
           response.error = `data is too large (limit ${MAX_VALUE_BYTES} bytes)`;
           return res.status(413).json(response);
         }

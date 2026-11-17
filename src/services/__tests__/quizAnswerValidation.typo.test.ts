@@ -92,4 +92,42 @@ describe('typo tolerance in typed quiz modes', () => {
       false
     );
   });
+
+  it('fails closed when the course has no words at all (an empty list is not cached)', () => {
+    (getWordsForLanguage as jest.Mock).mockReturnValue([]);
+    // 'it' has not been looked up yet in this file
+    expect(validateQuizAnswer('bibliotca', byId('es:1'), 'open-answer', 'it').isCorrect).toBe(
+      false
+    );
+
+    // and once the data is there, the same language works: the empty result was not cached
+    (getWordsForLanguage as jest.Mock).mockReturnValue(course);
+    expect(validateQuizAnswer('bibliotca', byId('es:1'), 'open-answer', 'it').closeMatch).toBe(
+      'typo'
+    );
+  });
+
+  it('does not depend on which field holds the course language', () => {
+    // Some course files store the German in `definition`, others in `term`
+    const mixed: Word[] = [
+      { id: 'd:1', term: 'muur', definition: 'die Wand' },
+      { id: 'd:2', term: 'die Hand', definition: 'hand' },
+    ];
+    (getWordsForLanguage as jest.Mock).mockReturnValue(mixed);
+    const wand: Word = { ...mixed[0], direction: 'term-to-definition' };
+
+    expect(validateQuizAnswer('die Hand', wand, 'open-answer', 'de').isCorrect).toBe(false);
+    expect(validateQuizAnswer('die Wnd', wand, 'open-answer', 'de').closeMatch).toBe('typo');
+  });
+
+  it('counts letters, not spaces: a five-letter phrase is too short', () => {
+    const sea: Word = {
+      id: 'm:1',
+      term: 'el mar',
+      definition: 'de zee',
+      direction: 'definition-to-term',
+    };
+    (getWordsForLanguage as jest.Mock).mockReturnValue([sea]);
+    expect(validateQuizAnswer('el mir', sea, 'open-answer', 'pt').isCorrect).toBe(false);
+  });
 });
