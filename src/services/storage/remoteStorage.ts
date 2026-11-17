@@ -21,6 +21,7 @@ interface RemoteStorageConfig {
 }
 
 const SESSION_STORAGE_KEY = 'levelup_remote_session';
+const RETRYABLE_REFUSALS = [408, 429];
 
 /**
  * The stored remote session can no longer be used: the server refused its token (expired beyond
@@ -35,7 +36,20 @@ export class RemoteSessionError extends Error {
   }
 }
 
-/** A non-2xx API response. 4xx means the request itself was refused, so it is never retried. */
+/**
+ * The request never got an answer: offline, no connection, DNS, a timeout. This says nothing about
+ * the session, so it must never be mistaken for a lost one (and must not offer a reset).
+ */
+export class RemoteNetworkError extends Error {
+  readonly cause?: unknown;
+  constructor(message = 'The sync server could not be reached', cause?: unknown) {
+    super(message);
+    this.name = 'RemoteNetworkError';
+    this.cause = cause;
+  }
+}
+
+/** A non-2xx API response. A 4xx means the request itself was refused (see RETRYABLE_REFUSALS). */
 class RemoteHttpError extends Error {
   constructor(
     readonly status: number,
@@ -65,6 +79,12 @@ const DEFAULT_REMOTE_CONFIG: RemoteStorageConfig = {
 export class RemoteStorageService implements AsyncStorageProvider {
   private config: RemoteStorageConfig;
   private userSession: RemoteUserSession | null = null;
+  // Bumped by resetSession(): a restore that was in flight across a reset must not write back
+  private sessionEpoch = 0;
+  // One restore/create at a time: concurrent callers would each create a guest account
+  private pendingSession: Promise<RemoteUserSession> | null = null;
+  // Once the server refused the stored session, stop asking on every storage call until a reset
+  private lostSession: RemoteSessionError | null = null;
   private isOnline = navigator.onLine;
   private currentLanguage = 'en'; // Default language
 
@@ -111,7 +131,10 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async initializeUser(existingSession?: {
     userId: string;
     sessionToken: string;
+    isGuest?: boolean;
   }): Promise<RemoteUserSession> {
+    const epoch = this.sessionEpoch;
+
     if (existingSession) {
       if (!existingSession.userId || !existingSession.sessionToken) {
         throw new Error('Stored remote session is invalid; local progress was preserved');
@@ -124,62 +147,95 @@ export class RemoteStorageService implements AsyncStorageProvider {
           sessionToken: existingSession.sessionToken,
         });
       } catch (error) {
-        // The server answered and refused the token: the session is lost, not the network
-        if (error instanceof RemoteHttpError && [400, 401, 404].includes(error.status)) {
-          throw new RemoteSessionError();
+        // Only an explicit refusal of the token (401) or of the account (404) means the session is
+        // lost. A 400 is a malformed request, and a network failure says nothing about the session.
+        if (error instanceof RemoteHttpError && [401, 404].includes(error.status)) {
+          const lost = new RemoteSessionError();
+          if (epoch === this.sessionEpoch) this.lostSession = lost;
+          throw lost;
         }
         throw error;
       }
 
       if (!result.success || !result.data?.userId) {
-        throw new RemoteSessionError();
+        const lost = new RemoteSessionError();
+        if (epoch === this.sessionEpoch) this.lostSession = lost;
+        throw lost;
       }
 
       // The server issues a fresh token on every authenticate (an expired one within the refresh
       // period is exchanged for a new one); keep it, or the next visit would start expired again
-      const sessionToken: string =
-        typeof result.data.sessionToken === 'string'
-          ? result.data.sessionToken
-          : existingSession.sessionToken;
-      this.userSession = {
+      const session: RemoteUserSession = {
         userId: result.data.userId,
-        sessionToken,
-        isGuest: false,
+        sessionToken:
+          typeof result.data.sessionToken === 'string'
+            ? result.data.sessionToken
+            : existingSession.sessionToken,
+        isGuest: existingSession.isGuest ?? false,
       };
-      localStorage.setItem(
-        SESSION_STORAGE_KEY,
-        JSON.stringify({ userId: result.data.userId, sessionToken, isGuest: false })
-      );
-      return this.userSession;
+      return this.adoptSession(session, epoch);
     }
 
     // Create new user session
+    let result;
     try {
-      const result = await this.apiCall('/api/users', {
+      result = await this.apiCall('/api/users', {
         action: 'create',
         userData: {
           username: `guest_${Date.now()}`,
           preferences: {},
         },
       });
+    } catch (error) {
+      logger.error('Failed to create user session:', error);
+      // Keep "no connection" distinguishable from "the server refused us"
+      if (error instanceof RemoteNetworkError) throw error;
+      throw new Error('Failed to initialize user session');
+    }
 
-      if (result.success) {
-        this.userSession = {
+    if (result.success) {
+      return this.adoptSession(
+        {
           userId: result.data.userId,
           sessionToken: result.data.sessionToken,
           isGuest: true,
-        };
-
-        // Store session in localStorage for persistence
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(this.userSession));
-
-        return this.userSession;
-      }
-    } catch (error) {
-      logger.error('Failed to create user session:', error);
+        },
+        epoch
+      );
     }
 
     throw new Error('Failed to initialize user session');
+  }
+
+  /**
+   * Make a restored or created session the current one and remember it. Persisting is best effort
+   * (storage can be full or blocked): the server already accepted the session, so a failed write
+   * must not fail the call; the session is simply re-established next visit.
+   */
+  private adoptSession(session: RemoteUserSession, epoch: number): RemoteUserSession {
+    if (epoch !== this.sessionEpoch) {
+      // resetSession() ran while this was in flight: do not bring the old session back
+      throw new Error('The remote session was reset while it was being restored');
+    }
+    this.userSession = session;
+    this.lostSession = null;
+    this.persistSession(session);
+    return session;
+  }
+
+  private persistSession(session: RemoteUserSession): void {
+    try {
+      localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          userId: session.userId,
+          sessionToken: session.sessionToken,
+          isGuest: session.isGuest,
+        })
+      );
+    } catch (error) {
+      logger.warn('Could not save the remote session; it will be set up again next visit:', error);
+    }
   }
 
   /**
@@ -188,7 +244,10 @@ export class RemoteStorageService implements AsyncStorageProvider {
    * RemoteSessionError.
    */
   async resetSession(): Promise<void> {
+    this.sessionEpoch += 1; // anything still in flight must not write its result back
+    this.pendingSession = null;
     this.userSession = null;
+    this.lostSession = null;
     localStorage.removeItem(SESSION_STORAGE_KEY);
   }
 
@@ -199,7 +258,26 @@ export class RemoteStorageService implements AsyncStorageProvider {
     if (this.userSession) {
       return this.userSession;
     }
+    // Known to be refused already: fail at once until the user resets, instead of one doomed
+    // request per storage call
+    if (this.lostSession) {
+      throw this.lostSession;
+    }
+    // Share a restore/create that is already running (two callers must not create two guests)
+    if (this.pendingSession) {
+      return this.pendingSession;
+    }
 
+    const pending = this.loadSession();
+    this.pendingSession = pending;
+    try {
+      return await pending;
+    } finally {
+      if (this.pendingSession === pending) this.pendingSession = null;
+    }
+  }
+
+  private async loadSession(): Promise<RemoteUserSession> {
     // Try to restore from localStorage
     const stored = localStorage.getItem(SESSION_STORAGE_KEY);
     if (stored !== null) {
@@ -230,6 +308,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
       return await this.initializeUser({
         userId: session.userId,
         sessionToken: session.sessionToken,
+        isGuest: 'isGuest' in session && session.isGuest === true,
       });
     }
 
@@ -242,7 +321,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
    */
   private async apiCall(endpoint: string, data: any, attempt = 1): Promise<any> {
     if (!this.isOnline) {
-      throw new Error('Offline - remote storage unavailable');
+      throw new RemoteNetworkError('Offline - remote storage unavailable');
     }
 
     const url = `${this.config.baseUrl}${endpoint}`;
@@ -271,14 +350,24 @@ export class RemoteStorageService implements AsyncStorageProvider {
 
       return await response.json();
     } catch (error) {
-      // A refused request (4xx) will be refused again; retrying only makes the screen hang
-      const refused = error instanceof RemoteHttpError && error.status >= 400 && error.status < 500;
+      // A refused request (4xx) will be refused again, so retrying only makes the screen hang.
+      // 408 (timeout) and 429 (rate limit) are the exceptions: they are transient.
+      const refused =
+        error instanceof RemoteHttpError &&
+        error.status >= 400 &&
+        error.status < 500 &&
+        !RETRYABLE_REFUSALS.includes(error.status);
       if (!refused && attempt < this.config.retries) {
         const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.apiCall(endpoint, data, attempt + 1);
       }
-      throw error;
+      if (error instanceof RemoteHttpError) throw error;
+      // fetch rejected or timed out: there was no answer at all
+      throw new RemoteNetworkError(
+        error instanceof Error ? error.message : 'The sync server could not be reached',
+        error
+      );
     }
   }
 
@@ -739,8 +828,9 @@ export class RemoteStorageService implements AsyncStorageProvider {
           linkedDevices: result.data.linkedDevices,
         };
 
-        // Update localStorage with new session
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(this.userSession));
+        // A valid session replaces whatever was lost (userSession takes precedence over the
+        // lost-session flag), and is remembered best-effort
+        this.persistSession(this.userSession);
 
         logger.info('🔗 Device successfully linked to account', {
           userId: this.userSession.userId,

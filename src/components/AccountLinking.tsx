@@ -7,7 +7,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { LoadingButton } from './feedback/UnifiedLoading';
-import { remoteStorage, RemoteSessionError } from '../services/storage/remoteStorage';
+import {
+  remoteStorage,
+  RemoteNetworkError,
+  RemoteSessionError,
+} from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 import { environmentConfig } from '../config/environment';
 
@@ -176,10 +180,13 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const generateCode = async () => {
     setLoading(true);
     setMessage(null);
-    setSessionLost(false);
+    // sessionLost is decided by the outcome below, not cleared up front: during a reset-and-retry
+    // the reset button must stay on screen (showing its progress) instead of vanishing under the
+    // user's finger, which also drops keyboard focus
 
     try {
       const result = await remoteStorage.generateAccountCode();
+      setSessionLost(false);
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({
@@ -187,14 +194,14 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         type: 'success',
       });
     } catch (error) {
+      setSessionLost(error instanceof RemoteSessionError);
       if (error instanceof RemoteSessionError) {
         // Say what happened and offer the way out instead of a generic failure
-        setSessionLost(true);
         setMessage({
           text: 'Your saved sync session is no longer valid (it may have expired). Your progress on this device is safe. Reset the sync session to continue.',
           type: 'error',
         });
-      } else if (!navigator.onLine || error instanceof TypeError) {
+      } else if (error instanceof RemoteNetworkError || !navigator.onLine) {
         setMessage({
           text: 'Could not reach the sync server. Check your connection and try again.',
           type: 'error',
@@ -212,8 +219,20 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   };
 
   const resetSessionAndRetry = async () => {
-    // Only the sync session is replaced; progress stored on this device is never touched
-    await remoteStorage.resetSession();
+    if (loading) return; // a double tap must not reset (and generate) twice
+    setLoading(true);
+    try {
+      // Only the sync session is replaced; progress stored on this device is never touched
+      await remoteStorage.resetSession();
+    } catch (error) {
+      logger.error('Failed to reset the sync session:', error);
+      setMessage({
+        text: 'Could not reset the sync session. Your progress on this device is safe.',
+        type: 'error',
+      });
+      setLoading(false);
+      return;
+    }
     await generateCode();
   };
 
@@ -225,13 +244,17 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
     setLoading(true);
     setMessage(null);
+    setSessionLost(false); // a stale reset button would otherwise stay with no message explaining it
 
     try {
       const result = await remoteStorage.linkDeviceWithCode(linkCode.trim());
-      setLinkedDevices(result.linkedDevices);
+      if (typeof result.linkedDevices === 'number') setLinkedDevices(result.linkedDevices);
       setLinkCode('');
       setMessage({
-        text: `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`,
+        text:
+          typeof result.linkedDevices === 'number'
+            ? `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`
+            : 'Demo account linked. Progress was not transferred.',
         type: 'success',
       });
     } catch (error) {
@@ -349,7 +372,15 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         </LoadingButton>
       </Section>
 
-      {message && <StatusMessage type={message.type}>{message.text}</StatusMessage>}
+      {message && (
+        <StatusMessage
+          type={message.type}
+          role={message.type === 'error' ? 'alert' : 'status'}
+          aria-live={message.type === 'error' ? 'assertive' : 'polite'}
+        >
+          {message.text}
+        </StatusMessage>
+      )}
 
       {sessionLost && (
         <LoadingButton
