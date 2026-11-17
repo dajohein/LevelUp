@@ -189,7 +189,6 @@ export const gameSlice = createSlice({
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = submission.answer;
-      state.totalAttempts += 1;
 
       // Spelling feedback: capitalization (German) or an accepted spelling variant
       state.spellingFeedback =
@@ -198,6 +197,13 @@ export const gameSlice = createSlice({
           ? getCapitalizationFeedback(validation, languageCode)
           : null) ??
         undefined;
+
+      // A re-queued retry is practice: the learner sees whether they got it, but nothing counts.
+      // No mastery, schedule, score, streak, life or attempt changes, in either direction,
+      // otherwise a missed word would be penalised twice and a retry would inflate the streak.
+      if (submission.isRetry === true) return;
+
+      state.totalAttempts += 1;
 
       // Update word progress with enhanced directional tracking
       const wordId = word.id;
@@ -233,7 +239,12 @@ export const gameSlice = createSlice({
       };
 
       // Calculate new mastery
-      const assisted = (submission.hintsUsed ?? 0) > 0 || submission.isRetry === true;
+      const assisted = (submission.hintsUsed ?? 0) > 0;
+      // A correct answer with hints is not evidence of recall: it must change neither mastery nor
+      // the review schedule. Keeping `lastPracticed` matters: moving it to now would restart the
+      // whole review interval and could push an overdue word out by a week or more.
+      const hintedCorrect = validation.isCorrect && assisted;
+      const now = new Date().toISOString();
       // Decay first: everything that reads mastery (selection, scheduling, the progress screens)
       // sees the decayed value, so a gain must start from it. Applying the gain to the stored,
       // undecayed value would erase all decay with a single answer.
@@ -251,11 +262,11 @@ export const gameSlice = createSlice({
       // Update overall progress (maintaining backward compatibility)
       const updatedProgress = {
         ...currentProgress,
-        xp: newMastery,
-        lastPracticed: new Date().toISOString(),
+        xp: hintedCorrect ? currentProgress.xp : newMastery,
+        lastPracticed: hintedCorrect ? currentProgress.lastPracticed : now,
         timesCorrect: currentProgress.timesCorrect + (validation.isCorrect ? 1 : 0),
         timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
-        totalXp: newMastery,
+        totalXp: hintedCorrect ? (currentProgress.totalXp ?? currentProgress.xp) : newMastery,
         version: 2,
         ...nextReviewStreak(currentProgress, validation.isCorrect, assisted),
       };
@@ -272,22 +283,18 @@ export const gameSlice = createSlice({
             assisted
           );
 
-          // Update directional stats
+          // Update directional stats. Same rules as the overall progress: hinted correct answers
+          // change neither mastery nor schedule, and the streak uses the same gated rule.
+          const streak = nextReviewStreak(directionData, validation.isCorrect, assisted);
           updatedProgress.directions[direction] = {
             ...directionData,
-            xp: directionalMastery,
-            lastPracticed: new Date().toISOString(),
+            xp: hintedCorrect ? directionData.xp : directionalMastery,
+            lastPracticed: hintedCorrect ? directionData.lastPracticed : now,
             timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
             timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            consecutiveCorrect: validation.isCorrect
-              ? (directionData.consecutiveCorrect || 0) + 1
-              : 0,
-            longestStreak: validation.isCorrect
-              ? Math.max(
-                  directionData.longestStreak || 0,
-                  (directionData.consecutiveCorrect || 0) + 1
-                )
-              : directionData.longestStreak || 0,
+            consecutiveCorrect: streak.consecutiveCorrect,
+            streakUpdatedAt: streak.streakUpdatedAt,
+            longestStreak: Math.max(directionData.longestStreak || 0, streak.consecutiveCorrect),
           };
         }
 
@@ -298,6 +305,8 @@ export const gameSlice = createSlice({
           updatedProgress.learningPhase = 'mastery';
         } else if (updatedProgress.xp > 0) {
           updatedProgress.learningPhase = 'practice';
+        } else {
+          updatedProgress.learningPhase = 'introduction';
         }
       }
 

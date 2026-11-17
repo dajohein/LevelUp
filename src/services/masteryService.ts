@@ -25,6 +25,12 @@ export const calculateMasteryDecay = (
   lastPracticed: string | undefined,
   currentMastery: number
 ): number => {
+  // Corrupted or legacy progress can have no usable xp; NaN would otherwise survive every
+  // later gain and loss and be saved forever
+  if (!Number.isFinite(currentMastery)) {
+    return MASTERY_LEVELS.BEGINNER;
+  }
+
   if (!lastPracticed) {
     return currentMastery;
   }
@@ -32,6 +38,12 @@ export const calculateMasteryDecay = (
   const hoursSinceLastPractice = Math.floor(
     (Date.now() - new Date(lastPracticed).getTime()) / (1000 * 60 * 60)
   );
+
+  // An unparseable timestamp (imported or corrupted data) gives NaN, and a future one a negative
+  // elapsed time that would *raise* mastery. Neither is evidence of decay.
+  if (!Number.isFinite(hoursSinceLastPractice) || hoursSinceLastPractice <= 0) {
+    return currentMastery;
+  }
 
   // Determine decay rate based on current mastery level
   let decayRate: number;

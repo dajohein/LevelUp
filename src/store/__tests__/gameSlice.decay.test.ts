@@ -14,6 +14,8 @@ jest.mock('../../services/wordSelectionManager', () => ({
 
 import gameReducer, { checkAnswer, setCurrentWord } from '../gameSlice';
 import type { WordProgress } from '../types';
+import { calculateMasteryDecay } from '../../services/masteryService';
+import { getNextReviewAt } from '../../services/spacedRepetitionService';
 
 const NOW = new Date('2026-06-01T12:00:00.000Z');
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString();
@@ -63,11 +65,22 @@ describe('mastery decay is applied before an answer changes it', () => {
     expect(xp).toBeLessThan(72);
   });
 
-  it('an assisted answer cannot restore decayed mastery by resetting the clock', () => {
-    const state = answer(progressWith(80, STALE), 'perro', { hintsUsed: 1 });
-    const progress = state.wordProgress[word.id];
-    expect(progress.xp).toBeCloseTo(72, 5);
-    expect(progress.lastPracticed).toBe(NOW.toISOString());
+  it('a hinted answer changes neither mastery nor the schedule, so decay stays visible', () => {
+    const stored = progressWith(80, STALE);
+    const progress = answer(stored, 'perro', { hintsUsed: 1 }).wordProgress[word.id];
+    // nothing is rewritten: decay is still computed on read, and the clock is not restarted
+    expect(progress.xp).toBe(80);
+    expect(progress.lastPracticed).toBe(STALE);
+    expect(calculateMasteryDecay(progress.lastPracticed, progress.xp)).toBeCloseTo(72, 5);
+    // the counters still record that the word was answered correctly
+    expect(progress.timesCorrect).toBe(6);
+  });
+
+  it('a hinted answer does not push an overdue word out by a whole interval', () => {
+    const stored = { ...progressWith(90, hoursAgo(24 * 20)), consecutiveCorrect: 4 };
+    const dueBefore = getNextReviewAt(stored);
+    const after = answer(stored, 'perro', { hintsUsed: 1 }).wordProgress[word.id];
+    expect(getNextReviewAt(after)?.getTime()).toBe(dueBefore?.getTime());
   });
 
   it('recent practice does not decay', () => {
@@ -92,5 +105,97 @@ describe('mastery decay is applied before an answer changes it', () => {
       'definition-to-term'
     ];
     expect(direction?.xp).toBeCloseTo(82.5, 5);
+  });
+
+  it('an invalid imported timestamp never turns mastery into NaN', () => {
+    const state = answer(progressWith(80, 'garbage'), 'perro');
+    const progress = state.wordProgress[word.id];
+    expect(Number.isFinite(progress.xp)).toBe(true);
+    expect(progress.xp).toBeCloseTo(90.5, 5);
+  });
+
+  it('a future timestamp does not inflate mastery, even for an assisted answer', () => {
+    const future = new Date(NOW.getTime() + 20 * 24 * 3_600_000).toISOString();
+    const state = answer(progressWith(80, future), 'perro', { hintsUsed: 1 });
+    expect(state.wordProgress[word.id].xp).toBe(80);
+  });
+
+  it('invalid directional timestamps stay finite too', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 1,
+          timesIncorrect: 0,
+          xp: 60,
+          lastPracticed: 'garbage',
+          consecutiveCorrect: 1,
+        },
+      },
+    };
+    const direction = answer(progress, 'perro').wordProgress[word.id].directions?.[
+      'definition-to-term'
+    ];
+    expect(Number.isFinite(direction?.xp)).toBe(true);
+  });
+
+  it('a wrong answer loses from the decayed value, with exact numbers', () => {
+    const progress = answer(progressWith(80, hoursAgo(240)), 'gato').wordProgress[word.id];
+    // 72 decayed; open-answer loss = 8 * (2 - 0.7 * 0.5) = 13.2 -> 58.8 (old behaviour: 66.8)
+    expect(progress.xp).toBeCloseTo(58.8, 5);
+    expect(progress.totalXp).toBeCloseTo(58.8, 5);
+  });
+
+  it('directional mastery decays from its own timestamp, not the word-level one', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 5,
+          timesIncorrect: 0,
+          xp: 80,
+          lastPracticed: hoursAgo(240),
+          consecutiveCorrect: 3,
+        },
+      },
+    };
+    const next = answer(progress, 'perro').wordProgress[word.id];
+    expect(next.xp).toBeCloseTo(90.5, 5); // word-level: recent, no decay
+    expect(next.directions?.['definition-to-term']?.xp).toBeCloseTo(82.5, 5); // direction: decayed
+  });
+
+  it('non-finite stored mastery is repaired instead of persisting NaN', () => {
+    const state = answer(
+      { ...progressWith(80, hoursAgo(1)), xp: undefined as unknown as number },
+      'perro'
+    );
+    expect(Number.isFinite(state.wordProgress[word.id].xp)).toBe(true);
+  });
+
+  it('an assisted or retried answer does not extend the directional streak either', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 5,
+          timesIncorrect: 0,
+          xp: 80,
+          lastPracticed: hoursAgo(1),
+          consecutiveCorrect: 3,
+          longestStreak: 3,
+        },
+      },
+    };
+    for (const extra of [{ hintsUsed: 1 }, { isRetry: true }]) {
+      const direction = answer(progress, 'perro', extra).wordProgress[word.id].directions?.[
+        'definition-to-term'
+      ];
+      expect(direction?.consecutiveCorrect).toBe(3);
+      expect(direction?.longestStreak).toBe(3);
+    }
+    const unassisted = answer(progress, 'perro').wordProgress[word.id].directions?.[
+      'definition-to-term'
+    ];
+    expect(unassisted?.consecutiveCorrect).toBe(4);
   });
 });

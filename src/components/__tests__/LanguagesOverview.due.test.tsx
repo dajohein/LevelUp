@@ -67,4 +67,15 @@ describe('LanguagesOverview due words', () => {
 
     expect(screen.queryByText(/due for review/)).not.toBeInTheDocument();
   });
+
+  it('still shows due reviews when no XP has been earned (e.g. only failed or assisted answers)', () => {
+    (DataMigrationService.safeLoadWordProgress as jest.Mock).mockReturnValue({
+      'es:a': { ...progress('es:a', hoursAgo(2000)), xp: 0 },
+    });
+    renderPage();
+
+    expect(screen.getByText('🔄 1 due for review')).toBeInTheDocument();
+    expect(screen.getByText(/1 word due for review/)).toBeInTheDocument();
+    expect(screen.queryByText(/XP/)).not.toBeInTheDocument();
+  });
 });

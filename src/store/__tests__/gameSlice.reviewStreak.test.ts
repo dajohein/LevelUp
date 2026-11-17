@@ -48,4 +48,35 @@ describe('review streak in gameSlice', () => {
     const second = answer(first, 'perro');
     expect(second.wordProgress[word.id].consecutiveCorrect).toBe(1);
   });
+
+  it('hinted and retried correct answers leave the review streak alone', () => {
+    const first = answer(start(), 'perro');
+    for (const extra of [{ hintsUsed: 1 }, { isRetry: true }]) {
+      const next = answer(first, 'perro', extra);
+      expect(next.wordProgress[word.id].consecutiveCorrect).toBe(1);
+    }
+  });
+
+  it('the per-direction streak uses the same gate as the overall one', () => {
+    const first = answer(start(), 'perro');
+    const second = answer(first, 'perro'); // same sitting: gated
+    const direction = second.wordProgress[word.id].directions?.['definition-to-term'];
+    expect(direction?.consecutiveCorrect).toBe(1);
+    expect(direction?.longestStreak).toBe(1);
+    expect(direction?.consecutiveCorrect).toBe(second.wordProgress[word.id].consecutiveCorrect);
+  });
+
+  it('demotes the learning phase when mastery falls back to zero', () => {
+    const state = answer(start(), 'perro');
+    const warmed = {
+      ...state,
+      wordProgress: {
+        ...state.wordProgress,
+        [word.id]: { ...state.wordProgress[word.id], xp: 5, learningPhase: 'maintenance' as const },
+      },
+    };
+    const missed = answer(warmed, 'gato');
+    expect(missed.wordProgress[word.id].xp).toBe(0);
+    expect(missed.wordProgress[word.id].learningPhase).toBe('introduction');
+  });
 });

@@ -24,7 +24,12 @@ export class MemoryDb {
     return entry ? (JSON.parse(entry.value) as T) : null;
   }
 
-  async set(key: string, value: unknown, opts?: { ex?: number }): Promise<'OK'> {
+  async set(
+    key: string,
+    value: unknown,
+    opts?: { ex?: number; nx?: boolean }
+  ): Promise<'OK' | null> {
+    if (opts?.nx && this.live(key)) return null;
     this.kv.set(key, {
       value: JSON.stringify(value),
       expiresAt: opts?.ex ? Date.now() + opts.ex * 1000 : undefined,
@@ -98,6 +103,10 @@ export class MemoryDb {
     const hash = this.hashes.get(key);
     if (!hash || hash.size === 0) return null;
     return Object.fromEntries([...hash].map(([f, v]) => [f, JSON.parse(v)])) as T;
+  }
+
+  async hlen(key: string): Promise<number> {
+    return this.hashes.get(key)?.size ?? 0;
   }
 
   async hdel(key: string, ...fields: string[]): Promise<number> {

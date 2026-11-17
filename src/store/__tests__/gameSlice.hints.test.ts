@@ -53,10 +53,40 @@ describe('hints and mastery', () => {
     expect(wrong.wordProgress[word.id].xp).toBeLessThan(xpBefore);
   });
 
-  it('a re-queued retry is practice: correct, but no mastery', () => {
-    const retry = gameReducer(start(), checkAnswer({ answer: 'Hund', isRetry: true }));
+  it('a re-queued retry is pure practice: feedback only, nothing counts', () => {
+    const base = start();
+    const retry = gameReducer(base, checkAnswer({ answer: 'Hund', isRetry: true }));
 
     expect(retry.isCorrect).toBe(true);
-    expect(retry.wordProgress[word.id].xp).toBe(0);
+    expect(retry.wordProgress[word.id]).toBeUndefined();
+    expect(retry.score).toBe(base.score);
+    expect(retry.streak).toBe(base.streak);
+    expect(retry.correctAnswers).toBe(base.correctAnswers);
+    expect(retry.totalAttempts).toBe(base.totalAttempts);
+  });
+
+  it('a missed retry is not penalised a second time', () => {
+    const first = gameReducer(start(), checkAnswer({ answer: 'Katze' }));
+    const missed = first.wordProgress[word.id];
+    const retried = gameReducer(
+      { ...first, currentWord: word },
+      checkAnswer({ answer: 'Katze', isRetry: true })
+    );
+
+    expect(retried.isCorrect).toBe(false);
+    expect(retried.lives).toBe(first.lives);
+    expect(retried.streak).toBe(first.streak);
+    expect(retried.totalAttempts).toBe(first.totalAttempts);
+    expect(retried.wordProgress[word.id]).toEqual(missed);
+  });
+
+  it('a correct retry does not grow the score streak', () => {
+    const warmed = gameReducer(start(), checkAnswer({ answer: 'Hund' }));
+    const retried = gameReducer(
+      { ...warmed, currentWord: word },
+      checkAnswer({ answer: 'Hund', isRetry: true })
+    );
+    expect(retried.streak).toBe(warmed.streak);
+    expect(retried.score).toBe(warmed.score);
   });
 });
