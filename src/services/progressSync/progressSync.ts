@@ -34,6 +34,11 @@ export interface ProgressSyncDeps {
   isEnabled(): boolean;
   hasSession(): boolean;
   isOnline(): boolean;
+  /**
+   * Try to establish the account session (the app may have started offline). Resolves true when one
+   * exists afterwards; never rejects. Optional: without it a missing session skips the run.
+   */
+  ensureSession?(): Promise<boolean>;
   /** undefined when the language has nothing stored on the server; throws on any failure. */
   getRemote(languageCode: string): Promise<unknown>;
   putRemote(languageCode: string, blob: unknown): Promise<void>;
@@ -78,7 +83,11 @@ export function createProgressSync(deps: ProgressSyncDeps) {
   let paused = false;
 
   const run = async (languageCode: string): Promise<SyncResult> => {
-    if (paused || !deps.isEnabled() || !deps.hasSession() || !deps.isOnline()) return SKIPPED;
+    if (paused || !deps.isEnabled() || !deps.isOnline()) return SKIPPED;
+    if (!deps.hasSession()) {
+      if (!deps.ensureSession || !(await deps.ensureSession())) return SKIPPED;
+      if (paused) return SKIPPED;
+    }
 
     let remoteRaw: unknown;
     try {

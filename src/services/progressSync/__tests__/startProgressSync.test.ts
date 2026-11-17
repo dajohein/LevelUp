@@ -1,10 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
-import gameReducer, { setLanguage, updateWordProgress } from '../../../store/gameSlice';
+import gameReducer, {
+  checkAnswer,
+  setLanguage,
+  updateWordProgress,
+} from '../../../store/gameSlice';
 import sessionReducer from '../../../store/sessionSlice';
 import achievementsReducer from '../../../store/achievementsSlice';
 import { persistenceMiddleware, persistenceUtils } from '../../../store/persistenceMiddleware';
 import type { RootState } from '../../../store/store';
 import type { WordProgress } from '../../../store/types';
+import { enhancedStorage } from '../../storage/enhancedStorage';
 import { remoteStorage } from '../../storage/remoteStorage';
 import { environmentConfig } from '../../../config/environment';
 import {
@@ -18,6 +23,7 @@ import { PROGRESS_KEY, UPLOAD_DEBOUNCE_MS } from '../progressSync';
 jest.mock('../../storage/remoteStorage', () => ({
   remoteStorage: {
     hasSession: jest.fn(),
+    getUserSession: jest.fn(),
     getValue: jest.fn(),
     putValue: jest.fn(),
   },
@@ -39,6 +45,7 @@ jest.mock('../../storage/enhancedStorage', () => ({
 
 const remote = remoteStorage as unknown as {
   hasSession: jest.Mock;
+  getUserSession: jest.Mock;
   getValue: jest.Mock;
   putValue: jest.Mock;
 };
@@ -100,6 +107,7 @@ describe('startProgressSync wiring', () => {
     );
     config.enableRemoteStorage = true;
     remote.hasSession.mockReset().mockReturnValue(true);
+    remote.getUserSession.mockReset().mockResolvedValue(undefined);
     remote.getValue.mockReset().mockResolvedValue(undefined);
     remote.putValue.mockReset().mockResolvedValue(undefined);
     setVisibility('visible');
@@ -286,6 +294,99 @@ describe('startProgressSync wiring', () => {
       await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS);
       expect(remote.putValue).toHaveBeenCalledTimes(1);
     });
+  });
+
+  describe('ensureSession (the app started offline, no session restored)', () => {
+    it('on the online event asks for the session once, then syncs when it exists', async () => {
+      let established = false;
+      remote.hasSession.mockImplementation(() => established);
+      remote.getUserSession.mockImplementation(async () => {
+        established = true;
+      });
+      start();
+      window.dispatchEvent(new Event('online'));
+      await settle();
+      expect(remote.getUserSession).toHaveBeenCalledTimes(1);
+      expect(remote.getValue).toHaveBeenCalledTimes(1);
+      expect(remote.getValue).toHaveBeenCalledWith('de', PROGRESS_KEY);
+    });
+
+    it('does nothing, and nothing throws, when the session is refused', async () => {
+      const unhandled = jest.fn();
+      process.on('unhandledRejection', unhandled);
+      try {
+        remote.hasSession.mockReturnValue(false);
+        remote.getUserSession.mockRejectedValue(new Error('session refused'));
+        start();
+        window.dispatchEvent(new Event('online'));
+        await settle();
+        await jest.advanceTimersByTimeAsync(10);
+        expect(remote.getUserSession).toHaveBeenCalledTimes(1);
+        expect(remote.getValue).not.toHaveBeenCalled();
+        expect(remote.putValue).not.toHaveBeenCalled();
+        expect(unhandled).not.toHaveBeenCalled();
+      } finally {
+        process.off('unhandledRejection', unhandled);
+      }
+    });
+
+    it('does not ask for a session when one already exists', async () => {
+      remote.hasSession.mockReturnValue(true);
+      start();
+      window.dispatchEvent(new Event('online'));
+      await settle();
+      expect(remote.getUserSession).not.toHaveBeenCalled();
+      expect(remote.getValue).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('a sync that merges into an inactive language is not undone by an older queued snapshot', async () => {
+    const saver = enhancedStorage.saveWordProgress as unknown as jest.Mock;
+    const { blob } = buildProgressBlob({ remoteOnly: entry('remoteOnly') }, 'other-device');
+    let resolveDe: (value: unknown) => void = () => undefined;
+    const pendingDe = new Promise(resolve => {
+      resolveDe = resolve;
+    });
+    remote.getValue.mockImplementation((languageCode: string) =>
+      languageCode === 'de' ? pendingDe : Promise.resolve(undefined)
+    );
+    start();
+
+    // A learner answer leaves a snapshot for de in the background queue ...
+    store.dispatch(
+      checkAnswer({
+        answer: 'Hund',
+        word: { id: 'de:hund', term: 'Hund', definition: 'x', direction: 'definition-to-term' },
+        quizMode: 'open-answer',
+        languageCode: 'de',
+      } as never)
+    );
+    // ... a sync of de is under way (waiting for the server) ...
+    const deSync = syncActiveLanguageProgress();
+    await settle();
+    expect(remote.getValue).toHaveBeenCalledWith('de', PROGRESS_KEY);
+    // ... and the switch to es flushes the queue, but that save fails, so the snapshot stays queued
+    saver.mockClear();
+    saver.mockResolvedValueOnce({ success: false, error: 'offline' });
+    store.dispatch(setLanguage('es'));
+    await settle();
+    expect(saver).toHaveBeenCalledTimes(1);
+    expect(persistenceUtils.getStatus().pendingChanges).toBe(1);
+
+    // de is no longer active: the sync merges into storage through the saveLocal wrapper
+    resolveDe(blob);
+    await deSync;
+    expect(store.getState().game.language).toBe('es');
+    const deStored = JSON.parse(localStorage.getItem('levelup_word_progress') || '{}').de;
+    expect(Object.keys(deStored).sort()).toEqual(['de:hund', 'local', 'remoteOnly']);
+
+    saver.mockClear();
+    await persistenceUtils.forceSave();
+    const deSaves = saver.mock.calls.filter(call => call[0] === 'de').map(call => call[1]);
+    expect(deSaves).toHaveLength(1);
+    expect(Object.keys(deSaves[0]).sort()).toEqual(['de:hund', 'local', 'remoteOnly']);
+    const after = JSON.parse(localStorage.getItem('levelup_word_progress') || '{}').de;
+    expect(Object.keys(after).sort()).toEqual(['de:hund', 'local', 'remoteOnly']);
   });
 
   it('cleanup removes the listeners and the store subscription', async () => {

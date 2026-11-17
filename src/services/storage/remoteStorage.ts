@@ -972,7 +972,9 @@ export class RemoteStorageService implements AsyncStorageProvider {
    * creates a guest account or touches the network.
    */
   hasSession(): boolean {
-    return this.userSession !== null && this.lostSession === null;
+    // Same precedence as getUserSession(): an established session wins over a stale lost-session
+    // flag (linking a device installs a valid session without clearing it)
+    return this.userSession !== null;
   }
 
   /**

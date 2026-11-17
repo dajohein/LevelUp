@@ -15,7 +15,8 @@ const STORAGE_KEY = 'levelup_word_progress';
 const stored = (): Record<string, WordMap> => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 
 describe('game/mergeRemoteProgress (reducer + real persistence middleware)', () => {
-  let persistenceUtils: { cleanup: () => Promise<void> } | undefined;
+  type Utils = typeof import('../persistenceMiddleware').persistenceUtils;
+  let persistenceUtils: Utils | undefined;
 
   const createStore = async (seed: Record<string, WordMap>) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
@@ -35,13 +36,21 @@ describe('game/mergeRemoteProgress (reducer + real persistence middleware)', () 
       import('../persistenceMiddleware'),
     ]);
     persistenceUtils = middleware.persistenceUtils;
+    const { enhancedStorage } = await import('../../services/storage/enhancedStorage');
+    const saveWordProgress = enhancedStorage.saveWordProgress as unknown as jest.Mock;
     const store = configureStore({
       reducer: { game: game.default, session: session.default, achievements: achievements.default },
       middleware: getDefaultMiddleware =>
         getDefaultMiddleware().concat(middleware.persistenceMiddleware),
     });
     store.dispatch(game.setLanguage('de'));
-    return { store, mergeRemoteProgress: game.mergeRemoteProgress, setLanguage: game.setLanguage };
+    return {
+      store,
+      mergeRemoteProgress: game.mergeRemoteProgress,
+      setLanguage: game.setLanguage,
+      checkAnswer: game.checkAnswer,
+      saveWordProgress,
+    };
   };
 
   beforeEach(() => {
@@ -160,5 +169,80 @@ describe('game/mergeRemoteProgress (reducer + real persistence middleware)', () 
     expect(Object.getPrototypeOf(progress)).toBe(Object.prototype);
     expect(progress.ok).toBeDefined();
     expect(Object.prototype.hasOwnProperty.call(stored().de, '__proto__')).toBe(false);
+  });
+
+  describe('background queue (stale snapshots)', () => {
+    const word = (id: string, term: string) => ({
+      id,
+      term,
+      definition: 'x',
+      direction: 'definition-to-term' as const,
+    });
+    const savesFor = (saver: jest.Mock, languageCode: string) =>
+      saver.mock.calls.filter(call => call[0] === languageCode).map(call => call[1] as WordMap);
+
+    it('a merge replaces an older queued snapshot, so the flush writes the merged map', async () => {
+      const { store, mergeRemoteProgress, setLanguage, checkAnswer, saveWordProgress } =
+        await createStore({ de: { a: entry('a') }, es: { eslocal: entry('eslocal') } });
+      store.dispatch(setLanguage('es'));
+      await persistenceUtils?.forceSave();
+
+      // A learner answer leaves a snapshot (without the remote word) in the queue
+      store.dispatch(
+        checkAnswer({
+          answer: 'perro',
+          word: word('es:perro', 'perro'),
+          quizMode: 'open-answer',
+          languageCode: 'es',
+        } as never)
+      );
+      expect(persistenceUtils?.getStatus().pendingChanges).toBe(1);
+      saveWordProgress.mockClear();
+
+      store.dispatch(
+        mergeRemoteProgress({ languageCode: 'es', words: { remoteOnly: entry('remoteOnly') } })
+      );
+      await persistenceUtils?.forceSave();
+
+      const saves = savesFor(saveWordProgress, 'es');
+      expect(saves).toHaveLength(1);
+      expect(Object.keys(saves[0]).sort()).toEqual(['es:perro', 'eslocal', 'remoteOnly']);
+      expect(Object.keys(stored().es).sort()).toEqual(['es:perro', 'eslocal', 'remoteOnly']);
+      expect(Object.keys(stored().de)).toEqual(['a']);
+    });
+
+    it('supersedeQueuedWordProgress replaces the queued snapshot of that language only', async () => {
+      const { store, checkAnswer, saveWordProgress } = await createStore({
+        de: { a: entry('a') },
+      });
+      await persistenceUtils?.forceSave();
+      store.dispatch(
+        checkAnswer({
+          answer: 'hund',
+          word: word('de:hund', 'Hund'),
+          quizMode: 'open-answer',
+          languageCode: 'de',
+        } as never)
+      );
+      expect(persistenceUtils?.getStatus().pendingChanges).toBe(1);
+      saveWordProgress.mockClear();
+
+      const newer = { a: entry('a'), fresh: entry('fresh', { xp: 44 }) };
+      persistenceUtils?.supersedeQueuedWordProgress('de', newer);
+      expect(persistenceUtils?.getStatus().pendingChanges).toBe(1);
+      await persistenceUtils?.forceSave();
+
+      const saves = savesFor(saveWordProgress, 'de');
+      expect(saves).toEqual([newer]);
+      expect(saveWordProgress).toHaveBeenCalledTimes(1);
+    });
+
+    it('supersedeQueuedWordProgress does nothing, and does not throw, when no autosave exists', async () => {
+      const { persistenceUtils: utils } = await import('../persistenceMiddleware');
+      persistenceUtils = utils;
+      expect(() => utils.supersedeQueuedWordProgress('de', { a: entry('a') })).not.toThrow();
+      expect(utils.getStatus().pendingChanges).toBe(0);
+      expect(utils.getStatus().enabled).toBe(false);
+    });
   });
 });

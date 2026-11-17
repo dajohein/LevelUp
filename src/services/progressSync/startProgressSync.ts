@@ -1,6 +1,7 @@
 import type { Store } from '@reduxjs/toolkit';
 import type { RootState } from '../../store/store';
 import { mergeRemoteProgress } from '../../store/gameSlice';
+import { persistenceUtils } from '../../store/persistenceMiddleware';
 import { environmentConfig } from '../../config/environment';
 import { logger } from '../logger';
 import { remoteStorage } from '../storage/remoteStorage';
@@ -34,11 +35,25 @@ export function startProgressSync(store: Store<RootState>): () => void {
   const instance = createProgressSync({
     isEnabled: () => environmentConfig.enableRemoteStorage,
     hasSession: () => remoteStorage.hasSession(),
+    // The app may have started offline, so no session was restored: try again when sync needs it
+    // (a refused session fails at once without a request)
+    ensureSession: async () => {
+      try {
+        await remoteStorage.getUserSession();
+        return remoteStorage.hasSession();
+      } catch {
+        return false;
+      }
+    },
     isOnline: () => typeof navigator === 'undefined' || navigator.onLine !== false,
     getRemote: languageCode => remoteStorage.getValue<unknown>(languageCode, PROGRESS_KEY),
     putRemote: (languageCode, blob) => remoteStorage.putValue(languageCode, PROGRESS_KEY, blob),
     loadLocal: languageCode => wordProgressStorage.load(languageCode),
-    saveLocal: (languageCode, words) => wordProgressStorage.save(languageCode, words),
+    saveLocal: (languageCode, words) => {
+      wordProgressStorage.save(languageCode, words);
+      // an older snapshot still queued for this language must not be written over the merge
+      persistenceUtils.supersedeQueuedWordProgress(languageCode, words);
+    },
     isActiveLanguage: languageCode => store.getState().game.language === languageCode,
     applyToActive: (languageCode, words) => {
       applyingRemote = true; // a merge is not a learner answer: it must not schedule an upload

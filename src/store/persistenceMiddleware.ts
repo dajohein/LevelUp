@@ -169,7 +169,9 @@ export const persistenceMiddleware: Middleware<Record<string, never>, RootState>
 
       // Capture answer progress under its current language before any navigation action can
       // replace the active Redux progress map.
-      if (action.type === 'game/checkAnswer') {
+      // A merge queues a fresh snapshot too: it replaces any older queued one for this language,
+      // which would otherwise be written later and overwrite the merged map
+      if (action.type === 'game/checkAnswer' || action.type === 'game/mergeRemoteProgress') {
         const languageCode = state.game?.language;
         const wordProgress = state.game?.wordProgress;
         if (languageCode && wordProgress && Object.keys(wordProgress).length > 0) {
@@ -209,6 +211,16 @@ export const persistenceUtils = {
         config: null,
       }
     );
+  },
+
+  /**
+   * Replace any word-progress snapshot still waiting in the background queue for this language with
+   * `words`. Used when progress is written to storage directly (a sync merge into a language that is
+   * not active): an older queued snapshot would otherwise be written afterwards and undo the merge.
+   * Nothing to do when no snapshot can be queued.
+   */
+  supersedeQueuedWordProgress: (languageCode: string, words: RootState['game']['wordProgress']) => {
+    backgroundAutoSave?.queueChange('wordProgress', words, languageCode, 'high');
   },
 
   // Force immediate save

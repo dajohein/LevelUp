@@ -112,6 +112,80 @@ describe('createProgressSync', () => {
     });
   });
 
+  describe('ensureSession', () => {
+    const withEnsure = (initial: Parameters<typeof setup>[0], impl: () => Promise<boolean>) => {
+      const s = setup(initial);
+      const ensureSession = jest.fn(impl);
+      const sync = createProgressSync({ ...s.deps, ensureSession });
+      return { ...s, sync, ensureSession };
+    };
+
+    it('runs on once ensureSession establishes a session, asking exactly once', async () => {
+      const s = withEnsure({ local: { es: mapOf(entry('a')) } }, async () => true);
+      s.state.session = false;
+      const result = await s.sync.syncLanguage('es');
+      expect(s.ensureSession).toHaveBeenCalledTimes(1);
+      expect(s.getRemote).toHaveBeenCalledTimes(1);
+      expect(result.status).toBe('uploaded');
+    });
+
+    it('is skipped, with no remote call, when ensureSession cannot establish one', async () => {
+      const s = withEnsure({ local: { es: mapOf(entry('a')) } }, async () => false);
+      s.state.session = false;
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'skipped', takenFromRemote: 0, uploaded: false });
+      expect(s.ensureSession).toHaveBeenCalledTimes(1);
+      expect(s.getRemote).not.toHaveBeenCalled();
+      expect(s.putRemote).not.toHaveBeenCalled();
+    });
+
+    it('is skipped as before when there is no session and no ensureSession dep', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      s.state.session = false;
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'skipped', takenFromRemote: 0, uploaded: false });
+      expect(s.getRemote).not.toHaveBeenCalled();
+    });
+
+    it('does not call ensureSession when a session already exists', async () => {
+      const s = withEnsure({ local: { es: mapOf(entry('a')) } }, async () => true);
+      await s.sync.syncLanguage('es');
+      expect(s.ensureSession).not.toHaveBeenCalled();
+      expect(s.getRemote).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['sync is disabled', (s: ReturnType<typeof setup>) => (s.state.enabled = false)],
+      ['the device is offline', (s: ReturnType<typeof setup>) => (s.state.online = false)],
+    ])('does not call ensureSession when %s', async (_name, breakIt) => {
+      const s = withEnsure({ local: { es: mapOf(entry('a')) } }, async () => true);
+      s.state.session = false;
+      breakIt(s);
+      const result = await s.sync.syncLanguage('es');
+      expect(result.status).toBe('skipped');
+      expect(s.ensureSession).not.toHaveBeenCalled();
+      expect(s.getRemote).not.toHaveBeenCalled();
+    });
+
+    it('ends skipped, calling nothing on the remote, when paused while ensureSession is pending', async () => {
+      const gate = deferred<boolean>();
+      const s = withEnsure({ local: { es: mapOf(entry('a')) } }, () => gate.promise);
+      s.state.session = false;
+
+      const run = s.sync.syncLanguage('es');
+      await flushPromises();
+      expect(s.ensureSession).toHaveBeenCalledTimes(1);
+
+      const pausing = s.sync.pause();
+      gate.resolve(true);
+      await pausing;
+
+      expect(await run).toEqual({ status: 'skipped', takenFromRemote: 0, uploaded: false });
+      expect(s.getRemote).not.toHaveBeenCalled();
+      expect(s.putRemote).not.toHaveBeenCalled();
+    });
+  });
+
   describe('first upload and empty sides', () => {
     it('uploads once when the remote is missing and local has words', async () => {
       const words = mapOf(entry('a'), entry('b', { xp: 40 }));

@@ -23,6 +23,10 @@ const requireSession = (): void => {
  * is worse than a reset that did not happen. Other linked devices keep their own copy; it returns
  * here when they next sync. Languages are removed one by one, so a failure part way leaves the
  * earlier ones removed.
+ *
+ * Callers MUST first `await pauseProgressSync()` (startProgressSync.ts) and keep sync paused until
+ * the page reloads: otherwise a run that is already in flight can recreate the server copy or merge
+ * the old progress back. Resume only if the reset is abandoned.
  */
 export async function resetRemoteProgress(languageCodes: string[]): Promise<void> {
   if (!isProgressSyncActive()) return;
