@@ -12,8 +12,10 @@ import { getAvailableLanguages, getModulesForLanguage } from '../services/module
 import { logger } from '../services/logger';
 import {
   isProgressSyncActive,
+  replaceRemoteProgress,
   resetRemoteProgress,
 } from '../services/progressSync/resetRemoteProgress';
+import { pauseProgressSync } from '../services/progressSync/startProgressSync';
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.1);
@@ -240,12 +242,19 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
       return;
     }
 
+    let resumeSync = (): void => undefined;
     try {
-      // Remove the synced copy first: otherwise the next sync would restore what is reset here
+      // Remove the synced copy first: otherwise the next sync would restore what is reset here.
+      // Sync is paused (and any upload under way finished) so it cannot recreate the copy.
       try {
+        resumeSync = await pauseProgressSync();
         await resetRemoteProgress([languageCode]);
       } catch (error) {
-        logger.warn('Reset stopped: the synced copy could not be removed', { languageCode });
+        resumeSync();
+        logger.warn('Reset stopped: the synced copy could not be removed', {
+          languageCode,
+          error: error instanceof Error ? error.name : 'Error',
+        });
         alert(
           `${languageName} progress was NOT reset: your synced copy could not be removed. Check your connection and try again.`
         );
@@ -263,6 +272,7 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
       alert(`${languageName} progress has been reset. The page will reload to refresh all data.`);
       window.location.reload();
     } catch (error) {
+      resumeSync();
       logger.error(`Failed to reset ${languageName} progress:`, error);
       alert(`Failed to reset ${languageName} progress. Please try again.`);
     }
@@ -282,6 +292,7 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
       return;
     }
 
+    let resumeSync = (): void => undefined;
     try {
       // Load current progress for the language
       const currentProgress = wordProgressStorage.load(languageCode);
@@ -296,6 +307,23 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
           delete currentProgress[word.id];
         });
 
+        // Update the synced copy first (sync paused so nothing recreates the removed words); if
+        // the server cannot confirm, stop: the words would come back at the next sync
+        try {
+          resumeSync = await pauseProgressSync();
+          await replaceRemoteProgress(languageCode, currentProgress);
+        } catch (error) {
+          resumeSync();
+          logger.warn('Module reset stopped: the synced copy could not be updated', {
+            languageCode,
+            error: error instanceof Error ? error.name : 'Error',
+          });
+          alert(
+            `Module "${moduleName}" was NOT reset: your synced copy could not be updated. Check your connection and try again.`
+          );
+          return;
+        }
+
         // Save the updated progress using centralized orchestrator
         await dispatch({ type: 'game/updateWordProgress', payload: currentProgress });
 
@@ -305,6 +333,7 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
         window.location.reload();
       }
     } catch (error) {
+      resumeSync();
       logger.error(`Failed to reset ${moduleName} module:`, error);
       alert(`Failed to reset module progress. Please try again.`);
     }
@@ -321,13 +350,18 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
     }
 
     setIsClearing(true);
+    let resumeSync = (): void => undefined;
     try {
       try {
+        resumeSync = await pauseProgressSync();
         await resetRemoteProgress(getAvailableLanguages().map(({ code }) => code));
       } catch (error) {
-        logger.warn('Clear stopped: the synced copy could not be removed');
+        resumeSync();
+        logger.warn('Clear stopped: the synced copy could not be removed', {
+          error: error instanceof Error ? error.name : 'Error',
+        });
         alert(
-          'Progress was NOT cleared: your synced copy could not be removed. Check your connection and try again.'
+          'Progress was NOT cleared on this device: your synced copy could not be removed. Some languages may already have been removed from the server; nothing was removed here. Check your connection and try again.'
         );
         setIsClearing(false);
         return;
@@ -337,6 +371,7 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
         window.location.reload(); // Reload to reset state
       }, 500);
     } catch (error) {
+      resumeSync();
       logger.error('Failed to clear data:', error);
       alert('Failed to clear data. Please try again.');
       setIsClearing(false);

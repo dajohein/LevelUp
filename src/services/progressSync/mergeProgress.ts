@@ -9,8 +9,14 @@ export const MAX_BLOB_BYTES = 900 * 1024;
 /** Most words accepted in one downloaded blob. */
 const MAX_WORDS = 20000;
 
-/** A lastPracticed further in the future than this counts as "now". */
+/** A lastPracticed further in the future than this is a skewed clock, not a practice time. */
 const MAX_FUTURE_SKEW_MS = 24 * 60 * 60 * 1000;
+
+/** Largest count or XP value accepted from the server (real values are far smaller). */
+const MAX_COUNT = 1e9;
+const MAX_STRING = 200;
+const MAX_NOTES = 2000;
+const MAX_TAGS = 50;
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
@@ -33,12 +39,28 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 /** Deep copy of JSON-shaped data, so results never share objects with their inputs. */
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-/** Effective practice time in ms: unparsable is the oldest, far-future is clamped to now. */
-const effectiveTime = (lastPracticed: unknown, now: number): number => {
+/** Practice time in ms; unparsable is the oldest possible. */
+const practiceTime = (lastPracticed: unknown): number => {
   if (typeof lastPracticed !== 'string') return -Infinity;
   const time = Date.parse(lastPracticed);
-  if (Number.isNaN(time)) return -Infinity;
-  return time > now + MAX_FUTURE_SKEW_MS ? now : time;
+  return Number.isNaN(time) ? -Infinity : time;
+};
+
+/**
+ * The two times to compare. A time more than 24 h in the future comes from a skewed clock and must
+ * not win just because of it, however the skew arose: against a sane time it counts as a tie
+ * (the answer count then decides), so it can neither overwrite fresher answers nor be ignored.
+ * If both are skewed, their own values are compared.
+ */
+const comparableTimes = (local: unknown, remote: unknown, now: number): [number, number] => {
+  const limit = now + MAX_FUTURE_SKEW_MS;
+  const l = practiceTime(local);
+  const r = practiceTime(remote);
+  const lSkewed = l > limit;
+  const rSkewed = r > limit;
+  if (rSkewed && !lSkewed) return [l, l];
+  if (lSkewed && !rSkewed) return [r, r];
+  return [l, r];
 };
 
 const attempts = (entry: WordProgress): number => {
@@ -50,7 +72,8 @@ const attempts = (entry: WordProgress): number => {
  * Merge remote progress into local progress, per word. The entry with the later
  * lastPracticed wins and is taken whole; a tie goes to more answers; a full tie keeps
  * local. Words on only one side are kept. No local word is ever dropped. Inputs are not
- * mutated. `takenFromRemote` counts remote-only words plus words where remote won.
+ * mutated. `takenFromRemote` counts remote-only words plus words where remote won. A
+ * lastPracticed more than 24 h in the future (a skewed clock) never wins by that alone.
  */
 export const mergeWordProgress = (
   local: WordMap,
@@ -72,8 +95,11 @@ export const mergeWordProgress = (
       continue;
     }
     const localEntry = merged[key];
-    const localTime = effectiveTime(localEntry.lastPracticed, now);
-    const remoteTime = effectiveTime(remoteEntry.lastPracticed, now);
+    const [localTime, remoteTime] = comparableTimes(
+      localEntry.lastPracticed,
+      remoteEntry.lastPracticed,
+      now
+    );
     const remoteWins =
       remoteTime > localTime ||
       (remoteTime === localTime && attempts(remoteEntry) > attempts(localEntry));
@@ -86,9 +112,10 @@ export const mergeWordProgress = (
 };
 
 const isCount = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0;
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= MAX_COUNT;
 
-const isString = (value: unknown): value is string => typeof value === 'string';
+const isString = (value: unknown): value is string =>
+  typeof value === 'string' && value.length <= MAX_STRING;
 
 const LEARNING_PHASES = new Set(['introduction', 'practice', 'mastery', 'maintenance']);
 const DIRECTION_KEYS = ['term-to-definition', 'definition-to-term'];
@@ -114,11 +141,19 @@ const hasValidOptionalFields = (entry: Record<string, unknown>): boolean => {
   if (entry.totalXp !== undefined && !isCount(entry.totalXp)) return false;
   if (entry.firstLearned !== undefined && !isString(entry.firstLearned)) return false;
   if (entry.version !== undefined && !isCount(entry.version)) return false;
-  if (entry.customNotes !== undefined && !isString(entry.customNotes)) return false;
+  if (
+    entry.customNotes !== undefined &&
+    !(typeof entry.customNotes === 'string' && entry.customNotes.length <= MAX_NOTES)
+  ) {
+    return false;
+  }
   if (entry.learningPhase !== undefined && !LEARNING_PHASES.has(entry.learningPhase as string)) {
     return false;
   }
-  if (entry.tags !== undefined && !(Array.isArray(entry.tags) && entry.tags.every(isString))) {
+  if (
+    entry.tags !== undefined &&
+    !(Array.isArray(entry.tags) && entry.tags.length <= MAX_TAGS && entry.tags.every(isString))
+  ) {
     return false;
   }
   if (entry.directions !== undefined) {
@@ -129,6 +164,55 @@ const hasValidOptionalFields = (entry: Record<string, unknown>): boolean => {
     }
   }
   return true;
+};
+
+const ENTRY_FIELDS = [
+  'wordId',
+  'xp',
+  'lastPracticed',
+  'timesCorrect',
+  'timesIncorrect',
+  'consecutiveCorrect',
+  'streakUpdatedAt',
+  'totalXp',
+  'firstLearned',
+  'version',
+  'learningPhase',
+  'tags',
+  'customNotes',
+] as const;
+const DIRECTION_FIELDS = [
+  'timesCorrect',
+  'timesIncorrect',
+  'xp',
+  'lastPracticed',
+  'averageResponseTime',
+  'consecutiveCorrect',
+  'streakUpdatedAt',
+  'longestStreak',
+  'difficultyLevel',
+] as const;
+
+/** Copy only the fields the app knows (an already validated entry), so unknown extras never persist. */
+const pickKnownFields = (entry: Record<string, unknown>): WordProgress => {
+  const out: Record<string, unknown> = {};
+  for (const field of ENTRY_FIELDS) {
+    if (entry[field] !== undefined) out[field] = clone(entry[field]);
+  }
+  if (isPlainObject(entry.directions)) {
+    const directions: Record<string, unknown> = {};
+    for (const key of DIRECTION_KEYS) {
+      const direction = entry.directions[key];
+      if (!isPlainObject(direction)) continue;
+      const picked: Record<string, unknown> = {};
+      for (const field of DIRECTION_FIELDS) {
+        if (direction[field] !== undefined) picked[field] = direction[field];
+      }
+      directions[key] = picked;
+    }
+    out.directions = directions;
+  }
+  return out as unknown as WordProgress;
 };
 
 /**
@@ -157,13 +241,13 @@ export const parseProgressBlob = (raw: unknown): { words: WordMap; dropped: numb
       !isCount(entry.xp) ||
       !isCount(entry.timesCorrect) ||
       !isCount(entry.timesIncorrect) ||
-      typeof entry.lastPracticed !== 'string' ||
+      !isString(entry.lastPracticed) ||
       !hasValidOptionalFields(entry)
     ) {
       dropped++;
       continue;
     }
-    words[key] = clone(entry) as unknown as WordProgress;
+    words[key] = pickKnownFields(entry);
   }
   return { words, dropped };
 };

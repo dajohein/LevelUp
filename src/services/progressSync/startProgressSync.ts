@@ -98,6 +98,13 @@ export function startProgressSync(store: Store<RootState>): () => void {
 }
 
 /**
+ * Stop progress sync and wait for any run in progress to end (before a reset, so an upload under way
+ * cannot recreate what the reset deletes). Returns a function that resumes syncing.
+ */
+export const pauseProgressSync = async (): Promise<() => void> =>
+  sync ? sync.pause() : () => undefined;
+
+/**
  * Sync the active language now (after the session is set up, or after a device was linked).
  * Resolves with the outcome, or undefined when there is no active language.
  */

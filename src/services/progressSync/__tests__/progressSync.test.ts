@@ -89,7 +89,7 @@ const setup = (
     now: () => NOW,
   };
   const sync = createProgressSync(deps);
-  return { sync, state, local, remote, getRemote, putRemote, saveLocal, applyToActive, warn };
+  return { sync, deps, state, local, remote, getRemote, putRemote, saveLocal, applyToActive, warn };
 };
 
 const flushPromises = async () => {
@@ -209,28 +209,177 @@ describe('createProgressSync', () => {
       );
     });
 
-    it('ignores invalid entries, warns with the dropped count, and merges the valid ones', async () => {
+    it('merges the readable entries, warns with the dropped count, and never uploads over unreadable ones', async () => {
       const valid = entry('good');
-      const s = setup({
-        remote: {
-          es: remoteBlob({
-            good: valid,
-            negative: entry('negative', { xp: -1 }),
-            mismatched: entry('other-id'),
-            notAnObject: 'x',
-          }),
-        },
+      const raw = remoteBlob({
+        good: valid,
+        negative: entry('negative', { xp: -1 }),
+        mismatched: entry('other-id'),
+        notAnObject: 'x',
       });
+      const s = setup({ remote: { es: raw } });
       const result = await s.sync.syncLanguage('es');
       expect(s.warn).toHaveBeenCalledWith(
         expect.stringMatching(/^progress-sync: some remote entries were invalid/),
         { languageCode: 'es', dropped: 3 }
       );
-      expect(result.status).toBe('merged');
+      expect(s.warn).toHaveBeenCalledWith(
+        'progress-sync: remote progress has unreadable entries; not uploading',
+        { languageCode: 'es', unreadableEntries: 3 }
+      );
+      expect(result).toEqual({ status: 'failed', takenFromRemote: 1, uploaded: false });
       expect(s.local.es).toEqual({ good: valid });
-      // the valid words equal what local now holds, but the server still has junk entries: we
-      // never upload when content matches the parsed remote
       expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.remote.get('es')).toEqual(raw);
+    });
+
+    it('does not upload local-only words over a blob with one unreadable entry (boundary: 1)', async () => {
+      const raw = remoteBlob({ bad: entry('bad', { xp: -1 }) });
+      const s = setup({ local: { es: mapOf(entry('local-only')) }, remote: { es: raw } });
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'failed', takenFromRemote: 0, uploaded: false });
+      expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.remote.get('es')).toEqual(raw);
+      expect(s.warn).toHaveBeenCalledWith(
+        'progress-sync: remote progress has unreadable entries; not uploading',
+        { languageCode: 'es', unreadableEntries: 1 }
+      );
+    });
+  });
+
+  describe('persistence check', () => {
+    const LOCAL_FAILED = 'progress-sync: local progress could not be saved; nothing uploaded';
+
+    it('uploads nothing when saveLocal silently does not persist (inactive language)', async () => {
+      const local = { es: mapOf(entry('local-only')) };
+      const remoteRaw = remoteBlob(mapOf(entry('remote-only')));
+      const s = setup({ local, remote: { es: remoteRaw } });
+      s.state.active = 'de';
+      s.saveLocal.mockImplementation(() => undefined);
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'failed', takenFromRemote: 1, uploaded: false });
+      expect(s.saveLocal).toHaveBeenCalledTimes(1);
+      expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.remote.get('es')).toEqual(remoteRaw);
+      expect(s.warn).toHaveBeenCalledWith(LOCAL_FAILED, { languageCode: 'es' });
+    });
+
+    it('uploads nothing when applyToActive silently does not persist (active language)', async () => {
+      const local = { es: mapOf(entry('local-only')) };
+      const remoteRaw = remoteBlob(mapOf(entry('remote-only')));
+      const s = setup({ local, remote: { es: remoteRaw } });
+      s.applyToActive.mockImplementation(() => undefined);
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'failed', takenFromRemote: 1, uploaded: false });
+      expect(s.applyToActive).toHaveBeenCalledTimes(1);
+      expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.remote.get('es')).toEqual(remoteRaw);
+      expect(s.local).toEqual(local);
+      expect(s.warn).toHaveBeenCalledWith(LOCAL_FAILED, { languageCode: 'es' });
+    });
+
+    it('uploads the merged map when saveLocal persists (inactive language)', async () => {
+      const s = setup({
+        local: { es: mapOf(entry('local-only')) },
+        remote: { es: remoteBlob(mapOf(entry('remote-only'))) },
+      });
+      s.state.active = 'de';
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'uploaded', takenFromRemote: 1, uploaded: true });
+      expect(s.putRemote).toHaveBeenCalledTimes(1);
+      expect(s.warn).not.toHaveBeenCalled();
+    });
+
+    it('uploads the merged map when applyToActive persists (active language)', async () => {
+      const s = setup({
+        local: { es: mapOf(entry('local-only')) },
+        remote: { es: remoteBlob(mapOf(entry('remote-only'))) },
+      });
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'uploaded', takenFromRemote: 1, uploaded: true });
+      expect(s.putRemote).toHaveBeenCalledTimes(1);
+      expect(s.warn).not.toHaveBeenCalled();
+    });
+
+    it('does not apply the check when nothing was taken from the remote', async () => {
+      const s = setup({ local: { es: mapOf(entry('local-only')) } });
+      const result = await s.sync.syncLanguage('es');
+      expect(result.status).toBe('uploaded');
+      expect(s.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('never rejects', () => {
+    const UNEXPECTED = 'progress-sync: unexpected error; local progress left as is';
+
+    it('resolves failed when hasSession throws', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      s.deps.hasSession = () => {
+        throw new TypeError('boom');
+      };
+      await expect(s.sync.syncLanguage('es')).resolves.toEqual({
+        status: 'failed',
+        takenFromRemote: 0,
+        uploaded: false,
+      });
+      expect(s.warn).toHaveBeenCalledWith(UNEXPECTED, { languageCode: 'es', error: 'TypeError' });
+      expect(s.putRemote).not.toHaveBeenCalled();
+    });
+
+    it('resolves failed when the second loadLocal call throws', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      const original = s.deps.loadLocal;
+      let calls = 0;
+      s.deps.loadLocal = languageCode => {
+        calls++;
+        if (calls === 2) throw new RangeError('storage gone');
+        return original(languageCode);
+      };
+      await expect(s.sync.syncLanguage('es')).resolves.toEqual({
+        status: 'failed',
+        takenFromRemote: 0,
+        uploaded: false,
+      });
+      expect(calls).toBe(2);
+      expect(s.warn).toHaveBeenCalledWith(UNEXPECTED, { languageCode: 'es', error: 'RangeError' });
+      expect(s.putRemote).not.toHaveBeenCalled();
+    });
+
+    it('resolves failed when deviceId throws', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      s.deps.deviceId = () => {
+        throw new Error('no id');
+      };
+      await expect(s.sync.syncLanguage('es')).resolves.toMatchObject({ status: 'failed' });
+      expect(s.warn).toHaveBeenCalledWith(UNEXPECTED, { languageCode: 'es', error: 'Error' });
+      expect(s.putRemote).not.toHaveBeenCalled();
+    });
+
+    it('still does not reject when warn itself throws', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      s.deps.deviceId = () => {
+        throw new Error('no id');
+      };
+      s.warn.mockImplementation(() => {
+        throw new Error('logger broke');
+      });
+      await expect(s.sync.syncLanguage('es')).resolves.toEqual({
+        status: 'failed',
+        takenFromRemote: 0,
+        uploaded: false,
+      });
+      expect(s.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('a failed run does not block the next one', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      const original = s.deps.hasSession;
+      s.deps.hasSession = () => {
+        throw new Error('boom');
+      };
+      await s.sync.syncLanguage('es');
+      s.deps.hasSession = original;
+      expect((await s.sync.syncLanguage('es')).status).toBe('uploaded');
     });
   });
 
@@ -546,6 +695,124 @@ describe('createProgressSync', () => {
       await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS * 2);
       expect(s.getRemote).not.toHaveBeenCalled();
       expect(await s.sync.flush()).toEqual([]);
+    });
+  });
+
+  describe('pause', () => {
+    it('makes syncLanguage skip and call nothing, until resumed', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      const resume = await s.sync.pause();
+      const result = await s.sync.syncLanguage('es');
+      expect(result).toEqual({ status: 'skipped', takenFromRemote: 0, uploaded: false });
+      expect(s.getRemote).not.toHaveBeenCalled();
+      expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.saveLocal).not.toHaveBeenCalled();
+      expect(s.applyToActive).not.toHaveBeenCalled();
+
+      resume();
+      expect((await s.sync.syncLanguage('es')).status).toBe('uploaded');
+      expect(s.putRemote).toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves at once when nothing is running', async () => {
+      const s = setup();
+      const resume = await s.sync.pause();
+      expect(typeof resume).toBe('function');
+    });
+
+    it('waits for a run that is reading, and that run applies and uploads nothing', async () => {
+      const local = { es: mapOf(entry('local-only')) };
+      const remoteRaw = remoteBlob(mapOf(entry('remote-only')));
+      const s = setup({ local, remote: { es: remoteRaw } });
+      const gate = deferred<unknown>();
+      s.getRemote.mockImplementationOnce(() => gate.promise);
+
+      const run = s.sync.syncLanguage('es');
+      await flushPromises();
+      expect(s.getRemote).toHaveBeenCalledTimes(1);
+
+      let paused = false;
+      const pausing = s.sync.pause().then(resume => {
+        paused = true;
+        return resume;
+      });
+      await flushPromises();
+      expect(paused).toBe(false); // still waiting for the read
+
+      gate.resolve(clone(remoteRaw)); // the read succeeds, but a reset has begun
+      const result = await run;
+      const resume = await pausing;
+      expect(paused).toBe(true);
+      expect(result).toEqual({ status: 'skipped', takenFromRemote: 0, uploaded: false });
+      expect(s.applyToActive).not.toHaveBeenCalled();
+      expect(s.saveLocal).not.toHaveBeenCalled();
+      expect(s.putRemote).not.toHaveBeenCalled();
+      expect(s.local).toEqual(local);
+      expect(s.remote.get('es')).toEqual(remoteRaw);
+      resume();
+    });
+
+    it('lets an upload already past its check finish before pause resolves', async () => {
+      const s = setup({ local: { es: mapOf(entry('a')) } });
+      const gate = deferred<void>();
+      s.putRemote.mockImplementationOnce(async (languageCode, blob) => {
+        await gate.promise;
+        s.remote.set(languageCode, clone(blob));
+      });
+
+      const run = s.sync.syncLanguage('es');
+      await flushPromises();
+      expect(s.putRemote).toHaveBeenCalledTimes(1);
+
+      let paused = false;
+      const pausing = s.sync.pause().then(resume => {
+        paused = true;
+        return resume;
+      });
+      await flushPromises();
+      expect(paused).toBe(false);
+      expect(s.remote.has('es')).toBe(false);
+
+      gate.resolve();
+      const resume = await pausing;
+      // by the time pause resolves the upload has landed, so a reset can now delete it
+      expect(s.remote.has('es')).toBe(true);
+      expect(await run).toEqual({ status: 'uploaded', takenFromRemote: 0, uploaded: true });
+      resume();
+    });
+
+    describe('timers', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      it('cancels pending timers so nothing fires later', async () => {
+        const s = setup({ local: { es: mapOf(entry('a')) } });
+        s.sync.noteLocalChange('es');
+        expect(jest.getTimerCount()).toBe(1);
+        await s.sync.pause();
+        expect(jest.getTimerCount()).toBe(0);
+        await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS * 3);
+        expect(s.getRemote).not.toHaveBeenCalled();
+      });
+
+      it('noteLocalChange schedules nothing while paused, and works again after resume', async () => {
+        const s = setup({ local: { es: mapOf(entry('a')) } });
+        const resume = await s.sync.pause();
+        s.sync.noteLocalChange('es');
+        expect(jest.getTimerCount()).toBe(0);
+        await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS * 3);
+        expect(s.getRemote).not.toHaveBeenCalled();
+
+        resume();
+        s.sync.noteLocalChange('es');
+        expect(jest.getTimerCount()).toBe(1);
+        await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS);
+        expect(s.putRemote).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

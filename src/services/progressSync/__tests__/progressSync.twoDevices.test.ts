@@ -380,12 +380,60 @@ describe('progress sync between two devices of one account (real API handlers)',
     });
   });
 
+  it('a blob with an unreadable entry is merged for its readable words but never overwritten', async () => {
+    await linkDevices();
+    const raw = {
+      schema: 1,
+      deviceId: 'newer-app',
+      updatedAt: iso(NOW),
+      words: { ...words(entry('es_a1')), es_future: { wordId: 'es_future', xp: -5 } },
+    };
+    await a.remote.putValue('es', PROGRESS_KEY, raw);
+    b.local.set('es', words(entry('es_b1', { xp: 7 })));
+
+    const result = await b.sync.syncLanguage('es');
+
+    expect(result).toEqual({ status: 'failed', takenFromRemote: 1, uploaded: false });
+    expect(b.local.get('es')).toEqual(words(entry('es_a1'), entry('es_b1', { xp: 7 })));
+    expect(b.putSpy).not.toHaveBeenCalled();
+    expect(await a.remote.getValue<unknown>('es', PROGRESS_KEY)).toEqual(raw);
+    expect(b.warn).toHaveBeenCalledWith(
+      'progress-sync: remote progress has unreadable entries; not uploading',
+      { languageCode: 'es', unreadableEntries: 1 }
+    );
+  });
+
   describe('blob size against the real 1 MiB server cap', () => {
-    /** One word whose note is padded so the whole blob is exactly `target` UTF-8 bytes. */
+    /**
+     * Many small, valid words (the client rejects strings over 200 characters and notes over 2000
+     * on read, so one huge note would make the blob unreadable on the other device). The count is
+     * the largest that fits, then the last word's note is padded (under 200 characters) so the
+     * whole blob is exactly `target` UTF-8 bytes.
+     */
     const wordsOfBlobSize = (target: number): WordMap => {
-      const base = words(entry('es_big', { customNotes: '' }));
-      const { bytes } = buildProgressBlob(base, 'device-a', NOW);
-      const padded = words(entry('es_big', { customNotes: 'n'.repeat(target - bytes) }));
+      const build = (count: number, padding: number): WordMap =>
+        words(
+          ...Array.from({ length: count }, (_, i) =>
+            entry(`es_${String(i).padStart(5, '0')}`, {
+              customNotes: i === count - 1 ? 'n'.repeat(padding) : '',
+            })
+          )
+        );
+      const sizeOf = (count: number): number =>
+        buildProgressBlob(build(count, 0), 'device-a', NOW).bytes;
+      // largest count that fits (binary search: the size grows with every word)
+      let low = 1;
+      let high = 20000;
+      while (low < high) {
+        const mid = Math.ceil((low + high) / 2);
+        if (sizeOf(mid) <= target) low = mid;
+        else high = mid - 1;
+      }
+      const count = low;
+      expect(count).toBeLessThan(20000);
+      const padding = target - sizeOf(count);
+      expect(padding).toBeLessThan(200);
+      const padded = build(count, padding);
       expect(buildProgressBlob(padded, 'device-a', NOW).bytes).toBe(target);
       return padded;
     };

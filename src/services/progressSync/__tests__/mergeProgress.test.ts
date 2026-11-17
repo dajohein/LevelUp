@@ -115,23 +115,116 @@ describe('mergeWordProgress', () => {
     expect(mergeWordProgress({ a: good }, { a: bad }, NOW).merged.a.xp).toBe(2);
   });
 
-  it('clamps a lastPracticed more than 24h in the future to now', () => {
-    const skewed = { a: entry('a', { lastPracticed: iso(NOW + DAY + 1), xp: 1 }) };
-    // Clamped to NOW, so an entry practised 1s after NOW (within 24h) is later and wins.
-    const within = { a: entry('a', { lastPracticed: iso(NOW + 1000), xp: 3 }) };
-    expect(mergeWordProgress(within, skewed, NOW).merged.a.xp).toBe(3);
-    expect(mergeWordProgress(skewed, within, NOW).merged.a.xp).toBe(3);
-    // Clamped to exactly NOW: ties with an entry at NOW, and more attempts decide.
-    const atNow = { a: entry('a', { lastPracticed: iso(NOW), xp: 2, timesCorrect: 0 }) };
-    expect(mergeWordProgress(atNow, skewed, NOW).merged.a.xp).toBe(1);
-  });
+  describe('future clock (skew) rule', () => {
+    const SKEW = NOW + DAY + 1; // 24h + 1ms ahead: skewed
+    const sane = NOW - DAY;
+    const withTimes = (lastPracticed: number, xp: number, timesCorrect: number) => ({
+      a: entry('a', { lastPracticed: iso(lastPracticed), xp, timesCorrect, timesIncorrect: 0 }),
+    });
 
-  it('does not clamp a lastPracticed exactly 24h in the future', () => {
-    const exact = { a: entry('a', { lastPracticed: iso(NOW + DAY), xp: 1 }) };
-    const within = { a: entry('a', { lastPracticed: iso(NOW + 1000), xp: 3 }) };
-    // Not clamped: NOW + 24h is later than NOW + 1s, so it wins.
-    expect(mergeWordProgress(within, exact, NOW).merged.a.xp).toBe(1);
-    expect(mergeWordProgress(exact, within, NOW).merged.a.xp).toBe(1);
+    it('a skewed remote with MORE answers than a sane local wins on the tie', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(sane, 1, 2),
+        withTimes(SKEW, 2, 3),
+        NOW
+      );
+      expect(merged.a.xp).toBe(2);
+      expect(takenFromRemote).toBe(1);
+    });
+
+    it('a skewed remote with FEWER answers cannot overwrite a sane local', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(sane, 1, 3),
+        withTimes(SKEW, 2, 2),
+        NOW
+      );
+      expect(merged.a.xp).toBe(1);
+      expect(takenFromRemote).toBe(0);
+    });
+
+    it('a skewed remote with EQUAL answers cannot overwrite a sane local', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(sane, 1, 2),
+        withTimes(SKEW, 2, 2),
+        NOW
+      );
+      expect(merged.a.xp).toBe(1);
+      expect(takenFromRemote).toBe(0);
+    });
+
+    it('a skewed remote cannot beat a local practised just after now (within 24h)', () => {
+      const { merged } = mergeWordProgress(withTimes(NOW + 1000, 1, 5), withTimes(SKEW, 2, 2), NOW);
+      expect(merged.a.xp).toBe(1);
+    });
+
+    it('a skewed local with FEWER answers than a sane remote is replaced', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(SKEW, 1, 2),
+        withTimes(sane, 2, 3),
+        NOW
+      );
+      expect(merged.a.xp).toBe(2);
+      expect(takenFromRemote).toBe(1);
+    });
+
+    it('a skewed local with MORE answers than a sane remote is kept', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(SKEW, 1, 3),
+        withTimes(sane, 2, 2),
+        NOW
+      );
+      expect(merged.a.xp).toBe(1);
+      expect(takenFromRemote).toBe(0);
+    });
+
+    it('a skewed local with EQUAL answers than a sane remote is kept', () => {
+      const { merged, takenFromRemote } = mergeWordProgress(
+        withTimes(SKEW, 1, 2),
+        withTimes(sane, 2, 2),
+        NOW
+      );
+      expect(merged.a.xp).toBe(1);
+      expect(takenFromRemote).toBe(0);
+    });
+
+    it('when both are skewed, the later value wins whatever the answer counts', () => {
+      const earlier = withTimes(NOW + 3 * DAY, 1, 9);
+      const later = withTimes(NOW + 3 * DAY + 1, 2, 1);
+      expect(mergeWordProgress(earlier, later, NOW).merged.a.xp).toBe(2);
+      expect(mergeWordProgress(later, earlier, NOW).merged.a.xp).toBe(2);
+    });
+
+    it('exactly 24h ahead is not skewed: its real value is compared', () => {
+      // remote at NOW+24h has FEWER answers but is genuinely later than local at NOW+1s
+      const exactRemote = mergeWordProgress(
+        withTimes(NOW + 1000, 1, 5),
+        withTimes(NOW + DAY, 2, 1),
+        NOW
+      );
+      expect(exactRemote.merged.a.xp).toBe(2);
+      // as local: a real later value is kept against a sane remote with more answers
+      const exactLocal = mergeWordProgress(
+        withTimes(NOW + DAY, 1, 1),
+        withTimes(NOW + 1000, 2, 5),
+        NOW
+      );
+      expect(exactLocal.merged.a.xp).toBe(1);
+    });
+
+    it('24h + 1ms ahead is skewed: it counts as a tie, so fewer answers lose', () => {
+      const skewedRemote = mergeWordProgress(
+        withTimes(NOW + 1000, 1, 5),
+        withTimes(NOW + DAY + 1, 2, 1),
+        NOW
+      );
+      expect(skewedRemote.merged.a.xp).toBe(1);
+      const skewedLocal = mergeWordProgress(
+        withTimes(NOW + DAY + 1, 1, 1),
+        withTimes(NOW + 1000, 2, 5),
+        NOW
+      );
+      expect(skewedLocal.merged.a.xp).toBe(2);
+    });
   });
 
   it('does not mutate its inputs and returns copies', () => {
@@ -336,6 +429,118 @@ describe('parseProgressBlob', () => {
       );
       expect(result?.dropped).toBe(1);
       expect(Object.keys(result?.words ?? {})).toEqual(['b']);
+    });
+  });
+
+  describe('value caps', () => {
+    const parsedWith = (overrides: Record<string, unknown>) =>
+      parseProgressBlob(blobWith({ a: { ...entry('a'), ...overrides }, b: entry('b') }));
+    const expectKept = (overrides: Record<string, unknown>) => {
+      const result = parsedWith(overrides);
+      expect(result?.dropped).toBe(0);
+      expect(Object.keys(result?.words ?? {})).toEqual(['a', 'b']);
+    };
+    const expectDropped = (overrides: Record<string, unknown>) => {
+      const result = parsedWith(overrides);
+      expect(result?.dropped).toBe(1);
+      expect(Object.keys(result?.words ?? {})).toEqual(['b']);
+    };
+    const MAX = 1e9;
+    const dirWith = (overrides: Record<string, unknown>) => ({
+      directions: { 'term-to-definition': direction(overrides) },
+    });
+
+    it.each(['xp', 'timesCorrect', 'timesIncorrect', 'consecutiveCorrect', 'totalXp', 'version'])(
+      'accepts %s = 1e9 and drops 1e9 + 1',
+      field => {
+        expectKept({ [field]: MAX });
+        expectDropped({ [field]: MAX + 1 });
+      }
+    );
+
+    it.each([
+      'xp',
+      'timesCorrect',
+      'timesIncorrect',
+      'consecutiveCorrect',
+      'longestStreak',
+      'averageResponseTime',
+    ])('accepts a direction %s = 1e9 and drops 1e9 + 1', field => {
+      expectKept(dirWith({ [field]: MAX }));
+      expectDropped(dirWith({ [field]: MAX + 1 }));
+    });
+
+    it.each([
+      ['lastPracticed', (s: string) => ({ lastPracticed: s })],
+      ['streakUpdatedAt', (s: string) => ({ streakUpdatedAt: s })],
+      ['firstLearned', (s: string) => ({ firstLearned: s })],
+      ['a tags item', (s: string) => ({ tags: ['ok', s] })],
+      ['a direction lastPracticed', (s: string) => dirWith({ lastPracticed: s })],
+      ['a direction streakUpdatedAt', (s: string) => dirWith({ streakUpdatedAt: s })],
+    ])('accepts %s of 200 characters and drops 201', (_name, build) => {
+      expectKept(build('x'.repeat(200)));
+      expectDropped(build('x'.repeat(201)));
+    });
+
+    it('accepts customNotes of 2000 characters and drops 2001', () => {
+      expectKept({ customNotes: 'n'.repeat(2000) });
+      expectDropped({ customNotes: 'n'.repeat(2001) });
+    });
+
+    it('accepts 50 tags and drops 51', () => {
+      expectKept({ tags: Array.from({ length: 50 }, (_v, i) => `t${i}`) });
+      expectDropped({ tags: Array.from({ length: 51 }, (_v, i) => `t${i}`) });
+    });
+  });
+
+  describe('known-field allow-list', () => {
+    const KNOWN = ['wordId', 'xp', 'lastPracticed', 'timesCorrect', 'timesIncorrect'];
+
+    it('does not copy unknown top-level keys, and keeps the entry', () => {
+      const big = 'z'.repeat(1024 * 1024);
+      const result = parseProgressBlob(
+        blobWith({ a: { ...entry('a'), junk: 'x', bigJunk: big, nested: { deep: 1 } } })
+      );
+      expect(result?.dropped).toBe(0);
+      expect(Object.keys(result?.words.a ?? {}).sort()).toEqual([...KNOWN].sort());
+      expect(result?.words.a).toEqual(entry('a'));
+      expect(JSON.stringify(result).length).toBeLessThan(1000);
+    });
+
+    it('does not copy an own __proto__ key inside an entry, and does not pollute', () => {
+      const raw = JSON.parse(
+        '{"schema":1,"words":{"a":{"wordId":"a","xp":1,"lastPracticed":"x","timesCorrect":1,"timesIncorrect":0,"__proto__":{"polluted":true}}}}'
+      );
+      const result = parseProgressBlob(raw);
+      expect(result?.dropped).toBe(0);
+      expect(Object.keys(result?.words.a ?? {}).sort()).toEqual([...KNOWN].sort());
+      expect(Object.getPrototypeOf(result?.words.a)).toBe(Object.prototype);
+      expect((result?.words.a as unknown as Record<string, unknown>).polluted).toBeUndefined();
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    });
+
+    it('does not copy unknown keys inside a direction entry', () => {
+      const raw = JSON.parse(
+        JSON.stringify({
+          schema: 1,
+          words: {
+            a: {
+              ...entry('a'),
+              directions: {
+                'term-to-definition': { ...direction(), junk: 'x', big: 'y'.repeat(5000) },
+              },
+            },
+          },
+        }).replace('"junk"', '"__proto__":{"polluted":true},"junk"')
+      );
+      const result = parseProgressBlob(raw);
+      expect(result?.dropped).toBe(0);
+      const picked = result?.words.a.directions?.['term-to-definition'];
+      expect(Object.keys(picked ?? {}).sort()).toEqual(
+        ['lastPracticed', 'timesCorrect', 'timesIncorrect', 'xp'].sort()
+      );
+      expect(picked).toEqual(direction());
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
     });
   });
 

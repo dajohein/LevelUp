@@ -10,9 +10,13 @@ import {
 } from '../../services/storage/remoteStorage';
 import { environmentConfig } from '../../config/environment';
 import { syncActiveLanguageProgress } from '../../services/progressSync/startProgressSync';
+import { logger } from '../../services/logger';
 
 jest.mock('../../services/progressSync/startProgressSync', () => ({
   syncActiveLanguageProgress: jest.fn(),
+}));
+jest.mock('../../services/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('../../config/environment', () => ({
   environmentConfig: { enableRemoteStorage: false },
@@ -312,7 +316,10 @@ describe('AccountLinking', () => {
             .mockResolvedValue({ status: outcome, takenFromRemote: 0, uploaded: false });
           const status = await link();
           expect(status).toHaveTextContent('Device linked to your account.');
-          expect(status).toHaveTextContent('could not be synced right now');
+          expect(status).toHaveTextContent(
+            'Your progress could not be synced right now; it stays on this device.'
+          );
+          expect(status).not.toHaveTextContent('syncs again later');
           expect(status).not.toHaveTextContent('was synced');
         }
       );
@@ -321,7 +328,30 @@ describe('AccountLinking', () => {
         jest.mocked(syncActiveLanguageProgress).mockRejectedValue(new Error('boom'));
         const status = await link();
         expect(status).toHaveTextContent('Device linked to your account.');
-        expect(status).toHaveTextContent('could not be synced right now');
+        expect(status).toHaveTextContent(
+          'Your progress could not be synced right now; it stays on this device.'
+        );
+        expect(status).not.toHaveTextContent('was synced');
+      });
+
+      it('logs a warning with only the error name when the sync throws', async () => {
+        jest
+          .mocked(syncActiveLanguageProgress)
+          .mockRejectedValue(new TypeError('secret detail boom'));
+        await link();
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect(logger.warn).toHaveBeenCalledWith('Progress sync after linking failed', {
+          error: 'TypeError',
+        });
+        expect(JSON.stringify(jest.mocked(logger.warn).mock.calls)).not.toContain('secret detail');
+      });
+
+      it('logs no warning when the sync merely ends as failed or skipped', async () => {
+        jest
+          .mocked(syncActiveLanguageProgress)
+          .mockResolvedValue({ status: 'failed', takenFromRemote: 0, uploaded: false });
+        await link();
+        expect(logger.warn).not.toHaveBeenCalled();
       });
 
       it('does not sync when linking fails', async () => {

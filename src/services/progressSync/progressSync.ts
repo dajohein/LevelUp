@@ -59,9 +59,14 @@ const errorName = (error: unknown): string => (error instanceof Error ? error.na
  * word), and writes the merged result back only when it differs from what the server holds.
  *
  * Safety rules (each is covered by a test):
- * - nothing is uploaded unless the server blob was read successfully (an unreadable or newer-schema
- *   blob is left alone, never overwritten) and the merged map is not empty
- * - a failed run never changes local progress
+ * - nothing is uploaded unless the server blob was read successfully AND entirely understood (an
+ *   unreadable or newer-schema blob, or one with entries this version cannot read, is left alone,
+ *   never overwritten) and the merged map is not empty
+ * - a failed read never changes local progress (a merge already saved locally is kept if the
+ *   upload then fails: it only adds words)
+ * - nothing is uploaded unless the merge reached local storage, so a failed local save cannot
+ *   turn into a server blob that lacks the remote words
+ * - a paused service (a reset is running) neither applies nor uploads anything
  * - the upload is built from the language's own local data, never from whatever is active after an
  *   `await`, so languages cannot mix
  * - equal content means no upload, so a merge cannot trigger a chain of uploads
@@ -70,9 +75,10 @@ export function createProgressSync(deps: ProgressSyncDeps) {
   const inFlight = new Map<string, Promise<SyncResult>>();
   const rerun = new Set<string>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  let paused = false;
 
   const run = async (languageCode: string): Promise<SyncResult> => {
-    if (!deps.isEnabled() || !deps.hasSession() || !deps.isOnline()) return SKIPPED;
+    if (paused || !deps.isEnabled() || !deps.hasSession() || !deps.isOnline()) return SKIPPED;
 
     let remoteRaw: unknown;
     try {
@@ -85,7 +91,10 @@ export function createProgressSync(deps: ProgressSyncDeps) {
       return FAILED;
     }
 
+    if (paused) return SKIPPED; // a reset began while we were reading: apply and upload nothing
+
     let remoteWords: WordMap = {};
+    let unreadableEntries = 0;
     if (remoteRaw !== undefined) {
       const parsed = parseProgressBlob(remoteRaw);
       if (parsed === null) {
@@ -102,10 +111,12 @@ export function createProgressSync(deps: ProgressSyncDeps) {
         });
       }
       remoteWords = parsed.words;
+      unreadableEntries = parsed.dropped;
     }
 
     // From here to the end of the merge there is no `await`: the language cannot switch under us
     let takenFromRemote = 0;
+    let expected: WordMap = {};
     try {
       const local = deps.loadLocal(languageCode);
       const { merged, takenFromRemote: taken } = mergeWordProgress(
@@ -114,6 +125,7 @@ export function createProgressSync(deps: ProgressSyncDeps) {
         deps.now?.()
       );
       takenFromRemote = taken;
+      expected = merged;
       if (taken > 0) {
         if (deps.isActiveLanguage(languageCode)) {
           deps.applyToActive(languageCode, remoteWords);
@@ -130,6 +142,23 @@ export function createProgressSync(deps: ProgressSyncDeps) {
     }
 
     const finalWords = deps.loadLocal(languageCode);
+    if (takenFromRemote > 0 && !sameWords(finalWords, expected)) {
+      // Local storage did not take the merge (full or blocked): uploading now would overwrite the
+      // server blob with a map that lacks the remote words
+      deps.warn('progress-sync: local progress could not be saved; nothing uploaded', {
+        languageCode,
+      });
+      return { status: 'failed', takenFromRemote, uploaded: false };
+    }
+    if (unreadableEntries > 0) {
+      // The server blob holds entries this app version cannot read (for example written by a newer
+      // version). Uploading would erase them, so only the readable part was merged locally.
+      deps.warn('progress-sync: remote progress has unreadable entries; not uploading', {
+        languageCode,
+        unreadableEntries,
+      });
+      return { status: 'failed', takenFromRemote, uploaded: false };
+    }
     if (Object.keys(finalWords).length === 0 || sameWords(finalWords, remoteWords)) {
       return {
         status: takenFromRemote > 0 ? 'merged' : 'unchanged',
@@ -159,8 +188,26 @@ export function createProgressSync(deps: ProgressSyncDeps) {
     return { status: 'uploaded', takenFromRemote, uploaded: true };
   };
 
+  /** Never rejects: an unexpected error becomes a failed result and a named warning. */
+  const safeRun = async (languageCode: string): Promise<SyncResult> => {
+    try {
+      return await run(languageCode);
+    } catch (error) {
+      try {
+        deps.warn('progress-sync: unexpected error; local progress left as is', {
+          languageCode,
+          error: errorName(error),
+        });
+      } catch {
+        // a failing logger must not turn into an unhandled rejection
+      }
+      return FAILED;
+    }
+  };
+
   /** One sync per language at a time; a request made meanwhile runs once more afterwards. */
   const syncLanguage = (languageCode: string): Promise<SyncResult> => {
+    if (paused) return Promise.resolve(SKIPPED);
     const running = inFlight.get(languageCode);
     if (running) {
       rerun.add(languageCode);
@@ -168,9 +215,9 @@ export function createProgressSync(deps: ProgressSyncDeps) {
     }
     const promise = (async () => {
       try {
-        let result = await run(languageCode);
+        let result = await safeRun(languageCode);
         while (rerun.delete(languageCode)) {
-          result = await run(languageCode);
+          result = await safeRun(languageCode);
         }
         return result;
       } finally {
@@ -183,7 +230,7 @@ export function createProgressSync(deps: ProgressSyncDeps) {
 
   /** Call after every answer: syncs once the learner has been quiet for a while. */
   const noteLocalChange = (languageCode: string): void => {
-    if (!deps.isEnabled()) return;
+    if (paused || !deps.isEnabled()) return;
     const pending = timers.get(languageCode);
     if (pending) clearTimeout(pending);
     timers.set(
@@ -208,7 +255,21 @@ export function createProgressSync(deps: ProgressSyncDeps) {
     timers.clear();
   };
 
-  return { syncLanguage, noteLocalChange, flush, dispose };
+  /**
+   * Stop syncing and wait for every run in progress to end. Used before a reset: an upload already
+   * under way would otherwise recreate the server copy that was just deleted. Returns a function
+   * that resumes syncing (call it if the reset is abandoned).
+   */
+  const pause = async (): Promise<() => void> => {
+    paused = true;
+    dispose();
+    await Promise.all([...inFlight.values()].map(promise => promise.catch(() => undefined)));
+    return () => {
+      paused = false;
+    };
+  };
+
+  return { syncLanguage, noteLocalChange, flush, dispose, pause };
 }
 
 export type ProgressSync = ReturnType<typeof createProgressSync>;

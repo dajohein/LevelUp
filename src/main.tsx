@@ -32,9 +32,14 @@ import './index.css';
 // server's copy into local progress; local storage stays the source of truth.
 startProgressSync(store);
 initializeStorage()
-  .then(() => syncActiveLanguageProgress())
   .catch(error => {
     logger.warn('Storage initialization failed, falling back to local storage', { error });
+  })
+  .then(() => syncActiveLanguageProgress())
+  .catch(error => {
+    logger.warn('Progress sync at startup failed', {
+      error: error instanceof Error ? error.name : 'Error',
+    });
   });
 
 // Initialize development cache busting

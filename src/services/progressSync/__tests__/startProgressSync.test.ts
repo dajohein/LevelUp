@@ -7,7 +7,11 @@ import type { RootState } from '../../../store/store';
 import type { WordProgress } from '../../../store/types';
 import { remoteStorage } from '../../storage/remoteStorage';
 import { environmentConfig } from '../../../config/environment';
-import { startProgressSync, syncActiveLanguageProgress } from '../startProgressSync';
+import {
+  pauseProgressSync,
+  startProgressSync,
+  syncActiveLanguageProgress,
+} from '../startProgressSync';
 import { buildProgressBlob } from '../mergeProgress';
 import { PROGRESS_KEY, UPLOAD_DEBOUNCE_MS } from '../progressSync';
 
@@ -60,6 +64,8 @@ const settle = () => jest.advanceTimersByTimeAsync(0);
 const setVisibility = (state: 'hidden' | 'visible') =>
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
 
+let testClock = Date.now();
+
 describe('startProgressSync wiring', () => {
   let store: ReturnType<typeof createStore>;
   let cleanup: (() => void) | undefined;
@@ -83,6 +89,10 @@ describe('startProgressSync wiring', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    // wordProgressStorage skips an identical save made within 100ms of the last one for the same
+    // language; give every test its own distant clock so one test cannot swallow the next one's save
+    testClock += 60_000;
+    jest.setSystemTime(testClock);
     localStorage.clear();
     localStorage.setItem(
       'levelup_word_progress',
@@ -224,6 +234,58 @@ describe('startProgressSync wiring', () => {
     await settle();
     expect(remote.getValue).toHaveBeenCalledTimes(1);
     expect(remote.getValue).toHaveBeenCalledWith('de', PROGRESS_KEY);
+  });
+
+  describe('pauseProgressSync', () => {
+    it('with no sync running, resolves to a function that does nothing', async () => {
+      const resume = await pauseProgressSync();
+      expect(typeof resume).toBe('function');
+      expect(resume()).toBeUndefined();
+      expect(remote.getValue).not.toHaveBeenCalled();
+      expect(remote.putValue).not.toHaveBeenCalled();
+    });
+
+    it('while paused, a language switch and an answer start no sync and schedule no upload', async () => {
+      start();
+      await pauseProgressSync();
+
+      store.dispatch(setLanguage('es'));
+      answer();
+      window.dispatchEvent(new Event('online'));
+      await settle();
+      await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS * 3);
+
+      expect(remote.getValue).not.toHaveBeenCalled();
+      expect(remote.putValue).not.toHaveBeenCalled();
+    });
+
+    it('drops an upload that was already scheduled', async () => {
+      start();
+      answer();
+      await pauseProgressSync();
+      await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS * 3);
+      expect(remote.getValue).not.toHaveBeenCalled();
+      expect(remote.putValue).not.toHaveBeenCalled();
+    });
+
+    it('syncs again after the returned function is called', async () => {
+      start();
+      const resume = await pauseProgressSync();
+      store.dispatch(setLanguage('es'));
+      await settle();
+      expect(remote.getValue).not.toHaveBeenCalled();
+
+      resume();
+      store.dispatch(setLanguage('de'));
+      await settle();
+      expect(remote.getValue).toHaveBeenCalledTimes(1);
+      expect(remote.getValue).toHaveBeenCalledWith('de', PROGRESS_KEY);
+
+      remote.putValue.mockClear();
+      answer();
+      await jest.advanceTimersByTimeAsync(UPLOAD_DEBOUNCE_MS);
+      expect(remote.putValue).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('cleanup removes the listeners and the store subscription', async () => {

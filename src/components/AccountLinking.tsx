@@ -257,13 +257,17 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       let synced: Awaited<ReturnType<typeof syncActiveLanguageProgress>>;
       try {
         synced = await syncActiveLanguageProgress();
-      } catch {
-        synced = undefined; // the link worked; only the progress sync did not
+      } catch (syncError) {
+        // the link worked; only the progress sync did not
+        logger.warn('Progress sync after linking failed', {
+          error: syncError instanceof Error ? syncError.name : 'Error',
+        });
+        synced = undefined;
       }
       const progressNote =
         synced && synced.status !== 'failed' && synced.status !== 'skipped'
           ? 'Your progress for the current language was synced; other languages sync when you open them.'
-          : 'Your progress could not be synced right now; it stays on this device and syncs again later.';
+          : 'Your progress could not be synced right now; it stays on this device.';
       setMessage({
         text: `Device linked to your account. ${progressNote}${devices}`,
         type: 'success',
