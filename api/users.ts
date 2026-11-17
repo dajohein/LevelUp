@@ -21,6 +21,7 @@ interface VercelResponse {
 import { randomBytes, randomUUID } from 'crypto';
 import { getDb, KEY_PREFIX } from './_db.js';
 import { createSessionToken, verifySessionToken, resolveCorsOrigin } from './_auth.js';
+import { clientAddress, envPositiveInt } from './_config.js';
 
 interface UserRequest {
   action: 'create' | 'get' | 'update' | 'authenticate' | 'generateCode' | 'linkDevice';
@@ -71,11 +72,26 @@ const codeKey = (code: string) => `${KEY_PREFIX}code:${code}`;
 const userCodeKey = (id: string) => `${KEY_PREFIX}usercode:${id}`;
 const codeAttemptsKey = (code: string) => `${KEY_PREFIX}codeattempts:${code}`;
 
-// Security constants (env-driven)
-const MAX_CODE_ATTEMPTS = Number(process.env.ACCOUNT_CODE_MAX_ATTEMPTS || 5); // Max attempts per code
-const MAX_RATE_LIMIT_ATTEMPTS = Number(process.env.RATE_LIMIT_MAX_ATTEMPTS || 10); // Max attempts per IP per window
-const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60 * 60 * 1000); // default 1 hour
-const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || 60 * 60 * 1000); // default 1 hour
+// Security limits (env-driven). A malformed value falls back to the default and is logged
+// (see envPositiveInt); it never disables a limit.
+const MAX_CODE_ATTEMPTS = () => envPositiveInt('ACCOUNT_CODE_MAX_ATTEMPTS', 5); // per code
+const MAX_RATE_LIMIT_ATTEMPTS = () => envPositiveInt('RATE_LIMIT_MAX_ATTEMPTS', 10); // per client per window
+const MAX_CREATE_ATTEMPTS = () => envPositiveInt('CREATE_MAX_PER_WINDOW', 30); // new accounts per client per window
+const RATE_LIMIT_WINDOW = () => envPositiveInt('RATE_LIMIT_WINDOW_MS', 60 * 60 * 1000); // default 1 hour
+const CODE_EXPIRY = () => envPositiveInt('ACCOUNT_CODE_EXPIRY_MS', 60 * 60 * 1000); // default 1 hour
+
+const KNOWN_ACTIONS: ReadonlyArray<string> = [
+  'create',
+  'get',
+  'update',
+  'authenticate',
+  'generateCode',
+  'linkDevice',
+];
+const MAX_USERNAME_LENGTH = 64;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_PREFERENCES_BYTES = 16 * 1024;
+const ACCOUNT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
@@ -118,38 +134,55 @@ function validateSession(token: string): string | null {
 }
 
 function createSession(userId: string): string {
-  const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || 24 * 60 * 60 * 1000);
+  const ttlMs = envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
   return createSessionToken(userId, ttlMs);
 }
 
-// Fixed-window rate limit: allows MAX_RATE_LIMIT_ATTEMPTS per window per identifier.
+// Fixed-window rate limit: allows `max` attempts per window per identifier.
 // The window number is part of the key and EXPIRE is always (re)applied, so a request that
 // dies between INCR and EXPIRE can only leave a harmless stale bucket behind. The client
 // is never locked out beyond the current window.
-async function isRateLimited(identifier: string): Promise<boolean> {
+async function isRateLimited(
+  identifier: string,
+  max = MAX_RATE_LIMIT_ATTEMPTS()
+): Promise<boolean> {
   const db = await getDb();
-  const windowId = Math.floor(Date.now() / RATE_LIMIT_WINDOW);
-  const key = `${KEY_PREFIX}rl:${identifier}:${windowId}`;
+  const window = RATE_LIMIT_WINDOW();
+  const key = `${KEY_PREFIX}rl:${identifier}:${Math.floor(Date.now() / window)}`;
   const attempts = await db.incr(key);
-  await db.expire(key, Math.ceil((RATE_LIMIT_WINDOW * 2) / 1000));
-  return attempts > MAX_RATE_LIMIT_ATTEMPTS;
+  await db.expire(key, Math.ceil((window * 2) / 1000));
+  return attempts > max;
 }
 
-// Helper function to get client identifier (IP-based)
-function getClientIdentifier(req: any): string {
-  // In production, use proper IP detection with proxy headers
-  return (
-    req.headers['x-forwarded-for'] ||
-    req.headers['x-real-ip'] ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
+// Client identity for rate limiting (parsed, validated and length-capped, see _config.ts)
+function getClientIdentifier(req: VercelRequest): string {
+  return clientAddress(req.headers);
+}
+
+/** Validates the client-supplied profile fields; returns an error message or null. */
+function validateUserData(userData: UserRequest['userData']): string | null {
+  if (userData === undefined) return null;
+  if (typeof userData !== 'object' || userData === null) return 'userData must be an object';
+  const { username, email, preferences } = userData;
+  if (
+    username !== undefined &&
+    (typeof username !== 'string' || username.length > MAX_USERNAME_LENGTH)
+  )
+    return `username must be a string of at most ${MAX_USERNAME_LENGTH} characters`;
+  if (email !== undefined && (typeof email !== 'string' || email.length > MAX_EMAIL_LENGTH))
+    return `email must be a string of at most ${MAX_EMAIL_LENGTH} characters`;
+  if (
+    preferences !== undefined &&
+    JSON.stringify(preferences ?? null).length > MAX_PREFERENCES_BYTES
+  )
+    return 'preferences are too large';
+  return null;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS via environment configuration
   const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  res.setHeader('Vary', 'Origin');
   if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -172,12 +205,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: false,
       metadata: {
         timestamp: Date.now(),
-        action: request.action,
+        action: KNOWN_ACTIONS.includes(request.action) ? request.action : 'unknown',
       },
     };
 
     switch (request.action) {
       case 'create': {
+        if (await isRateLimited(`create_${getClientIdentifier(req)}`, MAX_CREATE_ATTEMPTS())) {
+          response.error = 'Too many accounts created. Please try again later.';
+          return res.status(429).json(response);
+        }
+        const invalid = validateUserData(request.userData);
+        if (invalid) {
+          response.error = invalid;
+          return res.status(400).json(response);
+        }
         const userId = randomUUID();
         const user: UserProfile = {
           id: userId,
@@ -225,6 +267,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
+        const invalidUpdate = validateUserData(request.userData);
+        if (invalidUpdate) {
+          response.error = invalidUpdate;
+          return res.status(400).json(response);
+        }
         if (!(await db.hgetall(userKey(userId)))) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -294,7 +341,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const accountCode = generateAccountCode();
-        const expirySeconds = Math.ceil(CODE_EXPIRY / 1000);
+        const expirySeconds = Math.ceil(CODE_EXPIRY() / 1000);
         const previousCode = await db.get<string>(userCodeKey(userId));
         await db.set(
           codeKey(accountCode),
@@ -313,58 +360,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.success = true;
         response.data = {
           accountCode,
-          expiresIn: CODE_EXPIRY / 1000, // Return seconds for client
+          expiresIn: CODE_EXPIRY() / 1000, // Return seconds for client
         } as any; // Type assertion for Vercel response compatibility
         break;
       }
 
       case 'linkDevice': {
-        if (!request.accountCode) {
-          response.error = 'accountCode is required to link device';
-          return res.status(400).json(response);
-        }
-
-        // Normalize the code (uppercase, remove spaces)
-        const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
-
-        // Check rate limiting for link attempts
+        // Rate limit first, so malformed and unknown guesses all count against the client
         const clientId = getClientIdentifier(req);
         if (await isRateLimited(`link_${clientId}`)) {
           response.error = 'Too many linking attempts. Please try again later.';
           return res.status(429).json(response);
         }
 
-        const codeData = await db.get<{ userId: string }>(codeKey(normalizedCode));
-        if (!codeData) {
-          // Unknown or expired (TTL elapsed)
+        // Every failure below returns this same message so a response never reveals whether a
+        // code is unknown, expired, superseded, used or exhausted.
+        const invalidCode = () => {
           response.error = 'Invalid or expired account code';
           return res.status(400).json(response);
-        }
+        };
+
+        if (typeof request.accountCode !== 'string') return invalidCode();
+        // Normalize the code (uppercase, remove spaces), then require the exact code format
+        const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
+        if (!ACCOUNT_CODE_PATTERN.test(normalizedCode)) return invalidCode();
+
+        const codeData = await db.get<{ userId: string }>(codeKey(normalizedCode));
+        if (!codeData) return invalidCode(); // unknown or expired (TTL elapsed)
 
         // Check code-specific attempt limit (EXPIRE always re-applied, see isRateLimited)
         const codeAttempts = await db.incr(codeAttemptsKey(normalizedCode));
-        await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY / 1000));
-        if (codeAttempts > MAX_CODE_ATTEMPTS) {
+        await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY() / 1000));
+        if (codeAttempts > MAX_CODE_ATTEMPTS()) {
           await db.del(codeKey(normalizedCode), codeAttemptsKey(normalizedCode));
-          response.error = 'Too many attempts for this code. Code has been invalidated.';
-          return res.status(400).json(response);
+          return invalidCode();
         }
 
         // Only the user's most recently generated code is redeemable
         const currentCode = await db.get<string>(userCodeKey(codeData.userId));
-        if (currentCode !== normalizedCode) {
-          response.error = 'Invalid or expired account code';
-          return res.status(400).json(response);
-        }
+        if (currentCode !== normalizedCode) return invalidCode();
 
         // Single use: DEL is atomic, so only one concurrent request can consume the code.
         // The user's pointer is left to expire: it now names a consumed code, which can
         // never validate again, and deleting it here could race with a newer generateCode.
         const consumed = await db.del(codeKey(normalizedCode));
-        if (!consumed) {
-          response.error = 'Account code has already been used';
-          return res.status(400).json(response);
-        }
+        if (!consumed) return invalidCode();
         await db.del(codeAttemptsKey(normalizedCode));
 
         const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
@@ -386,7 +426,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       default:
-        response.error = `Unknown action: ${request.action}`;
+        response.error = 'Unknown action';
         return res.status(400).json(response);
     }
 
@@ -398,7 +438,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       metadata: {
         timestamp: Date.now(),
-        action: req.body?.action || 'unknown',
+        action: 'unknown',
       },
     });
   }

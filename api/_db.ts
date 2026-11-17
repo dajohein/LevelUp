@@ -10,6 +10,7 @@
  */
 import type { Redis } from '@upstash/redis';
 import { MemoryDb } from './_memoryDb.js';
+import { isProduction } from './_config.js';
 
 export const KEY_PREFIX = 'levelup:';
 
@@ -24,7 +25,7 @@ export async function getDb(): Promise<Redis> {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (!isProduction()) {
       return memoryDb as unknown as Redis;
     }
     throw new Error(
