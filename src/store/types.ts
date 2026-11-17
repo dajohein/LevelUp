@@ -44,6 +44,10 @@ export interface WordProgress {
   timesCorrect: number; // Original correct count
   timesIncorrect: number; // Original incorrect count
 
+  // REVIEW SCHEDULING - OPTIONAL (absent on progress saved before streaks were tracked)
+  consecutiveCorrect?: number; // Reviews answered correctly in a row; a lapse resets it to 0
+  streakUpdatedAt?: string; // ISO date of the last streak increase (see reviewStreak.ts)
+
   // NEW FIELDS - OPTIONAL AND DEFAULTED
   totalXp?: number; // Aggregate XP across directions
   firstLearned?: string; // When word was first encountered

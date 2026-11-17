@@ -13,6 +13,7 @@ import { WordProgress } from '../store/types';
 import { Word } from './wordService';
 import { calculateMasteryDecay } from './masteryService';
 import { logger } from './logger';
+import { getReviewStreak } from './reviewStreak';
 
 // Learning constants based on cognitive science research
 export const LEARNING_CONSTANTS = {
@@ -309,6 +310,28 @@ export const createWordGroups = (
 };
 
 /**
+ * When a practiced word is next due, or null if it has never been practiced.
+ * Uses the word's mastery after decay and its review streak.
+ */
+export const getNextReviewAt = (progress: WordProgress | undefined): Date | null => {
+  if (!progress || !progress.lastPracticed) return null;
+  const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
+  return calculateNextReviewTime(currentMastery, getReviewStreak(progress), progress.lastPracticed);
+};
+
+/** Practiced words whose review time has passed, most overdue first. */
+export const getDueWords = (
+  words: Word[],
+  wordProgress: { [key: string]: WordProgress },
+  now: Date = new Date()
+): Word[] =>
+  words
+    .map(word => ({ word, dueAt: getNextReviewAt(wordProgress[word.id]) }))
+    .filter((c): c is { word: Word; dueAt: Date } => c.dueAt !== null && c.dueAt <= now)
+    .sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime())
+    .map(c => c.word);
+
+/**
  * Selects words that need review based on spaced repetition algorithm
  */
 export const selectWordsForReview = (
@@ -316,33 +339,7 @@ export const selectWordsForReview = (
   wordProgress: { [key: string]: WordProgress },
   maxReviewWords = 10
 ): Word[] => {
-  const now = new Date();
-
-  const reviewCandidates = words
-    .map(word => {
-      const progress = wordProgress[word.id];
-      if (!progress || !progress.lastPracticed) return null;
-
-      const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
-      const correctStreak = Math.max(0, progress.timesCorrect - progress.timesIncorrect);
-      const nextReviewTime = calculateNextReviewTime(
-        currentMastery,
-        correctStreak,
-        progress.lastPracticed
-      );
-
-      return {
-        word,
-        currentMastery,
-        nextReviewTime,
-        priority: nextReviewTime.getTime() - now.getTime(), // Negative = overdue
-      };
-    })
-    .filter(Boolean)
-    .filter(candidate => candidate!.priority <= 0) // Only overdue words
-    .sort((a, b) => a!.priority - b!.priority) // Most overdue first
-    .slice(0, maxReviewWords)
-    .map(candidate => candidate!.word);
+  const reviewCandidates = getDueWords(words, wordProgress).slice(0, maxReviewWords);
 
   if (reviewCandidates.length > 0) {
     logger.debug(`🔄 Selected ${reviewCandidates.length} words for review`);
