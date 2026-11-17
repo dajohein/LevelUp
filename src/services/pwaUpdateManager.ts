@@ -6,6 +6,7 @@
  */
 
 import { logger } from './logger';
+import { reloadPage } from './pageReload';
 
 export interface UpdateInfo {
   version: string;
@@ -13,9 +14,19 @@ export interface UpdateInfo {
   available: boolean;
 }
 
+/** How long to wait for the new worker to take control before reloading anyway. */
+const CONTROLLER_CHANGE_TIMEOUT_MS = 4000;
+
 class PWAUpdateManager {
   private updateCallbacks: ((info: UpdateInfo) => void)[] = [];
   private currentVersion: string | null = null;
+  // An update that was found before anyone was listening (the banner mounts after startup)
+  private pendingUpdate: UpdateInfo | null = null;
+  // Set once the user accepted the update: guards against applying twice
+  private applying = false;
+  // The fallback reload, cancelled as soon as control changes (or the page is already going away)
+  private fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private reloaded = false;
 
   constructor() {
     this.initializeServiceWorker();
@@ -36,19 +47,19 @@ class PWAUpdateManager {
 
           console.log('🔧 ServiceWorker registered:', registration.scope);
 
-          // Check for updates immediately
+          // A new version may already be waiting (found on an earlier visit, or while the page
+          // was loading): tell the UI without needing a fresh `updatefound`
+          if (registration.waiting && navigator.serviceWorker.controller) {
+            this.notifyUpdateAvailable();
+          }
+
+          // A worker may already be installing (its `updatefound` fired before we got here,
+          // because other code registers the same worker too): watch it as well
+          if (registration.installing) this.watchInstalling(registration.installing);
+
           registration.addEventListener('updatefound', () => {
             console.log('🔄 New service worker found, preparing update...');
-
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('✅ New version ready! Notifying user...');
-                  this.notifyUpdateAvailable();
-                }
-              });
-            }
+            if (registration.installing) this.watchInstalling(registration.installing);
           });
 
           // Check for updates periodically (every 5 minutes)
@@ -76,21 +87,22 @@ class PWAUpdateManager {
    */
   private listenForUpdates() {
     if ('serviceWorker' in navigator) {
+      // A page that started out controlled by an earlier worker is running the OLD release. If a
+      // worker takes control without this page having asked (the user accepted the update in
+      // another tab), this page now has an old bundle under a new worker whose caches no longer
+      // hold the old release's files: offer the reload, never do it unasked. A first install
+      // (no earlier controller) is not an update.
+      const startedControlled = navigator.serviceWorker.controller !== null;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (startedControlled && !this.applying) this.notifyUpdateAvailable();
+      });
+
       navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
-          console.log('📢 Received update availability notification:', event.data);
-
-          const updateInfo: UpdateInfo = {
-            version: event.data.version,
-            cacheIdentifier: event.data.cacheIdentifier,
-            available: true,
-          };
-
-          this.currentVersion = event.data.version;
-          this.triggerUpdateCallbacks(updateInfo);
-        } else if (event.data && event.data.type === 'SW_UPDATED_APPLIED') {
+        // The worker no longer announces "update available" (it cannot know the update is
+        // wanted); a waiting worker is detected from the registration instead.
+        if (event.data && event.data.type === 'SW_UPDATED_APPLIED') {
           console.log('✅ Update successfully applied:', event.data);
-          // The page will reload automatically after this message
+          if (event.data.version) this.currentVersion = event.data.version;
         }
       });
     }
@@ -106,59 +118,96 @@ class PWAUpdateManager {
       available: true,
     };
 
+    this.pendingUpdate = updateInfo;
     this.triggerUpdateCallbacks(updateInfo);
   }
 
   /**
-   * Subscribe to update notifications
+   * Subscribe to update notifications. A subscriber that arrives after the update was found is
+   * told at once (the banner mounts after startup, so it would otherwise miss it). Returns the
+   * function that ends the subscription: call it on unmount, or callbacks pile up.
    */
-  onUpdateAvailable(callback: (info: UpdateInfo) => void) {
+  onUpdateAvailable(callback: (info: UpdateInfo) => void): () => void {
     this.updateCallbacks.push(callback);
+    if (this.pendingUpdate) {
+      try {
+        callback(this.pendingUpdate);
+      } catch (error) {
+        logger.error('Update callback error', { error });
+      }
+    }
+    return () => {
+      this.updateCallbacks = this.updateCallbacks.filter(existing => existing !== callback);
+    };
+  }
+
+  /** Announce the update when this installing worker finishes installing under a controlled page. */
+  private watchInstalling(worker: ServiceWorker) {
+    const announceIfReady = () => {
+      if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+        logger.debug('✅ New version ready! Notifying user...');
+        this.notifyUpdateAvailable();
+      }
+    };
+    worker.addEventListener('statechange', announceIfReady);
+    announceIfReady(); // it may have finished installing before we attached
   }
 
   /**
-   * Apply the available update
+   * Apply the available update. Call this only after the user asked for it: it reloads the page.
+   * The reload happens once however many times this is called.
    */
   async applyUpdate(): Promise<boolean> {
+    // Take the guard before the first await: overlapping calls must not each post SKIP_WAITING
+    if (this.applying) return true;
+    this.applying = true;
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
 
         if (registration && registration.waiting) {
-          console.log('🔄 Applying update...');
+          logger.debug('🔄 Applying update...');
 
-          // Tell the waiting service worker to become active
+          // Reload as soon as the new worker has taken control
+          navigator.serviceWorker.addEventListener(
+            'controllerchange',
+            () => {
+              logger.debug('✅ New service worker is now controlling the page');
+              this.reloadOnce();
+            },
+            { once: true }
+          );
+          // Tell the waiting worker to become active
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
 
-          // Wait for the new service worker to take control
-          await new Promise<void>(resolve => {
-            navigator.serviceWorker.addEventListener(
-              'controllerchange',
-              () => {
-                console.log('✅ New service worker is now controlling the page');
-                resolve();
-              },
-              { once: true }
-            );
-          });
-
-          // Reload the page to get the fresh content
-          console.log('🔄 Reloading page with new version...');
-          window.location.reload();
-
-          return true;
-        } else {
-          console.log('🔄 No waiting service worker, forcing page reload...');
-          window.location.reload();
+          // If control never changes (a browser quirk), do not leave the user on a dead button
+          this.fallbackTimer = setTimeout(() => this.reloadOnce(), CONTROLLER_CHANGE_TIMEOUT_MS);
           return true;
         }
+
+        logger.debug('🔄 No waiting service worker, reloading the page...');
+        this.reloadOnce();
+        return true;
       }
 
+      this.applying = false;
       return false;
     } catch (error) {
+      this.applying = false;
       logger.error('Failed to apply update', { error });
       return false;
     }
+  }
+
+  /** Reload at most once, and drop the pending fallback so it cannot reload a second time. */
+  private reloadOnce() {
+    if (this.fallbackTimer !== null) {
+      clearTimeout(this.fallbackTimer);
+      this.fallbackTimer = null;
+    }
+    if (this.reloaded) return;
+    this.reloaded = true;
+    reloadPage();
   }
 
   /**

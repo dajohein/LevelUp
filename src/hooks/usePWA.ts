@@ -1,3 +1,4 @@
+import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { useState, useEffect } from 'react';
 import { logger } from '../services/logger';
 
@@ -27,6 +28,14 @@ interface NavigatorIOS extends Navigator {
   standalone?: boolean;
 }
 
+/**
+ * The push (VAPID) public key. Vite settings reach shared code through window.__APP_ENV (set in
+ * main.tsx); `import.meta` itself cannot be parsed by the test runner.
+ */
+const getVapidKey = (): string | undefined =>
+  (window as Window & { __APP_ENV?: Record<string, string | undefined> }).__APP_ENV
+    ?.VITE_VAPID_PUBLIC_KEY;
+
 // PWA installation and service worker management
 export const usePWA = () => {
   const [isInstallable, setIsInstallable] = useState(false);
@@ -35,23 +44,15 @@ export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
+  // One update detector: the manager's. It also sees a worker that was already waiting when the
+  // page started (this hook used to listen for `updatefound` only, which does not fire for that)
+  useEffect(() => pwaUpdateManager.onUpdateAvailable(() => setUpdateAvailable(true)), []);
+
   const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         setSwRegistration(registration);
-
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateAvailable(true);
-              }
-            });
-          }
-        });
 
         logger.debug('Service Worker registered successfully');
       } catch (error) {
@@ -111,10 +112,10 @@ export const usePWA = () => {
   };
 
   const updateApp = async () => {
-    if (swRegistration?.waiting) {
-      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
-    }
+    // Reloading right after posting SKIP_WAITING would race the new worker's activation; the
+    // manager waits for it to take control, and reloads once (or just reloads if the update was
+    // already applied from another tab)
+    await pwaUpdateManager.applyUpdate();
   };
 
   return {
@@ -178,7 +179,7 @@ export const usePushNotifications = () => {
     }
 
     // Check if VAPID key is configured (you would set this in environment variables)
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = getVapidKey();
     setVapidKeyAvailable(!!vapidKey);
   }, []);
 
@@ -195,7 +196,7 @@ export const usePushNotifications = () => {
     if (!('PushManager' in window) || !registration) return;
 
     // Get VAPID key from environment variables
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = getVapidKey();
 
     if (!vapidKey) {
       logger.warn('VAPID key not configured for push notifications');

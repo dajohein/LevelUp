@@ -1,13 +1,13 @@
 # 🚀 LevelUp Deployment Guide
 
-Your LevelUp PWA is ready for deployment! 
+Your LevelUp PWA is ready for deployment!
 
 ## Pull request quality gate
 
 `.github/workflows/quality-gate.yml` runs on every pull request (including forks),
 push to `main`, and merge-queue group. There are no path filters or secrets.
 The stable job name is **Quality gate**. It runs `npm ci`, app/API type-checks,
-lint-policy tests, the ESLint regression check, Jest and the Vite build on Node 22.
+lint-policy tests, the service worker lifecycle test, the ESLint regression check, Jest and the Vite build on Node 22.
 An unsuccessful step fails the job; no check uses `continue-on-error`.
 
 Run the same checks locally with Node 22 and npm 10:
@@ -17,6 +17,7 @@ npm ci --no-audit --no-fund
 npm run type-check
 npm run type-check:api
 npm run test:quality-gate
+npm run test:sw-lifecycle
 npm run lint:ci
 npm test -- --ci --runInBand
 npm run build
@@ -108,6 +109,7 @@ runner use; logs show step durations for monitoring.
 ## 📋 Pre-Deployment Checklist
 
 ### ✅ **Ready to Deploy**
+
 - [x] PWA manifest.json configured
 - [x] Service Worker implemented
 - [x] All icons generated (16x16 to 512x512)
@@ -115,11 +117,12 @@ runner use; logs show step durations for monitoring.
 - [x] Build process working (`npm run build`)
 - [x] Production-ready code (no debug components)
 
-## 🌟 **Recommended: Vercel** 
+## 🌟 **Recommended: Vercel**
 
 **Perfect for React/Vite apps with zero configuration**
 
 ### **One-Click Deploy**
+
 1. Go to [vercel.com](https://vercel.com)
 2. Sign in with GitHub
 3. Click "Import Project"
@@ -130,6 +133,7 @@ runner use; logs show step durations for monitoring.
 **Your app will be live at**: `https://your-app-name.vercel.app`
 
 ### **Why Vercel?**
+
 - ✅ **Zero configuration** for Vite/React
 - ✅ **Automatic deployments** on git push
 - ✅ **Global CDN** included
@@ -149,6 +153,7 @@ VITE_VAPID_PUBLIC_KEY=BI8OflKtDyI1am3VQ-pZa2qLBiUnXLAoYzkkq233ylHP3U4EC-N7reTeyz
 ## 📱 **Production Cache Management**
 
 ### **For Production Deployments:**
+
 Use the normal build command for production and preview deployments. This is
 already the command in `vercel.json`; no deployment-setting change is required:
 
@@ -166,6 +171,7 @@ never mutate `public/sw.js`; only deploy a successfully completed output.
 `npm run build:production` remains a compatibility alias for this same path.
 
 ### **Cache Versioning System:**
+
 - **Development server**: The unbuilt worker uses timestamps for cache busting.
 - **Built output**, including localhost previews: Uses version + content hash.
 - **Offline shell**: Installation precaches HTML, the manifest, and all emitted
@@ -195,15 +201,36 @@ CDN behavior, and the actual hosted output cannot be inferred from local tests.
 Project/dashboard build settings remain owner-controlled and are not changed here.
 
 ### **Troubleshooting Cache Issues:**
+
 If users report not seeing latest changes:
+
 1. Check service worker version in browser DevTools
-2. Force refresh with Ctrl+Shift+R (desktop)  
+2. Force refresh with Ctrl+Shift+R (desktop)
 3. Clear application data in browser settings (mobile)
 4. Update notification should appear automatically on next visit
 
 ## 🎯 **Post-Deployment Testing**
 
+### **Verify the update flow on a real device**
+
+The service worker lifecycle is tested without a browser (`npm run test:sw-lifecycle` runs the real
+`public/sw.js` in a sandbox, and the update manager and banner have unit tests), but only a real
+browser can show it end to end. After a deploy, on an installed home-screen app **and** in a
+browser tab that was opened before the deploy:
+
+- [ ] The old version keeps working: the page does not reload by itself, even mid-quiz
+- [ ] A banner "A new version of LevelUp is ready." appears (not during a quiz; it appears when the learner leaves it)
+- [ ] The banner stays until acted on; "Later" hides it, "Update now" loads the new version once (no reload loop)
+- [ ] After updating, the new behaviour is visible and the old caches are gone (DevTools, Application, Cache Storage)
+- [ ] Closing every tab and reopening also loads the new version (the fallback if the banner is ignored)
+- [ ] A first visit in a fresh profile does not reload the page
+
+`npm run test:sw` also runs a real-Chrome update test. CI runs it on every pull request (the job fails if
+Chrome is missing); the dev container installs Chromium so it can be run from a Codespace too. Outside
+those, it skips itself when no browser is found.
+
 ### **Test PWA Features**
+
 - [ ] App installation works
 - [ ] Offline functionality
 - [ ] Push notifications (with permission)
@@ -211,6 +238,7 @@ If users report not seeing latest changes:
 - [ ] Responsive design on mobile
 
 ### **Test Language Learning**
+
 - [ ] Language selection works
 - [ ] Word practice sessions
 - [ ] Progress tracking
@@ -240,7 +268,7 @@ npm run preview
 ✅ **Push Notifications**: Smart permission handling  
 ✅ **Responsive Design**: Works perfectly on all devices  
 ✅ **Fast Loading**: Optimized build with Service Worker caching  
-✅ **Green Rocket Icon**: Your custom branding everywhere  
+✅ **Green Rocket Icon**: Your custom branding everywhere
 
 ## 🔮 **Future Backend (Optional)**
 
