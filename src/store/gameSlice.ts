@@ -1,3 +1,4 @@
+import { nextReviewStreak } from '../services/reviewStreak';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   selectWordForRegularSession,
@@ -245,6 +246,7 @@ export const gameSlice = createSlice({
         timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
         totalXp: newMastery,
         version: 2,
+        ...nextReviewStreak(currentProgress, validation.isCorrect, assisted),
       };
 
       // Update directional progress if using enhanced format
