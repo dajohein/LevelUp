@@ -1,4 +1,5 @@
 const fs = require('node:fs/promises');
+const { existsSync } = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { ESLint } = require('eslint');
@@ -83,13 +84,20 @@ const USAGE =
  * - --base-ref SHA: compare against the warnings at an immutable commit
  * - --files FILE...: lint only these files (the pre-commit hook), same "no new warnings" rule
  */
-function parseArgs(args) {
+function parseArgs(args, cwd = process.cwd()) {
   if (args.length === 0) return { mode: 'all' };
   if (args.length === 1 && args[0] === '--prune') return { mode: 'prune' };
   if (args.length === 2 && args[0] === '--base-ref') return { mode: 'base', ref: args[1] };
   if (args[0] === '--files') {
-    // Only source files the project lints; lint-staged may also pass other staged files
-    const files = args.slice(1).filter(file => /^(?:.*[\\/])?src[\\/].*\.(?:ts|tsx)$/.test(file));
+    const rest = args.slice(1);
+    // `--files --prune` and the like would silently do nothing; make the mistake visible
+    if (rest.some(arg => arg.startsWith('--'))) throw new Error(USAGE);
+    // Only source files the project lints (src/**/*.ts|tsx, judged relative to the repository
+    // root, not by a `src` directory somewhere above it); lint-staged may pass other staged files
+    const files = rest.filter(file => {
+      const relative = path.relative(cwd, path.resolve(cwd, file)).split(path.sep).join('/');
+      return /^src\/.+\.tsx?$/.test(relative);
+    });
     return { mode: 'files', files };
   }
   throw new Error(USAGE);
@@ -104,18 +112,28 @@ async function main() {
   let baseline = JSON.parse(await fs.readFile(baselinePath, 'utf8'));
   compareWarnings([], baseline, process.cwd());
   const eslint = new ESLint({ extensions: ['.ts', '.tsx'] });
+  let filesToLint = ['src'];
+  if (filesMode) {
+    // Skip what cannot or should not be linted: ESLint throws for a path it cannot find (a deleted
+    // or renamed file) and reports a bogus warning for a file its own config ignores
+    filesToLint = [];
+    for (const file of options.files) {
+      if (existsSync(file) && !(await eslint.isPathIgnored(file))) filesToLint.push(file);
+    }
+    if (filesToLint.length === 0) return;
+  }
   if (useBase) {
     baseline = await baselineFromCommit(eslint, options.ref, process.cwd());
     console.log(`Comparing lint warnings against base commit ${options.ref}.`);
   }
-  const results = await eslint.lintFiles(filesMode ? options.files : ['src']);
+  const results = await eslint.lintFiles(filesToLint);
   const report = compareWarnings(results, baseline, process.cwd());
   const formatter = await eslint.loadFormatter('stylish');
   if (filesMode) {
     // A commit only needs to hear about what it introduced
     console.log(
       `Lint (changed files): ${report.regressions.length} new warnings or errors in ` +
-        `${options.files.length} file(s).`
+        `${filesToLint.length} file(s).`
     );
   } else {
     // Keep all existing debt visible in the CI log, not just the regressions.

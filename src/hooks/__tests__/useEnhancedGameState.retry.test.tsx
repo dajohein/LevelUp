@@ -76,6 +76,8 @@ const submitInActiveSession = (isRetry: boolean, answer: string) => {
   try {
     const { result } = renderHook(() => useEnhancedGameState(props), { wrapper: Wrapper });
     act(() => result.current.gameHandlers.handleSubmit(answer));
+    // the retry still gets its feedback and transition; only the session bookkeeping is skipped
+    expect(result.current.gameState.isTransitioning).toBe(true);
     return spy.mock.calls.map(([isCorrect]) => isCorrect);
   } finally {
     spy.mockRestore();
