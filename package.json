@@ -34,8 +34,9 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
-      "eslint --fix --max-warnings 0",
-      "prettier --write"
+      "eslint --fix --quiet",
+      "prettier --write",
+      "node scripts/check-lint-baseline.cjs --files"
     ],
     "*.{css,md,json}": [
       "prettier --write"

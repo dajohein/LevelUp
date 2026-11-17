@@ -407,6 +407,9 @@ export const useEnhancedGameState = ({
       if (submissionGuardRef.current) return;
 
       const enhancedWordInfo = getCurrentWordInfo();
+      // One source of truth for "this is a re-queued retry": the progress update, the feedback key
+      // and the active session must never disagree about it
+      const isRetry = (options?.isRetry ?? enhancedWordInfo?.isRetry) === true;
       const currentWordToUse = gameServices.modeHandler.getCurrentWord(
         enhancedWordInfo,
         currentWord
@@ -435,11 +438,7 @@ export const useEnhancedGameState = ({
       setAnswerSequence(sequence => sequence + 1);
       setLastSelectedAnswer(answer);
       setFeedbackQuestionKey(
-        gameServices.progressTracker.generateFeedbackKey(
-          currentWordToUse,
-          getQuestionWord,
-          enhancedWordInfo?.isRetry === true
-        )
+        gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord, isRetry)
       );
 
       // Play audio feedback
@@ -458,7 +457,7 @@ export const useEnhancedGameState = ({
           quizMode: quizModeToUse,
           languageCode,
           hintsUsed: options?.hintsUsed,
-          isRetry: options?.isRetry ?? enhancedWordInfo?.isRetry,
+          isRetry,
         })
       );
 
@@ -494,13 +493,17 @@ export const useEnhancedGameState = ({
       setInputValue('');
       setIsTransitioning(true);
 
-      gameServices.sessionManager.handleAnswerSubmission(
-        validationResult.isCorrect,
-        currentSession,
-        isSessionActive,
-        sessionTimer,
-        sessionProgress
-      );
+      // A re-queued retry is practice: it must not add words completed, bonuses or counters to the
+      // active session (a correct retry would otherwise count twice towards session completion)
+      if (!isRetry) {
+        gameServices.sessionManager.handleAnswerSubmission(
+          validationResult.isCorrect,
+          currentSession,
+          isSessionActive,
+          sessionTimer,
+          sessionProgress
+        );
+      }
 
       // Trigger delayed transition via ref so this callback doesn't need
       // handleWordTransition in its dep array (handleWordTransition re-creates on every
