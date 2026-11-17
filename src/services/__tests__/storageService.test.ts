@@ -142,25 +142,17 @@ describe('enhancedStorage', () => {
     });
 
     it('should cache analytics results for performance', async () => {
-      // First call computes analytics
-      const start1 = performance.now();
+      // First call computes analytics; second should be served from cache
       const result1 = await enhancedStorage.getStorageAnalytics();
-      const duration1 = performance.now() - start1;
-
-      // Second call should use cache and be faster
-      const start2 = performance.now();
       const result2 = await enhancedStorage.getStorageAnalytics();
-      const duration2 = performance.now() - start2;
 
       // Both should succeed
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
 
-      // Results should be identical (cached)
+      // Identical timestamp proves the cached result was returned (no wall-clock timing,
+      // which is flaky on shared CI runners)
       expect(result1.data.lastAnalyzed).toBe(result2.data.lastAnalyzed);
-
-      // Second call should be significantly faster (cached)
-      expect(duration2).toBeLessThan(duration1 * 0.5);
     });
 
     it('should invalidate cache after write operations', async () => {

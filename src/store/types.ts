@@ -31,6 +31,8 @@ export interface LegacyWordProgress {
 export interface SubmitOptions {
   /** Hints used; an assisted answer is still correct but earns no mastery. */
   hintsUsed?: number;
+  /** A re-queued retry after a miss: practice only, earns no mastery. */
+  isRetry?: boolean;
 }
 
 export interface WordProgress {

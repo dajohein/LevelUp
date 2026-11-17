@@ -24,6 +24,8 @@ interface AnswerSubmission {
   languageCode?: string;
   /** Hints used for this answer; an assisted answer earns no mastery. */
   hintsUsed?: number;
+  /** A re-queued retry after a miss: practice only, earns no mastery. */
+  isRetry?: boolean;
 }
 
 type CheckAnswerPayload = string | AnswerSubmission;
@@ -226,7 +228,7 @@ export const gameSlice = createSlice({
       };
 
       // Calculate new mastery
-      const assisted = (submission.hintsUsed ?? 0) > 0;
+      const assisted = (submission.hintsUsed ?? 0) > 0 || submission.isRetry === true;
       const newMastery = calculateMasteryGain(
         currentProgress.xp,
         validation.isCorrect,

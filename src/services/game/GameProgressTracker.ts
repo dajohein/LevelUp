@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../sessionRequeue';
 import { store } from '../../store/store';
 import { updateWordProgress } from '../../store/gameSlice';
 import { calculateMasteryDecay } from '../masteryService';
@@ -126,9 +127,13 @@ export class GameProgressTracker {
   /**
    * Generate unique feedback tracking key for analytics
    */
-  generateFeedbackKey(currentWord: any, getQuestionWord: (word: any) => string): string {
+  generateFeedbackKey<W extends { id: string }>(
+    currentWord: W | null | undefined,
+    getQuestionWord: (word: W) => string,
+    isRetry = false
+  ): string {
     return currentWord
-      ? `${currentWord.id}-${getQuestionWord(currentWord)}-${Date.now()}`
+      ? `${getQuestionKey(currentWord.id, getQuestionWord(currentWord), isRetry)}-${Date.now()}`
       : `unknown-${Date.now()}`;
   }
 

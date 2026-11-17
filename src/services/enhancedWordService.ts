@@ -1,15 +1,8 @@
 /**
  * Enhanced Word Service with Spaced Repetition Integration
  *
- * Provides intellig      this.state = {
-        currentSession: session,
-        currentLanguageCode: languageCode,
-        currentWordIndex: 0,
-        sessionWords: interleaved,
-        sessionResults: [],
-        sessionStartTime: Date.now(),
-      };d selection using the spaced repetition learning engine
- * Maintains backward compatibility with existing game logic
+ * Provides intelligent word selection using the spaced repetition learning engine.
+ * Maintains backward compatibility with existing game logic.
  */
 
 import { WordProgress } from '../store/types';
@@ -25,6 +18,7 @@ import {
 } from './spacedRepetitionService';
 import { logger } from './logger';
 import { hasEquivalentTranslation } from './translationUtils';
+import { requeueMissedWord } from './sessionRequeue';
 
 // Enhanced word service state
 interface EnhancedWordServiceState {
@@ -36,6 +30,7 @@ interface EnhancedWordServiceState {
     quizMode: 'multiple-choice' | 'letter-scramble' | 'open-answer' | 'fill-in-the-blank';
     type: 'group' | 'review';
     difficulty?: number;
+    isRetry?: boolean;
   }>;
   sessionResults: Array<{
     wordId: string;
@@ -44,6 +39,8 @@ interface EnhancedWordServiceState {
     quizMode: string;
   }>;
   sessionStartTime: number;
+  /** Words already re-queued after a miss in this session (each is retried at most once). */
+  requeuedWordIds: Set<string>;
 }
 
 class EnhancedWordService {
@@ -54,6 +51,7 @@ class EnhancedWordService {
     sessionWords: [],
     sessionResults: [],
     sessionStartTime: 0,
+    requeuedWordIds: new Set(),
   };
 
   /**
@@ -103,6 +101,7 @@ class EnhancedWordService {
         sessionWords: interleavedWords,
         sessionResults: [],
         sessionStartTime: sessionStartTime ?? Date.now(),
+        requeuedWordIds: new Set(),
       };
 
       logger.debug(`✅ Learning session initialized:`, {
@@ -129,6 +128,7 @@ class EnhancedWordService {
     isReviewWord: boolean;
     progress: number;
     wordType: 'group' | 'review';
+    isRetry: boolean;
   } | null {
     if (!this.state.currentSession || !this.state.sessionWords.length) {
       return null;
@@ -139,7 +139,7 @@ class EnhancedWordService {
       return null;
     }
 
-    const { word, quizMode, type } = currentWordData;
+    const { word, quizMode, type, isRetry = false } = currentWordData;
     const progress = (this.state.currentWordIndex / this.state.sessionWords.length) * 100;
 
     // Generate options for multiple choice
@@ -155,6 +155,7 @@ class EnhancedWordService {
       isReviewWord: type === 'review',
       progress,
       wordType: type,
+      isRetry,
     };
   }
 
@@ -181,6 +182,15 @@ class EnhancedWordService {
         timeSpent,
         quizMode: currentWordData.quizMode,
       });
+
+      if (!isCorrect) {
+        this.state.sessionWords = requeueMissedWord(
+          this.state.sessionWords,
+          this.state.currentWordIndex,
+          this.state.requeuedWordIds,
+          'multiple-choice'
+        );
+      }
 
       logger.debug(`📝 Recorded answer:`, {
         word: currentWordData.word.term,
@@ -219,7 +229,7 @@ class EnhancedWordService {
     );
 
     // Get all studied word IDs
-    const wordsStudied = this.state.sessionResults.map(r => r.wordId);
+    const wordsStudied = [...new Set(this.state.sessionResults.map(r => r.wordId))];
 
     // Record session in cache
     const languageCode = this.getCurrentLanguageCode();
@@ -295,6 +305,7 @@ class EnhancedWordService {
       sessionWords: [],
       sessionResults: [],
       sessionStartTime: 0,
+      requeuedWordIds: new Set(),
     };
     logger.debug('🔄 Session reset');
   }

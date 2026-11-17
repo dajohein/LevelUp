@@ -100,7 +100,6 @@
     "[\"src/services/deepDiveService.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log(`🎯 QUIZ MODE SELECTION for \\\"${word.term}\\\":`, {\"]": 1,
     "[\"src/services/game/__tests__/GameSessionManager.test.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"(store as any).dispatch = mockDispatch;\"]": 1,
     "[\"src/services/game/GameProgressTracker.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"currentWord: any,\"]": 3,
-    "[\"src/services/game/GameProgressTracker.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"generateFeedbackKey(currentWord: any, getQuestionWord: (word: any) => string): string {\"]": 2,
     "[\"src/services/game/GameProgressTracker.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"getAnswerWord: (word: any) => string,\"]": 2,
     "[\"src/services/game/GameProgressTracker.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"getQuestionWord: (word: any) => string,\"]": 2,
     "[\"src/services/game/GameProgressTracker.ts\",\"@typescript-eslint/no-explicit-any\",\"Unexpected any. Specify a different type.\",\"getQuizAnswer: (word: any, mode: string) => string,\"]": 2,

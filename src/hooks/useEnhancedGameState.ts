@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../services/sessionRequeue';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -434,7 +435,11 @@ export const useEnhancedGameState = ({
       setAnswerSequence(sequence => sequence + 1);
       setLastSelectedAnswer(answer);
       setFeedbackQuestionKey(
-        gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
+        gameServices.progressTracker.generateFeedbackKey(
+          currentWordToUse,
+          getQuestionWord,
+          enhancedWordInfo?.isRetry === true
+        )
       );
 
       // Play audio feedback
@@ -453,6 +458,7 @@ export const useEnhancedGameState = ({
           quizMode: quizModeToUse,
           languageCode,
           hintsUsed: options?.hintsUsed,
+          isRetry: options?.isRetry ?? enhancedWordInfo?.isRetry,
         })
       );
 
@@ -549,9 +555,11 @@ export const useEnhancedGameState = ({
   useEffect(() => {
     const enhancedWordInfo = getCurrentWordInfo();
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    const currentQuestionKey = `${wordToUse?.id || 'unknown'}-${
-      wordToUse ? getQuestionWord(wordToUse) : 'unknown'
-    }`;
+    const currentQuestionKey = getQuestionKey(
+      wordToUse?.id || 'unknown',
+      wordToUse ? getQuestionWord(wordToUse) : 'unknown',
+      enhancedWordInfo?.isRetry === true
+    );
 
     if (previousWordRef.current && previousWordRef.current !== currentQuestionKey) {
       transitionIdRef.current += 1;
