@@ -32,10 +32,14 @@ export const getCloseMatchFeedback = (validation: AnswerValidation): string | nu
 
 // Check capitalization for languages that require it
 const checkCapitalization = (
-  userAnswer: string,
-  correctAnswer: string,
+  rawUserAnswer: string,
+  rawCorrectAnswer: string,
   language: string
 ): AnswerValidation => {
+  // matchAnswer treats canonically equivalent Unicode (e.g. "Mu\u0308nchen" and "München") as
+  // identical, so capitalization must be graded on the same normalized text.
+  const userAnswer = rawUserAnswer.normalize('NFC');
+  const correctAnswer = rawCorrectAnswer.normalize('NFC');
   const match = matchAnswer(userAnswer, correctAnswer, language);
 
   if (match === 'none') {
@@ -54,7 +58,7 @@ const checkCapitalization = (
       capitalizationCorrect: true,
       capitalizationPenalty: 1.0,
       closeMatch: 'accent',
-      matchedAnswer: correctAnswer,
+      matchedAnswer: rawCorrectAnswer,
     };
   }
 
