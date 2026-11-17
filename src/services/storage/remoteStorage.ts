@@ -85,6 +85,8 @@ export class RemoteStorageService implements AsyncStorageProvider {
   private pendingSession: Promise<RemoteUserSession> | null = null;
   // Once the server refused the stored session, stop asking on every storage call until a reset
   private lostSession: RemoteSessionError | null = null;
+  // One token refresh at a time: calls that expire together share it
+  private pendingRefresh: Promise<RemoteUserSession> | null = null;
   private isOnline = navigator.onLine;
   private currentLanguage = 'en'; // Default language
 
@@ -246,6 +248,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
   async resetSession(): Promise<void> {
     this.sessionEpoch += 1; // anything still in flight must not write its result back
     this.pendingSession = null;
+    this.pendingRefresh = null;
     this.userSession = null;
     this.lostSession = null;
     localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -317,6 +320,59 @@ export class RemoteStorageService implements AsyncStorageProvider {
   }
 
   /**
+   * Make a call that needs the session token. A page can stay open (or suspended) far longer than
+   * a token lives, so the cached session may have expired: on a 401 the token is exchanged for a
+   * fresh one through `authenticate` (the server accepts a recently expired token for exactly this)
+   * and the same request is retried once, keeping the same account. If the refresh is refused the
+   * session is lost (RemoteSessionError); if it cannot be tried because the network is down that is
+   * a network error and the session stays usable. Returns the session the call was made with, since
+   * it may have been renewed.
+   */
+  private async authedCall(
+    endpoint: string,
+    build: (session: RemoteUserSession) => Record<string, unknown>
+  ) {
+    let session = await this.getUserSession();
+    try {
+      return { result: await this.apiCall(endpoint, build(session)), session };
+    } catch (error) {
+      if (!(error instanceof RemoteHttpError && error.status === 401)) throw error;
+      session = await this.refreshSession(session);
+      // Retried once only: a 401 that survives a fresh token is reported, never looped on
+      return { result: await this.apiCall(endpoint, build(session)), session };
+    }
+  }
+
+  private async refreshSession(stale: RemoteUserSession): Promise<RemoteUserSession> {
+    // A concurrent call may already have renewed it while this one was failing
+    if (this.userSession && this.userSession.sessionToken !== stale.sessionToken) {
+      return this.userSession;
+    }
+    if (!this.pendingRefresh) {
+      const pending = this.initializeUser({
+        userId: stale.userId,
+        sessionToken: stale.sessionToken,
+        isGuest: stale.isGuest,
+      });
+      this.pendingRefresh = pending;
+      const done = () => {
+        if (this.pendingRefresh === pending) this.pendingRefresh = null;
+      };
+      pending.then(done, done);
+    }
+    try {
+      return await this.pendingRefresh;
+    } catch (error) {
+      // Refused: forget the cached, dead session so the lost-session state takes over (otherwise
+      // every later call would reuse the stale token and fail the same way)
+      if (error instanceof RemoteSessionError && this.userSession === stale) {
+        this.userSession = null;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Make API call with error handling and retries
    */
   private async apiCall(endpoint: string, data: any, attempt = 1): Promise<any> {
@@ -379,18 +435,16 @@ export class RemoteStorageService implements AsyncStorageProvider {
     const languageCode = this.currentLanguage;
 
     try {
-      const session = await this.getUserSession();
-
-      const result = await this.apiCall('/api/storage', {
+      const { result, session } = await this.authedCall('/api/storage', current => ({
         action: 'get',
-        userId: session.userId,
-        sessionToken: session.sessionToken,
+        userId: current.userId,
+        sessionToken: current.sessionToken,
         languageCode,
         key,
         options: {
           compress: this.config.enableCompression && options.compress !== false,
         },
-      });
+      }));
 
       const retrievalTime = performance.now() - startTime;
 
@@ -439,8 +493,6 @@ export class RemoteStorageService implements AsyncStorageProvider {
     const languageCode = this.currentLanguage;
 
     try {
-      const session = await this.getUserSession();
-
       // Apply compression if enabled
       let processedData = data;
       if (this.config.enableCompression && options.compress !== false) {
@@ -451,10 +503,10 @@ export class RemoteStorageService implements AsyncStorageProvider {
         }
       }
 
-      const result = await this.apiCall('/api/storage', {
+      const { result, session } = await this.authedCall('/api/storage', current => ({
         action: 'set',
-        userId: session.userId,
-        sessionToken: session.sessionToken,
+        userId: current.userId,
+        sessionToken: current.sessionToken,
         languageCode,
         key,
         data: processedData,
@@ -462,7 +514,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
           compress: this.config.enableCompression && options.compress !== false,
           ttl: options.ttl,
         },
-      });
+      }));
 
       const retrievalTime = performance.now() - startTime;
 
@@ -510,15 +562,13 @@ export class RemoteStorageService implements AsyncStorageProvider {
     const languageCode = this.currentLanguage;
 
     try {
-      const session = await this.getUserSession();
-
-      const result = await this.apiCall('/api/storage', {
+      const { result, session } = await this.authedCall('/api/storage', current => ({
         action: 'delete',
-        userId: session.userId,
-        sessionToken: session.sessionToken,
+        userId: current.userId,
+        sessionToken: current.sessionToken,
         languageCode,
         key,
-      });
+      }));
 
       const retrievalTime = performance.now() - startTime;
 
@@ -682,14 +732,12 @@ export class RemoteStorageService implements AsyncStorageProvider {
     const languageCode = this.currentLanguage;
 
     try {
-      const session = await this.getUserSession();
-
-      const result = await this.apiCall('/api/storage', {
+      const { result, session } = await this.authedCall('/api/storage', current => ({
         action: 'list',
-        userId: session.userId,
-        sessionToken: session.sessionToken,
+        userId: current.userId,
+        sessionToken: current.sessionToken,
         languageCode,
-      });
+      }));
 
       const retrievalTime = performance.now() - startTime;
 
@@ -773,21 +821,10 @@ export class RemoteStorageService implements AsyncStorageProvider {
    */
   async generateAccountCode(): Promise<{ code: string; expires: number }> {
     try {
-      const session = await this.getUserSession();
-
-      // Debug logging
-      logger.info('Generating account code for session:', {
-        userId: session.userId,
-        hasSessionToken: !!session.sessionToken,
-        apiUrl: `${this.config.baseUrl}/api/users`,
-      });
-
-      const requestData = {
+      const { result } = await this.authedCall('/api/users', current => ({
         action: 'generateCode',
-        sessionToken: session.sessionToken,
-      };
-
-      const result = await this.apiCall('/api/users', requestData);
+        sessionToken: current.sessionToken,
+      }));
 
       if (result.success) {
         // The server decides how long a code lives and says so; do not assume a duration

@@ -291,4 +291,134 @@ describe('RemoteStorageService error handling and session state', () => {
       }
     });
   });
+
+  describe('a session that expires while the page stays open', () => {
+    const url = (call: unknown[]) => String(call[0]);
+    const tokenOf = (call: unknown[]) =>
+      JSON.parse(String((call[1] as RequestInit).body)).sessionToken;
+
+    /** A service that already holds a session in memory, as a PWA left running for days would. */
+    const openPage = async (service = new RemoteStorageService({ retries: 1 })) => {
+      store();
+      fetchMock.mockResolvedValueOnce(authenticated({ sessionToken: 'tok-open' }));
+      await service.getUserSession();
+      fetchMock.mockReset();
+      return service;
+    };
+    const storageOk = (data: unknown) => reply(200, { success: true, data, metadata: {} });
+
+    it('refreshes once and retries the same request with the new token', async () => {
+      const service = await openPage();
+      fetchMock
+        .mockResolvedValueOnce(reply(401)) // storage: token expired
+        .mockResolvedValueOnce(authenticated({ sessionToken: 'tok-renewed' })) // authenticate
+        .mockResolvedValueOnce(storageOk({ xp: 5 })); // storage again
+
+      const result = await service.get('word_progress_de');
+
+      expect(result).toMatchObject({ success: true, data: { xp: 5 } });
+      const sequence = fetchMock.mock.calls.map(
+        call => `${url(call).split('/api/')[1]}:${actionOf(call)}:${tokenOf(call)}`
+      );
+      expect(sequence).toEqual([
+        'storage:get:tok-open',
+        'users:authenticate:tok-open',
+        'storage:get:tok-renewed',
+      ]);
+      expect(stored().sessionToken).toBe('tok-renewed');
+    });
+
+    it('works for every protected call, including generating a code', async () => {
+      const service = await openPage();
+      fetchMock
+        .mockResolvedValueOnce(reply(401))
+        .mockResolvedValueOnce(authenticated({ sessionToken: 'tok-renewed' }))
+        .mockResolvedValueOnce(
+          reply(200, { success: true, data: { accountCode: 'ABCD2345', expiresIn: 3600 } })
+        );
+      await expect(service.generateAccountCode()).resolves.toMatchObject({ code: 'ABCD2345' });
+      expect(tokenOf(fetchMock.mock.calls[2])).toBe('tok-renewed');
+
+      for (const run of [
+        (s: RemoteStorageService) => s.set('k', { a: 1 }),
+        (s: RemoteStorageService) => s.delete('k'),
+        (s: RemoteStorageService) => s.getKeys('.*'),
+      ]) {
+        fetchMock.mockReset();
+        fetchMock
+          .mockResolvedValueOnce(reply(401))
+          .mockResolvedValueOnce(authenticated({ sessionToken: 'tok-again' }))
+          .mockResolvedValueOnce(storageOk([]));
+        expect(await run(service)).toMatchObject({ success: true });
+        expect(tokenOf(fetchMock.mock.calls[2])).toBe('tok-again');
+      }
+    });
+
+    it('does not loop: a 401 that survives the refresh is reported, after exactly one retry', async () => {
+      const service = await openPage();
+      fetchMock
+        .mockResolvedValueOnce(reply(401))
+        .mockResolvedValueOnce(authenticated({ sessionToken: 'tok-renewed' }))
+        .mockResolvedValue(reply(401));
+      const result = await service.get('word_progress_de');
+      expect(result.success).toBe(false);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it('a refused refresh is a lost session and is not retried on every later call', async () => {
+      const service = await openPage();
+      fetchMock.mockResolvedValueOnce(reply(401)).mockResolvedValueOnce(reply(401)); // storage, authenticate
+
+      await expect(service.generateAccountCode()).rejects.toBeInstanceOf(RemoteSessionError);
+      // the saved session is left exactly as it was, for the reset flow
+      expect(stored()).toEqual({ ...STORED, sessionToken: 'tok-open' });
+
+      fetchMock.mockClear();
+      await expect(service.generateAccountCode()).rejects.toBeInstanceOf(RemoteSessionError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('does not try to refresh for errors that are not an expired token', async () => {
+      for (const status of [500, 403, 429]) {
+        const service = await openPage();
+        fetchMock.mockResolvedValue(reply(status));
+        await service.get('word_progress_de');
+        expect(fetchMock.mock.calls.some(call => actionOf(call) === 'authenticate')).toBe(false);
+      }
+    });
+
+    it('calls that fail together share one refresh', async () => {
+      const service = await openPage();
+      let storageCalls = 0;
+      fetchMock.mockImplementation(async (_url: string, init?: RequestInit) => {
+        const body = JSON.parse(String(init?.body));
+        if (body.action === 'authenticate') return authenticated({ sessionToken: 'tok-shared' });
+        storageCalls += 1;
+        return body.sessionToken === 'tok-shared' ? storageOk([]) : reply(401);
+      });
+
+      await Promise.all([service.get('a'), service.get('b'), service.getKeys('.*')]);
+
+      expect(calls(fetchMock, 'authenticate')).toBe(1);
+      expect(storageCalls).toBe(6); // three failed, three retried
+    });
+
+    it('a network failure during the refresh is a network error, not a lost session', async () => {
+      const service = await openPage();
+      fetchMock
+        .mockResolvedValueOnce(reply(401))
+        .mockRejectedValue(new TypeError('Failed to fetch'));
+      const error = await service.generateAccountCode().catch(e => e);
+      expect(error).toBeInstanceOf(RemoteNetworkError);
+      // the session is still usable once the network is back
+      fetchMock.mockReset();
+      fetchMock
+        .mockResolvedValueOnce(reply(401))
+        .mockResolvedValueOnce(authenticated({ sessionToken: 'tok-later' }))
+        .mockResolvedValueOnce(
+          reply(200, { success: true, data: { accountCode: 'LATE2345', expiresIn: 60 } })
+        );
+      await expect(service.generateAccountCode()).resolves.toMatchObject({ code: 'LATE2345' });
+    });
+  });
 });
