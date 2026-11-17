@@ -50,6 +50,10 @@ interface StorageResponse {
   };
 }
 
+// Input limits: keys become Redis hash fields and values are stored per user, so bound both.
+const MAX_KEY_LENGTH = 128;
+const MAX_VALUE_BYTES = 1024 * 1024;
+
 // Redis layout (see _db.ts):
 //   levelup:data:<userId>:<lang>  -> hash, field = storage key, value = stored item
 // One hash per user+language means set/delete/list are each a single atomic command,
@@ -96,6 +100,7 @@ function decompressData(data: string): any {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS configuration via environment (Twelve-Factor)
   const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  res.setHeader('Vary', 'Origin');
   if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -130,6 +135,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: false,
         error: 'Invalid or missing session token',
       });
+    }
+
+    // Validate key and payload shape (keys become Redis hash fields, so bound them)
+    if (
+      request.key !== undefined &&
+      (typeof request.key !== 'string' ||
+        request.key.length === 0 ||
+        request.key.length > MAX_KEY_LENGTH)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `key must be a string of 1-${MAX_KEY_LENGTH} characters`,
+      });
+    }
+    const ttlOption = request.options?.ttl;
+    if (
+      ttlOption !== undefined &&
+      (typeof ttlOption !== 'number' || !Number.isFinite(ttlOption) || ttlOption <= 0)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'options.ttl must be a positive number' });
     }
 
     // Validate language code if provided
@@ -187,6 +214,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
+        if (JSON.stringify(dataToStore).length > MAX_VALUE_BYTES) {
+          response.error = `data is too large (limit ${MAX_VALUE_BYTES} bytes)`;
+          return res.status(413).json(response);
+        }
 
         const now = Date.now();
         const ttl = request.options?.ttl;
@@ -260,7 +291,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       default:
-        response.error = `Unknown action: ${request.action}`;
+        response.error = 'Unknown action';
         return res.status(400).json(response);
     }
 

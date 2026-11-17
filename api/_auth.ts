@@ -7,13 +7,14 @@
  * verified by any function that knows SESSION_SECRET.
  */
 import { createHmac, timingSafeEqual } from 'crypto';
+import { isProduction } from './_config.js';
 
 const DEV_FALLBACK_SECRET = 'levelup-insecure-dev-secret';
 
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (secret) return secret;
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+  if (isProduction()) {
     throw new Error('SESSION_SECRET must be set in production');
   }
   return DEV_FALLBACK_SECRET;
