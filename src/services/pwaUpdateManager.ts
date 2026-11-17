@@ -22,8 +22,11 @@ class PWAUpdateManager {
   private currentVersion: string | null = null;
   // An update that was found before anyone was listening (the banner mounts after startup)
   private pendingUpdate: UpdateInfo | null = null;
-  // Set once the user accepted the update: guards against reloading twice
+  // Set once the user accepted the update: guards against applying twice
   private applying = false;
+  // The fallback reload, cancelled as soon as control changes (or the page is already going away)
+  private fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private reloaded = false;
 
   constructor() {
     this.initializeServiceWorker();
@@ -90,6 +93,16 @@ class PWAUpdateManager {
    */
   private listenForUpdates() {
     if ('serviceWorker' in navigator) {
+      // A page that started out controlled by an earlier worker is running the OLD release. If a
+      // worker takes control without this page having asked (the user accepted the update in
+      // another tab), this page now has an old bundle under a new worker whose caches no longer
+      // hold the old release's files: offer the reload, never do it unasked. A first install
+      // (no earlier controller) is not an update.
+      const startedControlled = navigator.serviceWorker.controller !== null;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (startedControlled && !this.applying) this.notifyUpdateAvailable();
+      });
+
       navigator.serviceWorker.addEventListener('message', event => {
         // The worker no longer announces "update available" (it cannot know the update is
         // wanted); a waiting worker is detected from the registration instead.
@@ -153,7 +166,7 @@ class PWAUpdateManager {
             'controllerchange',
             () => {
               logger.debug('✅ New service worker is now controlling the page');
-              reloadPage();
+              this.reloadOnce();
             },
             { once: true }
           );
@@ -161,13 +174,13 @@ class PWAUpdateManager {
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
 
           // If control never changes (a browser quirk), do not leave the user on a dead button
-          setTimeout(() => reloadPage(), CONTROLLER_CHANGE_TIMEOUT_MS);
+          this.fallbackTimer = setTimeout(() => this.reloadOnce(), CONTROLLER_CHANGE_TIMEOUT_MS);
           return true;
         }
 
         logger.debug('🔄 No waiting service worker, reloading the page...');
         this.applying = true;
-        reloadPage();
+        this.reloadOnce();
         return true;
       }
 
@@ -177,6 +190,17 @@ class PWAUpdateManager {
       logger.error('Failed to apply update', { error });
       return false;
     }
+  }
+
+  /** Reload at most once, and drop the pending fallback so it cannot reload a second time. */
+  private reloadOnce() {
+    if (this.fallbackTimer !== null) {
+      clearTimeout(this.fallbackTimer);
+      this.fallbackTimer = null;
+    }
+    if (this.reloaded) return;
+    this.reloaded = true;
+    reloadPage();
   }
 
   /**

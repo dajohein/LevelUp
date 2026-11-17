@@ -145,7 +145,7 @@ export const PWAUpdateNotification: React.FC = () => {
         {updateInfo?.version && updateInfo.version !== 'unknown' && (
           <span className="version">v{updateInfo.version}</span>
         )}
-        <span>Reload to get it. Your progress is saved.</span>
+        <span>Reload to get it.</span>
       </UpdateMessage>
 
       <UpdateActions>

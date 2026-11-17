@@ -226,6 +226,87 @@ describe('applying an update', () => {
   });
 });
 
+describe('exactly one reload', () => {
+  const withWaitingWorker = async () => {
+    const waiting = new FakeWorker();
+    const ctx = await setup(container => (container.registration.waiting = waiting));
+    return { ...ctx, waiting };
+  };
+
+  it('the fallback timer is cancelled once control changed: no second reload', async () => {
+    const { manager, container } = await withWaitingWorker();
+    const baseline = jest.getTimerCount(); // the manager's own periodic update check
+    await manager.applyUpdate();
+    expect(jest.getTimerCount()).toBe(baseline + 1); // the fallback is armed
+
+    container.dispatchEvent(new Event('controllerchange'));
+    expect(jest.getTimerCount()).toBe(baseline); // and disarmed: nothing left that could reload later
+    jest.advanceTimersByTime(60_000);
+
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('after the fallback fired, a late controllerchange does not reload again', async () => {
+    const { manager, container } = await withWaitingWorker();
+    await manager.applyUpdate();
+
+    jest.advanceTimersByTime(4000);
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('an update accepted in another tab', () => {
+  it('offers a reload to this (old) tab instead of reloading it unasked', async () => {
+    const { manager, container } = await setup();
+    const callback = jest.fn();
+    manager.onUpdateAvailable(callback);
+
+    container.dispatchEvent(new Event('controllerchange')); // another tab accepted the update
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(reloadPage).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(60_000);
+    expect(reloadPage).not.toHaveBeenCalled();
+  });
+
+  it('and accepting reloads once (there is no waiting worker any more)', async () => {
+    const { manager, container } = await setup();
+    container.dispatchEvent(new Event('controllerchange'));
+
+    await manager.applyUpdate();
+    await manager.applyUpdate();
+
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('a page that started uncontrolled (a first install) is not told there is an update', async () => {
+    const { manager, container } = await setup(c => (c.controller = null));
+    const callback = jest.fn();
+    manager.onUpdateAvailable(callback);
+
+    container.controller = {};
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('the tab that asked for the update is not also told about it', async () => {
+    const waiting = new FakeWorker();
+    const { manager, container } = await setup(c => (c.registration.waiting = waiting));
+    const callback = jest.fn();
+    manager.onUpdateAvailable(callback);
+    callback.mockClear(); // the initial replay is expected
+    await manager.applyUpdate();
+
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(callback).not.toHaveBeenCalled();
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('without service worker support', () => {
   it('does nothing and applyUpdate reports it', async () => {
     Reflect.deleteProperty(navigator, 'serviceWorker');

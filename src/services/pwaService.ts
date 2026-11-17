@@ -33,16 +33,6 @@ export const updateServiceWorker = async (): Promise<void> => {
   }
 };
 
-// Skip waiting for new Service Worker
-export const skipWaitingForUpdate = async (): Promise<void> => {
-  if ('serviceWorker' in navigator) {
-    const registration = await navigator.serviceWorker.getRegistration();
-    if (registration && registration.waiting) {
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-  }
-};
-
 // Unregister Service Worker (for debugging)
 export const unregisterPWA = async (): Promise<boolean> => {
   if ('serviceWorker' in navigator) {

@@ -72,6 +72,7 @@ describe('PWAUpdateNotification', () => {
     const banner = screen.getByRole('status');
     expect(banner).toHaveAttribute('aria-live', 'polite');
     expect(banner).toHaveTextContent('A new version of LevelUp is ready.');
+    expect(banner).not.toHaveTextContent(/progress is saved/i);
     expect(banner).toHaveTextContent('v2.1.0');
     expect(screen.getByRole('button', { name: /Update now/ })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Later' })).toBeEnabled();

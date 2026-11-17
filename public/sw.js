@@ -52,7 +52,9 @@ self.addEventListener('install', (event) => {
       // once, delete the previous release's caches under pages that are still running that release
       // (their lazy chunks would then fail), and switch those pages to the new worker without the
       // user's consent. It activates when the user accepts the update (the SKIP_WAITING message
-      // below) or, at the latest, when every tab using the old release has been closed.
+      // below) or when no page controlled by the old release is left. On an installed iOS app
+      // pages are suspended rather than closed, so that is not guaranteed there: the banner is
+      // shown again on every launch while a worker waits.
   );
 });
 
