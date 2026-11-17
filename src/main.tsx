@@ -23,7 +23,7 @@ import './index.css';
 // This avoids direct import.meta.env usage in shared modules used by tests.
 (window as any).__APP_ENV = import.meta.env;
 
-// Remote storage is opt-in for volatile development/demo environments only.
+// Remote storage (Upstash Redis behind api/) is opt-in via VITE_ENABLE_REMOTE_STORAGE.
 initializeStorage().catch(error => {
   logger.warn('Storage initialization failed, falling back to local storage', { error });
 });

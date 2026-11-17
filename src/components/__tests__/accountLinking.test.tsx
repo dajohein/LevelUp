@@ -207,7 +207,7 @@ describe('AccountLinking', () => {
         await userEvent.type(screen.getByRole('textbox'), 'ABCD2345');
         await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
 
-        expect(await screen.findByText(/Demo account linked/)).toBeInTheDocument();
+        expect(await screen.findByText(/Device linked to your account/)).toBeInTheDocument();
         expect(resetButton()).not.toBeInTheDocument();
       });
     });
@@ -275,7 +275,9 @@ describe('AccountLinking', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
 
         const status = await screen.findByRole('status');
-        expect(status).toHaveTextContent('Demo account linked. Progress was not transferred.');
+        expect(status).toHaveTextContent(
+          'Device linked to your account. Progress was not transferred.'
+        );
         expect(status).not.toHaveTextContent('undefined');
       });
     });

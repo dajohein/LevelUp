@@ -158,7 +158,7 @@ window.testPerformanceFix();
 - **Mixed quiz modes** within sessions for engaging variety
 - **Four learning phases**: Introduction → Learning → Consolidation → Mastery
 - **Adaptive practice**: spaced repetition with mode adaptation based on recent performance (see docs/ADAPTIVE_LEARNING.md)
-- **User Learning Profiles** automatically saved and synchronized across devices
+- **User Learning Profiles** saved on this device (cross-device sync is not implemented yet)
 - **Personalized analytics** and ML-powered learning recommendations
 
 ### **Triple Quiz System**
@@ -322,7 +322,7 @@ The application implements **strict language separation** to prevent data contam
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
-- **Capability**: The process-local API is opt-in for development only; production rejects remote requests. It does not provide durable or cross-device progress sync.
+- **Capability**: The API is backed by Upstash Redis and is opt-in (`VITE_ENABLE_REMOTE_STORAGE`). The app creates a guest session and can link devices, but it does not upload or restore learning progress yet (the remote tier is disabled in `tieredStorage`), so there is no cross-device progress sync.
 
 ### **Performance Monitoring**
 
