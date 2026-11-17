@@ -113,10 +113,14 @@ export const Navigation: React.FC<NavigationProps> = ({
               <DropdownItem to="/settings" onClick={close}>
                 ⚙️ Settings
               </DropdownItem>
-              <DropdownDivider aria-hidden="true" />
-              <DropdownItem to="/developer-dashboard" onClick={close}>
-                🛠️ Developer Dashboard
-              </DropdownItem>
+              {process.env.NODE_ENV !== 'production' && (
+                <>
+                  <DropdownDivider aria-hidden="true" />
+                  <DropdownItem to="/developer-dashboard" onClick={close}>
+                    🛠️ Developer Dashboard
+                  </DropdownItem>
+                </>
+              )}
               <DropdownDivider aria-hidden="true" />
               <DropdownItem to="/" onClick={close}>
                 🌍 Change Language
