@@ -17,7 +17,6 @@ import { registerPWA } from './services/pwaService';
 import { developmentCacheManager } from './utils/developmentCacheManager';
 import { environmentConfig } from './config/environment';
 import { logger } from './services/logger';
-import './utils/developerToolsDashboard'; // Initialize developer tools globally
 import './index.css';
 
 // Expose Vite env to runtime for env-first configuration (frontend)
@@ -40,7 +39,8 @@ if (environmentConfig.cacheBusting.enabled) {
 }
 
 // Load debug helpers in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
+  import('./utils/developerToolsDashboard'); // Initialize developer tools globally
   import('./utils/debugHelpers');
   import('./utils/debugPerformanceHelper');
   import('./utils/testPerformanceFix');

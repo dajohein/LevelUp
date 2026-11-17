@@ -224,7 +224,7 @@ test('desktop profile disclosure remains available with existing progress', asyn
   });
   await user.click(screen.getByRole('button', { name: 'User navigation' }));
   expect(screen.getByText('100 XP')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /Developer Dashboard/ })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /Developer Dashboard/, hidden: true })).toHaveAttribute(
     'href',
     '/developer-dashboard'
   );
@@ -241,4 +241,28 @@ test.each([false, true])('hiding the user profile is respected (mobile: %s)', is
   renderNavigation(isMobile, '/', false);
   expect(screen.queryByRole('button', { name: 'User navigation' })).not.toBeInTheDocument();
   expect(screen.queryByRole('link', { name: 'View Profile' })).not.toBeInTheDocument();
+});
+
+test('developer dashboard link is only offered outside production', async () => {
+  const user = userEvent.setup();
+  const original = process.env.NODE_ENV;
+  const openMenu = () => user.click(screen.getByRole('button', { name: 'User navigation' }));
+  try {
+    process.env.NODE_ENV = 'production';
+    const { unmount } = renderNavigation(false);
+    await openMenu();
+    expect(screen.getByRole('link', { name: /Change Language/ })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Developer Dashboard/ })).not.toBeInTheDocument();
+    unmount();
+
+    process.env.NODE_ENV = 'development';
+    renderNavigation(false);
+    await openMenu();
+    expect(screen.getByRole('link', { name: /Developer Dashboard/ })).toHaveAttribute(
+      'href',
+      '/developer-dashboard'
+    );
+  } finally {
+    process.env.NODE_ENV = original;
+  }
 });

@@ -2,6 +2,8 @@
 // Ensures typed access to import.meta.env across the app
 
 interface ImportMetaEnv {
+  readonly DEV: boolean; // Vite: true in `vite` dev server, false in builds
+  readonly PROD: boolean;
   readonly VITE_API_BASE_URL?: string;
   readonly VITE_ENABLE_REMOTE_STORAGE?: string; // 'true' | 'false'
   readonly VITE_ENABLE_LOCAL_FALLBACK?: string; // 'true' | 'false'

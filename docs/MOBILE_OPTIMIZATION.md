@@ -84,11 +84,6 @@ timers are introduced; disclosure event listeners exist only while open.
 - Responsive font sizing and spacing
 - Context sections with mobile-optimized padding
 
-#### Language Selection (`LanguageSelect.tsx`)
-- Vertical layout on mobile for better accessibility
-- Smaller language cards with appropriate touch targets
-- Responsive typography and emoji sizing
-
 ### 4. **New Mobile-Specific Components**
 
 #### `MobileButton.tsx`

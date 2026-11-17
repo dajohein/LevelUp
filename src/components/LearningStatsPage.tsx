@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { RootState } from '../store/store';
 import { Navigation } from './Navigation';
-import { AILearningDashboard } from './AILearningDashboard';
 import { DirectionalStats } from './DirectionalStats';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
 import { DataMigrationService } from '../services/dataMigrationService';
@@ -190,16 +189,6 @@ const ProgressFill = styled.div<{ progress: number }>`
   transition: width 0.3s ease;
 `;
 
-// Generate stable user ID for demo
-const getDemoUserId = () => {
-  let userId = localStorage.getItem('demo_user_id');
-  if (!userId) {
-    userId = `demo_${Math.random().toString(36).substr(2, 8)}`;
-    localStorage.setItem('demo_user_id', userId);
-  }
-  return userId;
-};
-
 export const LearningStatsPage: React.FC = () => {
   const { languageCode } = useParams<{ languageCode: string }>();
   const reduxWordProgress = useSelector((state: RootState) => state.game.wordProgress);
@@ -236,19 +225,15 @@ export const LearningStatsPage: React.FC = () => {
       0
     );
 
-    const totalWordsLearned = Object.values(wordProgress).filter(progress => progress.xp > 0).length;
+    const totalWordsLearned = Object.values(wordProgress).filter(
+      progress => progress.xp > 0
+    ).length;
 
-    const totalXP = Object.values(wordProgress).reduce(
-      (sum, progress) => sum + progress.xp,
-      0
-    );
+    const totalXP = Object.values(wordProgress).reduce((sum, progress) => sum + progress.xp, 0);
 
     const overallAccuracy =
       totalAttempts > 0
-        ? (Object.values(wordProgress).reduce(
-            (sum, progress) => sum + progress.timesCorrect,
-            0
-          ) /
+        ? (Object.values(wordProgress).reduce((sum, progress) => sum + progress.timesCorrect, 0) /
             totalAttempts) *
           100
         : 0;
@@ -298,12 +283,6 @@ export const LearningStatsPage: React.FC = () => {
           </PageTitle>
           <PageSubtitle>Detailed insights into your learning progress and performance</PageSubtitle>
         </PageHeader>
-
-        {/* AI Learning Dashboard */}
-        <StatsSection>
-          <SectionTitle>🤖 AI Learning Coach</SectionTitle>
-          <AILearningDashboard userId={getDemoUserId()} languageCode={languageCode} />
-        </StatsSection>
 
         {/* Overall Statistics */}
         <StatsSection>

@@ -243,7 +243,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
       <StatusMessage type="info">
         {environmentConfig.enableRemoteStorage
-          ? 'Demo only: remote account and progress data is stored in process memory and can disappear when the server restarts. Linking identifies an account but does not transfer or reconcile progress. Your local progress remains saved on this device.'
+          ? 'Linking identifies your account on another device but does not yet transfer or merge learning progress between devices. Your local progress remains saved on this device.'
           : 'Remote sync is unavailable. Progress is saved on this device only; linking is disabled until durable remote storage is available.'}
       </StatusMessage>
 
