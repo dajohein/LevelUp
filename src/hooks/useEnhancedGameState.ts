@@ -494,13 +494,17 @@ export const useEnhancedGameState = ({
       setInputValue('');
       setIsTransitioning(true);
 
-      gameServices.sessionManager.handleAnswerSubmission(
-        validationResult.isCorrect,
-        currentSession,
-        isSessionActive,
-        sessionTimer,
-        sessionProgress
-      );
+      // A re-queued retry is practice: it must not add words completed, bonuses or counters to the
+      // active session (a correct retry would otherwise count twice towards session completion)
+      if (enhancedWordInfo?.isRetry !== true) {
+        gameServices.sessionManager.handleAnswerSubmission(
+          validationResult.isCorrect,
+          currentSession,
+          isSessionActive,
+          sessionTimer,
+          sessionProgress
+        );
+      }
 
       // Trigger delayed transition via ref so this callback doesn't need
       // handleWordTransition in its dep array (handleWordTransition re-creates on every

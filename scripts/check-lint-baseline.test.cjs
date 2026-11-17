@@ -5,7 +5,12 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { ESLint } = require('eslint');
-const { compareWarnings, warningKey, baselineFromCommit } = require('./check-lint-baseline.cjs');
+const {
+  compareWarnings,
+  warningKey,
+  baselineFromCommit,
+  parseArgs,
+} = require('./check-lint-baseline.cjs');
 
 const cwd = '/repo';
 const message = {
@@ -156,5 +161,59 @@ test('base comparison uses immutable Git sources, not the candidate or stale sna
 test('invalid and unavailable base commits fail closed', async () => {
   for (const commit of ['main', '', 'HEAD', '--prune', '0'.repeat(40)]) {
     await assert.rejects(baselineFromCommit({}, commit, process.cwd()));
+  }
+});
+
+test('command-line modes are parsed strictly', () => {
+  assert.deepEqual(parseArgs([]), { mode: 'all' });
+  assert.deepEqual(parseArgs(['--prune']), { mode: 'prune' });
+  assert.deepEqual(parseArgs(['--base-ref', 'abc']), { mode: 'base', ref: 'abc' });
+  for (const bad of [['--nope'], ['--prune', 'x'], ['--base-ref'], ['src/a.ts']]) {
+    assert.throws(() => parseArgs(bad), /Usage/);
+  }
+});
+
+test('--files keeps only linted source files and tolerates an empty list', () => {
+  assert.deepEqual(parseArgs(['--files']), { mode: 'files', files: [] });
+  const staged = [
+    '/repo/src/a.ts',
+    '/repo/src/deep/b.tsx',
+    '/repo/api/c.ts',
+    '/repo/src/style.css',
+    '/repo/README.md',
+    '/repo/scripts/src/x.cjs',
+  ];
+  assert.deepEqual(parseArgs(['--files', ...staged]).files, [
+    '/repo/src/a.ts',
+    '/repo/src/deep/b.tsx',
+  ]);
+});
+
+const script = path.join(__dirname, 'check-lint-baseline.cjs');
+const runFiles = (...files) => {
+  try {
+    execFileSync(process.execPath, [script, '--files', ...files], {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'pipe',
+    });
+    return 0;
+  } catch (error) {
+    return error.status;
+  }
+};
+
+test('--files passes on a file whose warnings are already in the baseline', () => {
+  // This file carries recorded lint debt; committing a change to it must not be blocked by it
+  assert.equal(runFiles('src/utils/errorHandling.ts'), 0);
+});
+
+test('--files fails on a newly introduced warning and ignores non-source files', async () => {
+  const probe = path.join(__dirname, '..', 'src', '__lint_probe__.ts');
+  await fs.writeFile(probe, 'export const probe: any = 1;\n');
+  try {
+    assert.equal(runFiles(probe), 1);
+    assert.equal(runFiles('package.json', 'README.md'), 0);
+  } finally {
+    await fs.rm(probe, { force: true });
   }
 });
