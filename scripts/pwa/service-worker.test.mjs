@@ -196,16 +196,17 @@ test(
       const names = await browser.evaluate('caches.keys()');
       return names.includes(secondCache);
     }, 'new worker installed');
+    // The cache appears while the worker is still installing; `waiting` is set once it finished
+    await waitFor(
+      () =>
+        browser.evaluate(
+          '(async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting))()'
+        ),
+      'the new worker is waiting, not active'
+    );
     assert.ok(
       (await browser.evaluate('caches.keys()')).includes(firstCache),
       'the old release keeps its cache while the new worker waits'
-    );
-    assert.equal(
-      await browser.evaluate(
-        '(async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting))()'
-      ),
-      true,
-      'the new worker is waiting, not active'
     );
     // Accepting the update activates it and removes the previous release's caches
     await browser.evaluate(
