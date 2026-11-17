@@ -232,40 +232,6 @@ export const DeveloperDashboard: React.FC = () => {
               </FeatureButton>
 
               <FeatureButton
-                color="#e17055"
-                onClick={() =>
-                  runTest(
-                    'Storage Optimization',
-                    () =>
-                      (window as any).LevelUpDev?.testing?.saveOptimization?.() ||
-                      Promise.resolve('Tools not loaded')
-                  )
-                }
-              >
-                <FeatureTitle>💾 Storage Tests</FeatureTitle>
-                <FeatureDescription>
-                  Test storage optimization, save frequency, and data integrity
-                </FeatureDescription>
-              </FeatureButton>
-
-              <FeatureButton
-                color="#a29bfe"
-                onClick={() =>
-                  runTest(
-                    'Performance Analysis',
-                    () =>
-                      (window as any).LevelUpDev?.testing?.gameServicesPerformance?.() ||
-                      Promise.resolve('Tools not loaded')
-                  )
-                }
-              >
-                <FeatureTitle>⚡ Performance Tests</FeatureTitle>
-                <FeatureDescription>
-                  Benchmark all game services and analyze performance metrics
-                </FeatureDescription>
-              </FeatureButton>
-
-              <FeatureButton
                 color="#fdcb6e"
                 onClick={() =>
                   runTest(
