@@ -39,8 +39,6 @@ window.LevelUpDev.performance.getReport() // Get performance analysis
 
 ### **Storage & Performance Tests**
 ```typescript
-LevelUpDev.testing.saveOptimization()          // Test storage save optimization
-LevelUpDev.testing.gameServicesPerformance()   // Test all game services
 LevelUpDev.testing.immediateImprovements()     // Test system improvements
 LevelUpDev.testing.performanceFix()            // Verify performance fixes
 ```
@@ -169,11 +167,8 @@ LevelUpDev.storage.checkHealth()
 // Run complete test suite
 LevelUpDev.testing.runAllTests()
 
-// Check specific area
-LevelUpDev.testing.gameServicesPerformance()
-
-// Verify storage is working correctly
-LevelUpDev.testing.saveOptimization()
+// Check a specific area
+LevelUpDev.testing.performanceFix()
 ```
 
 ### **3. Debugging Issues**
@@ -208,8 +203,6 @@ The old scattered functions are still available for backward compatibility:
 
 | Old Function | New Function |
 |--------------|-------------|
-| `window.testSaveOptimization()` | `LevelUpDev.testing.saveOptimization()` |
-| `window.testAllGameServicesPerformance()` | `LevelUpDev.testing.gameServicesPerformance()` |
 | `window.testPerformanceFix()` | `LevelUpDev.testing.performanceFix()` |
 | `window.migrationTests.*` | `LevelUpDev.testing.migration.*` |
 | `window.enablePerformanceDebug()` | `LevelUpDev.performance.enable()` |

@@ -6,8 +6,6 @@
  */
 
 // Core utilities
-import { testSaveOptimization } from './testSaveOptimization';
-import { testAllGameServicesPerformance } from './testAllGameServicesPerformance';
 import { testImmediateImprovements } from './testImmediateImprovements';
 import { testPerformanceFix } from './testPerformanceFix';
 import {
@@ -51,8 +49,6 @@ class LevelUpDeveloperTools {
    */
   testing = {
     // Storage and performance tests
-    saveOptimization: testSaveOptimization,
-    gameServicesPerformance: testAllGameServicesPerformance,
     immediateImprovements: testImmediateImprovements,
     performanceFix: testPerformanceFix,
 
@@ -112,8 +108,6 @@ class LevelUpDeveloperTools {
       console.log('🧪 Running comprehensive test suite...');
 
       const results = {
-        saveOptimization: await testSaveOptimization(),
-        gameServices: await testAllGameServicesPerformance(),
         immediateImprovements: await testImmediateImprovements(),
         performanceFix: await testPerformanceFix(),
         wordRepetition: runWordRepetitionTests(),
@@ -402,8 +396,6 @@ class LevelUpDeveloperTools {
   LevelUpDev.help.list()                  // List all functions
 
 🔧 Testing:
-  LevelUpDev.testing.saveOptimization()   // Test storage optimization
-  LevelUpDev.testing.gameServicesPerformance() // Test services
   LevelUpDev.testing.wordRepetition()     // Test word repetition fix
 
 📊 Performance:
@@ -448,8 +440,6 @@ if (typeof window !== 'undefined') {
   (window as any).LevelUpDev = levelUpDevTools;
 
   // Backward compatibility - map old functions to new interface
-  (window as any).testSaveOptimization = levelUpDevTools.testing.saveOptimization;
-  (window as any).testAllGameServicesPerformance = levelUpDevTools.testing.gameServicesPerformance;
   (window as any).testImmediateImprovements = levelUpDevTools.testing.immediateImprovements;
   (window as any).testPerformanceFix = levelUpDevTools.testing.performanceFix;
   (window as any).enablePerformanceDebug = levelUpDevTools.performance.enable;
