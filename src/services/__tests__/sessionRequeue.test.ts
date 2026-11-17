@@ -1,4 +1,4 @@
-import { QueueEntry, REQUEUE_GAP, requeueMissedWord } from '../sessionRequeue';
+import { getQuestionKey, QueueEntry, REQUEUE_GAP, requeueMissedWord } from '../sessionRequeue';
 
 type W = { id: string };
 const entry = (id: string, quizMode = 'open-answer'): QueueEntry<W> => ({
@@ -40,5 +40,27 @@ describe('requeueMissedWord', () => {
 
   it('ignores an out-of-range index', () => {
     expect(ids(requeueMissedWord(queue, 99, new Set(), 'multiple-choice'))).toEqual(ids(queue));
+  });
+});
+
+describe('getQuestionKey', () => {
+  it('gives a retry its own identity even for the same word and question', () => {
+    const original = getQuestionKey('w1', 'hond');
+    const retry = getQuestionKey('w1', 'hond', true);
+    expect(retry).not.toBe(original);
+  });
+
+  it('keeps feedback of one attempt from matching the other (feedback keys use startsWith)', () => {
+    const originalFeedback = `${getQuestionKey('w1', 'hond')}-1700000000000`;
+    const retryFeedback = `${getQuestionKey('w1', 'hond', true)}-1700000000001`;
+
+    expect(originalFeedback.startsWith(getQuestionKey('w1', 'hond', true))).toBe(false);
+    expect(retryFeedback.startsWith(getQuestionKey('w1', 'hond'))).toBe(false);
+    expect(originalFeedback.startsWith(getQuestionKey('w1', 'hond'))).toBe(true);
+  });
+
+  it('is stable for non-retries', () => {
+    expect(getQuestionKey('w1', 'hond')).toBe('w1-hond');
+    expect(getQuestionKey('w1', 'hond', false)).toBe('w1-hond');
   });
 });

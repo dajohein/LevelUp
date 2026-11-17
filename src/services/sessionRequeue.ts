@@ -39,3 +39,14 @@ export function requeueMissedWord<W extends { id: string }, M extends string>(
   const insertAt = Math.min(currentIndex + 1 + gap, queue.length);
   return [...queue.slice(0, insertAt), retry, ...queue.slice(insertAt)];
 }
+
+/**
+ * Identity of one asked question, used to scope feedback (selected answer, correct/incorrect)
+ * to the attempt it belongs to. A retry has the same word and question text as the original, so
+ * it needs its own identity. Otherwise a retry that directly follows the original (the last
+ * word of the queue) would inherit the previous attempt's highlighted answer. The prefix (rather
+ * than a suffix) keeps the original's key from being a prefix of the retry's key, because feedback
+ * keys are matched with `startsWith`.
+ */
+export const getQuestionKey = (wordId: string, question: string, isRetry = false): string =>
+  `${isRetry ? 'retry:' : ''}${wordId}-${question}`;

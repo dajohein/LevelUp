@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../services/sessionRequeue';
 import React from 'react';
 import styled from '@emotion/styled';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
@@ -383,7 +384,11 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   }
 
   // Generate unique key for current question
-  const currentQuestionKey = `${wordToUse.id}-${gameServices.modeHandler.getQuestionWord(wordToUse)}`;
+  const currentQuestionKey = getQuestionKey(
+    wordToUse.id,
+    gameServices.modeHandler.getQuestionWord(wordToUse),
+    enhancedWordInfo?.isRetry === true
+  );
 
   // Only show feedback if it belongs to the current question instance
   const shouldShowFeedback = feedbackQuestionKey.startsWith(currentQuestionKey);
