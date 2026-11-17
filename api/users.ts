@@ -1,21 +1,7 @@
 /**
- * Vercel Serverless API for Usinterface UserResponse {
-  success: boolean;
-  data?: {
-    userId?: string;
-    sessionToken?: string;
-    accountCode?: string;
-    expiresIn?: number; // Added for account code expiration
-    user?: any;
-    linkedDevices?: number;
-  };
-  error?: string;
-  metadata: {
-    timestamp: number;
-    action: string;
-  };
-}* 
- * Handles user authentication, profile management, and session handling
+ * Vercel Serverless API for User Management
+ *
+ * Handles user creation, profile management, session handling and device linking.
  */
 
 // TypeScript interfaces for Vercel runtime
@@ -48,6 +34,15 @@ interface UserRequest {
     lastActive?: number;
   };
 }
+
+type UserProfile = {
+  id: string;
+  username: string;
+  email?: string;
+  preferences: unknown;
+  createdAt: number;
+  lastActive: number;
+};
 
 interface UserResponse {
   success: boolean;
@@ -127,14 +122,16 @@ function createSession(userId: string): string {
   return createSessionToken(userId, ttlMs);
 }
 
-// Fixed-window rate limit: allows MAX_RATE_LIMIT_ATTEMPTS per window per identifier
+// Fixed-window rate limit: allows MAX_RATE_LIMIT_ATTEMPTS per window per identifier.
+// The window number is part of the key and EXPIRE is always (re)applied, so a request that
+// dies between INCR and EXPIRE can only leave a harmless stale bucket behind. The client
+// is never locked out beyond the current window.
 async function isRateLimited(identifier: string): Promise<boolean> {
   const db = await getDb();
-  const key = `${KEY_PREFIX}rl:${identifier}`;
+  const windowId = Math.floor(Date.now() / RATE_LIMIT_WINDOW);
+  const key = `${KEY_PREFIX}rl:${identifier}:${windowId}`;
   const attempts = await db.incr(key);
-  if (attempts === 1) {
-    await db.expire(key, Math.ceil(RATE_LIMIT_WINDOW / 1000));
-  }
+  await db.expire(key, Math.ceil((RATE_LIMIT_WINDOW * 2) / 1000));
   return attempts > MAX_RATE_LIMIT_ATTEMPTS;
 }
 
@@ -182,16 +179,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (request.action) {
       case 'create': {
         const userId = randomUUID();
-        const user = {
+        const user: UserProfile = {
           id: userId,
           username: request.userData?.username || `user_${userId.slice(0, 8)}`,
-          email: request.userData?.email,
           preferences: request.userData?.preferences || {},
           createdAt: Date.now(),
           lastActive: Date.now(),
         };
+        if (request.userData?.email !== undefined) user.email = request.userData.email;
 
-        await db.set(userKey(userId), user);
+        await db.hset(userKey(userId), user);
         const sessionToken = createSession(userId);
 
         response.success = true;
@@ -210,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = await db.get<any>(userKey(userId));
+        const user = await db.hgetall<UserProfile>(userKey(userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -228,21 +225,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = await db.get<any>(userKey(userId));
-        if (!user) {
+        if (!(await db.hgetall(userKey(userId)))) {
           response.error = 'User not found';
           return res.status(404).json(response);
         }
 
-        // Update user data
-        const updatedUser = {
-          ...user,
-          ...request.userData,
-          id: user.id,
-          lastActive: Date.now(),
-        };
-
-        await db.set(userKey(userId), updatedUser);
+        // Write only the fields being changed (HSET is per-field), so concurrent updates
+        // and `authenticate` heartbeats never overwrite each other with a stale snapshot.
+        // `id` and `createdAt` are never client-writable.
+        const changes: Record<string, unknown> = { lastActive: Date.now() };
+        for (const field of ['username', 'email', 'preferences'] as const) {
+          if (request.userData?.[field] !== undefined) changes[field] = request.userData[field];
+        }
+        await db.hset(userKey(userId), changes);
+        const updatedUser = await db.hgetall<UserProfile>(userKey(userId));
 
         response.success = true;
         response.data = { user: updatedUser };
@@ -261,15 +257,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(401).json(response);
         }
 
-        const user = await db.get<any>(userKey(userId));
-        if (!user) {
+        if (!(await db.hgetall(userKey(userId)))) {
           response.error = 'User not found';
           return res.status(404).json(response);
         }
 
-        // Update last active
-        user.lastActive = Date.now();
-        await db.set(userKey(userId), user);
+        // Touch only lastActive (single-field write; see `update`)
+        await db.hset(userKey(userId), { lastActive: Date.now() });
+        const user = await db.hgetall<UserProfile>(userKey(userId));
 
         response.success = true;
         response.data = {
@@ -298,20 +293,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(429).json(response);
         }
 
-        // Invalidate any existing unused code for this user (security best practice)
-        const previousCode = await db.get<string>(userCodeKey(userId));
-        if (previousCode) {
-          await db.del(codeKey(previousCode), codeAttemptsKey(previousCode));
-        }
-
         const accountCode = generateAccountCode();
         const expirySeconds = Math.ceil(CODE_EXPIRY / 1000);
+        const previousCode = await db.get<string>(userCodeKey(userId));
         await db.set(
           codeKey(accountCode),
-          { userId, used: false, createdAt: Date.now() },
+          { userId, createdAt: Date.now() },
           { ex: expirySeconds }
         );
+        // The pointer is what makes a code redeemable: linkDevice requires the code to match
+        // it. One SET replaces the previous pointer, so the newest code always wins, even if
+        // two generateCode calls race (the loser's code simply never validates).
         await db.set(userCodeKey(userId), accountCode, { ex: expirySeconds });
+        // Hygiene only. Security does not depend on this delete.
+        if (previousCode && previousCode !== accountCode) {
+          await db.del(codeKey(previousCode), codeAttemptsKey(previousCode));
+        }
 
         response.success = true;
         response.data = {
@@ -337,39 +334,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(429).json(response);
         }
 
-        const codeData = await db.get<{ userId: string; used: boolean }>(codeKey(normalizedCode));
+        const codeData = await db.get<{ userId: string }>(codeKey(normalizedCode));
         if (!codeData) {
           // Unknown or expired (TTL elapsed)
           response.error = 'Invalid or expired account code';
           return res.status(400).json(response);
         }
 
-        // Check code-specific attempt limit
+        // Check code-specific attempt limit (EXPIRE always re-applied, see isRateLimited)
         const codeAttempts = await db.incr(codeAttemptsKey(normalizedCode));
-        if (codeAttempts === 1) {
-          await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY / 1000));
-        }
+        await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY / 1000));
         if (codeAttempts > MAX_CODE_ATTEMPTS) {
           await db.del(codeKey(normalizedCode), codeAttemptsKey(normalizedCode));
           response.error = 'Too many attempts for this code. Code has been invalidated.';
           return res.status(400).json(response);
         }
 
-        if (codeData.used) {
-          response.error = 'Account code has already been used';
+        // Only the user's most recently generated code is redeemable
+        const currentCode = await db.get<string>(userCodeKey(codeData.userId));
+        if (currentCode !== normalizedCode) {
+          response.error = 'Invalid or expired account code';
           return res.status(400).json(response);
         }
 
-        // Single use: consume the code now
-        // DEL is atomic: only one concurrent request can consume the code
+        // Single use: DEL is atomic, so only one concurrent request can consume the code.
+        // The user's pointer is left to expire: it now names a consumed code, which can
+        // never validate again, and deleting it here could race with a newer generateCode.
         const consumed = await db.del(codeKey(normalizedCode));
         if (!consumed) {
           response.error = 'Account code has already been used';
           return res.status(400).json(response);
         }
-        await db.del(userCodeKey(codeData.userId), codeAttemptsKey(normalizedCode));
+        await db.del(codeAttemptsKey(normalizedCode));
 
-        const user = await db.get<any>(userKey(codeData.userId));
+        const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
         if (!user) {
           response.error = 'Associated user not found';
           return res.status(404).json(response);

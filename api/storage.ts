@@ -51,13 +51,27 @@ interface StorageResponse {
 }
 
 // Redis layout (see _db.ts):
-//   levelup:data:<userId>:<lang>:<key>  -> stored item (JSON)
-//   levelup:idx:<userId>:<lang>         -> set of keys, so `list` needs no SCAN
-function dataKey(userId: string, languageCode: string, key: string): string {
-  return `${KEY_PREFIX}data:${userId}:${languageCode}:${key}`;
+//   levelup:data:<userId>:<lang>  -> hash, field = storage key, value = stored item
+// One hash per user+language means set/delete/list are each a single atomic command,
+// so there is no separate index that can drift out of sync with the data.
+// Per-key TTL is stored as `expiresAt` on the item and enforced on read/list; expired
+// items are simply ignored (and overwritten by the next set) rather than deleted, which
+// would race with a concurrent set.
+function bucketKey(userId: string, languageCode: string): string {
+  return `${KEY_PREFIX}data:${userId}:${languageCode}`;
 }
-function indexKey(userId: string, languageCode: string): string {
-  return `${KEY_PREFIX}idx:${userId}:${languageCode}`;
+
+interface StoredItem {
+  data: any;
+  compressed: boolean;
+  timestamp: number;
+  ttl?: number;
+  expiresAt?: number;
+  languageCode: string;
+}
+
+function isLive(item: StoredItem | null | undefined, now = Date.now()): item is StoredItem {
+  return !!item && (item.expiresAt === undefined || item.expiresAt > now);
 }
 
 // Helper function to validate language code
@@ -142,9 +156,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const stored = await db.get<any>(
-          dataKey(request.userId, request.languageCode, request.key)
+        const candidate = await db.hget<StoredItem>(
+          bucketKey(request.userId, request.languageCode),
+          request.key
         );
+        const stored = isLive(candidate) ? candidate : null;
 
         if (stored) {
           response.success = true;
@@ -172,22 +188,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
 
-        const storedItem = {
+        const now = Date.now();
+        const ttl = request.options?.ttl;
+        const storedItem: StoredItem = {
           data: dataToStore,
           compressed: compress,
-          timestamp: Date.now(),
-          ttl: request.options?.ttl,
+          timestamp: now,
+          ttl,
+          expiresAt: ttl && ttl > 0 ? now + ttl : undefined,
           languageCode: request.languageCode,
         };
 
-        const ttlSeconds = request.options?.ttl ? Math.ceil(request.options.ttl / 1000) : undefined;
-        const redisKey = dataKey(request.userId, request.languageCode, request.key);
-        if (ttlSeconds) {
-          await db.set(redisKey, storedItem, { ex: ttlSeconds });
-        } else {
-          await db.set(redisKey, storedItem);
-        }
-        await db.sadd(indexKey(request.userId, request.languageCode), request.key);
+        await db.hset(bucketKey(request.userId, request.languageCode), {
+          [request.key]: storedItem,
+        });
 
         response.success = true;
         response.metadata = {
@@ -207,8 +221,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const existed =
-          (await db.del(dataKey(request.userId, request.languageCode, request.key))) > 0;
-        await db.srem(indexKey(request.userId, request.languageCode), request.key);
+          (await db.hdel(bucketKey(request.userId, request.languageCode), request.key)) > 0;
 
         response.success = true;
         response.data = { deleted: existed };
@@ -226,7 +239,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const keys = await db.smembers(indexKey(request.userId, request.languageCode));
+        const items =
+          (await db.hgetall<Record<string, StoredItem>>(
+            bucketKey(request.userId, request.languageCode)
+          )) ?? {};
+        const now = Date.now();
+        const keys = Object.entries(items)
+          .filter(([, item]) => isLive(item, now))
+          .map(([key]) => key);
 
         response.success = true;
         response.data = keys;

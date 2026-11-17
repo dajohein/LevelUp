@@ -8,6 +8,7 @@ type Entry = { value: string; expiresAt?: number };
 export class MemoryDb {
   private kv = new Map<string, Entry>();
   private sets = new Map<string, Set<string>>();
+  private hashes = new Map<string, Map<string, string>>();
 
   private live(key: string): Entry | undefined {
     const entry = this.kv.get(key);
@@ -37,6 +38,7 @@ export class MemoryDb {
       if (this.live(key)) removed++;
       this.kv.delete(key);
       if (this.sets.delete(key)) removed++;
+      if (this.hashes.delete(key)) removed++;
     }
     return removed;
   }
@@ -73,5 +75,37 @@ export class MemoryDb {
 
   async smembers(key: string): Promise<string[]> {
     return [...(this.sets.get(key) ?? [])];
+  }
+
+  // Hashes: field values are JSON round-tripped like Upstash does
+  async hset(key: string, fields: Record<string, unknown>): Promise<number> {
+    const hash = this.hashes.get(key) ?? new Map<string, string>();
+    let added = 0;
+    for (const [field, value] of Object.entries(fields)) {
+      if (!hash.has(field)) added++;
+      hash.set(field, JSON.stringify(value));
+    }
+    this.hashes.set(key, hash);
+    return added;
+  }
+
+  async hget<T>(key: string, field: string): Promise<T | null> {
+    const raw = this.hashes.get(key)?.get(field);
+    return raw === undefined ? null : (JSON.parse(raw) as T);
+  }
+
+  async hgetall<T extends Record<string, unknown>>(key: string): Promise<T | null> {
+    const hash = this.hashes.get(key);
+    if (!hash || hash.size === 0) return null;
+    return Object.fromEntries([...hash].map(([f, v]) => [f, JSON.parse(v)])) as T;
+  }
+
+  async hdel(key: string, ...fields: string[]): Promise<number> {
+    const hash = this.hashes.get(key);
+    if (!hash) return 0;
+    let removed = 0;
+    fields.forEach(f => hash.delete(f) && removed++);
+    if (hash.size === 0) this.hashes.delete(key);
+    return removed;
   }
 }
