@@ -103,15 +103,17 @@ describe('users API hardening', () => {
     expect(last).toBe(429);
   });
 
-  it('rate limits account creation per client', async () => {
+  it('rate limits account creation per client at exactly the limit', async () => {
     const codes: number[] = [];
     for (let i = 0; i < 32; i++) {
       codes.push(
         (await callUsers({ action: 'create' }, { 'x-forwarded-for': '31.0.0.1' })).statusCode
       );
     }
-    expect(codes[0]).toBe(200);
-    expect(codes[codes.length - 1]).toBe(429);
+    // the default is 30 per window: the 30th succeeds and the 31st is refused
+    expect(codes.slice(0, 30).every(code => code === 200)).toBe(true);
+    expect(codes[30]).toBe(429);
+    expect(codes[31]).toBe(429);
   });
 
   it('rejects oversized or mistyped profile fields', async () => {
@@ -281,6 +283,10 @@ describe('review follow-ups: config', () => {
     }
     delete (process.env as Record<string, string | undefined>).NODE_ENV;
     expect(isProduction()).toBe(true);
+    // `vercel dev` sets VERCEL_ENV=development and may leave NODE_ENV unset
+    process.env.VERCEL_ENV = 'development';
+    expect(isProduction()).toBe(false);
+    process.env.VERCEL_ENV = 'production';
     process.env.NODE_ENV = 'development';
     process.env.VERCEL_ENV = 'production';
     expect(isProduction()).toBe(true);
@@ -429,5 +435,73 @@ describe('limit boundaries', () => {
       userData: { preferences: { x: '界'.repeat(6000) } },
     });
     expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('clientAddress: table-driven forms', () => {
+  const label = (value: string) => clientAddress({ 'x-forwarded-for': value });
+
+  it.each([
+    // IPv4
+    ['1.2.3.4', '1.2.3.4'],
+    ['255.255.255.255', '255.255.255.255'],
+    ['0.0.0.0', '0.0.0.0'],
+    // IPv6: same /64 -> same label, however it is written
+    ['2001:db8:1:2:aaaa:bbbb:cccc:dddd', '2001:0db8:0001:0002::/64'],
+    ['2001:DB8:1:2::1', '2001:0db8:0001:0002::/64'],
+    ['2001:0db8:0001:0002:0000:0000:0000:0001', '2001:0db8:0001:0002::/64'],
+    // "::" inside the /64 itself, at the start, and standing for exactly one group
+    ['2001:db8::1', '2001:0db8:0000:0000::/64'],
+    ['::1', '0000:0000:0000:0000::/64'],
+    ['::', '0000:0000:0000:0000::/64'],
+    ['1:2:3:4:5:6:7::', '0001:0002:0003:0004::/64'],
+    ['1:2:3::5:6:7:8', '0001:0002:0003:0000::/64'],
+    // embedded dotted IPv4 (NAT64 and similar) is part of the lower 64 bits
+    ['64:ff9b::192.0.2.1', '0064:ff9b:0000:0000::/64'],
+    ['2001:db8:1:2::192.0.2.1', '2001:0db8:0001:0002::/64'],
+    // IPv4-mapped, dotted or hex, is the IPv4 address
+    ['::ffff:192.0.2.1', '192.0.2.1'],
+    ['::ffff:c000:0201', '192.0.2.1'],
+    ['0:0:0:0:0:ffff:1.2.3.4', '1.2.3.4'],
+  ])('%s -> %s', (input, expected) => {
+    expect(label(input)).toBe(expected);
+  });
+
+  it.each([
+    '999.1.1.1',
+    '256.0.0.1',
+    '1.256.1.1',
+    '1.2.3',
+    '1.2.3.4.5',
+    '01.2.3.4',
+    'ffff:1.2.3.4',
+    ':ffff:1.2.3.4',
+    ':::ffff:1.2.3.4',
+    '0:ffff:1.2.3.4',
+    '0:0:0:0:0:0:0:ffff:1.2.3.4',
+    '::ffff:999.999.999.999',
+    '1::2::3',
+    '1:2:3',
+    '1:2:3:4:5:6:7:8:9',
+    ':1::2',
+    '1::2:',
+    '12345::1',
+    'zzzz::1',
+    'fe80::1%eth0',
+    '[::1]:443',
+    '',
+    '1'.repeat(46),
+  ])('malformed %j -> unknown', input => {
+    expect(label(input)).toBe('unknown');
+  });
+
+  it('two addresses in different /64s never share a label', () => {
+    expect(label('2001:db8:1:2::1')).not.toBe(label('2001:db8:1:3::1'));
+    expect(label('2001:db8:1:2::1')).not.toBe(label('2001:db8:2:2::1'));
+  });
+
+  it('uses only the first entry of a list and the first of an array header', () => {
+    expect(label('1.2.3.4, 5.6.7.8')).toBe('1.2.3.4');
+    expect(clientAddress({ 'x-forwarded-for': ['9.9.9.9', '8.8.8.8'] })).toBe('9.9.9.9');
   });
 });
