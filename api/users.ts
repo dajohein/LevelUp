@@ -32,7 +32,8 @@ interface VercelResponse {
   setHeader(name: string, value: string): VercelResponse;
   end(): VercelResponse;
 }
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
+import { createSessionToken, verifySessionToken, resolveCorsOrigin } from './_auth.js';
 
 interface UserRequest {
   action: 'create' | 'get' | 'update' | 'authenticate' | 'generateCode' | 'linkDevice';
@@ -66,7 +67,6 @@ interface UserResponse {
 // Simple in-memory storage for development
 // In production, replace with proper database
 const users = new Map<string, any>();
-const sessions = new Map<string, { userId: string; expires: number }>();
 const accountCodes = new Map<
   string,
   {
@@ -88,11 +88,10 @@ const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || 60 * 60 * 1000)
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
   // Use crypto.randomBytes for cryptographically secure randomness
-  const crypto = require('crypto');
 
   // Generate 6 random bytes and encode as base32-like string
   // This gives us 8 characters from a 32-character alphabet
-  const bytes = crypto.randomBytes(6);
+  const bytes = randomBytes(6);
 
   // Use a custom alphabet excluding confusing characters (0, O, I, 1, etc.)
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -121,28 +120,14 @@ function generateAccountCode(): string {
   return result.substring(0, 8);
 }
 
-// Helper function to generate session token
-function generateSessionToken(): string {
-  return randomUUID();
-}
-
-// Helper function to validate session
+// Sessions are stateless signed tokens (see ./_auth.ts) so api/storage can verify them too
 function validateSession(token: string): string | null {
-  const session = sessions.get(token);
-  if (!session || session.expires < Date.now()) {
-    if (session) sessions.delete(token);
-    return null;
-  }
-  return session.userId;
+  return verifySessionToken(token);
 }
 
-// Helper function to create session
 function createSession(userId: string): string {
-  const token = generateSessionToken();
   const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || 24 * 60 * 60 * 1000);
-  const expires = Date.now() + ttlMs;
-  sessions.set(token, { userId, expires });
-  return token;
+  return createSessionToken(userId, ttlMs);
 }
 
 // Helper function to check rate limiting
@@ -188,13 +173,8 @@ function getClientIdentifier(req: any): string {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS via environment configuration
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
-  const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin =
-    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
-      ? origin
-      : allowedOrigins[0] || '*';
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -251,24 +231,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'get': {
-        if (!request.userId && !request.sessionToken) {
-          response.error = 'userId or sessionToken is required';
-          return res.status(400).json(response);
+        const userId = validateSession(request.sessionToken || '');
+        if (!userId) {
+          response.error = 'Valid sessionToken is required';
+          return res.status(401).json(response);
         }
 
-        let userId = request.userId;
-
-        // If session token provided, validate and get userId
-        if (request.sessionToken && !userId) {
-          const validatedUserId = validateSession(request.sessionToken);
-          if (!validatedUserId) {
-            response.error = 'Invalid or expired session';
-            return res.status(401).json(response);
-          }
-          userId = validatedUserId;
-        }
-
-        const user = users.get(userId!);
+        const user = users.get(userId);
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -280,23 +249,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'update': {
-        if (!request.userId && !request.sessionToken) {
-          response.error = 'userId or sessionToken is required';
-          return res.status(400).json(response);
+        const userId = validateSession(request.sessionToken || '');
+        if (!userId) {
+          response.error = 'Valid sessionToken is required';
+          return res.status(401).json(response);
         }
 
-        let userId = request.userId;
-
-        if (request.sessionToken && !userId) {
-          const validatedUserId = validateSession(request.sessionToken);
-          if (!validatedUserId) {
-            response.error = 'Invalid or expired session';
-            return res.status(401).json(response);
-          }
-          userId = validatedUserId;
-        }
-
-        const user = users.get(userId!);
+        const user = users.get(userId);
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -306,10 +265,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const updatedUser = {
           ...user,
           ...request.userData,
+          id: user.id,
           lastActive: Date.now(),
         };
 
-        users.set(userId!, updatedUser);
+        users.set(userId, updatedUser);
 
         response.success = true;
         response.data = { user: updatedUser };
@@ -452,20 +412,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Create new session for this device
         const newSessionToken = createSession(codeData.userId);
 
-        // Count linked devices (sessions)
-        let linkedDevices = 0;
-        for (const [_, sessionData] of sessions) {
-          if (sessionData.userId === codeData.userId && sessionData.expires > Date.now()) {
-            linkedDevices++;
-          }
-        }
-
         response.success = true;
         response.data = {
           userId: codeData.userId,
           sessionToken: newSessionToken,
           user,
-          linkedDevices,
         };
         break;
       }
