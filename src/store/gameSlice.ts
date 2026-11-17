@@ -12,6 +12,7 @@ import {
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
+import { mergeWordProgress } from '../services/progressSync/mergeProgress';
 import {
   getAnswerScoreMultiplier,
   getCapitalizationFeedback,
@@ -20,7 +21,7 @@ import {
 import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
 import { selectQuizMode } from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
-import type { GameState } from './types';
+import type { GameState, WordProgress } from './types';
 
 interface AnswerSubmission {
   answer: string;
@@ -338,6 +339,19 @@ export const gameSlice = createSlice({
       // REMOVED: Direct save call - persistence middleware will handle this
     },
 
+    /**
+     * Fold progress downloaded from the server into the active language. Merged against the
+     * CURRENT state (answers given while the request was in flight survive) and ignored for any
+     * language that is no longer active (it is merged in storage instead).
+     */
+    mergeRemoteProgress: (
+      state,
+      action: PayloadAction<{ languageCode: string; words: { [wordId: string]: WordProgress } }>
+    ) => {
+      if (state.language !== action.payload.languageCode) return;
+      state.wordProgress = mergeWordProgress(state.wordProgress, action.payload.words).merged;
+    },
+
     setLanguage: (state, action: PayloadAction<string>) => {
       const languageCode = action.payload;
       if (!languageCode) return; // Validate input
@@ -450,6 +464,7 @@ export const {
   setCurrentModule,
   resetGame,
   updateWordProgress,
+  mergeRemoteProgress,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

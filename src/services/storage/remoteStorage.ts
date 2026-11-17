@@ -49,6 +49,19 @@ export class RemoteNetworkError extends Error {
   }
 }
 
+/** Same rule as the server (api/storage.ts isValidLanguageCode and the key length bounds). */
+const LANGUAGE_CODE_PATTERN = /^[a-z]{2}(-[A-Z]{2})?$/;
+const MAX_KEY_LENGTH = 128;
+
+function assertValidTarget(languageCode: string, key: string): void {
+  if (typeof languageCode !== 'string' || !LANGUAGE_CODE_PATTERN.test(languageCode)) {
+    throw new Error('Invalid language code format');
+  }
+  if (typeof key !== 'string' || key.length < 1 || key.length > MAX_KEY_LENGTH) {
+    throw new Error(`Storage key must be a string of 1-${MAX_KEY_LENGTH} characters`);
+  }
+}
+
 /** A non-2xx API response. A 4xx means the request itself was refused (see RETRYABLE_REFUSALS). */
 class RemoteHttpError extends Error {
   constructor(
@@ -555,6 +568,73 @@ export class RemoteStorageService implements AsyncStorageProvider {
   }
 
   /**
+   * Read one value for an explicitly named language. Never uses the `currentLanguage` singleton,
+   * and the value is returned exactly as stored (no decompression or unwrapping). Resolves
+   * `undefined` only when the key does not exist (the API answers 404); every other failure
+   * (session, network, HTTP, an unsuccessful body) throws.
+   */
+  async getValue<T>(languageCode: string, key: string): Promise<T | undefined> {
+    assertValidTarget(languageCode, key);
+    let result;
+    try {
+      ({ result } = await this.authedCall('/api/storage', current => ({
+        action: 'get',
+        userId: current.userId,
+        sessionToken: current.sessionToken,
+        languageCode,
+        key,
+        options: { compress: false },
+      })));
+    } catch (error) {
+      if (error instanceof RemoteHttpError && error.status === 404) return undefined;
+      throw error;
+    }
+    if (!result || result.success !== true) {
+      throw new Error('Remote storage read failed: the server did not report success');
+    }
+    return result.data as T;
+  }
+
+  /**
+   * Write one value for an explicitly named language. Never uses the `currentLanguage` singleton;
+   * the value is sent uncompressed and unwrapped. Throws on any failure, including a value over
+   * the size limit or a full bucket (HTTP 413): it never resolves as an empty success.
+   */
+  async putValue(languageCode: string, key: string, data: unknown): Promise<void> {
+    assertValidTarget(languageCode, key);
+    const { result } = await this.authedCall('/api/storage', current => ({
+      action: 'set',
+      userId: current.userId,
+      sessionToken: current.sessionToken,
+      languageCode,
+      key,
+      data,
+      options: { compress: false },
+    }));
+    if (!result || result.success !== true) {
+      throw new Error('Remote storage write failed: the server did not report success');
+    }
+  }
+
+  /**
+   * Delete one value for an explicitly named language (never the `currentLanguage` singleton).
+   * Resolves when the server confirmed (also when the key did not exist); throws on any failure.
+   */
+  async deleteValue(languageCode: string, key: string): Promise<void> {
+    assertValidTarget(languageCode, key);
+    const { result } = await this.authedCall('/api/storage', current => ({
+      action: 'delete',
+      userId: current.userId,
+      sessionToken: current.sessionToken,
+      languageCode,
+      key,
+    }));
+    if (!result || result.success !== true) {
+      throw new Error('Remote storage delete failed: the server did not report success');
+    }
+  }
+
+  /**
    * Delete data from remote storage with language isolation
    */
   async delete(key: string, _options?: StorageOptions): Promise<StorageResult<void>> {
@@ -885,6 +965,14 @@ export class RemoteStorageService implements AsyncStorageProvider {
       logger.error('Failed to link device with code:', error);
       throw error;
     }
+  }
+
+  /**
+   * True when an account session is already established. Unlike getUserSession() this never
+   * creates a guest account or touches the network.
+   */
+  hasSession(): boolean {
+    return this.userSession !== null && this.lostSession === null;
   }
 
   /**

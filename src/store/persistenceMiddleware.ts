@@ -34,6 +34,7 @@ const CRITICAL_ACTIONS = [
 // Actions that trigger state changes needing persistence
 const PERSIST_ACTIONS = [
   'game/checkAnswer',
+  'game/mergeRemoteProgress',
   'session/setLanguage',
   'session/setWeeklyChallenge',
   'game/setCurrentModule',
@@ -111,7 +112,9 @@ const persistDurableSnapshot = (state: RootState, actionType: string): void => {
   if (actionType.startsWith('game/')) {
     gameStateStorage.save(createGameSnapshot(state.game));
 
-    if (actionType === 'game/checkAnswer') {
+    // The merged map is written at once, so nothing that reloads progress (a language switch)
+    // can read the pre-merge copy
+    if (actionType === 'game/checkAnswer' || actionType === 'game/mergeRemoteProgress') {
       if (state.game.language) {
         wordProgressStorage.save(state.game.language, state.game.wordProgress);
       }

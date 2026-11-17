@@ -10,6 +10,10 @@ import {
 } from '../services/storageService';
 import { getAvailableLanguages, getModulesForLanguage } from '../services/moduleService';
 import { logger } from '../services/logger';
+import {
+  isProgressSyncActive,
+  resetRemoteProgress,
+} from '../services/progressSync/resetRemoteProgress';
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.1);
@@ -185,6 +189,11 @@ interface StorageManagementProps {
   compact?: boolean;
 }
 
+// Shown when progress is synced to an account: a reset removes the server copy, but a linked device
+// that still has its own copy will upload it again
+const SYNC_RESET_NOTE =
+  '\n\nYour synced copy on the server is removed too. Other devices linked to this account keep their own progress and will send it back the next time they sync, so reset it there as well.';
+
 export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = false }) => {
   const dispatch = useDispatch();
 
@@ -222,15 +231,27 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
   }, []);
 
   const handleResetLanguage = async (languageCode: string, languageName: string) => {
+    const syncNote = isProgressSyncActive() ? SYNC_RESET_NOTE : '';
     if (
       !confirm(
-        `Are you sure you want to reset ALL progress for ${languageName}? This will delete all your XP, mastery levels, and statistics for this language. This cannot be undone.`
+        `Are you sure you want to reset ALL progress for ${languageName}? This will delete all your XP, mastery levels, and statistics for this language. This cannot be undone.${syncNote}`
       )
     ) {
       return;
     }
 
     try {
+      // Remove the synced copy first: otherwise the next sync would restore what is reset here
+      try {
+        await resetRemoteProgress([languageCode]);
+      } catch (error) {
+        logger.warn('Reset stopped: the synced copy could not be removed', { languageCode });
+        alert(
+          `${languageName} progress was NOT reset: your synced copy could not be removed. Check your connection and try again.`
+        );
+        return;
+      }
+
       // Clear the language-specific progress
       wordProgressStorage.clear(languageCode);
 
@@ -290,12 +311,27 @@ export const StorageManagement: React.FC<StorageManagementProps> = ({ compact = 
   };
 
   const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to clear all learning progress? This cannot be undone.')) {
+    const syncNote = isProgressSyncActive() ? SYNC_RESET_NOTE : '';
+    if (
+      !confirm(
+        `Are you sure you want to clear all learning progress? This cannot be undone.${syncNote}`
+      )
+    ) {
       return;
     }
 
     setIsClearing(true);
     try {
+      try {
+        await resetRemoteProgress(getAvailableLanguages().map(({ code }) => code));
+      } catch (error) {
+        logger.warn('Clear stopped: the synced copy could not be removed');
+        alert(
+          'Progress was NOT cleared: your synced copy could not be removed. Check your connection and try again.'
+        );
+        setIsClearing(false);
+        return;
+      }
       clearAllData();
       setTimeout(() => {
         window.location.reload(); // Reload to reset state

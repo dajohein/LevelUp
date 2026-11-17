@@ -13,6 +13,13 @@ import { remoteStorage } from '../../services/storage/remoteStorage';
 jest.mock('../../config/environment', () => ({
   environmentConfig: { enableRemoteStorage: true },
 }));
+jest.mock('../../services/progressSync/startProgressSync', () => ({
+  syncActiveLanguageProgress: jest.fn(async () => ({
+    status: 'uploaded',
+    takenFromRemote: 0,
+    uploaded: true,
+  })),
+}));
 jest.mock('../Navigation', () => ({ Navigation: () => null }));
 jest.mock('../DirectionalStats', () => ({ DirectionalStats: () => null }));
 jest.mock('../UserProfile', () => ({ UserProfile: () => null }));
@@ -180,7 +187,9 @@ describe('accessible dialogs', () => {
     await user.click(opener);
     dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     expect(
-      within(dialog).getByText(/Device linked to your account\. Progress was not transferred/)
+      within(dialog).getByText(
+        /Device linked to your account\. Your progress for the current language was synced/
+      )
     ).toBeInTheDocument();
     await user.type(within(dialog).getByRole('textbox'), 'B4C8L0N3');
     expect(within(dialog).getByRole('button', { name: 'Link This Device' })).toBeEnabled();
