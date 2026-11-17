@@ -37,6 +37,8 @@ interface EnhancedWordServiceState {
     isCorrect: boolean;
     timeSpent: number;
     quizMode: string;
+    /** An in-session re-ask of a missed word; practice, not a fresh result */
+    isRetry?: boolean;
   }>;
   sessionStartTime: number;
   /** Words already re-queued after a miss in this session (each is retried at most once). */
@@ -181,6 +183,7 @@ class EnhancedWordService {
         isCorrect,
         timeSpent,
         quizMode: currentWordData.quizMode,
+        isRetry: currentWordData.isRetry === true,
       });
 
       if (!isCorrect) {
@@ -223,9 +226,11 @@ class EnhancedWordService {
     if (!this.state.currentSession) return null;
 
     const sessionDuration = Date.now() - this.state.sessionStartTime;
+    // Only first attempts count towards session analytics: a missed word that is then answered
+    // correctly on its easier retry must not count as learned, nor appear twice as struggling.
     const performance = analyzeSessionPerformance(
       this.state.currentSession,
-      this.state.sessionResults
+      this.state.sessionResults.filter(r => !r.isRetry)
     );
 
     // Get all studied word IDs

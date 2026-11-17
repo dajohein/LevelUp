@@ -56,3 +56,23 @@ describe('review scheduling', () => {
     expect(getDueWords(words, wordProgress, NOW).map(w => w.id)).toEqual(['older', 'old']);
   });
 });
+
+describe('review scheduling robustness', () => {
+  it('a word with an unparseable lastPracticed is due, not silently skipped', () => {
+    const bad = progress('bad', { lastPracticed: 'garbage' });
+    expect(getDueWords([word('bad')], { bad }, NOW).map(w => w.id)).toEqual(['bad']);
+  });
+
+  it('a streak beyond the longest interval still gets a valid date', () => {
+    const at = getNextReviewAt(progress('a', { consecutiveCorrect: 40 }));
+    expect(at && Number.isNaN(at.getTime())).toBe(false);
+  });
+
+  it('a word is due exactly at its due instant', () => {
+    const p = progress('a', { lastPracticed: hoursAgo(10), consecutiveCorrect: 0 });
+    const dueAt = getNextReviewAt(p);
+    if (!dueAt) throw new Error('expected a review time');
+    expect(getDueWords([word('a')], { a: p }, dueAt).map(w => w.id)).toEqual(['a']);
+    expect(getDueWords([word('a')], { a: p }, new Date(dueAt.getTime() - 1))).toEqual([]);
+  });
+});

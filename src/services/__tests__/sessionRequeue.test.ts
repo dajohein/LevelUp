@@ -60,7 +60,23 @@ describe('getQuestionKey', () => {
   });
 
   it('is stable for non-retries', () => {
-    expect(getQuestionKey('w1', 'hond')).toBe('w1-hond');
-    expect(getQuestionKey('w1', 'hond', false)).toBe('w1-hond');
+    expect(getQuestionKey('w1', 'hond')).toBe(getQuestionKey('w1', 'hond', false));
+    expect(getQuestionKey('w1', 'hond')).toBe(getQuestionKey('w1', 'hond'));
+  });
+
+  it('cannot confuse a hyphenated id with a hyphenated question', () => {
+    expect(getQuestionKey('a', 'b-c')).not.toBe(getQuestionKey('a-b', 'c'));
+  });
+});
+
+describe('requeueMissedWord gap safety', () => {
+  const queue = ['w1', 'w2', 'w3'].map(id => entry(id));
+
+  it('never places the retry before the word just missed, whatever the gap', () => {
+    for (const gap of [NaN, -5, Infinity * -1]) {
+      const result = requeueMissedWord(queue, 1, new Set(), 'multiple-choice', gap);
+      const retryIndex = result.findIndex(e => e.isRetry);
+      expect(retryIndex).toBeGreaterThan(1);
+    }
   });
 });

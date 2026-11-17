@@ -279,15 +279,19 @@ export const gameSlice = createSlice({
             lastPracticed: new Date().toISOString(),
             timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
             timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            consecutiveCorrect: validation.isCorrect
-              ? (directionData.consecutiveCorrect || 0) + 1
-              : 0,
-            longestStreak: validation.isCorrect
-              ? Math.max(
-                  directionData.longestStreak || 0,
-                  (directionData.consecutiveCorrect || 0) + 1
-                )
-              : directionData.longestStreak || 0,
+            // Same rule as the overall streak: an assisted correct answer proves nothing
+            consecutiveCorrect: !validation.isCorrect
+              ? 0
+              : assisted
+                ? directionData.consecutiveCorrect || 0
+                : (directionData.consecutiveCorrect || 0) + 1,
+            longestStreak:
+              validation.isCorrect && !assisted
+                ? Math.max(
+                    directionData.longestStreak || 0,
+                    (directionData.consecutiveCorrect || 0) + 1
+                  )
+                : directionData.longestStreak || 0,
           };
         }
 

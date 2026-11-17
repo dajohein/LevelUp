@@ -198,6 +198,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // An empty or non-object body is a client error, not a 500 (and not an error-log entry)
+  if (typeof req.body !== 'object' || req.body === null || Array.isArray(req.body)) {
+    return res.status(400).json({ success: false, error: 'Request body must be a JSON object' });
+  }
+
   try {
     const db = await getDb();
     const request: UserRequest = req.body;
@@ -272,6 +277,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           response.error = invalidUpdate;
           return res.status(400).json(response);
         }
+        if (request.userData?.username !== undefined && !request.userData.username.trim()) {
+          response.error = 'username must not be empty';
+          return res.status(400).json(response);
+        }
         if (!(await db.hgetall(userKey(userId)))) {
           response.error = 'User not found';
           return res.status(404).json(response);
@@ -340,14 +349,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(429).json(response);
         }
 
-        const accountCode = generateAccountCode();
         const expirySeconds = Math.ceil(CODE_EXPIRY() / 1000);
         const previousCode = await db.get<string>(userCodeKey(userId));
-        await db.set(
-          codeKey(accountCode),
-          { userId, createdAt: Date.now() },
-          { ex: expirySeconds }
-        );
+
+        // NX: never overwrite a live code that belongs to someone else (a 40-bit collision is
+        // unlikely, but a plain SET would silently hand the other user's code to this one)
+        let accountCode = '';
+        for (let attempt = 0; attempt < 5 && !accountCode; attempt++) {
+          const candidate = generateAccountCode();
+          const stored = await db.set(
+            codeKey(candidate),
+            { userId, createdAt: Date.now() },
+            { ex: expirySeconds, nx: true }
+          );
+          if (stored) accountCode = candidate;
+        }
+        if (!accountCode) {
+          throw new Error('Could not generate a unique account code');
+        }
         // The pointer is what makes a code redeemable: linkDevice requires the code to match
         // it. One SET replaces the previous pointer, so the newest code always wins, even if
         // two generateCode calls race (the loser's code simply never validates).
@@ -403,15 +422,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Single use: DEL is atomic, so only one concurrent request can consume the code.
         // The user's pointer is left to expire: it now names a consumed code, which can
         // never validate again, and deleting it here could race with a newer generateCode.
+        // Look the user up first: if the account is gone or the read fails, the one-time code
+        // must not be burned without issuing a session.
+        const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
+        if (!user) return invalidCode();
+
         const consumed = await db.del(codeKey(normalizedCode));
         if (!consumed) return invalidCode();
         await db.del(codeAttemptsKey(normalizedCode));
-
-        const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
-        if (!user) {
-          response.error = 'Associated user not found';
-          return res.status(404).json(response);
-        }
 
         // Create new session for this device
         const newSessionToken = createSession(codeData.userId);

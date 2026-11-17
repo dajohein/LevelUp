@@ -2,6 +2,7 @@ import type { Word } from './wordService';
 import { validateAnswer, type AnswerValidation } from './answerValidation';
 import { isTypo, normalizeForMatching } from './answerMatching';
 import { getWordsForLanguage } from './wordService';
+import { logger } from './logger';
 
 const openEndedModes = ['contextual-analysis', 'usage-example', 'synonym-antonym'];
 
@@ -21,6 +22,9 @@ const typedModes = ['open-answer', 'fill-in-the-blank'];
 
 const knownWordsCache = new Map<string, Set<string>>();
 
+/** Clears the per-language known-word cache (tests, or after course data is reloaded). */
+export const resetKnownWordsCache = (): void => knownWordsCache.clear();
+
 /**
  * Every word of the course, from every field. Which field holds the course language and which
  * the Dutch side is not consistent across the course files (some store the German in `definition`),
@@ -38,10 +42,15 @@ const getKnownWords = (languageCode: string): Set<string> => {
   if (words.length === 0) throw new Error(`No course words available for "${languageCode}"`);
 
   const known = new Set<string>();
+  // Whole entries and their individual words, so that a slip that turns one word of a phrase
+  // into another real word ("die Maus" -> "das Maus" for "das Haus") is caught too
   const add = (text: string | undefined) => {
     if (!text) return;
-    known.add(normalizeForMatching(text, languageCode));
-    known.add(normalizeForMatching(text, 'nl'));
+    for (const language of [languageCode, 'nl']) {
+      const normalized = normalizeForMatching(text, language);
+      known.add(normalized);
+      normalized.split(/\s+/).forEach(token => token && known.add(token));
+    }
   };
   for (const word of words) {
     add(word.term);
@@ -64,7 +73,9 @@ const findTypoMatch = (
   let known: Set<string>;
   try {
     known = getKnownWords(languageCode);
-  } catch {
+  } catch (error) {
+    // Fail closed, but not silently: otherwise typo tolerance would just stop working unnoticed
+    logger.warn(`Typo tolerance disabled for "${languageCode}":`, error);
     return null;
   }
 

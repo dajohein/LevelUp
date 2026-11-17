@@ -289,3 +289,14 @@ describe('decay with unusable timestamps', () => {
     expect(calculateMasteryDecay(future, 50)).toBe(50);
   });
 });
+
+describe('decay with unusable mastery or small clock skew', () => {
+  it.each([NaN, undefined as unknown as number, Infinity])('repairs mastery %p to 0', bad => {
+    expect(calculateMasteryDecay(new Date().toISOString(), bad)).toBe(0);
+  });
+
+  it('a timestamp a few minutes in the future does not raise mastery', () => {
+    const slightlyAhead = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    expect(calculateMasteryDecay(slightlyAhead, 50)).toBe(50);
+  });
+});

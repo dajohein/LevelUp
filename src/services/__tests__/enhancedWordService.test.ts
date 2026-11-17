@@ -1,6 +1,7 @@
 import { enhancedWordService } from '../enhancedWordService';
 import { getWordsForLanguage } from '../wordService';
 import { learningCacheService } from '../cacheService';
+import { analyzeSessionPerformance } from '../spacedRepetitionService';
 import type { Word } from '../wordService';
 
 // Mock dependencies to return simple test data
@@ -158,6 +159,57 @@ describe('enhancedWordService', () => {
       // 5 original words + exactly one retry of the missed word, in recognition mode
       expect(seen).toHaveLength(5);
       expect(seen.filter(entry => entry.isRetry)).toEqual([{ id: missedId, isRetry: true }]);
+    });
+
+    it('asks the retry in multiple choice, three words later', () => {
+      expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+      const missedId = enhancedWordService.getCurrentWord()?.word?.id;
+
+      const upcoming: Array<{ id?: string; isRetry: boolean; mode?: string }> = [];
+      let step = enhancedWordService.recordAnswer(false);
+      while (!step.isSessionComplete && step.nextWord) {
+        upcoming.push({
+          id: step.nextWord.word?.id,
+          isRetry: step.nextWord.isRetry,
+          mode: step.nextWord.quizMode,
+        });
+        step = enhancedWordService.recordAnswer(true);
+      }
+
+      const retryAt = upcoming.findIndex(entry => entry.isRetry);
+      // the missed word was index 0; the three words after it come first, then the retry
+      expect(retryAt).toBe(3);
+      expect(upcoming[retryAt]).toMatchObject({ id: missedId, mode: 'multiple-choice' });
+    });
+
+    it('keeps retries out of the session analytics: first attempts only', () => {
+      expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+      const missedId = enhancedWordService.getCurrentWord()?.word?.id;
+
+      let step = enhancedWordService.recordAnswer(false); // first attempt of the first word: wrong
+      while (!step.isSessionComplete && step.nextWord) {
+        step = enhancedWordService.recordAnswer(true); // everything else, including the retry: right
+      }
+
+      // analyzeSessionPerformance is mocked in this file, so check what it was given
+      const [, results] = jest.mocked(analyzeSessionPerformance).mock.calls[0];
+      expect(results).toHaveLength(5); // first attempts only; the correct retry would make it 6
+      expect(results.some(r => 'isRetry' in r && r.isRetry)).toBe(false);
+      expect(results.filter(r => !r.isCorrect).map(r => r.wordId)).toEqual([missedId]);
+    });
+
+    it('starts every session with a clean re-queue state', () => {
+      for (let session = 0; session < 2; session++) {
+        expect(enhancedWordService.initializeLearningSession('de')).toBe(true);
+        const missedId = enhancedWordService.getCurrentWord()?.word?.id;
+        let sawRetry = false;
+        let step = enhancedWordService.recordAnswer(false);
+        while (!step.isSessionComplete && step.nextWord) {
+          if (step.nextWord.isRetry && step.nextWord.word?.id === missedId) sawRetry = true;
+          step = enhancedWordService.recordAnswer(true);
+        }
+        expect(sawRetry).toBe(true);
+      }
     });
 
     it('does not queue another retry when the retry is also missed', () => {

@@ -1,4 +1,4 @@
-import { validateQuizAnswer } from '../quizAnswerValidation';
+import { resetKnownWordsCache, validateQuizAnswer } from '../quizAnswerValidation';
 import { getAnswerScoreMultiplier, getCloseMatchFeedback } from '../answerValidation';
 import { getWordsForLanguage } from '../wordService';
 import type { Word } from '../wordService';
@@ -18,6 +18,7 @@ const byId = (id: string) => course.find(w => w.id === id) as Word;
 const reverse = (w: Word): Word => ({ ...w, direction: 'term-to-definition' });
 
 beforeEach(() => {
+  resetKnownWordsCache();
   (getWordsForLanguage as jest.Mock).mockReturnValue(course);
 });
 
@@ -110,14 +111,68 @@ describe('typo tolerance in typed quiz modes', () => {
   it('does not depend on which field holds the course language', () => {
     // Some course files store the German in `definition`, others in `term`
     const mixed: Word[] = [
-      { id: 'd:1', term: 'muur', definition: 'die Wand' },
-      { id: 'd:2', term: 'die Hand', definition: 'hand' },
+      { id: 'd:1', term: 'tuin', definition: 'der Garten' },
+      { id: 'd:2', term: 'die Karten', definition: 'kaarten' },
     ];
     (getWordsForLanguage as jest.Mock).mockReturnValue(mixed);
-    const wand: Word = { ...mixed[0], direction: 'term-to-definition' };
+    const garten: Word = { ...mixed[0], direction: 'term-to-definition' };
 
-    expect(validateQuizAnswer('die Hand', wand, 'open-answer', 'de').isCorrect).toBe(false);
-    expect(validateQuizAnswer('die Wnd', wand, 'open-answer', 'de').closeMatch).toBe('typo');
+    expect(validateQuizAnswer('der Karten', garten, 'open-answer', 'de').isCorrect).toBe(false);
+    expect(validateQuizAnswer('der Gartn', garten, 'open-answer', 'de').closeMatch).toBe('typo');
+  });
+
+  it('never accepts a wrong article as a typo', () => {
+    const tisch: Word = {
+      id: 'a:1',
+      term: 'der Tisch',
+      definition: 'tafel',
+      direction: 'definition-to-term',
+    };
+    (getWordsForLanguage as jest.Mock).mockReturnValue([tisch]);
+    expect(validateQuizAnswer('den Tisch', tisch, 'open-answer', 'nl').isCorrect).toBe(false);
+    expect(validateQuizAnswer('der Tisch', tisch, 'open-answer', 'nl').isCorrect).toBe(true);
+  });
+
+  it('forgives a slip when the answer has stray spaces around it', () => {
+    expect(validateQuizAnswer('  bibliotca  ', byId('es:1'), 'open-answer', 'es').closeMatch).toBe(
+      'typo'
+    );
+  });
+
+  it('forgives a slip of any accepted answer and shows that answer as the correct spelling', () => {
+    const word: Word = {
+      id: 'x:1',
+      term: 'sala',
+      definition: 'woonkamer',
+      acceptedAnswers: ['huiskamer'],
+      direction: 'term-to-definition',
+    };
+    expect(validateQuizAnswer('woonkamerr', word, 'open-answer', 'es')).toMatchObject({
+      closeMatch: 'typo',
+      matchedAnswer: 'woonkamer',
+    });
+    expect(validateQuizAnswer('huiskamr', word, 'open-answer', 'es')).toMatchObject({
+      isCorrect: true,
+      closeMatch: 'typo',
+      matchedAnswer: 'huiskamer',
+    });
+  });
+
+  it('keeps the correct spelling in its original case', () => {
+    const haus: Word = {
+      id: 'c:1',
+      term: 'Fußball',
+      definition: 'voetbal',
+      direction: 'definition-to-term',
+    };
+    (getWordsForLanguage as jest.Mock).mockReturnValue([haus]);
+    expect(validateQuizAnswer('Fußbal', haus, 'open-answer', 'nl').matchedAnswer).toBe('Fußball');
+  });
+
+  it('never applies to letter scramble or other non-typed modes', () => {
+    expect(validateQuizAnswer('bibliotca', byId('es:1'), 'letter-scramble', 'es').isCorrect).toBe(
+      false
+    );
   });
 
   it('counts letters, not spaces: a five-letter phrase is too short', () => {

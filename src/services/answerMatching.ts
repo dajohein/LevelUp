@@ -44,7 +44,7 @@ export const matchAnswer = (answer: string, expected: string, languageCode: stri
     : 'none';
 };
 
-/** Fewest letters (spaces and punctuation do not count) in an expected answer for a slip to be forgiven. */
+/** Fewest letters (spaces and punctuation do not count) in the word that has the slip. */
 export const MIN_TYPO_LENGTH = 6;
 
 const countLetters = (text: string): number => (text.match(/\p{L}/gu) ?? []).length;
@@ -69,10 +69,20 @@ export const isOneEditApart = (a: string, b: string): boolean => {
   return shorter.slice(i) === longer.slice(i + 1);
 };
 
+const toTokens = (text: string): string[] => text.split(/\s+/).filter(Boolean);
+
 /**
- * A slip of one letter in a long enough word. `knownWords` holds the normalized words of the
- * course: an answer that is itself a different real word ("perro" for "pero") is a wrong answer,
- * not a typo.
+ * A slip of one letter in a long enough word.
+ *
+ * Phrases are compared word by word: every other word must match exactly and the one that differs
+ * must itself have at least MIN_TYPO_LENGTH letters. That keeps short function words from being
+ * "typo'd" into a different word, so `den Tisch` is wrong for `der Tisch` and `los vacaciones` for
+ * `las vacaciones`: choosing the article is the thing being tested. Letters are counted on the
+ * expected word as written (before transliteration), so `Bäume` is not a six-letter word.
+ *
+ * `isKnownWord` receives normalized text. An answer that is itself a different real word of the
+ * course ("trabajar" for "trabajos", or a phrase that contains one such word) is a wrong answer, not
+ * a typo.
  */
 export const isTypo = (
   answer: string,
@@ -80,9 +90,22 @@ export const isTypo = (
   languageCode: string,
   isKnownWord: (normalizedAnswer: string) => boolean
 ): boolean => {
-  const normalizedExpected = normalizeForMatching(expected, languageCode);
-  if (countLetters(normalizedExpected) < MIN_TYPO_LENGTH) return false;
-  const normalizedAnswer = normalizeForMatching(answer, languageCode);
-  if (!isOneEditApart(normalizedAnswer, normalizedExpected)) return false;
-  return !isKnownWord(normalizedAnswer);
+  const expectedTokens = toTokens(normalizeForMatching(expected, languageCode));
+  const answerTokens = toTokens(normalizeForMatching(answer, languageCode));
+  const writtenTokens = toTokens(expected.normalize('NFC').toLowerCase());
+  if (
+    expectedTokens.length === 0 ||
+    expectedTokens.length !== answerTokens.length ||
+    expectedTokens.length !== writtenTokens.length
+  ) {
+    return false;
+  }
+
+  const differing = expectedTokens.flatMap((token, i) => (token === answerTokens[i] ? [] : [i]));
+  if (differing.length !== 1) return false;
+
+  const [i] = differing;
+  if (countLetters(writtenTokens[i]) < MIN_TYPO_LENGTH) return false;
+  if (!isOneEditApart(answerTokens[i], expectedTokens[i])) return false;
+  return !isKnownWord(answerTokens.join(' ')) && !isKnownWord(answerTokens[i]);
 };

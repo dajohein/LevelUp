@@ -53,6 +53,7 @@ interface StorageResponse {
 // Input limits: keys become Redis hash fields and values are stored per user, so bound both.
 const MAX_KEY_LENGTH = 128;
 const MAX_VALUE_BYTES = 1024 * 1024;
+const MAX_KEYS_PER_BUCKET = 500;
 
 // Redis layout (see _db.ts):
 //   levelup:data:<userId>:<lang>  -> hash, field = storage key, value = stored item
@@ -88,13 +89,10 @@ function compressData(data: any): string {
   return JSON.stringify(data);
 }
 
-// Helper function to decompress data
+// Helper function to decompress data. Throws on corrupt data: returning null would make the read
+// look like a success with no data, and a client could then overwrite real progress with a blank.
 function decompressData(data: string): any {
-  try {
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
+  return JSON.parse(data);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -114,6 +112,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: false,
       error: 'Method not allowed. Use POST.',
     });
+  }
+
+  // An empty or non-object body is a client error, not a 500 (and not an error-log entry)
+  if (typeof req.body !== 'object' || req.body === null || Array.isArray(req.body)) {
+    return res.status(400).json({ success: false, error: 'Request body must be a JSON object' });
   }
 
   try {
@@ -230,9 +233,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           languageCode: request.languageCode,
         };
 
-        await db.hset(bucketKey(request.userId, request.languageCode), {
-          [request.key]: storedItem,
-        });
+        // Bound the number of keys per user and language: the value limit alone would let one
+        // account grow its hash without limit
+        const bucket = bucketKey(request.userId, request.languageCode);
+        if (
+          (await db.hget(bucket, request.key)) === null &&
+          (await db.hlen(bucket)) >= MAX_KEYS_PER_BUCKET
+        ) {
+          response.error = `too many keys (limit ${MAX_KEYS_PER_BUCKET} per language)`;
+          return res.status(413).json(response);
+        }
+        await db.hset(bucket, { [request.key]: storedItem });
 
         response.success = true;
         response.metadata = {

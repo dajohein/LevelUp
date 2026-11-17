@@ -76,9 +76,38 @@ describe('isTypo', () => {
   });
 
   it('counts letters, not spaces or punctuation, toward the minimum length', () => {
-    // "el mar" has six characters but only five letters
     expect(isTypo('el mir', 'el mar', 'es', unknown)).toBe(false);
     expect(isTypo('el mara', 'el mar', 'es', unknown)).toBe(false);
-    expect(isTypo('el marx', 'el marr', 'es', unknown)).toBe(true); // six letters
+  });
+
+  it('counts the word as written, so transliteration cannot make a short word long', () => {
+    // "Bäume" is five letters; it only becomes "baeume" after transliteration
+    expect(isTypo('Baume', 'Bäume', 'de', unknown)).toBe(false);
+    expect(isTypo('Fußbalk', 'Fußball', 'de', unknown)).toBe(true);
+  });
+
+  it.each([
+    ['den Tisch', 'der Tisch', 'de'],
+    ['den Lehrer', 'der Lehrer', 'de'],
+    ['dem Fußballverein', 'der Fußballverein', 'de'],
+    ['los vacaciones', 'las vacaciones', 'es'],
+    ['los tijeras', 'las tijeras', 'es'],
+  ])('never forgives a wrong article: %s for %s', (answer, expected, language) => {
+    expect(isTypo(answer, expected, language, unknown)).toBe(false);
+  });
+
+  it('still forgives a slip in the noun of a phrase, but only one word may differ', () => {
+    expect(isTypo('die Gitarr', 'die Gitarre', 'de', unknown)).toBe(true);
+    expect(isTypo('das Gitarr', 'die Gitarre', 'de', unknown)).toBe(false);
+    expect(isTypo('diegitarre', 'die Gitarre', 'de', unknown)).toBe(false); // missing space
+  });
+
+  it('rejects a phrase whose changed word is itself a known word', () => {
+    const known = new Set(['garten', 'karten']);
+    expect(isTypo('der Karten', 'der Garten', 'de', w => known.has(w))).toBe(false);
+  });
+
+  it('is not fooled by length-one differences that are not a single insertion or deletion', () => {
+    expect(isOneEditApart('abcdef', 'abxdefg')).toBe(false);
   });
 });

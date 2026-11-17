@@ -36,7 +36,9 @@ export function requeueMissedWord<W extends { id: string }, M extends string>(
 
   requeued.add(missed.word.id);
   const retry: QueueEntry<W, M> = { ...missed, quizMode: retryMode, isRetry: true };
-  const insertAt = Math.min(currentIndex + 1 + gap, queue.length);
+  // A NaN or negative gap would put the retry before the word just missed
+  const safeGap = Number.isFinite(gap) ? Math.max(0, Math.floor(gap)) : REQUEUE_GAP;
+  const insertAt = Math.min(currentIndex + 1 + safeGap, queue.length);
   return [...queue.slice(0, insertAt), retry, ...queue.slice(insertAt)];
 }
 
@@ -49,4 +51,5 @@ export function requeueMissedWord<W extends { id: string }, M extends string>(
  * keys are matched with `startsWith`.
  */
 export const getQuestionKey = (wordId: string, question: string, isRetry = false): string =>
-  `${isRetry ? 'retry:' : ''}${wordId}-${question}`;
+  // The id length makes the key unambiguous even for hyphenated ids ("a-b" + "c" vs "a" + "b-c")
+  `${isRetry ? 'retry:' : ''}${wordId.length}:${wordId}-${question}`;

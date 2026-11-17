@@ -99,7 +99,10 @@ export const calculateNextReviewTime = (
   const lastPracticedDate = new Date(lastPracticed);
 
   // Base interval selection based on correct streak and mastery
-  const intervalIndex = Math.min(correctStreak, LEARNING_CONSTANTS.LEARNING_INTERVALS.length - 1);
+  const intervalIndex = Math.min(
+    Math.max(0, Math.floor(correctStreak) || 0),
+    LEARNING_CONSTANTS.LEARNING_INTERVALS.length - 1
+  );
   const baseInterval = LEARNING_CONSTANTS.LEARNING_INTERVALS[intervalIndex];
 
   // Apply multiplier based on learning phase
@@ -315,6 +318,10 @@ export const createWordGroups = (
  */
 export const getNextReviewAt = (progress: WordProgress | undefined): Date | null => {
   if (!progress || !progress.lastPracticed) return null;
+  // An unparseable timestamp would give an Invalid Date, which is never "<= now": the word would
+  // be silently excluded from review forever. Treat it as long overdue so it resurfaces and is
+  // repaired by the next answer.
+  if (Number.isNaN(new Date(progress.lastPracticed).getTime())) return new Date(0);
   const currentMastery = calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
   return calculateNextReviewTime(currentMastery, getReviewStreak(progress), progress.lastPracticed);
 };

@@ -69,3 +69,40 @@ describe('nextReviewStreak', () => {
     expect(next.consecutiveCorrect).toBe(4);
   });
 });
+
+describe('review streak robustness', () => {
+  it('a recovery right after a lapse counts (the lapse clears the 12h gate)', () => {
+    const first = nextReviewStreak(base, true, false, at(0));
+    const lapsed = nextReviewStreak({ ...base, ...first }, false, false, at(1));
+    const recovered = nextReviewStreak({ ...base, ...lapsed }, true, false, at(2));
+    expect(recovered.consecutiveCorrect).toBe(1);
+  });
+
+  it('a gate-blocked answer keeps the original stamp (the gap is not a sliding window)', () => {
+    const first = nextReviewStreak(base, true, false, at(0));
+    const blocked = nextReviewStreak({ ...base, ...first }, true, false, at(11));
+    expect(blocked.streakUpdatedAt).toBe(first.streakUpdatedAt);
+    const later = nextReviewStreak({ ...base, ...blocked }, true, false, at(12));
+    expect(later.consecutiveCorrect).toBe(2);
+  });
+
+  it('a stamp in the future does not freeze the streak', () => {
+    const future = at(24 * 30).toISOString();
+    const next = nextReviewStreak(
+      { ...base, consecutiveCorrect: 2, streakUpdatedAt: future },
+      true,
+      false,
+      at(0)
+    );
+    expect(next.consecutiveCorrect).toBe(3);
+  });
+
+  it.each([
+    [{ timesCorrect: undefined as unknown as number, timesIncorrect: 1 }],
+    [{ timesCorrect: 3, timesIncorrect: undefined as unknown as number }],
+    [{ timesCorrect: 1, timesIncorrect: 0, consecutiveCorrect: -4 }],
+    [{ timesCorrect: 1, timesIncorrect: 0, consecutiveCorrect: NaN }],
+  ])('corrupt counts give a streak of 0, never NaN: %j', progress => {
+    expect(getReviewStreak(progress)).toBe(0);
+  });
+});

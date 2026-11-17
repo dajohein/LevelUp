@@ -25,6 +25,12 @@ export const calculateMasteryDecay = (
   lastPracticed: string | undefined,
   currentMastery: number
 ): number => {
+  // Corrupted or legacy progress can have no usable xp; NaN would otherwise survive every
+  // later gain and loss and be saved forever
+  if (!Number.isFinite(currentMastery)) {
+    return MASTERY_LEVELS.BEGINNER;
+  }
+
   if (!lastPracticed) {
     return currentMastery;
   }

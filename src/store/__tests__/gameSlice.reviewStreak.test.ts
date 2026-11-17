@@ -48,4 +48,12 @@ describe('review streak in gameSlice', () => {
     const second = answer(first, 'perro');
     expect(second.wordProgress[word.id].consecutiveCorrect).toBe(1);
   });
+
+  it('hinted and retried correct answers leave the review streak alone', () => {
+    const first = answer(start(), 'perro');
+    for (const extra of [{ hintsUsed: 1 }, { isRetry: true }]) {
+      const next = answer(first, 'perro', extra);
+      expect(next.wordProgress[word.id].consecutiveCorrect).toBe(1);
+    }
+  });
 });

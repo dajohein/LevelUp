@@ -125,4 +125,64 @@ describe('mastery decay is applied before an answer changes it', () => {
     ];
     expect(Number.isFinite(direction?.xp)).toBe(true);
   });
+
+  it('a wrong answer loses from the decayed value, with exact numbers', () => {
+    const progress = answer(progressWith(80, hoursAgo(240)), 'gato').wordProgress[word.id];
+    // 72 decayed; open-answer loss = 8 * (2 - 0.7 * 0.5) = 13.2 -> 58.8 (old behaviour: 66.8)
+    expect(progress.xp).toBeCloseTo(58.8, 5);
+    expect(progress.totalXp).toBeCloseTo(58.8, 5);
+  });
+
+  it('directional mastery decays from its own timestamp, not the word-level one', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 5,
+          timesIncorrect: 0,
+          xp: 80,
+          lastPracticed: hoursAgo(240),
+          consecutiveCorrect: 3,
+        },
+      },
+    };
+    const next = answer(progress, 'perro').wordProgress[word.id];
+    expect(next.xp).toBeCloseTo(90.5, 5); // word-level: recent, no decay
+    expect(next.directions?.['definition-to-term']?.xp).toBeCloseTo(82.5, 5); // direction: decayed
+  });
+
+  it('non-finite stored mastery is repaired instead of persisting NaN', () => {
+    const state = answer(
+      { ...progressWith(80, hoursAgo(1)), xp: undefined as unknown as number },
+      'perro'
+    );
+    expect(Number.isFinite(state.wordProgress[word.id].xp)).toBe(true);
+  });
+
+  it('an assisted or retried answer does not extend the directional streak either', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, hoursAgo(1)),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 5,
+          timesIncorrect: 0,
+          xp: 80,
+          lastPracticed: hoursAgo(1),
+          consecutiveCorrect: 3,
+          longestStreak: 3,
+        },
+      },
+    };
+    for (const extra of [{ hintsUsed: 1 }, { isRetry: true }]) {
+      const direction = answer(progress, 'perro', extra).wordProgress[word.id].directions?.[
+        'definition-to-term'
+      ];
+      expect(direction?.consecutiveCorrect).toBe(3);
+      expect(direction?.longestStreak).toBe(3);
+    }
+    const unassisted = answer(progress, 'perro').wordProgress[word.id].directions?.[
+      'definition-to-term'
+    ];
+    expect(unassisted?.consecutiveCorrect).toBe(4);
+  });
 });

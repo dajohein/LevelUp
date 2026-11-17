@@ -81,8 +81,8 @@ describe('config helpers', () => {
   it('clientAddress takes the first valid entry and caps junk', () => {
     expect(clientAddress({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' })).toBe('1.2.3.4');
     expect(
-      clientAddress({ 'x-vercel-forwarded-for': '2001:db8::1', 'x-forwarded-for': '1.1.1.1' })
-    ).toBe('2001:db8::1');
+      clientAddress({ 'x-vercel-forwarded-for': '1.2.3.4', 'x-forwarded-for': '1.1.1.1' })
+    ).toBe('1.2.3.4');
     expect(clientAddress({ 'x-forwarded-for': 'x'.repeat(5000) })).toBe('unknown');
     expect(clientAddress({ 'x-forwarded-for': '1.2.3.4\nevil' })).toBe('unknown');
     expect(clientAddress({})).toBe('unknown');
@@ -242,5 +242,192 @@ describe('storage API hardening', () => {
   it('sets Vary: Origin', async () => {
     const res = await callStorage({ ...base, action: 'list' });
     expect(res.headers.Vary).toBe('Origin');
+  });
+});
+
+describe('review follow-ups: config', () => {
+  const saved = { ...process.env };
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  it('buckets IPv6 clients by /64, so rotating the low 64 bits gains nothing', () => {
+    const a = clientAddress({ 'x-forwarded-for': '2001:db8:1:2:aaaa:bbbb:cccc:dddd' });
+    const b = clientAddress({ 'x-forwarded-for': '2001:0DB8:1:2::1' });
+    const other = clientAddress({ 'x-forwarded-for': '2001:db8:1:3::1' });
+    expect(a).toBe(b);
+    expect(other).not.toBe(a);
+    expect(a).toBe('2001:0db8:0001:0002::/64');
+  });
+
+  it('treats an IPv4-mapped IPv6 address as the IPv4 address and rejects malformed ones', () => {
+    expect(clientAddress({ 'x-forwarded-for': '::ffff:1.2.3.4' })).toBe('1.2.3.4');
+    for (const bad of ['1:2:3', '1::2::3', 'zzzz::1', '1.2.3', '999.1.1.1.1', '1'.repeat(46)]) {
+      expect(clientAddress({ 'x-forwarded-for': bad })).toBe('unknown');
+    }
+  });
+
+  it('isProduction allow-lists development and test', () => {
+    delete process.env.VERCEL_ENV;
+    for (const [env, expected] of [
+      ['development', false],
+      ['test', false],
+      ['production', true],
+      ['staging', true],
+      ['', true],
+    ] as const) {
+      process.env.NODE_ENV = env;
+      expect(isProduction()).toBe(expected);
+    }
+    delete (process.env as Record<string, string | undefined>).NODE_ENV;
+    expect(isProduction()).toBe(true);
+    process.env.NODE_ENV = 'development';
+    process.env.VERCEL_ENV = 'production';
+    expect(isProduction()).toBe(true);
+  });
+
+  it('envPositiveInt accepts plain decimal digits only and logs a bad value once', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    process.env.Y_TEST = '0x10';
+    expect(envPositiveInt('Y_TEST', 5)).toBe(5);
+    expect(envPositiveInt('Y_TEST', 5)).toBe(5);
+    expect(spy).toHaveBeenCalledTimes(1);
+    process.env.Y_TEST = '1e3';
+    expect(envPositiveInt('Y_TEST', 5)).toBe(5);
+    process.env.Y_TEST = '007';
+    expect(envPositiveInt('Y_TEST', 5)).toBe(7);
+    spy.mockRestore();
+  });
+});
+
+describe('review follow-ups: users', () => {
+  it('returns 400, not 500, for an empty or non-object body', async () => {
+    for (const body of [undefined, null, 'x', [1]]) {
+      const res = mockRes();
+      await usersHandler({ method: 'POST', body, query: {}, headers: {} } as any, res);
+      expect(res.statusCode).toBe(400);
+    }
+  });
+
+  it('rejects an empty username on update', async () => {
+    const created = (await callUsers({ action: 'create' }, { 'x-forwarded-for': '40.0.0.1' })).body
+      .data;
+    for (const username of ['', '   ']) {
+      const res = await callUsers({
+        action: 'update',
+        sessionToken: created.sessionToken,
+        userData: { username },
+      });
+      expect(res.statusCode).toBe(400);
+    }
+    const ok = await callUsers({
+      action: 'update',
+      sessionToken: created.sessionToken,
+      userData: { username: 'x' },
+    });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('rejects update fields of the wrong type', async () => {
+    const created = (await callUsers({ action: 'create' }, { 'x-forwarded-for': '40.0.0.2' })).body
+      .data;
+    const res = await callUsers({
+      action: 'update',
+      sessionToken: created.sessionToken,
+      userData: { email: 12 },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('review follow-ups: storage', () => {
+  const token = createSessionToken('followup-user', 10000);
+  const base = { userId: 'followup-user', sessionToken: token, languageCode: 'es' };
+
+  it('returns 400 for a missing body', async () => {
+    const res = mockRes();
+    await storageHandler({ method: 'POST', body: undefined, query: {}, headers: {} } as any, res);
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('caps the number of keys per language, but still allows updating an existing key', async () => {
+    const lang = { ...base, languageCode: 'fr' };
+    for (let i = 0; i < 500; i++) {
+      const res = await callStorage({ ...lang, action: 'set', key: `k${i}`, data: i });
+      if (res.statusCode !== 200) throw new Error(`key ${i} rejected: ${res.statusCode}`);
+    }
+    expect(
+      (await callStorage({ ...lang, action: 'set', key: 'one-too-many', data: 1 })).statusCode
+    ).toBe(413);
+    expect(
+      (await callStorage({ ...lang, action: 'set', key: 'k0', data: 'updated' })).statusCode
+    ).toBe(200);
+  });
+
+  it('reports corrupt stored data as an error instead of a successful empty read', async () => {
+    const { getDb } = await import('../_db.js');
+    const db = await getDb();
+    await db.hset('levelup:data:followup-user:de', {
+      broken: { data: '{not json', compressed: true, timestamp: Date.now(), languageCode: 'de' },
+    });
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const res = await callStorage({ ...base, languageCode: 'de', action: 'get', key: 'broken' });
+    spy.mockRestore();
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+describe('limit boundaries', () => {
+  const token = createSessionToken('boundary-user', 10000);
+  const base = { userId: 'boundary-user', sessionToken: token, languageCode: 'es' };
+  const MIB = 1024 * 1024;
+
+  it('accepts a value of exactly 1 MiB and rejects one byte more', async () => {
+    // JSON.stringify adds two quote characters
+    const exact = 'x'.repeat(MIB - 2);
+    const options = { compress: false };
+    expect(
+      (await callStorage({ ...base, action: 'set', key: 'exact', data: exact, options })).statusCode
+    ).toBe(200);
+    expect(
+      (await callStorage({ ...base, action: 'set', key: 'over', data: exact + 'x', options }))
+        .statusCode
+    ).toBe(413);
+  });
+
+  it('applies the limit to the compressed form too', async () => {
+    const res = await callStorage({
+      ...base,
+      action: 'set',
+      key: 'compressed',
+      data: 'x'.repeat(MIB - 2),
+      options: { compress: true },
+    });
+    expect(res.statusCode).toBe(413);
+  });
+
+  it('accepts preferences of exactly 16 KiB and rejects one byte more', async () => {
+    const ip = { 'x-forwarded-for': '41.0.0.1' };
+    // {"x":"..."} is 8 bytes of structure around the string
+    const exact = { x: 'a'.repeat(16 * 1024 - 8) };
+    expect(
+      (await callUsers({ action: 'create', userData: { preferences: exact } }, ip)).statusCode
+    ).toBe(200);
+    const over = { x: 'a'.repeat(16 * 1024 - 7) };
+    expect(
+      (await callUsers({ action: 'create', userData: { preferences: over } }, ip)).statusCode
+    ).toBe(400);
+  });
+
+  it('enforces the profile limits on update as well as create', async () => {
+    const created = (await callUsers({ action: 'create' }, { 'x-forwarded-for': '41.0.0.2' })).body
+      .data;
+    const res = await callUsers({
+      action: 'update',
+      sessionToken: created.sessionToken,
+      userData: { preferences: { x: '界'.repeat(6000) } },
+    });
+    expect(res.statusCode).toBe(400);
   });
 });

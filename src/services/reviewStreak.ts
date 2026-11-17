@@ -22,8 +22,13 @@ type StreakFields = Pick<
  * Current review streak. Progress saved before streaks were tracked has no
  * `consecutiveCorrect`; fall back to the old estimate so existing learners keep their schedule.
  */
-export const getReviewStreak = (progress: StreakFields): number =>
-  progress.consecutiveCorrect ?? Math.max(0, progress.timesCorrect - progress.timesIncorrect);
+export const getReviewStreak = (progress: StreakFields): number => {
+  const streak =
+    progress.consecutiveCorrect ?? Math.max(0, progress.timesCorrect - progress.timesIncorrect);
+  // Corrupted or imported data (undefined counts, negative numbers) must not leak NaN into the
+  // schedule: a NaN streak produces an invalid review date and the word is silently never due.
+  return Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0;
+};
 
 export interface StreakUpdate {
   consecutiveCorrect: number;
@@ -45,12 +50,15 @@ export const nextReviewStreak = (
   const current = getReviewStreak(progress);
   const unchanged = { consecutiveCorrect: current, streakUpdatedAt: progress.streakUpdatedAt };
 
-  if (!isCorrect) return { consecutiveCorrect: 0, streakUpdatedAt: progress.streakUpdatedAt };
+  // A lapse also clears the gate: the next correct answer after a miss must count, or a learner
+  // who just recovered a word would be stuck at 0 for up to 12 hours.
+  if (!isCorrect) return { consecutiveCorrect: 0, streakUpdatedAt: undefined };
   if (assisted) return unchanged;
 
   const last = progress.streakUpdatedAt ? new Date(progress.streakUpdatedAt).getTime() : NaN;
   const hoursSince = (now.getTime() - last) / (60 * 60 * 1000);
-  if (!Number.isNaN(last) && hoursSince < MIN_STREAK_GAP_HOURS) return unchanged;
+  // A stamp in the future (clock skew, imported data) is invalid, not "very recent"
+  if (!Number.isNaN(last) && hoursSince >= 0 && hoursSince < MIN_STREAK_GAP_HOURS) return unchanged;
 
   return { consecutiveCorrect: current + 1, streakUpdatedAt: now.toISOString() };
 };
