@@ -103,7 +103,7 @@ Configuration is controlled via environment variables to follow Twelve-Factor pr
 **Frontend (Vite):**
 
 - `VITE_API_BASE_URL` — Base URL for API calls (defaults to browser origin)
-- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to the volatile remote demo in development only (default: `false`)
+- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to remote sync; requires the API to be backed by Redis (default: `false`)
 - `VITE_ENABLE_LOCAL_FALLBACK` — Keep local tiers as fallback
 - `VITE_DEBUG_MODE` — Enable verbose logging in development
 - `VITE_STORAGE_ENDPOINT_STORAGE`, `VITE_STORAGE_ENDPOINT_USERS` — Endpoint paths
@@ -297,7 +297,7 @@ The system keeps browser progress local:
 
 1. Detects existing local data
 2. Preserves it in browser storage
-3. Does not automatically upload or migrate it to the volatile demo API
+3. Does not automatically upload or migrate it to the remote API
 4. Requires an explicit export/import to move data between devices
 
 ### Language Isolation Compliance

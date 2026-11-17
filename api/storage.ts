@@ -20,10 +20,14 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 
+import { verifySessionToken, resolveCorsOrigin } from './_auth.js';
+import { getDb, KEY_PREFIX } from './_db.js';
+
 // Types for API requests/responses
 interface StorageRequest {
   action: 'get' | 'set' | 'delete' | 'list';
   userId: string;
+  sessionToken?: string;
   languageCode?: string;
   key?: string;
   data?: any;
@@ -46,13 +50,28 @@ interface StorageResponse {
   };
 }
 
-// Simple in-memory storage for development/testing
-// In production, this would be replaced with a proper database
-const storage = new Map<string, any>();
+// Redis layout (see _db.ts):
+//   levelup:data:<userId>:<lang>  -> hash, field = storage key, value = stored item
+// One hash per user+language means set/delete/list are each a single atomic command,
+// so there is no separate index that can drift out of sync with the data.
+// Per-key TTL is stored as `expiresAt` on the item and enforced on read/list; expired
+// items are simply ignored (and overwritten by the next set) rather than deleted, which
+// would race with a concurrent set.
+function bucketKey(userId: string, languageCode: string): string {
+  return `${KEY_PREFIX}data:${userId}:${languageCode}`;
+}
 
-// Helper function to generate storage key with language isolation
-function getStorageKey(userId: string, languageCode: string, key: string): string {
-  return `user:${userId}:lang:${languageCode}:${key}`;
+interface StoredItem {
+  data: any;
+  compressed: boolean;
+  timestamp: number;
+  ttl?: number;
+  expiresAt?: number;
+  languageCode: string;
+}
+
+function isLive(item: StoredItem | null | undefined, now = Date.now()): item is StoredItem {
+  return !!item && (item.expiresAt === undefined || item.expiresAt > now);
 }
 
 // Helper function to validate language code
@@ -76,13 +95,8 @@ function decompressData(data: string): any {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS configuration via environment (Twelve-Factor)
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
-  const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin =
-    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
-      ? origin
-      : allowedOrigins[0] || '*';
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -94,13 +108,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({
       success: false,
       error: 'Method not allowed. Use POST.',
-    });
-  }
-
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(503).json({
-      success: false,
-      error: 'Remote storage is unavailable: this demo backend is process-local and not durable.',
     });
   }
 
@@ -116,6 +123,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Authenticate: the session token must be valid and belong to the requested userId
+    const authedUserId = verifySessionToken(request.sessionToken);
+    if (!authedUserId || authedUserId !== request.userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or missing session token',
+      });
+    }
+
     // Validate language code if provided
     if (request.languageCode && !isValidLanguageCode(request.languageCode)) {
       return res.status(400).json({
@@ -124,6 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    const db = await getDb();
     const response: StorageResponse = {
       success: false,
       metadata: {
@@ -139,12 +156,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
-        const stored = storage.get(storageKey);
+        const candidate = await db.hget<StoredItem>(
+          bucketKey(request.userId, request.languageCode),
+          request.key
+        );
+        const stored = isLive(candidate) ? candidate : null;
 
         if (stored) {
           response.success = true;
-          response.data = request.options?.compress ? decompressData(stored.data) : stored.data;
+          response.data = stored.compressed ? decompressData(stored.data) : stored.data;
           response.metadata = {
             timestamp: Date.now(),
             tier: 'remote' as const,
@@ -165,19 +185,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
         const compress = request.options?.compress ?? defaultCompress;
         const dataToStore = compress ? compressData(request.data) : request.data;
 
-        const storedItem = {
+        const now = Date.now();
+        const ttl = request.options?.ttl;
+        const storedItem: StoredItem = {
           data: dataToStore,
           compressed: compress,
-          timestamp: Date.now(),
-          ttl: request.options?.ttl,
+          timestamp: now,
+          ttl,
+          expiresAt: ttl && ttl > 0 ? now + ttl : undefined,
           languageCode: request.languageCode,
         };
 
-        storage.set(storageKey, storedItem);
+        await db.hset(bucketKey(request.userId, request.languageCode), {
+          [request.key]: storedItem,
+        });
 
         response.success = true;
         response.metadata = {
@@ -196,9 +220,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const storageKey = getStorageKey(request.userId, request.languageCode, request.key);
-        const existed = storage.has(storageKey);
-        storage.delete(storageKey);
+        const existed =
+          (await db.hdel(bucketKey(request.userId, request.languageCode), request.key)) > 0;
 
         response.success = true;
         response.data = { deleted: existed };
@@ -216,14 +239,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const prefix = `user:${request.userId}:lang:${request.languageCode}:`;
-        const keys: string[] = [];
-
-        for (const [key] of storage) {
-          if (key.startsWith(prefix)) {
-            keys.push(key.substring(prefix.length));
-          }
-        }
+        const items =
+          (await db.hgetall<Record<string, StoredItem>>(
+            bucketKey(request.userId, request.languageCode)
+          )) ?? {};
+        const now = Date.now();
+        const keys = Object.entries(items)
+          .filter(([, item]) => isLive(item, now))
+          .map(([key]) => key);
 
         response.success = true;
         response.data = keys;

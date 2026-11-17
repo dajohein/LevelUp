@@ -130,7 +130,6 @@ console.log('Cache hit rate:', analytics.data.cache.hitRate); // >85%
 ```
 
 #### **Removed Test Files (November 2025 Cleanup)**
-- ❌ `testBatchingOptimization.ts` - Deprecated (moved to `testSimplifiedBatching.ts`)
 - ❌ `testCacheOptimization.ts` - Unused redundant tests
 - ❌ Backend migration utilities - Obsolete (migrations completed 2024)
 
@@ -139,7 +138,6 @@ console.log('Cache hit rate:', analytics.data.cache.hitRate); // >85%
 - ✅ `testAllGameServicesPerformance.ts` - Comprehensive service testing
 - ✅ `testImmediateImprovements.ts` - Core functionality validation
 - ✅ `testWordRepetitionFix.ts` - Word selection quality assurance
-- ✅ `testSimplifiedBatching.ts` - Background auto-save validation
 ```typescript
 // Heavy components now load only when needed
 const GameLazy = lazy(() => import('../components/Game'));
