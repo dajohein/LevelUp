@@ -1,0 +1,96 @@
+jest.mock('../../services/storageService', () => ({
+  gameStateStorage: { load: jest.fn(() => ({})), save: jest.fn() },
+}));
+jest.mock('../../services/dataMigrationService', () => ({
+  DataMigrationService: { safeLoadWordProgress: jest.fn(() => ({})) },
+}));
+jest.mock('../../services/logger', () => ({
+  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+jest.mock('../../services/wordSelectionManager', () => ({
+  selectWordForRegularSession: jest.fn(),
+  selectWordForMixedPractice: jest.fn(),
+}));
+
+import gameReducer, { checkAnswer, setCurrentWord } from '../gameSlice';
+import type { WordProgress } from '../types';
+
+const NOW = new Date('2026-06-01T12:00:00.000Z');
+const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString();
+
+const word = {
+  id: 'es:perro',
+  term: 'perro',
+  definition: 'hond',
+  direction: 'definition-to-term' as const,
+};
+
+const progressWith = (xp: number, lastPracticed: string): WordProgress => ({
+  wordId: word.id,
+  xp,
+  totalXp: xp,
+  lastPracticed,
+  timesCorrect: 5,
+  timesIncorrect: 0,
+  version: 2,
+});
+
+const answer = (progress: WordProgress, text: string, extra: object = {}) => {
+  let state = gameReducer(undefined, { type: 'test/initialize' });
+  state = { ...state, language: 'es', lives: 5, wordProgress: { [word.id]: progress } };
+  state = gameReducer(state, setCurrentWord({ word, options: [], quizMode: 'open-answer' }));
+  return gameReducer(state, checkAnswer({ answer: text, ...extra } as never));
+};
+
+beforeEach(() => {
+  jest.useFakeTimers().setSystemTime(NOW);
+});
+afterEach(() => jest.useRealTimers());
+
+describe('mastery decay is applied before an answer changes it', () => {
+  // 80 xp is 'advanced': 168h interval, 10% per interval. 240h = 1 interval, so 80 -> 72.
+  const STALE = hoursAgo(240);
+
+  it('a correct answer builds on the decayed value, not the stored one', () => {
+    const xp = answer(progressWith(80, STALE), 'perro').wordProgress[word.id].xp;
+    // 72 decayed, +10.5 (open-answer 15 x 0.7). The old behaviour gave 80 + 10.5 = 90.5.
+    expect(xp).toBeCloseTo(82.5, 5);
+    expect(xp).toBeLessThan(90);
+  });
+
+  it('a wrong answer also starts from the decayed value', () => {
+    const xp = answer(progressWith(80, STALE), 'gato').wordProgress[word.id].xp;
+    expect(xp).toBeLessThan(72);
+  });
+
+  it('an assisted answer cannot restore decayed mastery by resetting the clock', () => {
+    const state = answer(progressWith(80, STALE), 'perro', { hintsUsed: 1 });
+    const progress = state.wordProgress[word.id];
+    expect(progress.xp).toBeCloseTo(72, 5);
+    expect(progress.lastPracticed).toBe(NOW.toISOString());
+  });
+
+  it('recent practice does not decay', () => {
+    const xp = answer(progressWith(80, hoursAgo(2)), 'perro').wordProgress[word.id].xp;
+    expect(xp).toBeCloseTo(90.5, 5);
+  });
+
+  it('directional mastery decays too', () => {
+    const progress: WordProgress = {
+      ...progressWith(80, STALE),
+      directions: {
+        'definition-to-term': {
+          timesCorrect: 5,
+          timesIncorrect: 0,
+          xp: 80,
+          lastPracticed: STALE,
+          consecutiveCorrect: 3,
+        },
+      },
+    };
+    const direction = answer(progress, 'perro').wordProgress[word.id].directions?.[
+      'definition-to-term'
+    ];
+    expect(direction?.xp).toBeCloseTo(82.5, 5);
+  });
+});

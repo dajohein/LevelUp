@@ -26,6 +26,7 @@ jest.mock('../../services/logger', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 jest.mock('../../services/masteryService', () => ({
+  calculateMasteryDecay: (_lastPracticed: string, xp: number) => xp,
   calculateMasteryGain: jest.fn(() => 0),
   getMasteryQuizMode: (quizMode: string) =>
     quizMode === 'open-answer' ? 'open-answer' : 'multiple-choice',
