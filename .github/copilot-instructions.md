@@ -1,5 +1,9 @@
 # LevelUp Coding Agent Instructions
 
+> Workflow, CI gates, review and error-handling rules for agents live in [`CLAUDE.md`](../CLAUDE.md). Where this
+> file and `CLAUDE.md` differ on those, `CLAUDE.md` wins; this file remains the reference for the storage
+> architecture and language isolation.
+
 ## 🎯 **Core Coding Principles**
 
 ### 1. **CRITICAL: Language Data Isolation**
@@ -72,6 +76,8 @@ const results = await testImmediateImprovements();
 
 3. **Documentation Consolidation Rules:**
    - ❌ **NEVER** create standalone `.md` files in root directory
+     - _Exception:_ agent instruction files that the tools only load from the repository root
+       (`CLAUDE.md`). They hold working rules, not documentation, and must stay where they are.
    - ✅ **ALWAYS** integrate into existing `docs/` structure
    - ✅ **ALWAYS** update main `README.md` for major features
    - ✅ **ALWAYS** include testing instructions in relevant docs
@@ -98,7 +104,7 @@ docs/
 ├── README.md               # Documentation index (organized by topic)
 ├── SEPARATION_OF_CONCERNS.md      # Architecture & design
 ├── LANGUAGE_SEPARATION.md         # Language data isolation
-├── AI_LEARNING_ENGINE.md          # AI system (main feature)
+├── ADAPTIVE_LEARNING.md           # How word selection, scheduling and mastery work
 ├── PERFORMANCE_OPTIMIZATION.md    # Performance & optimization
 ├── ERROR_HANDLING.md              # Error patterns & debugging
 ├── DEPLOYMENT.md                  # Production deployment
@@ -146,6 +152,7 @@ docs/
    ```
 
 3. **Storage Operations:**
+
    ```typescript
    // ALWAYS use enhanced storage with language isolation
    const saveData = async (languageCode: string, data: any) => {
@@ -294,8 +301,7 @@ src/
 
 ### **Before Every Commit:**
 - [ ] **Language isolation verified** - No cross-language data mixing
-- [ ] **TypeScript compiles** - Zero errors required (`npm run type-check`)
-- [ ] **Tests pass** - Run `npm test` or use dev tools
+- [ ] **CI gates pass locally** - Type-check (app and `api/`), lint baseline, tests, build; the exact commands are in `CLAUDE.md`
 - [ ] **Storage health > 80** - Check analytics (dev dashboard)
 - [ ] **Documentation updated** - In existing docs/ files only
 - [ ] **Performance targets met** - Cache hit rate > 85%
@@ -304,7 +310,7 @@ src/
 ### **Code Review Criteria:**
 1. **Language separation compliance** - Most critical
 2. **Type safety** - No `any` without justification
-3. **Error handling** - Graceful fallbacks
+3. **Error handling** - Fail closed: no silent fallbacks, no empty success for corrupt data (see `CLAUDE.md`)
 4. **Performance impact** - Monitor storage analytics
 5. **Testing coverage** - Unit and integration tests
 
@@ -338,7 +344,7 @@ src/
 
 ### **Next Development Priorities:**
 1. Advanced analytics dashboard UI
-2. Backend API integration (when ready)
+2. Harden the existing remote sync (Upstash Redis behind `api/`, opt-in via `VITE_ENABLE_REMOTE_STORAGE`)
 3. Cross-device synchronization features
 4. Performance monitoring widgets
 

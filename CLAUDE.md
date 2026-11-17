@@ -55,6 +55,14 @@ Split work instead of doing it all in one session, and use the cheapest model th
   `react-reviewer`, `silent-failure-hunter`, `pr-test-analyzer`, `type-design-analyzer`) for focused review.
 - Verify every finding against the code before acting; reviewers' line numbers have been wrong.
 
+## Language isolation (the main architectural constraint)
+
+Learning progress is stored and loaded **per language**; languages must never be mixed. Always pass
+`languageCode` explicitly, never merge progress objects of different languages, and keep Redux
+`wordProgress` scoped to the active language (`gameSlice` loads only the current language's progress).
+Course data lives in `src/data/<languageCode>/`. See `docs/LANGUAGE_SEPARATION.md` and
+`.github/copilot-instructions.md` for the storage architecture.
+
 ## Code conventions
 
 - Format only the files you change (`npx prettier --write <files>`). Never run prettier over a whole
@@ -66,6 +74,10 @@ Split work instead of doing it all in one session, and use the cheapest model th
 - Fail closed. Do not swallow errors or return an empty success for corrupt data; log a named warning or
   throw. Validate every client-supplied field (type, length, format) at the API boundary.
 - Do not echo raw client input into responses or logs.
+- Avoid `any` (lint warns; existing ones are in the baseline). Do not add direct `localStorage` calls in
+  components; go through `storageService` / `enhancedStorage`.
+- Documentation: update the existing files under `docs/` (and the index `docs/README.md`), and `README.md` for
+  user-facing changes. Do not add root-level `.md` files; `CLAUDE.md` is the one exception.
 
 ## Learning-domain rules (non-obvious, easy to break)
 
