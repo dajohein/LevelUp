@@ -4,7 +4,11 @@ import {
   selectWordForRegularSession,
   selectWordForMixedPractice,
 } from '../services/wordSelectionManager';
-import { calculateMasteryGain, getMasteryQuizMode } from '../services/masteryService';
+import {
+  calculateMasteryDecay,
+  calculateMasteryGain,
+  getMasteryQuizMode,
+} from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
@@ -230,8 +234,15 @@ export const gameSlice = createSlice({
 
       // Calculate new mastery
       const assisted = (submission.hintsUsed ?? 0) > 0 || submission.isRetry === true;
+      // Decay first: everything that reads mastery (selection, scheduling, the progress screens)
+      // sees the decayed value, so a gain must start from it. Applying the gain to the stored,
+      // undecayed value would erase all decay with a single answer.
+      const decayedMastery = calculateMasteryDecay(
+        currentProgress.lastPracticed,
+        currentProgress.xp
+      );
       const newMastery = calculateMasteryGain(
-        currentProgress.xp,
+        decayedMastery,
         validation.isCorrect,
         masteryMode,
         assisted
@@ -255,7 +266,7 @@ export const gameSlice = createSlice({
         if (directionData) {
           // Calculate directional mastery gain
           const directionalMastery = calculateMasteryGain(
-            directionData.xp,
+            calculateMasteryDecay(directionData.lastPracticed, directionData.xp),
             validation.isCorrect,
             masteryMode,
             assisted

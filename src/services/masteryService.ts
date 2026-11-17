@@ -13,7 +13,7 @@ export const QUIZ_MODE_THRESHOLDS = {
 } as const;
 
 export const TIME_INTERVALS = {
-  BEGINNER: 4, // 4 hours - shorter for new words
+  BEGINNER: 24, // 1 day: a new word is first reviewed after a day, so it must not decay faster
   FAMILIAR: 24, // 1 day
   INTERMEDIATE: 72, // 3 days
   ADVANCED: 168, // 1 week
