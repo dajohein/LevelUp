@@ -7,7 +7,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { LoadingButton } from './feedback/UnifiedLoading';
-import { remoteStorage } from '../services/storage/remoteStorage';
+import {
+  remoteStorage,
+  RemoteNetworkError,
+  RemoteSessionError,
+} from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 import { environmentConfig } from '../config/environment';
 
@@ -140,6 +144,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   } | null>(null);
   const [linkedDevices, setLinkedDevices] = useState(0);
   const [codeExpires, setCodeExpires] = useState<number | null>(null);
+  // The saved sync session was refused by the server; the user can start a new one explicitly
+  const [sessionLost, setSessionLost] = useState(false);
 
   useEffect(() => {
     if (environmentConfig.enableRemoteStorage) {
@@ -174,9 +180,13 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const generateCode = async () => {
     setLoading(true);
     setMessage(null);
+    // sessionLost is decided by the outcome below, not cleared up front: during a reset-and-retry
+    // the reset button must stay on screen (showing its progress) instead of vanishing under the
+    // user's finger, which also drops keyboard focus
 
     try {
       const result = await remoteStorage.generateAccountCode();
+      setSessionLost(false);
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({
@@ -184,14 +194,46 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         type: 'success',
       });
     } catch (error) {
-      setMessage({
-        text: 'Failed to generate account code. Please try again.',
-        type: 'error',
-      });
+      setSessionLost(error instanceof RemoteSessionError);
+      if (error instanceof RemoteSessionError) {
+        // Say what happened and offer the way out instead of a generic failure
+        setMessage({
+          text: 'Your saved sync session is no longer valid (it may have expired). Your progress on this device is safe. Reset the sync session to continue.',
+          type: 'error',
+        });
+      } else if (error instanceof RemoteNetworkError || !navigator.onLine) {
+        setMessage({
+          text: 'Could not reach the sync server. Check your connection and try again.',
+          type: 'error',
+        });
+      } else {
+        setMessage({
+          text: 'Failed to generate account code. Please try again.',
+          type: 'error',
+        });
+      }
       logger.error('Failed to generate account code:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetSessionAndRetry = async () => {
+    if (loading) return; // a double tap must not reset (and generate) twice
+    setLoading(true);
+    try {
+      // Only the sync session is replaced; progress stored on this device is never touched
+      await remoteStorage.resetSession();
+    } catch (error) {
+      logger.error('Failed to reset the sync session:', error);
+      setMessage({
+        text: 'Could not reset the sync session. Your progress on this device is safe.',
+        type: 'error',
+      });
+      setLoading(false);
+      return;
+    }
+    await generateCode();
   };
 
   const linkDevice = async () => {
@@ -202,13 +244,17 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
     setLoading(true);
     setMessage(null);
+    setSessionLost(false); // a stale reset button would otherwise stay with no message explaining it
 
     try {
       const result = await remoteStorage.linkDeviceWithCode(linkCode.trim());
-      setLinkedDevices(result.linkedDevices);
+      if (typeof result.linkedDevices === 'number') setLinkedDevices(result.linkedDevices);
       setLinkCode('');
       setMessage({
-        text: `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`,
+        text:
+          typeof result.linkedDevices === 'number'
+            ? `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`
+            : 'Demo account linked. Progress was not transferred.',
         type: 'success',
       });
     } catch (error) {
@@ -326,7 +372,36 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         </LoadingButton>
       </Section>
 
-      {message && <StatusMessage type={message.type}>{message.text}</StatusMessage>}
+      {message && (
+        <StatusMessage
+          type={message.type}
+          role={message.type === 'error' ? 'alert' : 'status'}
+          aria-live={message.type === 'error' ? 'assertive' : 'polite'}
+        >
+          {message.text}
+        </StatusMessage>
+      )}
+
+      {sessionLost && (
+        <LoadingButton
+          onClick={resetSessionAndRetry}
+          isLoading={loading}
+          loadingText="Resetting..."
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            width: '100%',
+            background: '#e67e22',
+            color: 'white',
+          }}
+        >
+          Reset sync session and try again
+        </LoadingButton>
+      )}
     </Container>
   );
 };

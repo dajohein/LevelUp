@@ -20,7 +20,12 @@ interface VercelResponse {
 }
 import { randomBytes, randomUUID } from 'crypto';
 import { getDb, KEY_PREFIX } from './_db.js';
-import { createSessionToken, verifySessionToken, resolveCorsOrigin } from './_auth.js';
+import {
+  createSessionToken,
+  readSessionToken,
+  verifySessionToken,
+  resolveCorsOrigin,
+} from './_auth.js';
 import { clientAddress, envPositiveInt } from './_config.js';
 
 interface UserRequest {
@@ -133,9 +138,21 @@ function validateSession(token: string): string | null {
   return verifySessionToken(token);
 }
 
+/**
+ * How long after expiry a signed token can still be exchanged for a new one (default 30 days).
+ * Capped, so a mistyped value cannot turn the refresh into an open-ended window.
+ */
+const MAX_REFRESH_GRACE_MS = 90 * 24 * 60 * 60 * 1000;
+const refreshGraceMs = () =>
+  Math.min(
+    envPositiveInt('SESSION_REFRESH_GRACE_MS', 30 * 24 * 60 * 60 * 1000),
+    MAX_REFRESH_GRACE_MS
+  );
+
+const sessionTtlMs = () => envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
+
 function createSession(userId: string): string {
-  const ttlMs = envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
-  return createSessionToken(userId, ttlMs);
+  return createSessionToken(userId, sessionTtlMs());
 }
 
 // Fixed-window rate limit: allows `max` attempts per window per identifier.
@@ -307,16 +324,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const userId = validateSession(request.sessionToken);
-        if (!userId) {
+        // The one place an expired token is still honoured: a validly signed token that expired
+        // within the refresh grace period is exchanged for a fresh one. Without this a client that
+        // was away for longer than the token lifetime could never recover its session.
+        const now = Date.now();
+        const claims = readSessionToken(request.sessionToken, now, refreshGraceMs());
+        // A missing user gets the same answer as a bad token: this must not reveal which user ids exist
+        if (!claims || !(await db.hgetall(userKey(claims.userId)))) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
         }
-
-        if (!(await db.hgetall(userKey(userId)))) {
-          response.error = 'User not found';
-          return res.status(404).json(response);
-        }
+        const userId = claims.userId;
 
         // Touch only lastActive (single-field write; see `update`)
         await db.hset(userKey(userId), { lastActive: Date.now() });
@@ -326,6 +344,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.data = {
           userId,
           user,
+          // A fresh token keeps an active session alive, but it inherits the absolute end of the
+          // session, so refreshing can never extend it past that. A token issued before sessions
+          // had an absolute age gets one (grandfathered) full window.
+          sessionToken: createSessionToken(
+            userId,
+            sessionTtlMs(),
+            now,
+            claims.absoluteExpiry ?? undefined
+          ),
         };
         break;
       }
