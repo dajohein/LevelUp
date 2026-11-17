@@ -11,24 +11,37 @@ export interface AnswerValidation {
   isCorrect: boolean;
   capitalizationCorrect: boolean;
   capitalizationPenalty: number; // 0.5-1.0, where 1.0 = no penalty
-  /** Set when the answer was accepted via an accepted spelling variant (accents, ae/oe/ue/ss). */
-  closeMatch?: 'accent';
+  /**
+   * Set when the answer was accepted without being spelled exactly: `accent` for an accepted
+   * spelling variant (accents, ae/oe/ue/ss), `typo` for a one-letter slip.
+   */
+  closeMatch?: 'accent' | 'typo';
   /** The canonical spelling, set together with `closeMatch`. */
   matchedAnswer?: string;
 }
 
-/** Score multiplier for variant spellings; capitalization penalties apply on top. */
+/** Score multipliers for non-exact matches; capitalization penalties apply on top. */
 export const CLOSE_MATCH_SCORE_FACTOR = 0.9;
+export const TYPO_SCORE_FACTOR = 0.7;
 
 /** Combined score multiplier for a validation result. */
-export const getAnswerScoreMultiplier = (validation: AnswerValidation): number =>
-  validation.capitalizationPenalty * (validation.closeMatch ? CLOSE_MATCH_SCORE_FACTOR : 1);
+export const getAnswerScoreMultiplier = (validation: AnswerValidation): number => {
+  const closeMatchFactor =
+    validation.closeMatch === 'typo'
+      ? TYPO_SCORE_FACTOR
+      : validation.closeMatch
+        ? CLOSE_MATCH_SCORE_FACTOR
+        : 1;
+  return validation.capitalizationPenalty * closeMatchFactor;
+};
 
-/** Feedback shown when an answer was accepted despite a spelling variant. */
-export const getCloseMatchFeedback = (validation: AnswerValidation): string | null =>
-  validation.isCorrect && validation.closeMatch && validation.matchedAnswer
-    ? `✓ Correct! Spelled: ${validation.matchedAnswer}`
-    : null;
+/** Feedback shown when an answer was accepted despite a spelling variant or a typo. */
+export const getCloseMatchFeedback = (validation: AnswerValidation): string | null => {
+  if (!validation.isCorrect || !validation.closeMatch || !validation.matchedAnswer) return null;
+  return validation.closeMatch === 'typo'
+    ? `✓ Almost! Spelled: ${validation.matchedAnswer}`
+    : `✓ Correct! Spelled: ${validation.matchedAnswer}`;
+};
 
 // Check capitalization for languages that require it
 const checkCapitalization = (
