@@ -10,23 +10,9 @@ export const registerPWA = async (): Promise<ServiceWorkerRegistration | null> =
 
       logger.info('ServiceWorker registration successful', { scope: registration.scope });
 
-      // Listen for updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available
-              dispatchEvent(new CustomEvent('sw-update-available'));
-            }
-          });
-        }
-      });
-
-      // Listen for controller change (when new SW takes control)
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
+      // Updates are owned by pwaUpdateManager (waiting-worker detection, the banner and the
+      // user-initiated reload). Reloading here on `controllerchange` would reload the page without
+      // the user asking, possibly in the middle of a quiz.
 
       return registration;
     } catch (error) {

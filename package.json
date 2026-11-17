@@ -26,6 +26,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "test": "jest",
     "test:sw": "node --test scripts/pwa/*.test.mjs",
+    "test:sw-lifecycle": "node --test scripts/pwa/service-worker.lifecycle.test.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "icons:generate": "bash scripts/pwa/generate-icons.sh",

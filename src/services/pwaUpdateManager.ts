@@ -6,6 +6,7 @@
  */
 
 import { logger } from './logger';
+import { reloadPage } from './pageReload';
 
 export interface UpdateInfo {
   version: string;
@@ -13,9 +14,16 @@ export interface UpdateInfo {
   available: boolean;
 }
 
+/** How long to wait for the new worker to take control before reloading anyway. */
+const CONTROLLER_CHANGE_TIMEOUT_MS = 4000;
+
 class PWAUpdateManager {
   private updateCallbacks: ((info: UpdateInfo) => void)[] = [];
   private currentVersion: string | null = null;
+  // An update that was found before anyone was listening (the banner mounts after startup)
+  private pendingUpdate: UpdateInfo | null = null;
+  // Set once the user accepted the update: guards against reloading twice
+  private applying = false;
 
   constructor() {
     this.initializeServiceWorker();
@@ -35,6 +43,12 @@ class PWAUpdateManager {
           });
 
           console.log('🔧 ServiceWorker registered:', registration.scope);
+
+          // A new version may already be waiting (found on an earlier visit, or while the page
+          // was loading): tell the UI without needing a fresh `updatefound`
+          if (registration.waiting && navigator.serviceWorker.controller) {
+            this.notifyUpdateAvailable();
+          }
 
           // Check for updates immediately
           registration.addEventListener('updatefound', () => {
@@ -77,20 +91,11 @@ class PWAUpdateManager {
   private listenForUpdates() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
-          console.log('📢 Received update availability notification:', event.data);
-
-          const updateInfo: UpdateInfo = {
-            version: event.data.version,
-            cacheIdentifier: event.data.cacheIdentifier,
-            available: true,
-          };
-
-          this.currentVersion = event.data.version;
-          this.triggerUpdateCallbacks(updateInfo);
-        } else if (event.data && event.data.type === 'SW_UPDATED_APPLIED') {
+        // The worker no longer announces "update available" (it cannot know the update is
+        // wanted); a waiting worker is detected from the registration instead.
+        if (event.data && event.data.type === 'SW_UPDATED_APPLIED') {
           console.log('✅ Update successfully applied:', event.data);
-          // The page will reload automatically after this message
+          if (event.data.version) this.currentVersion = event.data.version;
         }
       });
     }
@@ -106,56 +111,69 @@ class PWAUpdateManager {
       available: true,
     };
 
+    this.pendingUpdate = updateInfo;
     this.triggerUpdateCallbacks(updateInfo);
   }
 
   /**
-   * Subscribe to update notifications
+   * Subscribe to update notifications. A subscriber that arrives after the update was found is
+   * told at once (the banner mounts after startup, so it would otherwise miss it). Returns the
+   * function that ends the subscription: call it on unmount, or callbacks pile up.
    */
-  onUpdateAvailable(callback: (info: UpdateInfo) => void) {
+  onUpdateAvailable(callback: (info: UpdateInfo) => void): () => void {
     this.updateCallbacks.push(callback);
+    if (this.pendingUpdate) {
+      try {
+        callback(this.pendingUpdate);
+      } catch (error) {
+        logger.error('Update callback error', { error });
+      }
+    }
+    return () => {
+      this.updateCallbacks = this.updateCallbacks.filter(existing => existing !== callback);
+    };
   }
 
   /**
-   * Apply the available update
+   * Apply the available update. Call this only after the user asked for it: it reloads the page.
+   * The reload happens once however many times this is called.
    */
   async applyUpdate(): Promise<boolean> {
+    if (this.applying) return true;
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
 
         if (registration && registration.waiting) {
-          console.log('🔄 Applying update...');
+          this.applying = true;
+          logger.debug('🔄 Applying update...');
 
-          // Tell the waiting service worker to become active
+          // Reload as soon as the new worker has taken control
+          navigator.serviceWorker.addEventListener(
+            'controllerchange',
+            () => {
+              logger.debug('✅ New service worker is now controlling the page');
+              reloadPage();
+            },
+            { once: true }
+          );
+          // Tell the waiting worker to become active
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
 
-          // Wait for the new service worker to take control
-          await new Promise<void>(resolve => {
-            navigator.serviceWorker.addEventListener(
-              'controllerchange',
-              () => {
-                console.log('✅ New service worker is now controlling the page');
-                resolve();
-              },
-              { once: true }
-            );
-          });
-
-          // Reload the page to get the fresh content
-          console.log('🔄 Reloading page with new version...');
-          window.location.reload();
-
-          return true;
-        } else {
-          console.log('🔄 No waiting service worker, forcing page reload...');
-          window.location.reload();
+          // If control never changes (a browser quirk), do not leave the user on a dead button
+          setTimeout(() => reloadPage(), CONTROLLER_CHANGE_TIMEOUT_MS);
           return true;
         }
+
+        logger.debug('🔄 No waiting service worker, reloading the page...');
+        this.applying = true;
+        reloadPage();
+        return true;
       }
 
       return false;
     } catch (error) {
+      this.applying = false;
       logger.error('Failed to apply update', { error });
       return false;
     }

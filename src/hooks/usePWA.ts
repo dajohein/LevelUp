@@ -1,3 +1,4 @@
+import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { useState, useEffect } from 'react';
 import { logger } from '../services/logger';
 
@@ -111,9 +112,10 @@ export const usePWA = () => {
   };
 
   const updateApp = async () => {
+    // Reloading right after posting SKIP_WAITING would race the new worker's activation; the
+    // manager waits for it to take control, and reloads once
     if (swRegistration?.waiting) {
-      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
+      await pwaUpdateManager.applyUpdate();
     }
   };
 
