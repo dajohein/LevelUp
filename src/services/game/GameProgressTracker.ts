@@ -92,7 +92,8 @@ export class GameProgressTracker {
     }
 
     const progress = wordProgress[currentWord.id];
-    return calculateMasteryDecay(progress.lastReviewed, progress.mastery || 0);
+    // WordProgress stores `xp` and `lastPracticed` (there is no `mastery` or `lastReviewed`)
+    return calculateMasteryDecay(progress.lastPracticed, progress.xp || 0);
   }
 
   /**

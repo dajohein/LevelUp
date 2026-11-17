@@ -110,4 +110,15 @@ describe('isTypo', () => {
   it('is not fooled by length-one differences that are not a single insertion or deletion', () => {
     expect(isOneEditApart('abcdef', 'abxdefg')).toBe(false);
   });
+
+  it('never accepts punctuation or digits typed in place of a letter', () => {
+    for (const bad of ['bibliotec.', 'bibliotec1', 'biblio-eca', 'biblioteca.', 'bibliot?ca']) {
+      expect(isTypo(bad, 'biblioteca', 'es', unknown)).toBe(false);
+    }
+  });
+
+  it('still allows characters that the expected word itself contains', () => {
+    expect(isTypo("l'ordinatur", "l'ordinateur", 'es', unknown)).toBe(true);
+    expect(isTypo('vice-presidnt', 'vice-president', 'es', unknown)).toBe(true);
+  });
 });

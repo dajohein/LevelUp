@@ -107,5 +107,12 @@ export const isTypo = (
   const [i] = differing;
   if (countLetters(writtenTokens[i]) < MIN_TYPO_LENGTH) return false;
   if (!isOneEditApart(answerTokens[i], expectedTokens[i])) return false;
+  // A slip is a wrong, missing or swapped *letter*. Punctuation or digits typed in place of a
+  // letter ("bibliotec." for "biblioteca") are not spelling slips; characters that the expected
+  // word itself contains (an apostrophe, a hyphen) may of course appear in the answer.
+  const expectedChars = new Set(expectedTokens[i]);
+  if ([...answerTokens[i]].some(char => !/\p{L}/u.test(char) && !expectedChars.has(char))) {
+    return false;
+  }
   return !isKnownWord(answerTokens.join(' ')) && !isKnownWord(answerTokens[i]);
 };

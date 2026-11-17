@@ -13,6 +13,17 @@ import type { WordProgress } from '../store/types';
  */
 export const MIN_STREAK_GAP_HOURS = 12;
 
+/**
+ * The gate grows with the streak. It is half of the base review intervals (1h, 4h, 1 day; see
+ * LEARNING_CONSTANTS), which is the shortest a word's interval can be after the phase multiplier,
+ * so a learner who answers correctly when a word comes due always moves forward. A flat 12h gate
+ * made new words come back every few hours without their streak ever advancing.
+ */
+export const STREAK_GATE_HOURS = [0.5, 2, MIN_STREAK_GAP_HOURS] as const;
+
+const gateHours = (streak: number): number =>
+  STREAK_GATE_HOURS[Math.min(streak, STREAK_GATE_HOURS.length - 1)];
+
 type StreakFields = Pick<
   WordProgress,
   'consecutiveCorrect' | 'streakUpdatedAt' | 'timesCorrect' | 'timesIncorrect'
@@ -39,7 +50,8 @@ export interface StreakUpdate {
  * Streak after an answer:
  * - incorrect: lapse, back to 0
  * - correct but assisted (hints / in-session retry): unchanged, it proves nothing about recall
- * - correct: +1, unless the streak already grew less than MIN_STREAK_GAP_HOURS ago
+ * - correct: +1, unless the streak already grew less than STREAK_GATE_HOURS ago (a flat
+ *   MIN_STREAK_GAP_HOURS at most), so drilling one word in a sitting cannot skip ahead
  */
 export const nextReviewStreak = (
   progress: StreakFields,
@@ -58,7 +70,7 @@ export const nextReviewStreak = (
   const last = progress.streakUpdatedAt ? new Date(progress.streakUpdatedAt).getTime() : NaN;
   const hoursSince = (now.getTime() - last) / (60 * 60 * 1000);
   // A stamp in the future (clock skew, imported data) is invalid, not "very recent"
-  if (!Number.isNaN(last) && hoursSince >= 0 && hoursSince < MIN_STREAK_GAP_HOURS) return unchanged;
+  if (!Number.isNaN(last) && hoursSince >= 0 && hoursSince < gateHours(current)) return unchanged;
 
   return { consecutiveCorrect: current + 1, streakUpdatedAt: now.toISOString() };
 };

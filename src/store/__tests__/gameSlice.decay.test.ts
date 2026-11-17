@@ -14,6 +14,8 @@ jest.mock('../../services/wordSelectionManager', () => ({
 
 import gameReducer, { checkAnswer, setCurrentWord } from '../gameSlice';
 import type { WordProgress } from '../types';
+import { calculateMasteryDecay } from '../../services/masteryService';
+import { getNextReviewAt } from '../../services/spacedRepetitionService';
 
 const NOW = new Date('2026-06-01T12:00:00.000Z');
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString();
@@ -63,11 +65,22 @@ describe('mastery decay is applied before an answer changes it', () => {
     expect(xp).toBeLessThan(72);
   });
 
-  it('an assisted answer cannot restore decayed mastery by resetting the clock', () => {
-    const state = answer(progressWith(80, STALE), 'perro', { hintsUsed: 1 });
-    const progress = state.wordProgress[word.id];
-    expect(progress.xp).toBeCloseTo(72, 5);
-    expect(progress.lastPracticed).toBe(NOW.toISOString());
+  it('a hinted answer changes neither mastery nor the schedule, so decay stays visible', () => {
+    const stored = progressWith(80, STALE);
+    const progress = answer(stored, 'perro', { hintsUsed: 1 }).wordProgress[word.id];
+    // nothing is rewritten: decay is still computed on read, and the clock is not restarted
+    expect(progress.xp).toBe(80);
+    expect(progress.lastPracticed).toBe(STALE);
+    expect(calculateMasteryDecay(progress.lastPracticed, progress.xp)).toBeCloseTo(72, 5);
+    // the counters still record that the word was answered correctly
+    expect(progress.timesCorrect).toBe(6);
+  });
+
+  it('a hinted answer does not push an overdue word out by a whole interval', () => {
+    const stored = { ...progressWith(90, hoursAgo(24 * 20)), consecutiveCorrect: 4 };
+    const dueBefore = getNextReviewAt(stored);
+    const after = answer(stored, 'perro', { hintsUsed: 1 }).wordProgress[word.id];
+    expect(getNextReviewAt(after)?.getTime()).toBe(dueBefore?.getTime());
   });
 
   it('recent practice does not decay', () => {

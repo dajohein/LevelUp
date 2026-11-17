@@ -13,6 +13,7 @@ export interface DirectionalProgress {
   lastPracticed: string;
   averageResponseTime?: number;
   consecutiveCorrect?: number;
+  streakUpdatedAt?: string; // ISO date of the last streak increase (see reviewStreak.ts)
   longestStreak?: number;
   difficultyLevel?: 'easy' | 'medium' | 'hard';
 }
