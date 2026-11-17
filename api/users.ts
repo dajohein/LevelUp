@@ -133,6 +133,9 @@ function validateSession(token: string): string | null {
   return verifySessionToken(token);
 }
 
+/** How long after expiry a signed token can still be exchanged for a new one (default 30 days). */
+const refreshGraceMs = () => envPositiveInt('SESSION_REFRESH_GRACE_MS', 30 * 24 * 60 * 60 * 1000);
+
 function createSession(userId: string): string {
   const ttlMs = envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
   return createSessionToken(userId, ttlMs);
@@ -307,7 +310,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const userId = validateSession(request.sessionToken);
+        // The one place an expired token is still honoured: a validly signed token that expired
+        // within the refresh grace period is exchanged for a fresh one. Without this a client that
+        // was away for longer than the token lifetime could never recover its session.
+        const userId = verifySessionToken(request.sessionToken, Date.now(), refreshGraceMs());
         if (!userId) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
@@ -326,6 +332,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response.data = {
           userId,
           user,
+          // A fresh token on every authenticate keeps an active session alive
+          sessionToken: createSession(userId),
         };
         break;
       }

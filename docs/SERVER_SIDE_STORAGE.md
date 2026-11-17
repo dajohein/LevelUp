@@ -1,6 +1,12 @@
-# Remote Storage Status and Development Demo
+# Remote Storage Status
 
-The current remote API is a development/demo implementation, not a durable storage service. Its user, session, account-code, and progress records live in process-local Maps, so they can disappear on a restart and are not shared reliably across serverless instances. Production remote account and storage requests are disabled. Learning progress remains local to each device; account linking does not transfer or reconcile progress.
+The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Vercel Marketplace) in production and by an in-memory stand-in only in development and tests. It is **opt-in**: the client uses it only when `VITE_ENABLE_REMOTE_STORAGE=true` was set at build time (a Vite variable, baked into the bundle). Learning progress remains local to each device and `localStorage` stays the source of truth; remote storage mirrors it. Account linking identifies the account on another device but does not yet transfer or reconcile progress between devices.
+
+## Sessions
+
+- Sessions are stateless HMAC-signed tokens (`SESSION_SECRET`); there is no server-side session table and no revocation.
+- A token lives `SESSION_TOKEN_TTL_MS` (default 24 hours). `authenticate` is the only action that also accepts a validly signed token that expired up to `SESSION_REFRESH_GRACE_MS` ago (default 30 days) and returns a fresh token; the client stores it, so an active or briefly absent client never loses its session. Every other action requires an unexpired token. Forged, tampered or unsigned tokens are never accepted.
+- If the server refuses the stored token (expired beyond the grace period, a leftover from the earlier demo API, or the account is gone) the client raises `RemoteSessionError`. The session is **not** replaced automatically, because replacing a linked account's session would orphan its remote data. The device-linking screen explains this and offers "Reset sync session and try again", which discards only the stored sync session (`remoteStorage.resetSession()`); local progress is never touched.
 
 ## 🌟 Features
 
@@ -111,7 +117,8 @@ Configuration is controlled via environment variables to follow Twelve-Factor pr
 **Serverless APIs (Vercel):**
 
 - `CORS_ALLOWED_ORIGINS` — Comma-separated origins (use `*` for all)
-- `SESSION_TOKEN_TTL_MS` — Session token TTL in milliseconds
+- `SESSION_TOKEN_TTL_MS` — Session token TTL in milliseconds (default 24 h)
+- `SESSION_REFRESH_GRACE_MS` — How long after expiry a signed token can still be refreshed (default 30 days)
 - `RATE_LIMIT_MAX_ATTEMPTS`, `RATE_LIMIT_WINDOW_MS` — Rate limit controls
 - `ACCOUNT_CODE_MAX_ATTEMPTS`, `ACCOUNT_CODE_EXPIRY_MS` — Device linking code policy
 
@@ -238,7 +245,7 @@ const env = import.meta.env;
 
 - Check if development server is running (`npm run dev:storage`)
 - Verify API endpoints are accessible
-- Local progress remains available; failed remote recovery does not replace a stored remote session with a new guest
+- Local progress remains available; a refused stored session is reported (`RemoteSessionError`) and is replaced only when the user chooses "Reset sync session" on the device-linking screen
 
 **"CORS errors in development"**
 
@@ -247,9 +254,8 @@ const env = import.meta.env;
 
 **"Data not syncing"**
 
-- Remote sync and cross-device progress transfer are not implemented
-- Device linking in development is a demo and does not copy or merge progress
-- Do not use the process-local API as a backup
+- Cross-device progress transfer is not implemented: device linking identifies the account but does not copy or merge progress
+- Progress is mirrored to the server only when remote sync is enabled; treat the browser's local storage as the source of truth
 
 ## 🔒 Security & Privacy
 
@@ -259,11 +265,10 @@ const env = import.meta.env;
 - User sessions are isolated by unique IDs
 - No cross-contamination between languages or users
 
-### Demo Accounts
+### Guest Accounts
 
-- Development can create temporary guest sessions
-- Process-local sessions may be lost on restart or a different serverless worker
-- An invalid stored session is reported instead of silently creating a replacement account
+- The first remote call creates a guest account and stores its session in `localStorage` (`levelup_remote_session`)
+- An invalid stored session is reported instead of silently creating a replacement account (see Sessions above)
 
 ### Data Storage
 

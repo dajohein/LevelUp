@@ -29,8 +29,15 @@ export function createSessionToken(userId: string, ttlMs: number, now = Date.now
   return `${payload}.${sign(payload)}`;
 }
 
-/** Returns the userId for a valid, unexpired token, otherwise null. */
-export function verifySessionToken(token: unknown, now = Date.now()): string | null {
+/**
+ * Returns the userId for a validly signed token, otherwise null.
+ *
+ * By default the token must be unexpired. `graceMs` also accepts a token that expired up to that
+ * long ago; only the session refresh in `authenticate` uses it, so that a client that was offline
+ * or closed for a while can recover. The signature is always required: an unsigned, tampered or
+ * forged token is never accepted, with or without grace.
+ */
+export function verifySessionToken(token: unknown, now = Date.now(), graceMs = 0): string | null {
   if (typeof token !== 'string') return null;
   const [payload, signature, ...rest] = token.split('.');
   if (!payload || !signature || rest.length > 0) return null;
@@ -41,7 +48,7 @@ export function verifySessionToken(token: unknown, now = Date.now()): string | n
 
   try {
     const { u, e } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    if (typeof u !== 'string' || typeof e !== 'number' || e < now) return null;
+    if (typeof u !== 'string' || typeof e !== 'number' || e + graceMs < now) return null;
     return u;
   } catch {
     return null;

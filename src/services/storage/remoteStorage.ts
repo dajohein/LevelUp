@@ -20,6 +20,32 @@ interface RemoteStorageConfig {
   debugMode: boolean;
 }
 
+const SESSION_STORAGE_KEY = 'levelup_remote_session';
+
+/**
+ * The stored remote session can no longer be used: the server refused its token (expired beyond
+ * the refresh period, a leftover from an earlier API, or the account is gone). Local progress is
+ * untouched. The session is NOT replaced automatically, because replacing a linked account's
+ * session would orphan its remote data; the user starts over with `resetSession()`.
+ */
+export class RemoteSessionError extends Error {
+  constructor(message = 'The saved sync session is no longer valid; local progress was preserved') {
+    super(message);
+    this.name = 'RemoteSessionError';
+  }
+}
+
+/** A non-2xx API response. 4xx means the request itself was refused, so it is never retried. */
+class RemoteHttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'RemoteHttpError';
+  }
+}
+
 interface RemoteUserSession {
   userId: string;
   sessionToken: string;
@@ -91,22 +117,39 @@ export class RemoteStorageService implements AsyncStorageProvider {
         throw new Error('Stored remote session is invalid; local progress was preserved');
       }
 
-      const result = await this.apiCall('/api/users', {
-        action: 'authenticate',
-        sessionToken: existingSession.sessionToken,
-      });
-
-      if (!result.success || !result.data?.userId) {
-        throw new Error(
-          'Stored remote session could not be restored; local progress was preserved'
-        );
+      let result;
+      try {
+        result = await this.apiCall('/api/users', {
+          action: 'authenticate',
+          sessionToken: existingSession.sessionToken,
+        });
+      } catch (error) {
+        // The server answered and refused the token: the session is lost, not the network
+        if (error instanceof RemoteHttpError && [400, 401, 404].includes(error.status)) {
+          throw new RemoteSessionError();
+        }
+        throw error;
       }
 
+      if (!result.success || !result.data?.userId) {
+        throw new RemoteSessionError();
+      }
+
+      // The server issues a fresh token on every authenticate (an expired one within the refresh
+      // period is exchanged for a new one); keep it, or the next visit would start expired again
+      const sessionToken: string =
+        typeof result.data.sessionToken === 'string'
+          ? result.data.sessionToken
+          : existingSession.sessionToken;
       this.userSession = {
         userId: result.data.userId,
-        sessionToken: existingSession.sessionToken,
+        sessionToken,
         isGuest: false,
       };
+      localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({ userId: result.data.userId, sessionToken, isGuest: false })
+      );
       return this.userSession;
     }
 
@@ -128,7 +171,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
         };
 
         // Store session in localStorage for persistence
-        localStorage.setItem('levelup_remote_session', JSON.stringify(this.userSession));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(this.userSession));
 
         return this.userSession;
       }
@@ -140,6 +183,16 @@ export class RemoteStorageService implements AsyncStorageProvider {
   }
 
   /**
+   * Forget the stored remote session so the next remote call starts a new guest session. Only the
+   * session is removed: local progress is never touched. Call it on explicit user request, after a
+   * RemoteSessionError.
+   */
+  async resetSession(): Promise<void> {
+    this.userSession = null;
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+
+  /**
    * Get current user session or create one
    */
   async getUserSession(): Promise<RemoteUserSession> {
@@ -148,7 +201,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
     }
 
     // Try to restore from localStorage
-    const stored = localStorage.getItem('levelup_remote_session');
+    const stored = localStorage.getItem(SESSION_STORAGE_KEY);
     if (stored !== null) {
       let session: unknown;
       try {
@@ -210,12 +263,17 @@ export class RemoteStorageService implements AsyncStorageProvider {
         logger.error(
           `API call failed - Status: ${response.status}, URL: ${url}, Response: ${errorText}`
         );
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new RemoteHttpError(
+          response.status,
+          `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
       return await response.json();
     } catch (error) {
-      if (attempt < this.config.retries) {
+      // A refused request (4xx) will be refused again; retrying only makes the screen hang
+      const refused = error instanceof RemoteHttpError && error.status >= 400 && error.status < 500;
+      if (!refused && attempt < this.config.retries) {
         const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.apiCall(endpoint, data, attempt + 1);
@@ -643,7 +701,10 @@ export class RemoteStorageService implements AsyncStorageProvider {
       const result = await this.apiCall('/api/users', requestData);
 
       if (result.success) {
-        const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+        // The server decides how long a code lives and says so; do not assume a duration
+        const seconds = Number(result.data.expiresIn);
+        const expires =
+          Date.now() + (Number.isFinite(seconds) && seconds > 0 ? seconds : 3600) * 1000;
         return {
           code: result.data.accountCode,
           expires,
@@ -679,7 +740,7 @@ export class RemoteStorageService implements AsyncStorageProvider {
         };
 
         // Update localStorage with new session
-        localStorage.setItem('levelup_remote_session', JSON.stringify(this.userSession));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(this.userSession));
 
         logger.info('🔗 Device successfully linked to account', {
           userId: this.userSession.userId,

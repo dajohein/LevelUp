@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { LoadingButton } from './feedback/UnifiedLoading';
-import { remoteStorage } from '../services/storage/remoteStorage';
+import { remoteStorage, RemoteSessionError } from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 import { environmentConfig } from '../config/environment';
 
@@ -140,6 +140,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   } | null>(null);
   const [linkedDevices, setLinkedDevices] = useState(0);
   const [codeExpires, setCodeExpires] = useState<number | null>(null);
+  // The saved sync session was refused by the server; the user can start a new one explicitly
+  const [sessionLost, setSessionLost] = useState(false);
 
   useEffect(() => {
     if (environmentConfig.enableRemoteStorage) {
@@ -174,6 +176,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const generateCode = async () => {
     setLoading(true);
     setMessage(null);
+    setSessionLost(false);
 
     try {
       const result = await remoteStorage.generateAccountCode();
@@ -184,14 +187,34 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         type: 'success',
       });
     } catch (error) {
-      setMessage({
-        text: 'Failed to generate account code. Please try again.',
-        type: 'error',
-      });
+      if (error instanceof RemoteSessionError) {
+        // Say what happened and offer the way out instead of a generic failure
+        setSessionLost(true);
+        setMessage({
+          text: 'Your saved sync session is no longer valid (it may have expired). Your progress on this device is safe. Reset the sync session to continue.',
+          type: 'error',
+        });
+      } else if (!navigator.onLine || error instanceof TypeError) {
+        setMessage({
+          text: 'Could not reach the sync server. Check your connection and try again.',
+          type: 'error',
+        });
+      } else {
+        setMessage({
+          text: 'Failed to generate account code. Please try again.',
+          type: 'error',
+        });
+      }
       logger.error('Failed to generate account code:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetSessionAndRetry = async () => {
+    // Only the sync session is replaced; progress stored on this device is never touched
+    await remoteStorage.resetSession();
+    await generateCode();
   };
 
   const linkDevice = async () => {
@@ -327,6 +350,27 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       </Section>
 
       {message && <StatusMessage type={message.type}>{message.text}</StatusMessage>}
+
+      {sessionLost && (
+        <LoadingButton
+          onClick={resetSessionAndRetry}
+          isLoading={loading}
+          loadingText="Resetting..."
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            width: '100%',
+            background: '#e67e22',
+            color: 'white',
+          }}
+        >
+          Reset sync session and try again
+        </LoadingButton>
+      )}
     </Container>
   );
 };
