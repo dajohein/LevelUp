@@ -36,9 +36,7 @@ This directory contains comprehensive technical documentation for the LevelUp la
 ### 🤖 **AI System Documentation**
 
 - **[AI Implementation Summary](AI_IMPLEMENTATION_SUMMARY.md)** - High-level overview of AI features built
-- **[AI Learning Engine](AI_LEARNING_ENGINE.md)** - Complete AI system implementation guide
-- **[AI Learning Coach](AI_LEARNING_COACH.md)** - Behavioral analytics and learning guidance system (456 lines)
-- **[AI Adaptive Learning](AI_ADAPTIVE_LEARNING.md)** - Real-time challenge intervention and quiz mode selection
+- **[Adaptive Learning](ADAPTIVE_LEARNING.md)** - How word selection, scheduling, mastery and adaptation work today
 - **[AI Challenge Data Storage](AI_CHALLENGE_DATA_STORAGE_COMPLETE.md)** - Challenge performance data storage implementation
 
 ### 🔧 **Development & Deployment**
@@ -61,170 +59,13 @@ This directory contains comprehensive technical documentation for the LevelUp la
 
 ## 🎯 Current Implementation Status (October 2025)
 
-### ✅ **Phase 2+ Complete**: AI Learning Coach & Advanced Analytics
+### Adaptive learning
 
-#### **🤖 AI Learning Coach System** (Clean Implementation)
-
-- **Behavioral Analytics**: Real-time learning pattern visualization with dynamic metrics
-- **Pattern Recognition**: Smart detection of learning momentum and cognitive load patterns
-- **Predictive Insights**: Mock AI recommendations based on learning behavior simulation
-- **Dashboard Integration**: Clean, responsive UI component with live metrics display
-- **Production Ready**: Simplified, maintainable codebase with realistic demo data
-
-#### **Key AI Features**
-
-- ✅ **Learning Momentum Tracking** - Visual display of learning progress velocity
-- ✅ **Cognitive Load Monitoring** - Real-time mental strain assessment display
-- ✅ **Motivation Profiling** - Intrinsic/extrinsic motivation analysis with trend tracking
-- ✅ **Personality Inference** - Learning style and preference determination
-- ✅ **Smart Recommendations** - Behavioral context-aware guidance with implementation steps
-- ✅ **Risk Assessment** - Predictive analysis for learning discontinuation and frustration
-
-#### **AI Usage Example**
-
-```tsx
-import { useAILearningCoach } from '@/hooks/useAILearningCoach';
-import { AILearningDashboard } from '@/components/AILearningDashboard';
-
-function GameSession({ userId, languageCode }: GameProps) {
-  const aiCoach = useAILearningCoach(userId, languageCode);
-
-  // Get real-time AI insights
-  const insights = aiCoach.getLatestInsights();
-
-  // Track learning events for analysis
-  aiCoach.trackEvent({
-    type: 'word_attempt',
-    data: { word: 'hallo', accuracy: true, responseTime: 2000 },
-  });
-
-  return (
-    <div>
-      {/* Game interface */}
-      <AILearningDashboard userId={userId} languageCode={languageCode} />
-    </div>
-  );
-}
-```
-
-#### **🎯 Latest AI Implementation (December 2024) - Clean & Production Ready**
-
-**Core AI Learning Coach Component:**
-
-- `src/components/AILearningDashboard.tsx` - Clean, self-contained AI insights visualization
-
-**Key Features:**
-
-- **Learning Momentum**: Dynamic progress tracking with realistic data simulation
-- **Cognitive Load**: Visual indicators for optimal learning challenge levels
-- **Motivation Metrics**: Engagement scoring with personalized insights
-- **Risk Assessment**: Early warning indicators for learning difficulties
-- **Real-time Updates**: Live dashboard refresh with user-specific analytics
-
-**Clean Architecture Benefits:**
-
-- **Self-contained**: No complex dependencies or inheritance chains
-- **Maintainable**: Clear, readable code with inline documentation
-- **Responsive**: Mobile-optimized design with consistent theming
-- **Extensible**: Easy to connect to real analytics backend when ready
-- **Demo-friendly**: Realistic mock data for immediate demonstration
-
-````
-
-### ✅ **Component Architecture & Usage**
-
-#### **Complete Component System (95+ Components)**
-- **Base Components**: Typography, buttons, cards, forms, layouts
-- **Game-Specific**: Badges, game cards, interactive elements, progress tracking
-- **Data Display**: Analytics, statistics, performance meters
-- **Game UI**: Boss battle components, mode containers, progress bars
-- **Layout System**: Responsive containers, grid systems, flexible layouts
-
-#### **Key Features**
-- ✅ **Language isolation compliant** - No cross-language data mixing
-- ✅ **TypeScript-first** - Full type safety with zero `any` types
-- ✅ **Mobile-optimized** - Touch-friendly with responsive design
-- ✅ **Accessibility focused** - WCAG compliant with proper semantics
-- ✅ **Performance optimized** - Emotion CSS-in-JS with minimal overhead
-- ✅ **Theme-based** - Consistent design tokens and dark theme support
-
-#### **Usage Example**
-```tsx
-import {
-  BaseButton,
-  GameCard,
-  ProgressMeter,
-  Container
-} from '@/components/ui';
-
-function GameComponent({ languageCode }: { languageCode: string }) {
-  return (
-    <Container padding center>
-      <GameCard variant="module" interactive>
-        <ProgressMeter value={75} label="Module Progress" />
-        <BaseButton variant="primary" size="lg">
-          Continue Learning
-        </BaseButton>
-      </GameCard>
-    </Container>
-  );
-}
-````
-
-#### **Component Documentation**
-
-- **Demo**: Available at `/component-library` route in the application
-- **Source**: `/src/styles/components/` - All styled component definitions
-- **Exports**: `/src/components/ui/index.ts` - Unified export system
-- **Types**: Full TypeScript definitions with theme integration
-
----
-
-## 🏗 **Next Development Priorities**
-
-1. **Advanced Analytics Dashboard** - Visual component for storage analytics
-2. **Backend API Integration** - When backend services are ready
-3. **Durable remote synchronization** - Not available until a shared persistent backend and reconciliation are implemented
-4. **Component Storybook** - Visual component documentation
-5. **Performance Monitoring** - Real-time performance widgets
-
----
-
-## 📞 **Quick Reference**
-
-- **Project Overview**: [`../README.md`](../README.md)
-- **Component Library**: [`/src/components/ui/`](../src/components/ui/)
-- **Storage Services**: [`/src/services/storage/`](../src/services/storage/)
-- **Language Configuration**: [`/src/config/languageRules.ts`](../src/config/languageRules.ts)
-- **Testing Utilities**: [`/src/utils/testImmediateImprovements.ts`](../src/utils/testImmediateImprovements.ts)
-
-_For technical questions about the component library or storage architecture, refer to the specific documentation files linked above._: Enhanced Storage & Analytics\*\*
-
-- **50x storage capacity increase** with tiered architecture
-- **Real-time performance monitoring** and health analytics
-- **Zero-downtime backend migration** preparation
-- **Enterprise-grade architecture** with comprehensive testing
-
-### ✅ **Unified Component Library (100% Complete - NEW)**
-
-- **75+ standardized components** with design system consistency
-- **Game-specific components** extracted from actual implementations
-- **Responsive, mobile-first components** with theme-based architecture
-- **TypeScript-first with full type safety** and accessibility focus
-- **Perfect styling consistency** with existing game components
-- **Comprehensive demo** available at `/component-library`
-
-## 📁 Documentation Structure
-
-### **Implementation & Status**
-
-- [`PHASE2_ANALYTICS_COMPLETE.md`](./PHASE2_ANALYTICS_COMPLETE.md) - Latest implementation status and Phase 2+ completion
-- [`IMPLEMENTATION_SUMMARY.md`](./IMPLEMENTATION_SUMMARY.md) - Historical implementation timeline
-- [`PERFORMANCE_OPTIMIZATION.md`](./PERFORMANCE_OPTIMIZATION.md) - Performance benchmarks and optimization guide
+See [ADAPTIVE_LEARNING.md](ADAPTIVE_LEARNING.md). The earlier "AI Learning Coach" dashboard displayed simulated numbers and was removed.
 
 ### **Technical Architecture**
 
-- [`AI_LEARNING_COACH.md`](./AI_LEARNING_COACH.md) - **🤖 Complete AI Learning Coach Documentation** - Behavioral analytics, pattern recognition, and intelligent coaching system
+- [`ADAPTIVE_LEARNING.md`](./ADAPTIVE_LEARNING.md) - How the adaptive learning pipeline works
 - [`LANGUAGE_SEPARATION.md`](./LANGUAGE_SEPARATION.md) - Critical language isolation architecture
 - [`DATA_MODEL_ANALYSIS.md`](./DATA_MODEL_ANALYSIS.md) - Data structure and modeling
 - [`IMPROVED_DATA_MODEL.md`](./IMPROVED_DATA_MODEL.md) - Enhanced data model specifications
@@ -329,7 +170,6 @@ function GameModule() {
 #### **Documentation**
 
 - **Component Guide**: [`/src/components/ui/README.md`](../src/components/ui/README.md)
-- **Live Examples**: [`ComponentShowcase.tsx`](../src/components/ui/ComponentShowcase.tsx)
 - **Theme Configuration**: [`/src/styles/theme.ts`](../src/styles/theme.ts)
 
 ## 🏗 **Critical Architecture Principles**

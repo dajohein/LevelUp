@@ -25,43 +25,34 @@ const LoadingStatesDemoLazy = import.meta.env.DEV
 const ComponentLibraryDemoLazy = import.meta.env.DEV
   ? React.lazy(() => import('./components/ComponentLibraryDemo'))
   : null;
-const AdvancedAISystemDemoLazy = import.meta.env.DEV
-  ? React.lazy(() => import('./components/AdvancedAISystemDemo'))
-  : null;
 const DeveloperDashboardLazy = import.meta.env.DEV
   ? React.lazy(() => import('./components/DeveloperDashboard'))
   : null;
 
-const devRoutes = import.meta.env.DEV
-  ? [
-      {
-        path: 'developer-dashboard',
-        Page: DeveloperDashboardLazy,
-        text: 'Loading Developer Dashboard...',
-      },
-      { path: 'loading-demo', Page: LoadingStatesDemoLazy, text: 'Loading demo...' },
-      {
-        path: 'components-demo',
-        Page: ComponentLibraryDemoLazy,
-        text: 'Loading component library...',
-      },
-      { path: 'simple-ai-demo', Page: AdvancedAISystemDemoLazy, text: 'Loading AI system demo...' },
-      { path: 'ai-system-demo', Page: AdvancedAISystemDemoLazy, text: 'Loading AI system demo...' },
-    ].flatMap(({ path, Page, text }) =>
-      Page
-        ? [
-            {
-              path,
-              element: (
-                <LazyWrapper loadingText={text}>
-                  {path.includes('ai') ? <Page languageCode="de" /> : <Page />}
-                </LazyWrapper>
-              ),
-            },
-          ]
-        : []
-    )
-  : [];
+const devPages = [
+  {
+    path: 'developer-dashboard',
+    Page: DeveloperDashboardLazy,
+    text: 'Loading Developer Dashboard...',
+  },
+  { path: 'loading-demo', Page: LoadingStatesDemoLazy, text: 'Loading demo...' },
+  { path: 'components-demo', Page: ComponentLibraryDemoLazy, text: 'Loading component library...' },
+];
+
+const devRoutes = devPages.flatMap(({ path, Page, text }) =>
+  Page
+    ? [
+        {
+          path,
+          element: (
+            <LazyWrapper loadingText={text}>
+              <Page />
+            </LazyWrapper>
+          ),
+        },
+      ]
+    : []
+);
 
 import { LazyWrapper, SkeletonLayout } from './components/feedback/UnifiedLoading';
 
