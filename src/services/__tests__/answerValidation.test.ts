@@ -82,6 +82,24 @@ describe('Answer Validation', () => {
   });
 
   describe('Diacritic and Accent Handling', () => {
+    it('treats decomposed and precomposed Unicode identically, including capitalization', () => {
+      const decomposed = 'Mu\u0308nchen';
+      const precomposed = 'M\u00fcnchen';
+
+      const result = validateAnswer(decomposed, precomposed, 'de');
+      expect(result.isCorrect).toBe(true);
+      expect(result.capitalizationCorrect).toBe(true);
+      expect(result.capitalizationPenalty).toBe(1);
+      expect(result.closeMatch).toBeUndefined();
+      expect(validateAnswer(precomposed, decomposed, 'de').capitalizationPenalty).toBe(1);
+    });
+
+    it('still penalizes wrong capitalization of a decomposed answer', () => {
+      const result = validateAnswer('mu\u0308nchen', 'M\u00fcnchen', 'de');
+      expect(result.isCorrect).toBe(true);
+      expect(result.capitalizationPenalty).toBeLessThan(1);
+    });
+
     it('should validate accented characters in Spanish', () => {
       const userAnswer = 'niño';
       const correctAnswer = 'niño';
