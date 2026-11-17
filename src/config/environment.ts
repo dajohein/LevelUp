@@ -52,8 +52,8 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   const apiBaseUrl =
     getEnv('VITE_API_BASE_URL') ||
     (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
-  const enableRemoteStorage =
-    parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), false) && process.env.NODE_ENV !== 'production';
+  // Opt-in: requires the API to be backed by Redis (see docs/SERVER_SIDE_STORAGE.md)
+  const enableRemoteStorage = parseBool(getEnv('VITE_ENABLE_REMOTE_STORAGE'), false);
   const enableLocalFallback = parseBool(getEnv('VITE_ENABLE_LOCAL_FALLBACK'), true);
   const debugMode = parseBool(getEnv('VITE_DEBUG_MODE'), false);
 

@@ -167,7 +167,7 @@ describe('RemoteStorageService integration (local handlers)', () => {
     expect(localStorage.getItem('levelup_remote_session')).toBe('');
   });
 
-  it('rejects volatile remote APIs in production', async () => {
+  it('fails closed in production when Redis is not configured', async () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
@@ -187,16 +187,11 @@ describe('RemoteStorageService integration (local handlers)', () => {
         body: JSON.stringify({ action: 'create' }),
       });
 
-      expect(storageResponse.status).toBe(503);
-      expect(await storageResponse.json()).toMatchObject({
-        success: false,
-        error: expect.stringMatching(/not durable/i),
-      });
-      expect(usersResponse.status).toBe(503);
-      expect(await usersResponse.json()).toMatchObject({
-        success: false,
-        error: expect.stringMatching(/not durable/i),
-      });
+      // Storage rejects the unauthenticated request before touching Redis;
+      // users has no auth step for `create`, so it must fail closed without Redis.
+      expect(storageResponse.status).toBe(401);
+      expect(usersResponse.status).toBe(500);
+      expect(await usersResponse.json()).toMatchObject({ success: false });
     } finally {
       process.env.NODE_ENV = originalEnv;
     }
