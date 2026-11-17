@@ -34,7 +34,6 @@ const CRITICAL_ACTIONS = [
 // Actions that trigger state changes needing persistence
 const PERSIST_ACTIONS = [
   'game/checkAnswer',
-  'game/submitAnswer',
   'session/setLanguage',
   'session/setWeeklyChallenge',
   'game/setCurrentModule',
@@ -112,7 +111,7 @@ const persistDurableSnapshot = (state: RootState, actionType: string): void => {
   if (actionType.startsWith('game/')) {
     gameStateStorage.save(createGameSnapshot(state.game));
 
-    if (actionType === 'game/checkAnswer' || actionType === 'game/submitAnswer') {
+    if (actionType === 'game/checkAnswer') {
       if (state.game.language) {
         wordProgressStorage.save(state.game.language, state.game.wordProgress);
       }
@@ -167,7 +166,7 @@ export const persistenceMiddleware: Middleware<Record<string, never>, RootState>
 
       // Capture answer progress under its current language before any navigation action can
       // replace the active Redux progress map.
-      if (action.type === 'game/checkAnswer' || action.type === 'game/submitAnswer') {
+      if (action.type === 'game/checkAnswer') {
         const languageCode = state.game?.language;
         const wordProgress = state.game?.wordProgress;
         if (languageCode && wordProgress && Object.keys(wordProgress).length > 0) {

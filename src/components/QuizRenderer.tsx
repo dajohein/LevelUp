@@ -7,7 +7,7 @@ import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
-import { WordProgress } from '../store/types';
+import { SubmitOptions, WordProgress } from '../store/types';
 import { SessionType, SessionProgress } from '../store/sessionSlice';
 import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
 
@@ -308,7 +308,7 @@ export interface QuizRendererProps {
   sessionTimer?: number | ReturnType<typeof setInterval>;
 
   // Main handlers
-  handleSubmit: (answer: string) => void;
+  handleSubmit: (answer: string, options?: SubmitOptions) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
 
@@ -432,10 +432,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             disabled={isTransitioning}
-            onAnswer={correct => {
+            onAnswer={(correct, hintsUsed) => {
               // Use the unified handleSubmit for consistent word progress tracking
               const targetAnswer = gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse);
-              handleSubmit(correct ? targetAnswer : 'incorrect_answer');
+              handleSubmit(correct ? targetAnswer : 'incorrect_answer', { hintsUsed });
             }}
           />
         ) : quizModeToUse === 'fill-in-the-blank' ? (

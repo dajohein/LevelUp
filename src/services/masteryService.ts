@@ -85,8 +85,14 @@ export const getMasteryQuizMode = (quizMode: string): QuizMode =>
 export const calculateMasteryGain = (
   currentMastery: number,
   isCorrect: boolean,
-  quizMode: QuizMode
+  quizMode: QuizMode,
+  /** A correct answer given with hints is not evidence of recall, so it earns no mastery. */
+  assisted = false
 ): number => {
+  if (isCorrect && assisted) {
+    return currentMastery;
+  }
+
   // More aggressive learning progression for systematic approach
   const baseGain = quizMode === 'open-answer' ? 15 : 10;
   const baseLoss = quizMode === 'open-answer' ? 8 : 5;

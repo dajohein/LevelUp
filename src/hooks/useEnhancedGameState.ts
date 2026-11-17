@@ -25,7 +25,7 @@ import { words, Word } from '../services/wordService';
 import { gameServices } from '../services/game';
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { logger } from '../services/logger';
-import { WordProgress } from '../store/types';
+import { SubmitOptions, WordProgress } from '../store/types';
 
 /** Shape of the feedback overlay shown after each answer. */
 export interface FeedbackWordInfo {
@@ -74,7 +74,7 @@ export interface GameState {
 }
 
 export interface GameHandlers {
-  handleSubmit: (answer: string) => void;
+  handleSubmit: (answer: string, options?: SubmitOptions) => void;
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
     transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
@@ -402,7 +402,7 @@ export const useEnhancedGameState = ({
 
   // Main submission handler
   const handleSubmit = useCallback(
-    (answer: string) => {
+    (answer: string, options?: SubmitOptions) => {
       if (submissionGuardRef.current) return;
 
       const enhancedWordInfo = getCurrentWordInfo();
@@ -452,6 +452,7 @@ export const useEnhancedGameState = ({
           word: currentWordToUse ?? undefined,
           quizMode: quizModeToUse,
           languageCode,
+          hintsUsed: options?.hintsUsed,
         })
       );
 

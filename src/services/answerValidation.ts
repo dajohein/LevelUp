@@ -1,4 +1,5 @@
 // Language-agnostic answer validation using configurable rules
+import { matchAnswer } from './answerMatching';
 import {
   getLanguageRules,
   shouldBeCapitalized,
@@ -10,25 +11,54 @@ export interface AnswerValidation {
   isCorrect: boolean;
   capitalizationCorrect: boolean;
   capitalizationPenalty: number; // 0.5-1.0, where 1.0 = no penalty
+  /** Set when the answer was accepted via an accepted spelling variant (accents, ae/oe/ue/ss). */
+  closeMatch?: 'accent';
+  /** The canonical spelling, set together with `closeMatch`. */
+  matchedAnswer?: string;
 }
+
+/** Score multiplier for variant spellings; capitalization penalties apply on top. */
+export const CLOSE_MATCH_SCORE_FACTOR = 0.9;
+
+/** Combined score multiplier for a validation result. */
+export const getAnswerScoreMultiplier = (validation: AnswerValidation): number =>
+  validation.capitalizationPenalty * (validation.closeMatch ? CLOSE_MATCH_SCORE_FACTOR : 1);
+
+/** Feedback shown when an answer was accepted despite a spelling variant. */
+export const getCloseMatchFeedback = (validation: AnswerValidation): string | null =>
+  validation.isCorrect && validation.closeMatch && validation.matchedAnswer
+    ? `✓ Correct! Spelled: ${validation.matchedAnswer}`
+    : null;
 
 // Check capitalization for languages that require it
 const checkCapitalization = (
-  userAnswer: string,
-  correctAnswer: string,
+  rawUserAnswer: string,
+  rawCorrectAnswer: string,
   language: string
 ): AnswerValidation => {
-  const userLower = userAnswer.toLowerCase();
-  const correctLower = correctAnswer.toLowerCase();
+  // matchAnswer treats canonically equivalent Unicode (e.g. "Mu\u0308nchen" and "München") as
+  // identical, so capitalization must be graded on the same normalized text.
+  const userAnswer = rawUserAnswer.normalize('NFC');
+  const correctAnswer = rawCorrectAnswer.normalize('NFC');
+  const match = matchAnswer(userAnswer, correctAnswer, language);
 
-  // First check if the basic answer is correct
-  const isCorrect = userLower === correctLower;
-
-  if (!isCorrect) {
+  if (match === 'none') {
     return {
       isCorrect: false,
       capitalizationCorrect: false,
       capitalizationPenalty: 1.0,
+    };
+  }
+
+  // Accepted via a spelling variant (e.g. "schoen" for "schön"): capitalization is not graded
+  // because the letters differ, so the answer cannot be compared position by position.
+  if (match === 'accent') {
+    return {
+      isCorrect: true,
+      capitalizationCorrect: true,
+      capitalizationPenalty: 1.0,
+      closeMatch: 'accent',
+      matchedAnswer: rawCorrectAnswer,
     };
   }
 
@@ -96,13 +126,14 @@ export const validateAnswer = (
     return checkCapitalization(userAnswer, correctAnswer, language);
   }
 
-  // For other languages, use case-insensitive validation
-  const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+  // For other languages, use case-insensitive validation with the language's spelling rules
+  const match = matchAnswer(userAnswer, correctAnswer, language);
 
   return {
-    isCorrect,
+    isCorrect: match !== 'none',
     capitalizationCorrect: true, // Not applicable for case-insensitive languages
     capitalizationPenalty: 1.0,
+    ...(match === 'accent' && { closeMatch: 'accent' as const, matchedAnswer: correctAnswer }),
   };
 };
 

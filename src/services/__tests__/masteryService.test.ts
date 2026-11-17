@@ -257,3 +257,11 @@ describe('Mastery Service', () => {
     });
   });
 });
+
+describe('assisted answers', () => {
+  it('earn no mastery when correct, but still lose mastery when wrong', () => {
+    expect(calculateMasteryGain(40, true, 'multiple-choice', true)).toBe(40);
+    expect(calculateMasteryGain(40, true, 'multiple-choice')).toBeGreaterThan(40);
+    expect(calculateMasteryGain(40, false, 'multiple-choice', true)).toBeLessThan(40);
+  });
+});

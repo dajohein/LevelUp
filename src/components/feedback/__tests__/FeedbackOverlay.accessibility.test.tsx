@@ -57,7 +57,7 @@ describe('FeedbackOverlay accessibility', () => {
       answerSequence: 1,
       selectedAnswer: 'Hund',
       correctAnswer: 'Hund',
-      capitalizationFeedback: 'Remember to capitalize German nouns.',
+      spellingFeedback: 'Remember to capitalize German nouns.',
     });
 
     expect(screen.getByRole('status')).toHaveTextContent('Answer 1: Correct.');

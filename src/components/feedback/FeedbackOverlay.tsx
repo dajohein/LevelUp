@@ -176,7 +176,7 @@ interface FeedbackOverlayProps {
   correctAnswer?: string;
   originalWord?: string;
   wordContext?: string;
-  capitalizationFeedback?: string;
+  spellingFeedback?: string;
 }
 
 export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
@@ -186,7 +186,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
   correctAnswer,
   originalWord,
   wordContext,
-  capitalizationFeedback,
+  spellingFeedback,
 }) => {
   const [show, setShow] = React.useState(false);
   const [reviewFeedback, setReviewFeedback] = React.useState<{
@@ -195,7 +195,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
     correctAnswer?: string;
     originalWord?: string;
     wordContext?: string;
-    capitalizationFeedback?: string;
+    spellingFeedback?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -207,11 +207,11 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
       correctAnswer,
       originalWord,
       wordContext,
-      capitalizationFeedback,
+      spellingFeedback,
     });
   }, [
     answerSequence,
-    capitalizationFeedback,
+    spellingFeedback,
     correctAnswer,
     isCorrect,
     originalWord,
@@ -232,7 +232,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
       ? ''
       : `Answer ${answerSequence}: ${isCorrect ? 'Correct.' : 'Incorrect.'}${
           !isCorrect && correctAnswer ? ` Correct answer: ${correctAnswer}.` : ''
-        }${isCorrect && capitalizationFeedback ? ` ${capitalizationFeedback}` : ''}`;
+        }${isCorrect && spellingFeedback ? ` ${spellingFeedback}` : ''}`;
 
   return (
     <>
@@ -244,7 +244,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
           {isCorrect ? (
             <>
               <RewardIndicator>★</RewardIndicator>
-              {capitalizationFeedback && <RewardFeedback>{capitalizationFeedback}</RewardFeedback>}
+              {spellingFeedback && <RewardFeedback>{spellingFeedback}</RewardFeedback>}
             </>
           ) : (
             <FeedbackCard isCorrect={false}>
@@ -273,7 +273,7 @@ export const FeedbackOverlay: React.FC<FeedbackOverlayProps> = ({
           {reviewFeedback.selectedAnswer && <p>Your answer: {reviewFeedback.selectedAnswer}</p>}
           {reviewFeedback.originalWord && <p>You were learning: {reviewFeedback.originalWord}</p>}
           {reviewFeedback.wordContext && <p>Context: {reviewFeedback.wordContext}</p>}
-          {reviewFeedback.capitalizationFeedback && <p>{reviewFeedback.capitalizationFeedback}</p>}
+          {reviewFeedback.spellingFeedback && <p>{reviewFeedback.spellingFeedback}</p>}
         </CorrectionReview>
       )}
     </>

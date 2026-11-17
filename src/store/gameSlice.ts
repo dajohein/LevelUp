@@ -7,7 +7,11 @@ import { calculateMasteryGain, getMasteryQuizMode } from '../services/masterySer
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
-import { getCapitalizationFeedback } from '../services/answerValidation';
+import {
+  getAnswerScoreMultiplier,
+  getCapitalizationFeedback,
+  getCloseMatchFeedback,
+} from '../services/answerValidation';
 import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
 import { selectQuizMode } from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
@@ -18,6 +22,8 @@ interface AnswerSubmission {
   word?: Word;
   quizMode?: string;
   languageCode?: string;
+  /** Hints used for this answer; an assisted answer earns no mastery. */
+  hintsUsed?: number;
 }
 
 type CheckAnswerPayload = string | AnswerSubmission;
@@ -111,7 +117,7 @@ export const gameSlice = createSlice({
           state.quizMode = selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
           state.isCorrect = null;
           state.lastAnswer = undefined;
-          state.capitalizationFeedback = undefined;
+          state.spellingFeedback = undefined;
           state.lastWordId = result.word.id;
 
           // Update recently used words list
@@ -147,7 +153,7 @@ export const gameSlice = createSlice({
       state.quizMode = quizMode ?? selectQuizMode({ word, wordProgress: state.wordProgress });
       state.isCorrect = null;
       state.lastAnswer = undefined;
-      state.capitalizationFeedback = undefined;
+      state.spellingFeedback = undefined;
       state.lastWordId = word?.id;
 
       // Update recently used words list
@@ -178,13 +184,13 @@ export const gameSlice = createSlice({
       state.lastAnswer = submission.answer;
       state.totalAttempts += 1;
 
-      // Store capitalization feedback for languages that require it
-      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, languageCode);
-        state.capitalizationFeedback = feedback || undefined;
-      } else {
-        state.capitalizationFeedback = undefined;
-      }
+      // Spelling feedback: capitalization (German) or an accepted spelling variant
+      state.spellingFeedback =
+        getCloseMatchFeedback(validation) ??
+        (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect
+          ? getCapitalizationFeedback(validation, languageCode)
+          : null) ??
+        undefined;
 
       // Update word progress with enhanced directional tracking
       const wordId = word.id;
@@ -220,10 +226,12 @@ export const gameSlice = createSlice({
       };
 
       // Calculate new mastery
+      const assisted = (submission.hintsUsed ?? 0) > 0;
       const newMastery = calculateMasteryGain(
         currentProgress.xp,
         validation.isCorrect,
-        masteryMode
+        masteryMode,
+        assisted
       );
 
       // Update overall progress (maintaining backward compatibility)
@@ -245,7 +253,8 @@ export const gameSlice = createSlice({
           const directionalMastery = calculateMasteryGain(
             directionData.xp,
             validation.isCorrect,
-            masteryMode
+            masteryMode,
+            assisted
           );
 
           // Update directional stats
@@ -290,7 +299,7 @@ export const gameSlice = createSlice({
                 ? 1.7
                 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
-        const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
+        const finalScore = Math.round(baseScore * getAnswerScoreMultiplier(validation));
 
         state.score += finalScore;
         state.streak += 1;
@@ -303,129 +312,6 @@ export const gameSlice = createSlice({
 
       // Persistence handled by middleware
       // REMOVED: Direct save call - persistence middleware will handle this
-    },
-
-    /**
-     * UNIFIED ACTION: Handle complete answer submission with word progress only
-     * Session updates should be handled by dispatching handleAnswerSubmission separately
-     * This reduces the number of actions but keeps concerns separated
-     */
-    submitAnswer: (state, action: PayloadAction<AnswerSubmission>) => {
-      const { answer } = action.payload;
-      const word = action.payload.word || state.currentWord;
-      if (!word) return;
-      const quizMode = action.payload.quizMode || state.quizMode;
-      const languageCode = action.payload.languageCode || state.language || 'en';
-
-      // Reuse existing checkAnswer logic but keep it self-contained
-      const direction = getQuizAnswerDirection(word, quizMode);
-      const masteryMode = getMasteryQuizMode(quizMode);
-      const validation = validateQuizAnswer(answer, word, quizMode, languageCode);
-
-      state.isCorrect = validation.isCorrect;
-      state.lastAnswer = answer;
-      state.totalAttempts += 1;
-
-      // Store capitalization feedback for languages that require it
-      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, languageCode);
-        state.capitalizationFeedback = feedback || undefined;
-      } else {
-        state.capitalizationFeedback = undefined;
-      }
-
-      // Update word progress with enhanced directional tracking
-      const wordId = word.id;
-      const currentProgress = state.wordProgress[wordId] || {
-        wordId,
-        xp: 0,
-        lastPracticed: new Date().toISOString(),
-        timesCorrect: 0,
-        timesIncorrect: 0,
-        version: 2,
-        totalXp: 0,
-        firstLearned: new Date().toISOString(),
-        directions: {
-          'term-to-definition': {
-            timesCorrect: 0,
-            timesIncorrect: 0,
-            xp: 0,
-            lastPracticed: new Date().toISOString(),
-          },
-          'definition-to-term': {
-            timesCorrect: 0,
-            timesIncorrect: 0,
-            xp: 0,
-            lastPracticed: new Date().toISOString(),
-          },
-        },
-      };
-
-      // Calculate mastery gain using the enhanced system
-      const masteryGain = calculateMasteryGain(
-        currentProgress.xp,
-        validation.isCorrect,
-        masteryMode
-      );
-
-      const newMastery = currentProgress.xp + masteryGain;
-
-      // Create updated progress
-      const updatedProgress = {
-        ...currentProgress,
-        xp: newMastery,
-        lastPracticed: new Date().toISOString(),
-        timesCorrect: currentProgress.timesCorrect + (validation.isCorrect ? 1 : 0),
-        timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
-        totalXp: newMastery,
-        version: 2,
-      };
-
-      // Update directional progress if using enhanced format
-      if (updatedProgress.directions) {
-        const directionData = updatedProgress.directions[direction];
-        if (directionData) {
-          // Calculate directional mastery gain
-          const directionalMastery = calculateMasteryGain(
-            directionData.xp,
-            validation.isCorrect,
-            masteryMode
-          );
-
-          // Update directional stats
-          updatedProgress.directions[direction] = {
-            ...directionData,
-            xp: directionalMastery,
-            timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
-            timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            lastPracticed: new Date().toISOString(),
-          };
-        }
-      }
-
-      state.wordProgress[wordId] = updatedProgress;
-
-      if (validation.isCorrect) {
-        // Update score based on streak, quiz mode, and capitalization penalty
-        const modeMultiplier =
-          quizMode === 'open-answer'
-            ? 2
-            : quizMode === 'letter-scramble'
-              ? 1.5
-              : quizMode === 'fill-in-the-blank'
-                ? 1.7
-                : 1;
-        const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
-        const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
-
-        state.score += finalScore;
-        state.streak += 1;
-        state.correctAnswers += 1;
-        state.bestStreak = Math.max(state.streak, state.bestStreak);
-      } else {
-        state.lives -= 1;
-        state.streak = 0;
-      }
     },
 
     setLanguage: (state, action: PayloadAction<string>) => {
@@ -536,7 +422,6 @@ export const {
   nextWord,
   setCurrentWord,
   checkAnswer,
-  submitAnswer,
   setLanguage,
   setCurrentModule,
   resetGame,
