@@ -128,7 +128,7 @@ window.testPerformanceFix();
 ### ✨ **Local-First Learning Progress**
 
 - **📱 Reliable Local Progress**: Learning progress is stored on this device
-- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API stores users and progress in Upstash Redis (Vercel Marketplace)
+- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API keeps accounts and sessions in Upstash Redis (Vercel Marketplace). Uploading learning progress is not implemented yet
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
@@ -268,7 +268,7 @@ Key tests:
 
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides
-- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and development-only API demo
+- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and the current state of remote sync
 
 ## 🎮 How to Use
 
@@ -317,7 +317,7 @@ The application implements **strict language separation** to prevent data contam
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
-### **Remote Storage Demo**
+### **Remote Storage**
 
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)

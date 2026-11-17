@@ -25,7 +25,7 @@ The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Ve
 1. **Memory Cache** (fastest) - Recent data
 2. **localStorage** (fast) - Browser storage
 3. **IndexedDB** (medium) - Large browser storage
-4. **Remote Storage** (opt-in) - Upstash Redis behind `api/`; enabled with `VITE_ENABLE_REMOTE_STORAGE`
+4. **Remote Storage** (currently switched off) - Upstash Redis behind `api/`. `VITE_ENABLE_REMOTE_STORAGE` only sets up the account session and the API connection; this tier is disabled in `tieredStorage`, so progress is not stored here yet
 
 ### API Endpoints
 
@@ -111,7 +111,7 @@ Configuration is controlled via environment variables to follow Twelve-Factor pr
 **Frontend (Vite):**
 
 - `VITE_API_BASE_URL` — Base URL for API calls (defaults to browser origin)
-- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to remote sync; requires the API to be backed by Redis (default: `false`)
+- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to remote account sessions and device linking; requires the API to be backed by Redis (default: `false`). The progress storage tier stays disabled either way
 - `VITE_ENABLE_LOCAL_FALLBACK` — Keep local tiers as fallback
 - `VITE_DEBUG_MODE` — Enable verbose logging in development
 - `VITE_STORAGE_ENDPOINT_STORAGE`, `VITE_STORAGE_ENDPOINT_USERS` — Endpoint paths
