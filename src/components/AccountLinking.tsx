@@ -253,8 +253,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       setMessage({
         text:
           typeof result.linkedDevices === 'number'
-            ? `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`
-            : 'Demo account linked. Progress was not transferred.',
+            ? `Device linked to your account. Progress was not transferred. Total devices: ${result.linkedDevices}`
+            : 'Device linked to your account. Progress was not transferred.',
         type: 'success',
       });
     } catch (error) {
@@ -281,7 +281,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
   return (
     <Container>
-      <Title id={titleId}>🔗 Device Linking (Demo Only)</Title>
+      <Title id={titleId}>🔗 Device Linking</Title>
 
       {linkedDevices > 1 && (
         <DeviceInfo>Account session linked across {linkedDevices} devices</DeviceInfo>
@@ -294,10 +294,10 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       </StatusMessage>
 
       <Section>
-        <SectionTitle>📱 Share Progress from This Device</SectionTitle>
+        <SectionTitle>📱 Link Another Device</SectionTitle>
         <Description>
-          Generate a code to link this device&apos;s demo account. This does not sync or copy
-          learning progress.
+          Generate a code, then enter it on your other device to link it to this account. Linking
+          does not sync or copy learning progress.
         </Description>
 
         {accountCode ? (
@@ -337,7 +337,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       <Section>
         <SectionTitle>💻 Link to Existing Account</SectionTitle>
         <Description>
-          Enter an account code to link a demo account. Progress is not transferred.
+          Enter the account code from your other device to link this device to that account.
+          Progress is not transferred.
         </Description>
 
         <Input

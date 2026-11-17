@@ -1,6 +1,6 @@
 # Remote Storage Status
 
-The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Vercel Marketplace) in production and by an in-memory stand-in only in development and tests. It is **opt-in**: the client uses it only when `VITE_ENABLE_REMOTE_STORAGE=true` was set at build time (a Vite variable, baked into the bundle). Learning progress remains local to each device and `localStorage` stays the source of truth; remote storage mirrors it. Account linking identifies the account on another device but does not yet transfer or reconcile progress between devices.
+The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Vercel Marketplace) in production and by an in-memory stand-in only in development and tests. It is **opt-in**: the client uses it only when `VITE_ENABLE_REMOTE_STORAGE=true` was set at build time (a Vite variable, baked into the bundle). Learning progress remains local to each device and `localStorage` is the source of truth. Nothing is mirrored to the server yet: the app creates a guest session and can link devices, but the remote storage tier is disabled. Account linking identifies the account on another device but does not yet transfer or reconcile progress between devices.
 
 ## Sessions
 
@@ -25,7 +25,7 @@ The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Ve
 1. **Memory Cache** (fastest) - Recent data
 2. **localStorage** (fast) - Browser storage
 3. **IndexedDB** (medium) - Large browser storage
-4. **Remote Storage** (development demo only) - Process-local API storage; not persistent or production-enabled
+4. **Remote Storage** (currently switched off) - Upstash Redis behind `api/`. `VITE_ENABLE_REMOTE_STORAGE` only sets up the account session and the API connection; this tier is disabled in `tieredStorage`, so progress is not stored here yet
 
 ### API Endpoints
 
@@ -111,7 +111,7 @@ Configuration is controlled via environment variables to follow Twelve-Factor pr
 **Frontend (Vite):**
 
 - `VITE_API_BASE_URL` — Base URL for API calls (defaults to browser origin)
-- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to remote sync; requires the API to be backed by Redis (default: `false`)
+- `VITE_ENABLE_REMOTE_STORAGE` — Opt in to remote account sessions and device linking; requires the API to be backed by Redis (default: `false`). The progress storage tier stays disabled either way
 - `VITE_ENABLE_LOCAL_FALLBACK` — Keep local tiers as fallback
 - `VITE_DEBUG_MODE` — Enable verbose logging in development
 - `VITE_STORAGE_ENDPOINT_STORAGE`, `VITE_STORAGE_ENDPOINT_USERS` — Endpoint paths
@@ -140,7 +140,7 @@ import { initializeStorage } from './services/storage/storageInitializer';
 await initializeStorage();
 ```
 
-For local API experiments only, set `VITE_ENABLE_REMOTE_STORAGE=true`. The demo API is process-local, can lose data on restart, does not replicate between workers, and must not be used for learning-progress backups or production sync. Production requests are rejected even if the frontend option is set.
+Remote sync is opt-in: set `VITE_ENABLE_REMOTE_STORAGE=true` at build time. The API is Redis-backed in production, but the app does not upload or restore learning progress yet (the remote tier is disabled in `tieredStorage`), so do not treat it as a backup or as cross-device sync.
 
 ### Manual Storage Operations
 
