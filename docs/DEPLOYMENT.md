@@ -225,8 +225,9 @@ browser tab that was opened before the deploy:
 - [ ] Closing every tab and reopening also loads the new version (the fallback if the banner is ignored)
 - [ ] A first visit in a fresh profile does not reload the page
 
-`npm run test:sw` additionally runs a real-Chrome update test when Chrome is available (it is skipped
-otherwise; CI does not run it).
+`npm run test:sw` also runs a real-Chrome update test. CI runs it on every pull request (the job fails if
+Chrome is missing); the dev container installs Chromium so it can be run from a Codespace too. Outside
+those, it skips itself when no browser is found.
 
 ### **Test PWA Features**
 

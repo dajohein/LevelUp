@@ -36,6 +36,11 @@ jobs:
         run: npm run test:quality-gate
       - name: Test service worker update lifecycle
         run: npm run test:sw-lifecycle
+      - name: Test service worker updates in a real browser
+        # The test skips itself when no browser is found; here that must be a failure, not a pass
+        run: |
+          google-chrome --version
+          npm run test:sw
       - name: Reject new lint warnings and all errors
         env:
           LINT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
