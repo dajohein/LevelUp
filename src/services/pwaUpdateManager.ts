@@ -53,19 +53,13 @@ class PWAUpdateManager {
             this.notifyUpdateAvailable();
           }
 
-          // Check for updates immediately
+          // A worker may already be installing (its `updatefound` fired before we got here,
+          // because other code registers the same worker too): watch it as well
+          if (registration.installing) this.watchInstalling(registration.installing);
+
           registration.addEventListener('updatefound', () => {
             console.log('🔄 New service worker found, preparing update...');
-
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('✅ New version ready! Notifying user...');
-                  this.notifyUpdateAvailable();
-                }
-              });
-            }
+            if (registration.installing) this.watchInstalling(registration.installing);
           });
 
           // Check for updates periodically (every 5 minutes)
@@ -147,18 +141,31 @@ class PWAUpdateManager {
     };
   }
 
+  /** Announce the update when this installing worker finishes installing under a controlled page. */
+  private watchInstalling(worker: ServiceWorker) {
+    const announceIfReady = () => {
+      if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+        logger.debug('✅ New version ready! Notifying user...');
+        this.notifyUpdateAvailable();
+      }
+    };
+    worker.addEventListener('statechange', announceIfReady);
+    announceIfReady(); // it may have finished installing before we attached
+  }
+
   /**
    * Apply the available update. Call this only after the user asked for it: it reloads the page.
    * The reload happens once however many times this is called.
    */
   async applyUpdate(): Promise<boolean> {
+    // Take the guard before the first await: overlapping calls must not each post SKIP_WAITING
     if (this.applying) return true;
+    this.applying = true;
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
 
         if (registration && registration.waiting) {
-          this.applying = true;
           logger.debug('🔄 Applying update...');
 
           // Reload as soon as the new worker has taken control
@@ -179,11 +186,11 @@ class PWAUpdateManager {
         }
 
         logger.debug('🔄 No waiting service worker, reloading the page...');
-        this.applying = true;
         this.reloadOnce();
         return true;
       }
 
+      this.applying = false;
       return false;
     } catch (error) {
       this.applying = false;

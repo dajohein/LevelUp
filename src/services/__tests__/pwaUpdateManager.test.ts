@@ -226,6 +226,45 @@ describe('applying an update', () => {
   });
 });
 
+describe('overlapping and early cases', () => {
+  it('concurrent applyUpdate calls post SKIP_WAITING once and reload once', async () => {
+    const waiting = new FakeWorker();
+    const { manager, container } = await setup(c => (c.registration.waiting = waiting));
+
+    await Promise.all([manager.applyUpdate(), manager.applyUpdate(), manager.applyUpdate()]);
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(waiting.postMessage).toHaveBeenCalledTimes(1);
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces a worker that was already installing when the page registered', async () => {
+    let installing!: FakeWorker;
+    const { manager } = await setup(c => {
+      installing = new FakeWorker();
+      c.registration.installing = installing;
+    });
+    const callback = jest.fn();
+    manager.onUpdateAvailable(callback);
+    expect(callback).not.toHaveBeenCalled();
+
+    installing.setState('installed');
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces a worker that finished installing just before we attached', async () => {
+    const { manager } = await setup(c => {
+      const done = new FakeWorker();
+      done.state = 'installed';
+      c.registration.installing = done;
+    });
+    const callback = jest.fn();
+    manager.onUpdateAvailable(callback);
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('exactly one reload', () => {
   const withWaitingWorker = async () => {
     const waiting = new FakeWorker();
