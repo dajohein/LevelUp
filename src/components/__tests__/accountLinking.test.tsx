@@ -31,6 +31,8 @@ jest.mock('../../services/storage/remoteStorage', () => {
       generateAccountCode: jest.fn(),
       resetSession: jest.fn().mockResolvedValue(undefined),
       linkDeviceWithCode: jest.fn(),
+      logout: jest.fn().mockResolvedValue(undefined),
+      revokeSessions: jest.fn().mockResolvedValue(undefined),
     },
   };
 });
@@ -361,6 +363,60 @@ describe('AccountLinking', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
         expect(await screen.findByRole('alert')).toHaveTextContent('Failed to link device');
         expect(syncActiveLanguageProgress).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('session logout and revocation', () => {
+      it('logs out on this device and confirms local progress is preserved', async () => {
+        const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+        renderIt();
+        const logoutBtn = screen.getByRole('button', { name: 'Log Out on This Device' });
+        await userEvent.click(logoutBtn);
+
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
+        expect(mocked.logout).toHaveBeenCalledTimes(1);
+        confirmSpy.mockRestore();
+        expect(
+          await screen.findByText(
+            /Logged out on this device. Your local progress has been preserved./
+          )
+        ).toBeInTheDocument();
+      });
+
+      it('does not log out when the user declines the warning', async () => {
+        const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+        renderIt();
+        await userEvent.click(screen.getByRole('button', { name: 'Log Out on This Device' }));
+        expect(mocked.logout).not.toHaveBeenCalled();
+        confirmSpy.mockRestore();
+      });
+
+      it('signs out the other devices and confirms revocation', async () => {
+        renderIt();
+        const revokeBtn = screen.getByRole('button', {
+          name: 'Sign Out Other Devices',
+        });
+        await userEvent.click(revokeBtn);
+
+        expect(mocked.revokeSessions).toHaveBeenCalledTimes(1);
+        expect(
+          await screen.findByText(/Signed out on all other devices. This device stays signed in/)
+        ).toBeInTheDocument();
+      });
+
+      it('handles revoke failure gracefully', async () => {
+        mocked.revokeSessions.mockRejectedValueOnce(new Error('Network error'));
+        renderIt();
+        const revokeBtn = screen.getByRole('button', {
+          name: 'Sign Out Other Devices',
+        });
+        await userEvent.click(revokeBtn);
+
+        expect(
+          await screen.findByText(
+            /Could not sign out your other devices. You are still signed in here/
+          )
+        ).toBeInTheDocument();
       });
     });
   });

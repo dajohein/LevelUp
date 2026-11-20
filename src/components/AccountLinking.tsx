@@ -283,6 +283,64 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
     }
   };
 
+  const handleLogout = async () => {
+    // Without a session token nothing can reach the cloud copy again except a link code from a
+    // device that is still signed in, so this must be a deliberate choice.
+    if (
+      !window.confirm(
+        'Log out on this device? To reconnect to your cloud copy you will need a link code from ' +
+          'another device that is still signed in; otherwise a new cloud account is created. ' +
+          'Your local progress stays on this device.'
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.logout();
+      setAccountCode('');
+      setCodeExpires(null);
+      setLinkedDevices(0);
+      setSessionLost(false);
+      setMessage({
+        text: 'Logged out on this device. Your local progress has been preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to log out:', error);
+      setMessage({
+        text: 'Failed to log out. Your local progress is safe.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeSessions = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.revokeSessions();
+      setAccountCode('');
+      setCodeExpires(null);
+      setSessionLost(false);
+      setMessage({
+        text: 'Signed out on all other devices. This device stays signed in; your local progress is preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to revoke sessions:', error);
+      setMessage({
+        text: 'Could not sign out your other devices. You are still signed in here; please try again.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatTimeRemaining = (expires: number): string => {
     const remaining = Math.max(0, expires - Date.now());
     const minutes = Math.floor(remaining / (60 * 1000));
@@ -386,6 +444,54 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         >
           Link This Device
         </LoadingButton>
+      </Section>
+
+      <Section>
+        <SectionTitle>🔒 Sessions & Sign Out</SectionTitle>
+        <Description>
+          Sign out on this device, or sign out every other device (this one stays signed in). Local
+          learning progress is always preserved on this device.
+        </Description>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+          <LoadingButton
+            onClick={handleLogout}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Logging out..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: '1px solid #bdc3c7',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#ffffff',
+              color: '#34495e',
+            }}
+          >
+            Log Out on This Device
+          </LoadingButton>
+          <LoadingButton
+            onClick={handleRevokeSessions}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Revoking sessions..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#e74c3c',
+              color: 'white',
+            }}
+          >
+            Sign Out Other Devices
+          </LoadingButton>
+        </div>
       </Section>
 
       {message && (

@@ -13,6 +13,7 @@ import { MemoryDb } from './_memoryDb.js';
 import { isProduction } from './_config.js';
 
 export const KEY_PREFIX = 'levelup:';
+export const userKey = (id: string) => `${KEY_PREFIX}user:${id}`;
 
 let client: Redis | null = null;
 

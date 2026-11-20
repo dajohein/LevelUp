@@ -195,5 +195,65 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
       await service.putValue('es', 'k', { a: 1 });
       await expect(service.getValue('es', 'k')).resolves.toEqual({ a: 1 });
     });
+
+    it('logout() clears the session and leaves local progress untouched', async () => {
+      localStorage.setItem(
+        'levelup_progress_es',
+        JSON.stringify({ words: { hola: { level: 1 } } })
+      );
+      const service = new RemoteStorageService({ retries: 1 });
+      await service.getUserSession();
+      expect(service.hasSession()).toBe(true);
+
+      await service.logout();
+
+      expect(service.hasSession()).toBe(false);
+      expect(localStorage.getItem(KEY)).toBeNull();
+      // local progress is strictly preserved (local-first)
+      expect(localStorage.getItem('levelup_progress_es')).toBe(
+        JSON.stringify({ words: { hola: { level: 1 } } })
+      );
+    });
+
+    it('revokeSessions() signs out the other devices but the revoking device keeps access', async () => {
+      const { created } = await createServerSession();
+      const service1 = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      await service1.getUserSession();
+      await service1.putValue('es', 'k', { a: 1 });
+
+      // Second client has the same token
+      const service2 = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      await service2.getUserSession();
+
+      await service1.revokeSessions();
+
+      // The revoking device is still signed in, on a new token, with its remote data reachable
+      expect(service1.hasSession()).toBe(true);
+      const stored = JSON.parse(localStorage.getItem(KEY) as string);
+      expect(stored.userId).toBe(created.userId);
+      expect(stored.sessionToken).not.toBe(created.sessionToken);
+      await expect(service1.getValue('es', 'k')).resolves.toEqual({ a: 1 });
+      await expect(service1.generateAccountCode()).resolves.toBeDefined();
+
+      // The other device's old token is rejected by the server
+      await expect(service2.generateAccountCode()).rejects.toBeInstanceOf(RemoteSessionError);
+    });
+
+    it('revokeSessions() keeps the session when the server call fails, so the user can retry', async () => {
+      const { created } = await createServerSession();
+      const service = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      await service.getUserSession();
+
+      // getUserSession() may have refreshed the token: compare with what is stored right now
+      const before = JSON.parse(localStorage.getItem(KEY) as string).sessionToken;
+      fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+      await expect(service.revokeSessions()).rejects.toBeInstanceOf(Error);
+
+      expect(service.hasSession()).toBe(true);
+      expect(JSON.parse(localStorage.getItem(KEY) as string).sessionToken).toBe(before);
+    });
   });
 });
