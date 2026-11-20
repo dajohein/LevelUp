@@ -94,11 +94,23 @@ describe('AccountLinking', () => {
       ).toBeInTheDocument();
     });
 
-    it('configures linking input with 10-character maxLength and updated placeholder', () => {
+    it('configures the linking input with the updated placeholder', () => {
+      renderIt();
+      expect(screen.getByRole('textbox')).toHaveAttribute(
+        'placeholder',
+        'Enter code (e.g., A3B7K9M2X4)'
+      );
+    });
+
+    it('keeps a pasted grouped code whole, and still caps the code at 10 characters', async () => {
       renderIt();
       const input = screen.getByRole('textbox');
-      expect(input).toHaveAttribute('maxLength', '10');
-      expect(input).toHaveAttribute('placeholder', 'Enter code (e.g., A3B7K9M2X4)');
+      await userEvent.click(input);
+      await userEvent.paste('a3b7k 9m2x4');
+      expect(input).toHaveValue('A3B7K9M2X4');
+      await userEvent.clear(input);
+      await userEvent.paste('A3B7 K9M2 X4ZZ ZZ');
+      expect(input).toHaveValue('A3B7K9M2X4');
     });
 
     describe('a lost session', () => {
