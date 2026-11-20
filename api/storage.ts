@@ -20,8 +20,8 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 
-import { verifySessionToken, resolveCorsOrigin } from './_auth.js';
-import { getDb, KEY_PREFIX } from './_db.js';
+import { readSessionToken, isSessionActive, resolveCorsOrigin } from './_auth.js';
+import { getDb, KEY_PREFIX, userKey } from './_db.js';
 
 // Types for API requests/responses
 interface StorageRequest {
@@ -131,9 +131,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Authenticate: the session token must be valid and belong to the requested userId
-    const authedUserId = verifySessionToken(request.sessionToken);
-    if (!authedUserId || authedUserId !== request.userId) {
+    // Authenticate: the session token must be valid, unrevoked and belong to the requested userId
+    const claims = readSessionToken(request.sessionToken);
+    if (!claims || claims.userId !== request.userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or missing session token',
+      });
+    }
+
+    const db = await getDb();
+    const user = await db.hgetall<{ sessionVersion?: number }>(userKey(claims.userId));
+    if (!isSessionActive(claims, user)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid or missing session token',
@@ -170,7 +179,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const db = await getDb();
+    // Language code validated
     const response: StorageResponse = {
       success: false,
       metadata: {

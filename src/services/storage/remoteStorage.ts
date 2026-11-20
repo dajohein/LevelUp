@@ -978,6 +978,32 @@ export class RemoteStorageService implements AsyncStorageProvider {
   }
 
   /**
+   * Log out on this device: clears the local session without invalidating other devices.
+   * Local progress is preserved.
+   */
+  async logout(): Promise<void> {
+    await this.resetSession();
+  }
+
+  /**
+   * Revoke all sessions across all devices for this account, invalidating existing tokens on the server,
+   * and clears the local session. Local progress is preserved.
+   */
+  async revokeSessions(): Promise<void> {
+    try {
+      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (this.userSession || stored) {
+        await this.authedCall('/api/users', current => ({
+          action: 'revokeSessions',
+          sessionToken: current.sessionToken,
+        }));
+      }
+    } finally {
+      await this.resetSession();
+    }
+  }
+
+  /**
    * Get current user session with linked devices
    */
   async getCurrentSession(): Promise<RemoteUserSession | null> {

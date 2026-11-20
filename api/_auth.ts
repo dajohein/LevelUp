@@ -33,17 +33,21 @@ const maxSessionAgeMs = () => envPositiveInt('SESSION_MAX_AGE_MS', 90 * DAY_MS);
  * Creates a signed token. `u` is the user, `e` the expiry of this token and `a` the absolute end
  * of the whole session: a refresh issues a new `e` but inherits `a`, so a session (and a stolen
  * token) cannot be kept alive forever by refreshing it. `e` never exceeds `a`.
+ * `v` is the per-user session version for revocation.
  */
 export function createSessionToken(
   userId: string,
   ttlMs: number,
   now = Date.now(),
-  absoluteExpiry: number = now + maxSessionAgeMs()
+  absoluteExpiry: number = now + maxSessionAgeMs(),
+  sessionVersion?: number
 ): string {
   const e = Math.min(now + ttlMs, absoluteExpiry);
-  const payload = Buffer.from(JSON.stringify({ u: userId, e, a: absoluteExpiry })).toString(
-    'base64url'
-  );
+  const data: Record<string, unknown> = { u: userId, e, a: absoluteExpiry };
+  if (sessionVersion !== undefined) {
+    data.v = sessionVersion;
+  }
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
   return `${payload}.${sign(payload)}`;
 }
 
@@ -51,6 +55,8 @@ export interface SessionClaims {
   userId: string;
   /** End of the whole session, or null for a token issued before sessions had an absolute age */
   absoluteExpiry: number | null;
+  /** Per-user session version, or undefined for legacy tokens */
+  sessionVersion?: number;
 }
 
 /** A finite, positive whole number of epoch milliseconds. */
@@ -81,15 +87,37 @@ export function readSessionToken(
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
 
   try {
-    const { u, e, a } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    const { u, e, a, v } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (typeof u !== 'string' || u.length === 0 || !isTimestamp(e)) return null;
     if (a !== undefined && !isTimestamp(a)) return null;
+    if (v !== undefined && (!Number.isSafeInteger(v) || v <= 0)) return null;
     if (e + graceMs < now) return null; // expired beyond what the caller tolerates
     if (a !== undefined && a < now) return null; // the session itself is over
-    return { userId: u, absoluteExpiry: a ?? null };
+    return { userId: u, absoluteExpiry: a ?? null, sessionVersion: v };
   } catch {
     return null;
   }
+}
+
+/**
+ * Checks whether the token's session version matches the user's active session version in the profile.
+ * Legacy tokens without a version claim inherit version 1; profiles without a sessionVersion
+ * default to version 1. Returns false if claims is null or if versions mismatch.
+ */
+export function isSessionActive(
+  claims: SessionClaims | null,
+  user: { sessionVersion?: unknown } | null | undefined
+): boolean {
+  if (!claims) return false;
+  const expectedVersion =
+    user &&
+    typeof user.sessionVersion === 'number' &&
+    Number.isSafeInteger(user.sessionVersion) &&
+    user.sessionVersion > 0
+      ? user.sessionVersion
+      : 1;
+  const tokenVersion = claims.sessionVersion ?? 1;
+  return tokenVersion === expectedVersion;
 }
 
 /** Returns the userId for a valid, unexpired token, otherwise null. */

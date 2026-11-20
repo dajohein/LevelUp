@@ -23,13 +23,21 @@ import { getDb, KEY_PREFIX } from './_db.js';
 import {
   createSessionToken,
   readSessionToken,
-  verifySessionToken,
+  isSessionActive,
   resolveCorsOrigin,
 } from './_auth.js';
 import { clientAddress, envPositiveInt } from './_config.js';
 
 interface UserRequest {
-  action: 'create' | 'get' | 'update' | 'authenticate' | 'generateCode' | 'linkDevice';
+  action:
+    | 'create'
+    | 'get'
+    | 'update'
+    | 'authenticate'
+    | 'generateCode'
+    | 'linkDevice'
+    | 'revokeSessions'
+    | 'signOutEverywhere';
   userId?: string;
   sessionToken?: string;
   accountCode?: string;
@@ -41,13 +49,14 @@ interface UserRequest {
   };
 }
 
-type UserProfile = {
+export type UserProfile = {
   id: string;
   username: string;
   email?: string;
   preferences: unknown;
   createdAt: number;
   lastActive: number;
+  sessionVersion?: number;
 };
 
 interface UserResponse {
@@ -58,6 +67,7 @@ interface UserResponse {
     accountCode?: string;
     user?: any;
     linkedDevices?: number;
+    sessionVersion?: number;
   };
   error?: string;
   metadata?: {
@@ -92,6 +102,8 @@ const KNOWN_ACTIONS: ReadonlyArray<string> = [
   'authenticate',
   'generateCode',
   'linkDevice',
+  'revokeSessions',
+  'signOutEverywhere',
 ];
 const MAX_USERNAME_LENGTH = 64;
 const MAX_EMAIL_LENGTH = 254;
@@ -133,11 +145,6 @@ function generateAccountCode(): string {
   return result.substring(0, 8);
 }
 
-// Sessions are stateless signed tokens (see ./_auth.ts) so api/storage can verify them too
-function validateSession(token: string): string | null {
-  return verifySessionToken(token);
-}
-
 /**
  * How long after expiry a signed token can still be exchanged for a new one (default 30 days).
  * Capped, so a mistyped value cannot turn the refresh into an open-ended window.
@@ -151,8 +158,8 @@ const refreshGraceMs = () =>
 
 const sessionTtlMs = () => envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
 
-function createSession(userId: string): string {
-  return createSessionToken(userId, sessionTtlMs());
+function createSession(userId: string, sessionVersion = 1): string {
+  return createSessionToken(userId, sessionTtlMs(), undefined, undefined, sessionVersion);
 }
 
 // Fixed-window rate limit: allows `max` attempts per window per identifier.
@@ -249,11 +256,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           preferences: request.userData?.preferences || {},
           createdAt: Date.now(),
           lastActive: Date.now(),
+          sessionVersion: 1,
         };
         if (request.userData?.email !== undefined) user.email = request.userData.email;
 
         await db.hset(userKey(userId), user);
-        const sessionToken = createSession(userId);
+        const sessionToken = createSession(userId, 1);
 
         response.success = true;
         response.data = {
@@ -265,16 +273,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'get': {
-        const userId = validateSession(request.sessionToken || '');
-        if (!userId) {
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
           response.error = 'Valid sessionToken is required';
           return res.status(401).json(response);
         }
 
-        const user = await db.hgetall<UserProfile>(userKey(userId));
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
+        }
+
+        if (!isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
         }
 
         response.success = true;
@@ -283,8 +296,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'update': {
-        const userId = validateSession(request.sessionToken || '');
-        if (!userId) {
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
           response.error = 'Valid sessionToken is required';
           return res.status(401).json(response);
         }
@@ -298,9 +311,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           response.error = 'username must not be empty';
           return res.status(400).json(response);
         }
-        if (!(await db.hgetall(userKey(userId)))) {
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
+        if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
+        }
+        if (!isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
         }
 
         // Write only the fields being changed (HSET is per-field), so concurrent updates
@@ -310,8 +328,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         for (const field of ['username', 'email', 'preferences'] as const) {
           if (request.userData?.[field] !== undefined) changes[field] = request.userData[field];
         }
-        await db.hset(userKey(userId), changes);
-        const updatedUser = await db.hgetall<UserProfile>(userKey(userId));
+        await db.hset(userKey(claims.userId), changes);
+        const updatedUser = await db.hgetall<UserProfile>(userKey(claims.userId));
 
         response.success = true;
         response.data = { user: updatedUser };
@@ -329,8 +347,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // was away for longer than the token lifetime could never recover its session.
         const now = Date.now();
         const claims = readSessionToken(request.sessionToken, now, refreshGraceMs());
+        const user = claims ? await db.hgetall<UserProfile>(userKey(claims.userId)) : null;
         // A missing user gets the same answer as a bad token: this must not reveal which user ids exist
-        if (!claims || !(await db.hgetall(userKey(claims.userId)))) {
+        if (!claims || !user || !isSessionActive(claims, user)) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
         }
@@ -338,12 +357,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Touch only lastActive (single-field write; see `update`)
         await db.hset(userKey(userId), { lastActive: Date.now() });
-        const user = await db.hgetall<UserProfile>(userKey(userId));
+        const updatedUser = await db.hgetall<UserProfile>(userKey(userId));
+        const activeVersion =
+          typeof user.sessionVersion === 'number' &&
+          Number.isSafeInteger(user.sessionVersion) &&
+          user.sessionVersion > 0
+            ? user.sessionVersion
+            : 1;
 
         response.success = true;
         response.data = {
           userId,
-          user,
+          user: updatedUser,
           // A fresh token keeps an active session alive, but it inherits the absolute end of the
           // session, so refreshing can never extend it past that. A token issued before sessions
           // had an absolute age gets one (grandfathered) full window.
@@ -351,7 +376,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             userId,
             sessionTtlMs(),
             now,
-            claims.absoluteExpiry ?? undefined
+            claims.absoluteExpiry ?? undefined,
+            activeVersion
           ),
         };
         break;
@@ -363,11 +389,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const userId = validateSession(request.sessionToken);
-        if (!userId) {
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
         }
+
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
+        if (!user || !isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+        const userId = claims.userId;
 
         // Check rate limiting for code generation
         const clientId = getClientIdentifier(req);
@@ -458,14 +491,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!consumed) return invalidCode();
         await db.del(codeAttemptsKey(normalizedCode));
 
-        // Create new session for this device
-        const newSessionToken = createSession(codeData.userId);
+        // Create new session for this device with the user's active session version
+        const activeVersion =
+          typeof user.sessionVersion === 'number' &&
+          Number.isSafeInteger(user.sessionVersion) &&
+          user.sessionVersion > 0
+            ? user.sessionVersion
+            : 1;
+        const newSessionToken = createSession(codeData.userId, activeVersion);
 
         response.success = true;
         response.data = {
           userId: codeData.userId,
           sessionToken: newSessionToken,
           user,
+        };
+        break;
+      }
+
+      case 'signOutEverywhere':
+      case 'revokeSessions': {
+        if (!request.sessionToken) {
+          response.error = 'sessionToken is required to revoke sessions';
+          return res.status(400).json(response);
+        }
+
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
+        if (!user || !isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+        const userId = claims.userId;
+
+        const currentVersion =
+          typeof user.sessionVersion === 'number' &&
+          Number.isSafeInteger(user.sessionVersion) &&
+          user.sessionVersion > 0
+            ? user.sessionVersion
+            : 1;
+        const nextVersion = currentVersion + 1;
+        await db.hset(userKey(userId), { sessionVersion: nextVersion, lastActive: Date.now() });
+
+        // Invalidate any pending unused link code for this user
+        const previousCode = await db.get<string>(userCodeKey(userId));
+        if (previousCode) {
+          await db.del(userCodeKey(userId), codeKey(previousCode), codeAttemptsKey(previousCode));
+        }
+
+        response.success = true;
+        response.data = {
+          userId,
+          sessionVersion: nextVersion,
         };
         break;
       }

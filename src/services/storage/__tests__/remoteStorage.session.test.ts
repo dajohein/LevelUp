@@ -195,5 +195,44 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
       await service.putValue('es', 'k', { a: 1 });
       await expect(service.getValue('es', 'k')).resolves.toEqual({ a: 1 });
     });
+
+    it('logout() clears the session and leaves local progress untouched', async () => {
+      localStorage.setItem(
+        'levelup_progress_es',
+        JSON.stringify({ words: { hola: { level: 1 } } })
+      );
+      const service = new RemoteStorageService({ retries: 1 });
+      await service.getUserSession();
+      expect(service.hasSession()).toBe(true);
+
+      await service.logout();
+
+      expect(service.hasSession()).toBe(false);
+      expect(localStorage.getItem(KEY)).toBeNull();
+      // local progress is strictly preserved (local-first)
+      expect(localStorage.getItem('levelup_progress_es')).toBe(
+        JSON.stringify({ words: { hola: { level: 1 } } })
+      );
+    });
+
+    it('revokeSessions() invalidates tokens on the server and clears the local session', async () => {
+      const { created } = await createServerSession();
+      const service1 = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      await service1.getUserSession();
+
+      // Second client has the same token
+      const service2 = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      await service2.getUserSession();
+
+      // Client 1 revokes sessions everywhere
+      await service1.revokeSessions();
+      expect(service1.hasSession()).toBe(false);
+      expect(localStorage.getItem(KEY)).toBeNull();
+
+      // Now client 2 with the old token must be rejected by the server
+      await expect(service2.generateAccountCode()).rejects.toBeInstanceOf(RemoteSessionError);
+    });
   });
 });

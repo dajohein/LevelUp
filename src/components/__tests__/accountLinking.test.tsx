@@ -31,6 +31,8 @@ jest.mock('../../services/storage/remoteStorage', () => {
       generateAccountCode: jest.fn(),
       resetSession: jest.fn().mockResolvedValue(undefined),
       linkDeviceWithCode: jest.fn(),
+      logout: jest.fn().mockResolvedValue(undefined),
+      revokeSessions: jest.fn().mockResolvedValue(undefined),
     },
   };
 });
@@ -361,6 +363,47 @@ describe('AccountLinking', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
         expect(await screen.findByRole('alert')).toHaveTextContent('Failed to link device');
         expect(syncActiveLanguageProgress).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('session logout and revocation', () => {
+      it('logs out on this device and confirms local progress is preserved', async () => {
+        renderIt();
+        const logoutBtn = screen.getByRole('button', { name: 'Log Out on This Device' });
+        await userEvent.click(logoutBtn);
+
+        expect(mocked.logout).toHaveBeenCalledTimes(1);
+        expect(
+          await screen.findByText(
+            /Logged out on this device. Your local progress has been preserved./
+          )
+        ).toBeInTheDocument();
+      });
+
+      it('revokes all sessions everywhere and confirms revocation', async () => {
+        renderIt();
+        const revokeBtn = screen.getByRole('button', {
+          name: 'Sign Out Everywhere (Revoke All Sessions)',
+        });
+        await userEvent.click(revokeBtn);
+
+        expect(mocked.revokeSessions).toHaveBeenCalledTimes(1);
+        expect(
+          await screen.findByText(/Signed out everywhere. All active sessions have been revoked/)
+        ).toBeInTheDocument();
+      });
+
+      it('handles revoke failure gracefully', async () => {
+        mocked.revokeSessions.mockRejectedValueOnce(new Error('Network error'));
+        renderIt();
+        const revokeBtn = screen.getByRole('button', {
+          name: 'Sign Out Everywhere (Revoke All Sessions)',
+        });
+        await userEvent.click(revokeBtn);
+
+        expect(
+          await screen.findByText(/Failed to revoke all sessions on the server/)
+        ).toBeInTheDocument();
       });
     });
   });

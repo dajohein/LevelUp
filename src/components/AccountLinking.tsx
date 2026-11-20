@@ -283,6 +283,54 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
     }
   };
 
+  const handleLogout = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.logout();
+      setAccountCode('');
+      setCodeExpires(null);
+      setLinkedDevices(0);
+      setSessionLost(false);
+      setMessage({
+        text: 'Logged out on this device. Your local progress has been preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to log out:', error);
+      setMessage({
+        text: 'Failed to log out. Your local progress is safe.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeSessions = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.revokeSessions();
+      setAccountCode('');
+      setCodeExpires(null);
+      setLinkedDevices(0);
+      setSessionLost(false);
+      setMessage({
+        text: 'Signed out everywhere. All active sessions have been revoked; your local progress is preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to revoke sessions:', error);
+      setMessage({
+        text: 'Failed to revoke all sessions on the server. You have been logged out on this device.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatTimeRemaining = (expires: number): string => {
     const remaining = Math.max(0, expires - Date.now());
     const minutes = Math.floor(remaining / (60 * 1000));
@@ -386,6 +434,54 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         >
           Link This Device
         </LoadingButton>
+      </Section>
+
+      <Section>
+        <SectionTitle>🔒 Sessions & Sign Out</SectionTitle>
+        <Description>
+          Sign out on this device or revoke all active sessions across all devices. Local learning
+          progress is always preserved on this device.
+        </Description>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+          <LoadingButton
+            onClick={handleLogout}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Logging out..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: '1px solid #bdc3c7',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#ffffff',
+              color: '#34495e',
+            }}
+          >
+            Log Out on This Device
+          </LoadingButton>
+          <LoadingButton
+            onClick={handleRevokeSessions}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Revoking sessions..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#e74c3c',
+              color: 'white',
+            }}
+          >
+            Sign Out Everywhere (Revoke All Sessions)
+          </LoadingButton>
+        </div>
       </Section>
 
       {message && (
