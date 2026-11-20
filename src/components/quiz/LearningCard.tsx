@@ -192,12 +192,14 @@ export const LearningCard: React.FC<LearningCardProps> = ({
 }) => {
   const contentLanguages = getContentLanguages(languageCode, word);
   const askTermFirst = word.direction === 'term-to-definition';
-  // The example sentence is in the term's language; its translation (or a plain-string
-  // description, used when there is no sentence) is in the definition's language.
+  // The example sentence is in the term's language and its translation in the definition's
+  // language. A plain-string context has no reliable language in the data, so it stays unmarked.
   const contextLanguage =
-    typeof word.context === 'object' && word.context?.sentence
-      ? contentLanguages.term
-      : contentLanguages.definition;
+    typeof word.context === 'object' && word.context
+      ? word.context.sentence
+        ? contentLanguages.term
+        : contentLanguages.definition
+      : undefined;
   const onContinueRef = useRef(onContinue);
   // timeLeft is initialized from autoAdvanceDelay and counted down in the interval
   // callback. Using a local `remaining` closure avoids synchronous setState in the

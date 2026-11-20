@@ -1,4 +1,4 @@
-import { getContentLanguages, getLanguageOfText, getNativeLanguageCode } from '../contentLanguage';
+import { getContentLanguages, getNativeLanguageCode } from '../contentLanguage';
 import { getModule } from '../moduleService';
 import type { Word } from '../wordService';
 
@@ -37,8 +37,6 @@ describe('content language', () => {
       definitionLanguage: 'de',
     });
     expect(getContentLanguages('de', w)).toEqual({ term: 'nl', definition: 'de' });
-    expect(getLanguageOfText('de', w, 'het huis')).toBe('nl');
-    expect(getLanguageOfText('de', w, 'das Haus')).toBe('de');
   });
 
   it('returns no language rather than guessing when it is unknown', () => {
@@ -46,8 +44,7 @@ describe('content language', () => {
       term: undefined,
       definition: undefined,
     });
-    expect(getLanguageOfText('de', word(), 'something else')).toBeUndefined();
-    expect(getLanguageOfText('de', null, 'x')).toBeUndefined();
+    expect(getContentLanguages('de', null)).toEqual({ term: 'de', definition: 'nl' });
   });
 
   it('the real Dutch-German module marks every Dutch-term word', () => {

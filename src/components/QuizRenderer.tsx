@@ -6,7 +6,7 @@ import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
 import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
-import { getContentLanguages, getLanguageOfText } from '../services/contentLanguage';
+import { getContentLanguages } from '../services/contentLanguage';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
 import { SubmitOptions, WordProgress } from '../store/types';
@@ -401,10 +401,9 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
 
   const contentLanguages = getContentLanguages(languageCode, wordToUse);
-  const questionText = gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse);
-  const answerText = gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse);
-  const promptLanguage = getLanguageOfText(languageCode, wordToUse, questionText);
-  const answerLanguage = getLanguageOfText(languageCode, wordToUse, answerText);
+  const quizFields = gameServices.modeHandler.getQuizFields(wordToUse, quizModeToUse);
+  const promptLanguage = contentLanguages[quizFields.question];
+  const answerLanguage = contentLanguages[quizFields.answer];
 
   const quizContent =
     showLearningCard && !isTransitioning ? ( // Don't show learning card during transitions

@@ -55,6 +55,21 @@ describe('learning content carries its own language', () => {
     expect(screen.getByText('de hond')).not.toHaveAttribute('lang');
   });
 
+  it('leaves a plain-string example unmarked (its language is not in the data)', () => {
+    const word = { id: '9', term: 'der Hund', definition: 'de hond', context: 'Een dier' };
+    wrap(
+      <LearningCard
+        word={word as unknown as Word}
+        currentIndex={0}
+        totalWords={1}
+        onContinue={jest.fn()}
+        autoAdvance={false}
+        languageCode="de"
+      />
+    );
+    expect(screen.getByText(/Een dier/)).not.toHaveAttribute('lang');
+  });
+
   it.each([
     ['definition-to-term', 'de hond', 'nl', 'der Hund', 'de'],
     ['term-to-definition', 'der Hund', 'de', 'de hond', 'nl'],
@@ -131,6 +146,18 @@ describe('QuizRenderer derives languages from the course and the word', () => {
       expect(screen.getByRole('button', { name: term })).toHaveAttribute('lang', tl);
     }
   );
+
+  it('words spelled the same in both fields still get the language of the shown field', () => {
+    // grundwortschatz "interessant": identical term and (Dutch) definition
+    renderQuiz('de', {
+      id: '3',
+      term: 'interessant',
+      definition: 'interessant',
+      direction: 'definition-to-term',
+    });
+    expect(screen.getAllByText('interessant')[0]).toHaveAttribute('lang', 'nl'); // the question shows the Dutch definition
+    screen.getAllByRole('button').forEach(b => expect(b).toHaveAttribute('lang', 'de')); // options are German terms
+  });
 
   it('a Dutch-term word (term-to-definition) is marked Dutch, not German', () => {
     renderQuiz('de', {

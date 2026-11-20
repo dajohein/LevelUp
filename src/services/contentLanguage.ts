@@ -41,19 +41,3 @@ export const getContentLanguages = (
     definition: word?.definitionLanguage ?? (course ? getNativeLanguageCode(course) : undefined),
   };
 };
-
-/** Language of `text` when it is the word's term or definition; undefined when it is neither. */
-export const getLanguageOfText = (
-  languageCode: string | undefined,
-  word:
-    | Pick<Word, 'term' | 'definition' | 'termLanguage' | 'definitionLanguage'>
-    | null
-    | undefined,
-  text: string
-): string | undefined => {
-  if (!word) return undefined;
-  const langs = getContentLanguages(languageCode, word);
-  if (text === word.term) return langs.term;
-  if (text === word.definition) return langs.definition;
-  return undefined;
-};

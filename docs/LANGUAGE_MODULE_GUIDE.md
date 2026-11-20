@@ -72,7 +72,7 @@ and `definition` the learner language (`from` in the course `index.json`, mapped
 `src/services/contentLanguage.ts`); `context.sentence` follows `term`, `context.translation` follows
 `definition`. `direction` only chooses which field is asked; it does not say which language a field
 is in, so set `termLanguage`/`definitionLanguage` on words whose fields are the other way round (the
-Dutch term / German definition words in `niederlandisch-deutsch-vokabeln`).
+Dutch term / German definition words in `niederlandisch-deutsch-vokabeln`). Multiple-choice distractors are taken from the field that has the answer's language, so all options of a question share one language. A plain-string `context` is left unmarked.
 
 Use `acceptedAnswers` when one displayed definition lists multiple valid translations.
 Keep the original `definition` for display, and list each independently valid answer
