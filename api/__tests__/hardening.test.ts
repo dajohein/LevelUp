@@ -191,7 +191,15 @@ describe('users API hardening', () => {
   });
 });
 
+// Storage calls now require the account to exist (a deleted user's token is refused)
+async function seedUsers(...ids: string[]) {
+  const { getDb, userKey } = await import('../_db.js');
+  const db = await getDb();
+  for (const id of ids) await db.hset(userKey(id), { id, sessionVersion: 1 });
+}
+
 describe('storage API hardening', () => {
+  beforeAll(() => seedUsers('hard-user'));
   const token = createSessionToken('hard-user', 10000);
   const base = { userId: 'hard-user', sessionToken: token, languageCode: 'es' };
 
@@ -347,6 +355,7 @@ describe('review follow-ups: users', () => {
 });
 
 describe('review follow-ups: storage', () => {
+  beforeAll(() => seedUsers('followup-user'));
   const token = createSessionToken('followup-user', 10000);
   const base = { userId: 'followup-user', sessionToken: token, languageCode: 'es' };
 
@@ -385,6 +394,7 @@ describe('review follow-ups: storage', () => {
 });
 
 describe('limit boundaries', () => {
+  beforeAll(() => seedUsers('boundary-user'));
   const token = createSessionToken('boundary-user', 10000);
   const base = { userId: 'boundary-user', sessionToken: token, languageCode: 'es' };
   const MIB = 1024 * 1024;

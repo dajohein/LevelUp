@@ -99,6 +99,27 @@ export class MemoryDb {
     return raw === undefined ? null : (JSON.parse(raw) as T);
   }
 
+  async hmget(key: string, ...fields: string[]): Promise<Record<string, unknown> | null> {
+    const hash = this.hashes.get(key);
+    // Like Upstash: null when none of the fields exist
+    if (!hash || !fields.some(f => hash.has(f))) return null;
+    return Object.fromEntries(
+      fields.map(f => [f, hash.has(f) ? JSON.parse(hash.get(f) as string) : null])
+    );
+  }
+
+  /** Atomic in a single process (no await between read and write), like Redis HINCRBY. */
+  async hincrby(key: string, field: string, increment: number): Promise<number> {
+    const hash = this.hashes.get(key) ?? new Map<string, string>();
+    const raw = hash.get(field);
+    const current = raw === undefined ? 0 : Number(JSON.parse(raw));
+    if (!Number.isInteger(current)) throw new Error('ERR hash value is not an integer');
+    const next = current + increment;
+    hash.set(field, JSON.stringify(next));
+    this.hashes.set(key, hash);
+    return next;
+  }
+
   async hgetall<T extends Record<string, unknown>>(key: string): Promise<T | null> {
     const hash = this.hashes.get(key);
     if (!hash || hash.size === 0) return null;
