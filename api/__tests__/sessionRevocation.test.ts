@@ -363,8 +363,6 @@ describe('Session revocation and logout (Issue #71)', () => {
         );
         expect([action, res.statusCode]).toEqual([action, 401]);
       }
-      // (storage cannot tell a stored JSON null from a field the profile never had)
-      if (value === null) return;
       const store = await callStorage(
         { action: 'get', userId, sessionToken, languageCode: 'es', key: 'progress' },
         '10.8.0.1'

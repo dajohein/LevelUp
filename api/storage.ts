@@ -144,8 +144,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Only the version is needed (not the whole profile with its preferences). HMGET of id +
     // sessionVersion also tells a deleted account (null) from a legacy profile without the field.
     const fields = await db.hmget(userKey(claims.userId), 'id', 'sessionVersion');
-    // Redis reports a field the profile never had as null: that is a legacy profile (version 1)
-    const user = fields ? { sessionVersion: fields.sessionVersion ?? undefined } : null;
+    // HMGET reports both a field the profile never had (legacy profile: version 1) and a stored
+    // JSON null (corrupt: deny) as null. Only the full hash tells them apart, so an ambiguous null
+    // falls back to one full read and the same readSessionVersion rule the user endpoints apply.
+    let user: { sessionVersion?: unknown } | null = null;
+    if (fields) {
+      user =
+        fields.sessionVersion === null || fields.sessionVersion === undefined
+          ? await db.hgetall<Record<string, unknown>>(userKey(claims.userId))
+          : { sessionVersion: fields.sessionVersion };
+    }
     if (!isSessionActive(claims, user)) {
       return res.status(401).json({
         success: false,
