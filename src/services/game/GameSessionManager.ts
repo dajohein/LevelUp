@@ -189,12 +189,12 @@ export class GameSessionManager {
           );
         }
       } else {
-        this.dispatch(nextWord());
+        this.dispatch(nextWord({ progressiveLearning: currentSession?.id === 'deep-dive' }));
       }
     } catch (error) {
       logger.error(`Failed to get next word from ${currentSession?.id} service:`, { sessionId: currentSession?.id, error });
       // Fallback only if we're still in the same session
-      this.dispatch(nextWord());
+      this.dispatch(nextWord({ progressiveLearning: currentSession?.id === 'deep-dive' }));
     }
   }
 

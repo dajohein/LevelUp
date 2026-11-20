@@ -118,6 +118,7 @@ const isString = (value: unknown): value is string =>
   typeof value === 'string' && value.length <= MAX_STRING;
 
 const LEARNING_PHASES = new Set(['introduction', 'practice', 'mastery', 'maintenance']);
+const LEARNING_MODES = new Set(['multiple-choice', 'letter-scramble', 'fill-in-the-blank']);
 const DIRECTION_KEYS = ['term-to-definition', 'definition-to-term'];
 const DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
 
@@ -150,6 +151,9 @@ const hasValidOptionalFields = (entry: Record<string, unknown>): boolean => {
   if (entry.learningPhase !== undefined && !LEARNING_PHASES.has(entry.learningPhase as string)) {
     return false;
   }
+  if (entry.learningMode !== undefined && !LEARNING_MODES.has(entry.learningMode as string)) {
+    return false;
+  }
   if (
     entry.tags !== undefined &&
     !(Array.isArray(entry.tags) && entry.tags.length <= MAX_TAGS && entry.tags.every(isString))
@@ -178,6 +182,7 @@ const ENTRY_FIELDS = [
   'firstLearned',
   'version',
   'learningPhase',
+  'learningMode',
   'tags',
   'customNotes',
 ] as const;

@@ -43,7 +43,7 @@ export const Game: React.FC = () => {
       left.quizMode === right.quizMode &&
       left.language === right.language &&
       left.spellingFeedback === right.spellingFeedback &&
-      Object.keys(left.wordProgress).length === Object.keys(right.wordProgress).length
+      left.wordProgress === right.wordProgress
   );
 
   const sessionState = useSelector(
@@ -239,10 +239,10 @@ export const Game: React.FC = () => {
                       `Failed to get next word from ${currentSession.id} service on skip:`,
                       error
                     );
-                    dispatch(nextWord()); // Fallback
+                    dispatch(nextWord({ progressiveLearning: currentSession.id === 'deep-dive' }));
                   });
               } else {
-                dispatch(nextWord());
+                dispatch(nextWord({ progressiveLearning: currentSession?.id === 'deep-dive' }));
               }
 
               // Increment words completed in session if session is active

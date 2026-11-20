@@ -19,15 +19,21 @@ import {
   getCloseMatchFeedback,
 } from '../services/answerValidation';
 import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
-import { selectQuizMode } from '../services/quizModeSelectionUtils';
+import {
+  advanceLearningMode,
+  selectProgressiveQuizMode,
+  selectQuizMode,
+} from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
 import type { GameState, WordProgress } from './types';
+import { generateModuleScopedOptions } from '../services/optionGenerationUtils';
 
 interface AnswerSubmission {
   answer: string;
   word?: Word;
   quizMode?: string;
   languageCode?: string;
+  progressiveLearning?: boolean;
   /** Hints used for this answer; an assisted answer earns no mastery. */
   hintsUsed?: number;
   /** A re-queued retry after a miss: practice only, earns no mastery. */
@@ -99,7 +105,7 @@ export const gameSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    nextWord: state => {
+    nextWord: (state, action: PayloadAction<{ progressiveLearning?: boolean } | undefined>) => {
       if (state.language) {
         // Use centralized word selection - create a unique session ID for game
         const sessionId = `game-session-${state.language}-${state.module || 'all'}`;
@@ -122,7 +128,15 @@ export const gameSlice = createSlice({
         if (result) {
           state.currentWord = result.word;
           state.currentOptions = result.alternatives.slice(0, 4).map(word => word.term); // Convert Word objects to strings
-          state.quizMode = selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
+          state.quizMode = action.payload?.progressiveLearning
+            ? selectProgressiveQuizMode(result.word, state.wordProgress[result.word.id])
+            : selectQuizMode({ word: result.word, wordProgress: state.wordProgress });
+          if (action.payload?.progressiveLearning && state.quizMode === 'multiple-choice') {
+            state.currentOptions = generateModuleScopedOptions(result.word, state.language, [
+              result.word,
+              ...result.alternatives,
+            ]);
+          }
           state.isCorrect = null;
           state.lastAnswer = undefined;
           state.spellingFeedback = undefined;
@@ -311,6 +325,14 @@ export const gameSlice = createSlice({
         }
       }
 
+      if (submission.progressiveLearning) {
+        updatedProgress.learningMode = advanceLearningMode(
+          word,
+          currentProgress,
+          quizMode,
+          validation.isCorrect
+        );
+      }
       state.wordProgress[wordId] = updatedProgress;
 
       if (validation.isCorrect) {
