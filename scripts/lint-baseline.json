@@ -133,7 +133,6 @@
     "[\"src/services/pwaService.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('Error sharing:', error);\"]": 1,
     "[\"src/services/pwaService.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log(`User response to install prompt: ${outcome}`);\"]": 1,
     "[\"src/services/pwaUpdateManager.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('✅ All caches cleared');\"]": 1,
-    "[\"src/services/pwaUpdateManager.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('✅ New version ready! Notifying user...');\"]": 1,
     "[\"src/services/pwaUpdateManager.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('✅ Update successfully applied:', event.data);\"]": 1,
     "[\"src/services/pwaUpdateManager.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('🔄 New service worker found, preparing update...');\"]": 1,
     "[\"src/services/pwaUpdateManager.ts\",\"no-console\",\"Unexpected console statement.\",\"console.log('🔍 Checking for updates...');\"]": 1,

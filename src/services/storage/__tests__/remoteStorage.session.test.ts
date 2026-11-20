@@ -124,4 +124,76 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
     expect(lifetime).toBeGreaterThan(55 * 60 * 1000);
     expect(lifetime).toBeLessThan(65 * 60 * 1000);
   });
+  describe('hasSession()', () => {
+    const lose = async (service: RemoteStorageService) => {
+      localStorage.setItem(KEY, JSON.stringify({ userId: 'someone', sessionToken: 'garbage' }));
+      await expect(service.getUserSession()).rejects.toBeInstanceOf(RemoteSessionError);
+    };
+
+    it('is false before any session, and never creates one or calls the network', () => {
+      const service = new RemoteStorageService({ retries: 1 });
+      fetchMock.mockClear();
+      expect(service.hasSession()).toBe(false);
+      expect(service.hasSession()).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(localStorage.getItem(KEY)).toBeNull();
+    });
+
+    it('does not restore a stored session by itself', () => {
+      localStorage.setItem(KEY, JSON.stringify({ userId: 'u', sessionToken: 't' }));
+      const service = new RemoteStorageService({ retries: 1 });
+      fetchMock.mockClear();
+      expect(service.hasSession()).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('is true once a session is established, and false again after resetSession()', async () => {
+      const service = new RemoteStorageService({ retries: 1 });
+      await service.getUserSession();
+      fetchMock.mockClear();
+      expect(service.hasSession()).toBe(true);
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      await service.resetSession();
+      expect(service.hasSession()).toBe(false);
+    });
+
+    it('is false after the server refused the stored session', async () => {
+      const service = new RemoteStorageService({ retries: 1 });
+      await lose(service);
+      fetchMock.mockClear();
+      expect(service.hasSession()).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('is true after a lost session is replaced by linking a device, which then is used', async () => {
+      const { created } = await createServerSession();
+      const owner = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ userId: created.userId, sessionToken: created.sessionToken })
+      );
+      const { code } = await owner.generateAccountCode();
+
+      localStorage.clear();
+      const service = new RemoteStorageService({ retries: 1 });
+      await lose(service);
+      expect(service.hasSession()).toBe(false);
+
+      const linked = await service.linkDeviceWithCode(code);
+      expect(linked.success).toBe(true);
+      expect(service.hasSession()).toBe(true);
+
+      // an explicit call now uses the linked session instead of throwing the stale lost-session
+      fetchMock.mockClear();
+      const session = await service.getUserSession();
+      expect(session.userId).toBe(created.userId);
+      expect(session.isGuest).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(JSON.parse(localStorage.getItem(KEY) as string).userId).toBe(created.userId);
+
+      await service.putValue('es', 'k', { a: 1 });
+      await expect(service.getValue('es', 'k')).resolves.toEqual({ a: 1 });
+    });
+  });
 });

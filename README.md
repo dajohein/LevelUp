@@ -128,7 +128,7 @@ window.testPerformanceFix();
 ### ✨ **Local-First Learning Progress**
 
 - **📱 Reliable Local Progress**: Learning progress is stored on this device
-- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API keeps accounts and sessions in Upstash Redis (Vercel Marketplace). Uploading learning progress is not implemented yet
+- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API keeps accounts, sessions and each language's learning progress in Upstash Redis (Vercel Marketplace). Progress syncs between linked devices and is merged per word; this device's copy stays the source of truth
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
@@ -138,7 +138,7 @@ window.testPerformanceFix();
 
 - **Local-first**: Progress remains available on this device
 - **Opt-in**: Remote account and storage endpoints are off by default; enable with `VITE_ENABLE_REMOTE_STORAGE=true`
-- **No progress transfer**: Device linking does not sync or reconcile learning progress
+- **Cross-device progress**: With sync enabled, progress is uploaded shortly after you answer and merged into the other devices of the same account (per word, the more recently practiced entry wins; nothing is ever deleted). Only the language you are using syncs; others sync when you switch to them. If two devices answer the same word while both are offline, one of those answers is lost. Resetting progress removes the server copy too, but another linked device keeps its own copy and sends it back when it syncs
 - **Production behavior**: The API needs a connected Redis store (`KV_REST_API_URL`/`KV_REST_API_TOKEN`) and `SESSION_SECRET`; without Redis it fails closed (HTTP 500)
 
 ### 📈 **Performance Achievements**
@@ -158,7 +158,7 @@ window.testPerformanceFix();
 - **Mixed quiz modes** within sessions for engaging variety
 - **Four learning phases**: Introduction → Learning → Consolidation → Mastery
 - **Adaptive practice**: spaced repetition with mode adaptation based on recent performance (see docs/ADAPTIVE_LEARNING.md)
-- **User Learning Profiles** saved on this device (cross-device sync is not implemented yet)
+- **User Learning Profiles** saved on this device (cross-device sync covers word progress only)
 - **Personalized analytics** and ML-powered learning recommendations
 
 ### **Triple Quiz System**
@@ -322,7 +322,7 @@ The application implements **strict language separation** to prevent data contam
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
-- **Capability**: The API is backed by Upstash Redis and is opt-in (`VITE_ENABLE_REMOTE_STORAGE`). The app creates a guest session and can link devices, but it does not upload or restore learning progress yet (the remote tier is disabled in `tieredStorage`), so there is no cross-device progress sync.
+- **Capability**: The API is backed by Upstash Redis and is opt-in (`VITE_ENABLE_REMOTE_STORAGE`). The app creates a guest session, can link devices, and syncs learning progress through `src/services/progressSync/` (one `progress_v1` entry per language; the `tieredStorage` remote tier stays disabled).
 
 ### **Performance Monitoring**
 

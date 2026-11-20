@@ -14,6 +14,7 @@ import {
 } from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 import { environmentConfig } from '../config/environment';
+import { syncActiveLanguageProgress } from '../services/progressSync/startProgressSync';
 
 const Container = styled.div`
   max-width: 500px;
@@ -250,11 +251,25 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       const result = await remoteStorage.linkDeviceWithCode(linkCode.trim());
       if (typeof result.linkedDevices === 'number') setLinkedDevices(result.linkedDevices);
       setLinkCode('');
+      const devices =
+        typeof result.linkedDevices === 'number' ? ` Total devices: ${result.linkedDevices}` : '';
+      // The account is linked either way; say truthfully what happened to the progress
+      let synced: Awaited<ReturnType<typeof syncActiveLanguageProgress>>;
+      try {
+        synced = await syncActiveLanguageProgress();
+      } catch (syncError) {
+        // the link worked; only the progress sync did not
+        logger.warn('Progress sync after linking failed', {
+          error: syncError instanceof Error ? syncError.name : 'Error',
+        });
+        synced = undefined;
+      }
+      const progressNote =
+        synced && synced.status !== 'failed' && synced.status !== 'skipped'
+          ? 'Your progress for the current language was synced; other languages sync when you open them.'
+          : 'Your progress could not be synced right now; it stays on this device.';
       setMessage({
-        text:
-          typeof result.linkedDevices === 'number'
-            ? `Device linked to your account. Progress was not transferred. Total devices: ${result.linkedDevices}`
-            : 'Device linked to your account. Progress was not transferred.',
+        text: `Device linked to your account. ${progressNote}${devices}`,
         type: 'success',
       });
     } catch (error) {
@@ -289,7 +304,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
       <StatusMessage type="info">
         {environmentConfig.enableRemoteStorage
-          ? 'Linking identifies your account on another device but does not yet transfer or merge learning progress between devices. Your local progress remains saved on this device.'
+          ? 'Linked devices share one account. Learning progress syncs for the language you are using (other languages sync when you open them) and is merged per word, so nothing on this device is deleted. This device always keeps its own copy.'
           : 'Remote sync is unavailable. Progress is saved on this device only; linking is disabled until durable remote storage is available.'}
       </StatusMessage>
 
@@ -337,8 +352,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       <Section>
         <SectionTitle>💻 Link to Existing Account</SectionTitle>
         <Description>
-          Enter the account code from your other device to link this device to that account.
-          Progress is not transferred.
+          Enter the account code from your other device to link this device to that account. Your
+          progress will be merged with the progress already on that account.
         </Description>
 
         <Input

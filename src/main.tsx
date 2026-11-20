@@ -12,6 +12,10 @@ import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
 import { initializeStorage } from './services/storage/storageInitializer';
+import {
+  startProgressSync,
+  syncActiveLanguageProgress,
+} from './services/progressSync/startProgressSync';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
 import { developmentCacheManager } from './utils/developmentCacheManager';
@@ -24,9 +28,19 @@ import './index.css';
 (window as any).__APP_ENV = import.meta.env;
 
 // Remote storage (Upstash Redis behind api/) is opt-in via VITE_ENABLE_REMOTE_STORAGE.
-initializeStorage().catch(error => {
-  logger.warn('Storage initialization failed, falling back to local storage', { error });
-});
+// Cross-device progress sync (also opt-in): uploads progress shortly after answers and merges the
+// server's copy into local progress; local storage stays the source of truth.
+startProgressSync(store);
+initializeStorage()
+  .catch(error => {
+    logger.warn('Storage initialization failed, falling back to local storage', { error });
+  })
+  .then(() => syncActiveLanguageProgress())
+  .catch(error => {
+    logger.warn('Progress sync at startup failed', {
+      error: error instanceof Error ? error.name : 'Error',
+    });
+  });
 
 // Initialize development cache busting
 if (environmentConfig.cacheBusting.enabled) {

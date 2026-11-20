@@ -1,6 +1,6 @@
 # Remote Storage Status
 
-The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Vercel Marketplace) in production and by an in-memory stand-in only in development and tests. It is **opt-in**: the client uses it only when `VITE_ENABLE_REMOTE_STORAGE=true` was set at build time (a Vite variable, baked into the bundle). Learning progress remains local to each device and `localStorage` is the source of truth. Nothing is mirrored to the server yet: the app creates a guest session and can link devices, but the remote storage tier is disabled. Account linking identifies the account on another device but does not yet transfer or reconcile progress between devices.
+The remote API (`api/users.ts`, `api/storage.ts`) is backed by Upstash Redis (Vercel Marketplace) in production and by an in-memory stand-in only in development and tests. It is **opt-in**: the client uses it only when `VITE_ENABLE_REMOTE_STORAGE=true` was set at build time (a Vite variable, baked into the bundle). Learning progress remains local to each device and `localStorage` is the source of truth. The app creates a guest session and can link devices; learning progress is synced by `src/services/progressSync/` (see [Progress sync](#progress-sync)), not by the tiered storage stack, whose remote tier stays disabled.
 
 ## Sessions
 
@@ -140,7 +140,7 @@ import { initializeStorage } from './services/storage/storageInitializer';
 await initializeStorage();
 ```
 
-Remote sync is opt-in: set `VITE_ENABLE_REMOTE_STORAGE=true` at build time. The API is Redis-backed in production, but the app does not upload or restore learning progress yet (the remote tier is disabled in `tieredStorage`), so do not treat it as a backup or as cross-device sync.
+Remote sync is opt-in: set `VITE_ENABLE_REMOTE_STORAGE=true` at build time. The API is Redis-backed in production and word progress is synced per language (see [Progress sync](#progress-sync)). It is a convenience for moving between devices, not a backup: this device's `localStorage` copy stays the source of truth, and nothing is ever deleted by a merge.
 
 ### Manual Storage Operations
 
@@ -174,6 +174,16 @@ const status = await getStorageStatus();
 console.log('Remote storage enabled:', status.remoteEnabled);
 console.log('System initialized:', status.initialized);
 ```
+
+## Progress sync
+
+Implemented in `src/services/progressSync/`; the `tieredStorage` remote tier is deliberately left off.
+
+- **Format**: one server entry per language, key `progress_v1`, value `{ schema: 1, deviceId, updatedAt, words: { [wordId]: WordProgress } }`. No client-side compression. The client refuses to upload more than 900 KiB (the server limit is 1 MiB); real courses are far smaller. A course that approaches the limit needs sharding.
+- **When**: the active language syncs at startup (after the session is set up), after a device is linked, when the network returns and when you switch language. Uploads happen 5 seconds after the last answer and when the page is hidden. Other languages sync when you switch to them.
+- **Merge**: per word, the entry with the later `lastPracticed` wins and is taken whole (so XP, streak and per-direction fields stay consistent); a tie goes to the entry with more answers. A `lastPracticed` more than 24 hours in the future counts as now, an unparsable one as oldest. Words present on one side only are kept. A merge never deletes a word, never replaces the whole entry, and a language never touches another language's progress.
+- **Failures** (offline, HTTP error, corrupt or newer-format entry) leave local progress untouched and log a `progress-sync:` warning. Nothing is uploaded unless the server entry was read successfully, and an empty map is never uploaded. An unreadable server entry is never overwritten.
+- **Known limits**: the read-merge-write is not atomic, so two devices uploading at the same instant can overwrite each other's words on the server; each device still holds its own words and re-uploads them on its next sync. When two devices answer the same word while both are offline, the later one wins and the other answer (including a lapse) is lost. Deletions do not sync: resetting a language (Settings, Storage) removes the server copy first and stops without resetting anything if the server cannot confirm, but another linked device that still has its own copy uploads it again on its next sync, so reset it there too.
 
 ## 🌐 Deployment
 

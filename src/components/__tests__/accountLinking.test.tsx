@@ -9,7 +9,15 @@ import {
   RemoteSessionError,
 } from '../../services/storage/remoteStorage';
 import { environmentConfig } from '../../config/environment';
+import { syncActiveLanguageProgress } from '../../services/progressSync/startProgressSync';
+import { logger } from '../../services/logger';
 
+jest.mock('../../services/progressSync/startProgressSync', () => ({
+  syncActiveLanguageProgress: jest.fn(),
+}));
+jest.mock('../../services/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
 jest.mock('../../config/environment', () => ({
   environmentConfig: { enableRemoteStorage: false },
 }));
@@ -275,10 +283,84 @@ describe('AccountLinking', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
 
         const status = await screen.findByRole('status');
-        expect(status).toHaveTextContent(
-          'Device linked to your account. Progress was not transferred.'
-        );
+        expect(status).toHaveTextContent('Device linked to your account.');
         expect(status).not.toHaveTextContent('undefined');
+      });
+
+      const link = async () => {
+        mocked.linkDeviceWithCode.mockResolvedValue({ success: true, linkedDevices: 2 });
+        renderIt();
+        await userEvent.type(screen.getByRole('textbox'), 'ABCD2345');
+        await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
+        return screen.findByRole('status');
+      };
+
+      it.each(['uploaded', 'merged', 'unchanged'] as const)(
+        'says progress was synced when the sync ends as "%s"',
+        async outcome => {
+          jest
+            .mocked(syncActiveLanguageProgress)
+            .mockResolvedValue({ status: outcome, takenFromRemote: 0, uploaded: false });
+          const status = await link();
+          expect(status).toHaveTextContent('Your progress for the current language was synced');
+          expect(status).toHaveTextContent('Total devices: 2');
+          expect(syncActiveLanguageProgress).toHaveBeenCalledTimes(1);
+        }
+      );
+
+      it.each(['failed', 'skipped'] as const)(
+        'does not claim a sync when it ends as "%s"; the link itself still succeeded',
+        async outcome => {
+          jest
+            .mocked(syncActiveLanguageProgress)
+            .mockResolvedValue({ status: outcome, takenFromRemote: 0, uploaded: false });
+          const status = await link();
+          expect(status).toHaveTextContent('Device linked to your account.');
+          expect(status).toHaveTextContent(
+            'Your progress could not be synced right now; it stays on this device.'
+          );
+          expect(status).not.toHaveTextContent('syncs again later');
+          expect(status).not.toHaveTextContent('was synced');
+        }
+      );
+
+      it('does not claim a sync when the sync itself throws, and still reports the link', async () => {
+        jest.mocked(syncActiveLanguageProgress).mockRejectedValue(new Error('boom'));
+        const status = await link();
+        expect(status).toHaveTextContent('Device linked to your account.');
+        expect(status).toHaveTextContent(
+          'Your progress could not be synced right now; it stays on this device.'
+        );
+        expect(status).not.toHaveTextContent('was synced');
+      });
+
+      it('logs a warning with only the error name when the sync throws', async () => {
+        jest
+          .mocked(syncActiveLanguageProgress)
+          .mockRejectedValue(new TypeError('secret detail boom'));
+        await link();
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect(logger.warn).toHaveBeenCalledWith('Progress sync after linking failed', {
+          error: 'TypeError',
+        });
+        expect(JSON.stringify(jest.mocked(logger.warn).mock.calls)).not.toContain('secret detail');
+      });
+
+      it('logs no warning when the sync merely ends as failed or skipped', async () => {
+        jest
+          .mocked(syncActiveLanguageProgress)
+          .mockResolvedValue({ status: 'failed', takenFromRemote: 0, uploaded: false });
+        await link();
+        expect(logger.warn).not.toHaveBeenCalled();
+      });
+
+      it('does not sync when linking fails', async () => {
+        mocked.linkDeviceWithCode.mockRejectedValue(new Error('bad code'));
+        renderIt();
+        await userEvent.type(screen.getByRole('textbox'), 'ABCD2345');
+        await userEvent.click(screen.getByRole('button', { name: 'Link This Device' }));
+        expect(await screen.findByRole('alert')).toHaveTextContent('Failed to link device');
+        expect(syncActiveLanguageProgress).not.toHaveBeenCalled();
       });
     });
   });

@@ -34,6 +34,7 @@ const CRITICAL_ACTIONS = [
 // Actions that trigger state changes needing persistence
 const PERSIST_ACTIONS = [
   'game/checkAnswer',
+  'game/mergeRemoteProgress',
   'session/setLanguage',
   'session/setWeeklyChallenge',
   'game/setCurrentModule',
@@ -111,7 +112,9 @@ const persistDurableSnapshot = (state: RootState, actionType: string): void => {
   if (actionType.startsWith('game/')) {
     gameStateStorage.save(createGameSnapshot(state.game));
 
-    if (actionType === 'game/checkAnswer') {
+    // The merged map is written at once, so nothing that reloads progress (a language switch)
+    // can read the pre-merge copy
+    if (actionType === 'game/checkAnswer' || actionType === 'game/mergeRemoteProgress') {
       if (state.game.language) {
         wordProgressStorage.save(state.game.language, state.game.wordProgress);
       }
@@ -166,7 +169,9 @@ export const persistenceMiddleware: Middleware<Record<string, never>, RootState>
 
       // Capture answer progress under its current language before any navigation action can
       // replace the active Redux progress map.
-      if (action.type === 'game/checkAnswer') {
+      // A merge queues a fresh snapshot too: it replaces any older queued one for this language,
+      // which would otherwise be written later and overwrite the merged map
+      if (action.type === 'game/checkAnswer' || action.type === 'game/mergeRemoteProgress') {
         const languageCode = state.game?.language;
         const wordProgress = state.game?.wordProgress;
         if (languageCode && wordProgress && Object.keys(wordProgress).length > 0) {
@@ -206,6 +211,16 @@ export const persistenceUtils = {
         config: null,
       }
     );
+  },
+
+  /**
+   * Replace any word-progress snapshot still waiting in the background queue for this language with
+   * `words`. Used when progress is written to storage directly (a sync merge into a language that is
+   * not active): an older queued snapshot would otherwise be written afterwards and undo the merge.
+   * Nothing to do when no snapshot can be queued.
+   */
+  supersedeQueuedWordProgress: (languageCode: string, words: RootState['game']['wordProgress']) => {
+    backgroundAutoSave?.queueChange('wordProgress', words, languageCode, 'high');
   },
 
   // Force immediate save
