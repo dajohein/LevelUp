@@ -6,6 +6,7 @@ import { Word } from '../wordService';
 
 jest.mock('../logger');
 jest.mock('../moduleService', () => ({
+  ...jest.requireActual('../moduleService'),
   getModulesForLanguage: jest.fn(),
   getWordsForModule: jest.fn(),
 }));
@@ -100,5 +101,61 @@ describe('generateModuleScopedOptions', () => {
     const options = generateModuleScopedOptions(target, 'de', words);
 
     expect(options).toEqual(expect.arrayContaining(['in', 'auf', 'unter', 'neben']));
+  });
+
+  it('keeps every option in the answer language in a mixed-direction module', () => {
+    // Dutch-term words (term-to-definition) next to German-term words (definition-to-term)
+    const dutchTerm = (id: string, term: string, definition: string): Word => ({
+      id,
+      term,
+      definition,
+      direction: 'term-to-definition',
+      termLanguage: 'nl',
+      definitionLanguage: 'de',
+    });
+    const germanTerm = (id: string, term: string, definition: string): Word => ({
+      id,
+      term,
+      definition,
+      direction: 'definition-to-term',
+    });
+    const words: Word[] = [
+      dutchTerm('a', 'het balkon', 'der Balkon'),
+      dutchTerm('b', 'de tuin', 'der Garten'),
+      germanTerm('c', 'fertig', 'klaar'),
+      germanTerm('d', 'damals', 'toen'),
+      germanTerm('e', 'ziemlich', 'tamelijk'),
+    ];
+    const module: Module = {
+      id: 'mixed',
+      name: 'Mixed',
+      description: 'Mixed',
+      icon: '📚',
+      difficulty: 'beginner',
+      words,
+    };
+    jest.mocked(getModulesForLanguage).mockReturnValue([module]);
+    jest.mocked(getWordsForModule).mockReturnValue(words);
+
+    const germanAnswers = ['der Balkon', 'der Garten', 'fertig', 'damals', 'ziemlich'];
+    const dutchAnswers = ['het balkon', 'de tuin', 'klaar', 'toen', 'tamelijk'];
+
+    for (let run = 0; run < 25; run++) {
+      // Asks Dutch -> German (term-to-definition on a Dutch-term word): every option is German
+      const german = generateModuleScopedOptions(words[0], 'de', words);
+      expect(german).toContain('der Balkon');
+      german.forEach(option => expect(germanAnswers).toContain(option));
+      // Asks Dutch -> German on a German-term word (definition-to-term): every option is German
+      const german2 = generateModuleScopedOptions(words[2], 'de', words);
+      german2.forEach(option => expect(germanAnswers).toContain(option));
+      // Asks German -> Dutch (term-to-definition on a German-term word): every option is Dutch
+      const dutch = generateModuleScopedOptions(
+        { ...words[2], direction: 'term-to-definition' },
+        'de',
+        words
+      );
+      expect(dutch).toContain('klaar');
+      dutch.forEach(option => expect(dutchAnswers).toContain(option));
+    }
   });
 });

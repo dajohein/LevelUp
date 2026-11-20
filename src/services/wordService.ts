@@ -24,6 +24,8 @@ export interface Word {
   level?: number; // Current difficulty level
   mastery?: number; // Current mastery percentage (0-100)
   direction?: 'term-to-definition' | 'definition-to-term'; // Quiz direction
+  termLanguage?: string; // Language of `term` when it is not the course language (BCP 47)
+  definitionLanguage?: string; // Language of `definition` when it is not the learner's own language
 }
 
 export interface LanguageData {

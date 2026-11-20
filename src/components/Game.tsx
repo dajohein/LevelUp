@@ -153,6 +153,7 @@ export const Game: React.FC = () => {
         wordProgress={wordProgress}
         isUsingSpacedRepetition={isUsingSpacedRepetition}
         getCurrentWordInfo={getCurrentWordInfo}
+        languageCode={languageCode}
         showLearningCard={showLearningCard}
         wordLearningStatus={wordLearningStatus}
         currentSession={currentSession}
