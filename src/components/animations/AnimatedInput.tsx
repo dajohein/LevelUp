@@ -120,6 +120,8 @@ interface AnimatedInputProps {
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** Language of what the learner types (BCP 47), so screen readers use the right voice. */
+  lang?: string;
 }
 
 const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
@@ -132,6 +134,7 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
   placeholder = 'Type your answer',
   disabled = false,
   autoFocus = true,
+  lang,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isComposingRef = useRef(false);
@@ -199,6 +202,7 @@ const AnimatedInputComponent: React.FC<AnimatedInputProps> = ({
           isComposingRef.current = false;
         }}
         placeholder={placeholder}
+        lang={lang}
         isCorrect={isCorrect}
         isError={isError}
         disabled={disabled}

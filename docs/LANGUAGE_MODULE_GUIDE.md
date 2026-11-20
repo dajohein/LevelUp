@@ -53,6 +53,8 @@ This guide documents the standardized approach for creating and maintaining lang
    "term": "Target language term",      // e.g., Spanish word/phrase
    "definition": "Dutch translation",   // Dutch equivalent
    "direction": "definition-to-term" | "term-to-definition", // Quiz direction per module
+   "termLanguage": "nl",          // Optional: only when `term` is NOT the course language (BCP 47)
+   "definitionLanguage": "de",    // Optional: only when `definition` is NOT the learner's language
    "category": "category label",  // Grouping for organization
    "context": {                    // Contextual learning snippet
       "sentence": "Example sentence in target language",
@@ -63,6 +65,14 @@ This guide documents the standardized approach for creating and maintaining lang
    "acceptedAnswers": ["alternative answer"] // Optional accepted open-answer variants
 }
 ```
+
+**Language marking (screen readers).** Vocabulary and examples get a `lang` attribute so they
+are read with the right voice. By default `term` is the course language (the folder code, e.g. `de`)
+and `definition` the learner language (`from` in the course `index.json`, mapped in
+`src/services/contentLanguage.ts`); `context.sentence` follows `term`, `context.translation` follows
+`definition`. `direction` only chooses which field is asked; it does not say which language a field
+is in, so set `termLanguage`/`definitionLanguage` on words whose fields are the other way round (the
+Dutch term / German definition words in `niederlandisch-deutsch-vokabeln`).
 
 Use `acceptedAnswers` when one displayed definition lists multiple valid translations.
 Keep the original `definition` for display, and list each independently valid answer

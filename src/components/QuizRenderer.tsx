@@ -6,6 +6,7 @@ import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
 import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
+import { getContentLanguages, getLanguageOfText } from '../services/contentLanguage';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
 import { SubmitOptions, WordProgress } from '../store/types';
@@ -301,6 +302,9 @@ export interface QuizRendererProps {
   lastSelectedAnswer: string;
   feedbackQuestionKey: string;
 
+  // Course language code, used to mark vocabulary with its language for screen readers
+  languageCode?: string;
+
   // Context
   contextForWord: { sentence: string; translation: string; audio?: string } | null | undefined;
 
@@ -341,6 +345,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   lastAnswerCorrect,
   lastSelectedAnswer,
   feedbackQuestionKey,
+  languageCode,
   contextForWord,
   wordTimer: _wordTimer,
   sessionTimer: _sessionTimer,
@@ -395,6 +400,12 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   const currentAnswerCorrect = shouldShowFeedback ? lastAnswerCorrect : null;
   const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
 
+  const contentLanguages = getContentLanguages(languageCode, wordToUse);
+  const questionText = gameServices.modeHandler.getQuizQuestion(wordToUse, quizModeToUse);
+  const answerText = gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse);
+  const promptLanguage = getLanguageOfText(languageCode, wordToUse, questionText);
+  const answerLanguage = getLanguageOfText(languageCode, wordToUse, answerText);
+
   const quizContent =
     showLearningCard && !isTransitioning ? ( // Don't show learning card during transitions
       <LearningCard
@@ -407,6 +418,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
         onContinue={handleContinueFromLearningCard}
         autoAdvance={false} // Simple: user controls when to continue
         reason={wordLearningStatus.isTrulyNewWord ? 'new' : 'reinforcement'}
+        languageCode={languageCode}
       />
     ) : (
       <>
@@ -425,6 +437,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
               sessionProgress?.wordsCompleted / Math.max(currentSession?.targetWords || 20, 1)
             }
             context={contextForWord ?? undefined}
+            promptLanguage={promptLanguage}
+            answerLanguage={answerLanguage}
+            contextLanguage={contentLanguages.term}
+            contextTranslationLanguage={contentLanguages.definition}
           />
         ) : quizModeToUse === 'letter-scramble' ? (
           <LetterScrambleQuiz
@@ -473,6 +489,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             context={contextForWord ?? undefined}
+            promptLanguage={promptLanguage}
+            answerLanguage={answerLanguage}
+            contextLanguage={contentLanguages.term}
+            contextTranslationLanguage={contentLanguages.definition}
           />
         )}
       </>

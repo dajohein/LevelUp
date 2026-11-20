@@ -10,6 +10,8 @@
       "term": "het balkon",
       "definition": "der Balkon",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Wohnungen und Häuser",
       "context": {
         "sentence": "Het balkon heeft een prachtig uitzicht op de stad.",
@@ -25,6 +27,8 @@
       "term": "de boerderij",
       "definition": "der Bauernhof",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Gebäude",
       "context": {
         "sentence": "De boerderij ligt buiten het dorp.",
@@ -40,6 +44,8 @@
       "term": "het bureau",
       "definition": "der Schreibtisch",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "Het bureau staat naast het raam.",
@@ -53,6 +59,8 @@
       "term": "de fauteuil",
       "definition": "der Sessel",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De fauteuil is heel comfortabel om in te lezen.",
@@ -66,6 +74,8 @@
       "term": "de eetkamerstoel",
       "definition": "der Stuhl",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De eetkamerstoel is van hout gemaakt.",
@@ -81,6 +91,8 @@
       "term": "de kast",
       "definition": "der Schrank",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De kast is vol met kleding.",
@@ -96,6 +108,8 @@
       "term": "de spiegel",
       "definition": "der Spiegel",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Haushaltsgeräte",
       "context": {
         "sentence": "De spiegel hangt boven de wastafel.",
@@ -109,6 +123,8 @@
       "term": "de stoel",
       "definition": "der Stuhl",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De stoel staat bij de tafel.",
@@ -124,6 +140,8 @@
       "term": "de tafel",
       "definition": "der Tisch",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De tafel is gedekt voor het diner.",
@@ -139,6 +157,8 @@
       "term": "de televisie",
       "definition": "der Fernseher",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Elektronik",
       "context": {
         "sentence": "De televisie staat in de woonkamer.",
@@ -152,6 +172,8 @@
       "term": "de tuin",
       "definition": "der Garten",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Außenbereiche",
       "context": {
         "sentence": "De tuin bloeit prachtig in de lente.",
@@ -165,6 +187,8 @@
       "term": "het appartement",
       "definition": "die Wohnung",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Wohnungen und Häuser",
       "context": {
         "sentence": "Het appartement heeft twee slaapkamers.",
@@ -180,6 +204,8 @@
       "term": "de deur",
       "definition": "die Tür",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Gebäudeteile",
       "context": {
         "sentence": "De deur is open.",
@@ -195,6 +221,8 @@
       "term": "de douche",
       "definition": "die Dusche",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Badezimmer",
       "context": {
         "sentence": "De douche is erg warm vandaag.",
@@ -208,6 +236,8 @@
       "term": "de garage",
       "definition": "die Garage",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Gebäudeteile",
       "context": {
         "sentence": "De garage is groot genoeg voor twee auto's.",
@@ -223,6 +253,8 @@
       "term": "de keuken",
       "definition": "die Küche",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Räume",
       "context": {
         "sentence": "De keuken is modern ingericht.",
@@ -236,6 +268,8 @@
       "term": "de klok",
       "definition": "die Uhr",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Zeitmessung",
       "context": {
         "sentence": "De klok wijst twee uur aan.",
@@ -251,6 +285,8 @@
       "term": "de lamp",
       "definition": "die Lampe",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Beleuchtung",
       "context": {
         "sentence": "De lamp geeft warm licht.",
@@ -266,6 +302,8 @@
       "term": "de muur",
       "definition": "die Wand",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Gebäudeteile",
       "context": {
         "sentence": "De muur is wit geschilderd.",
@@ -281,6 +319,8 @@
       "term": "het toilet",
       "definition": "die Toilette",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Badezimmer",
       "context": {
         "sentence": "Het toilet is schoon.",
@@ -296,6 +336,8 @@
       "term": "de badkamer",
       "definition": "das Badezimmer",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Räume",
       "context": {
         "sentence": "De badkamer heeft een groot raam.",
@@ -311,6 +353,8 @@
       "term": "de bank",
       "definition": "das Sofa",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De bank is comfortabel voor een dutje.",
@@ -326,6 +370,8 @@
       "term": "het bed",
       "definition": "das Bett",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "Het bed is opgemaakt.",
@@ -341,6 +387,8 @@
       "term": "de eengezinswoning",
       "definition": "das Einfamilienhaus",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Wohnungen und Häuser",
       "context": {
         "sentence": "De eengezinswoning heeft een grote tuin.",
@@ -354,6 +402,8 @@
       "term": "het huis",
       "definition": "das Haus",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Wohnungen und Häuser",
       "context": {
         "sentence": "Het huis is geel geverfd.",
@@ -369,6 +419,8 @@
       "term": "de kamer",
       "definition": "das Zimmer",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Räume",
       "context": {
         "sentence": "De kamer is licht en ruim.",
@@ -384,6 +436,8 @@
       "term": "het raam",
       "definition": "das Fenster",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Gebäudeteile",
       "context": {
         "sentence": "Het raam staat open voor frisse lucht.",
@@ -399,6 +453,8 @@
       "term": "het rek",
       "definition": "das Regal",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "Het rek is vol met boeken.",
@@ -414,6 +470,8 @@
       "term": "de plank",
       "definition": "das Regal",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De plank hangt aan de muur.",
@@ -429,6 +487,8 @@
       "term": "de slaapkamer",
       "definition": "das Schlafzimmer",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Räume",
       "context": {
         "sentence": "De slaapkamer is rustig en donker.",
@@ -442,6 +502,8 @@
       "term": "de wastafel",
       "definition": "das Waschbecken",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Badezimmer",
       "context": {
         "sentence": "De wastafel in de badkamer is wit.",
@@ -455,6 +517,8 @@
       "term": "de woonkamer",
       "definition": "das Wohnzimmer",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Räume",
       "context": {
         "sentence": "De woonkamer is gezellig ingericht.",
@@ -468,6 +532,8 @@
       "term": "de meubels",
       "definition": "die Möbel",
       "direction": "term-to-definition",
+      "termLanguage": "nl",
+      "definitionLanguage": "de",
       "category": "Möbel",
       "context": {
         "sentence": "De meubels zijn van goede kwaliteit.",
