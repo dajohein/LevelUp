@@ -32,6 +32,14 @@ describe('difficulty colours', () => {
     expect(contrast('#ffffff', '#4caf50')).toBeLessThan(3);
   });
 
+  it.each(['constructor', 'toString', '__proto__'])(
+    'inherited object property name %s falls back to the default',
+    name => {
+      expect(getDifficultyColors(name)).toBe(DEFAULT_DIFFICULTY_COLORS);
+      expect(getDifficultyBackground(name)).toBe('#616161');
+    }
+  );
+
   it('falls back for unknown difficulties and builds backgrounds', () => {
     expect(getDifficultyColors('nope')).toBe(DEFAULT_DIFFICULTY_COLORS);
     expect(getDifficultyBackground('beginner')).toBe('#2e7d32');

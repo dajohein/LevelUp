@@ -18,7 +18,9 @@ export const DIFFICULTY_COLORS: Record<string, DifficultyColors> = {
 export const DEFAULT_DIFFICULTY_COLORS: DifficultyColors = { start: '#616161', end: '#616161' };
 
 export const getDifficultyColors = (difficulty: string): DifficultyColors =>
-  DIFFICULTY_COLORS[difficulty] ?? DEFAULT_DIFFICULTY_COLORS;
+  Object.prototype.hasOwnProperty.call(DIFFICULTY_COLORS, difficulty)
+    ? DIFFICULTY_COLORS[difficulty]
+    : DEFAULT_DIFFICULTY_COLORS;
 
 export const getDifficultyBackground = (difficulty: string): string => {
   const { start, end } = getDifficultyColors(difficulty);
