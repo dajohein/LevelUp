@@ -118,7 +118,7 @@ export async function openBrowser() {
           socket.close();
           processHandle.kill();
           await exited;
-          await rm(profile, { recursive: true, force: true });
+          await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
         }
       },
     };
@@ -127,7 +127,7 @@ export async function openBrowser() {
     const exited = processHandle.exitCode === null ? once(processHandle, 'exit') : null;
     processHandle.kill();
     if (exited) await exited;
-    await rm(profile, { recursive: true, force: true });
+    await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
     throw error;
   }
 }
