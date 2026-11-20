@@ -55,6 +55,13 @@ export class MemoryDb {
     return next;
   }
 
+  async decr(key: string): Promise<number> {
+    const next = Number(this.live(key)?.value ?? 0) - 1;
+    const existing = this.kv.get(key);
+    this.kv.set(key, { value: String(next), expiresAt: existing?.expiresAt });
+    return next;
+  }
+
   async expire(key: string, seconds: number): Promise<number> {
     const entry = this.live(key);
     if (!entry) return 0;

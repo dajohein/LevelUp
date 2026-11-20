@@ -251,4 +251,157 @@ describe('Issue #72: account linking code hardening', () => {
       expect(await db.get(`${KEY_PREFIX}usercode:${userId}`)).toBeNull();
     });
   });
+
+  describe('failed-only counting (H3)', () => {
+    const plantStaleCode = async (userId: string, code: string) => {
+      // A live code that is not the account's current one: redeeming it is a failed attempt
+      const db = await getDb();
+      await db.set(`${KEY_PREFIX}code:${code}`, { userId, createdAt: Date.now() }, { ex: 600 });
+    };
+    const newCode = (n: number) => `STALEXCDE${'ABCDEFGH'[n]}`;
+
+    it('a success neither counts nor resets: failures already in the window stay counted', async () => {
+      process.env.ACCOUNT_LINK_MAX_ATTEMPTS_PER_USER = '3';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      process.env.ACCOUNT_CODE_GENERATE_MAX_PER_USER = '50';
+      const { sessionToken, userId } = await createUser('60.0.0.1');
+      const redeem = (code: string, ip: string) =>
+        callUsers({ action: 'linkDevice', accountCode: code }, { 'x-forwarded-for': ip });
+
+      // two failed redemptions against the account
+      for (let i = 0; i < 2; i++) {
+        await plantStaleCode(userId, newCode(i));
+        expect((await redeem(newCode(i), `60.1.0.${i}`)).statusCode).toBe(400);
+      }
+      // a successful redemption in between: not counted, and it must not erase the failures
+      const gen = await callUsers(
+        { action: 'generateCode', sessionToken },
+        { 'x-forwarded-for': '60.0.0.2' }
+      );
+      expect((await redeem(gen.body.data.accountCode, '60.1.0.9')).statusCode).toBe(200);
+      // third failure is still within the limit of 3 ...
+      await plantStaleCode(userId, newCode(5));
+      expect((await redeem(newCode(5), '60.1.0.5')).statusCode).toBe(400);
+      // ... so the next redemption (even a valid code) is over it: the lockout survived the success
+      const gen2 = await callUsers(
+        { action: 'generateCode', sessionToken },
+        { 'x-forwarded-for': '60.0.0.3' }
+      );
+      expect((await redeem(gen2.body.data.accountCode, '60.1.0.6')).statusCode).toBe(400);
+    });
+
+    it('a user who redeems many codes in a row is never locked out by successes alone', async () => {
+      process.env.ACCOUNT_LINK_MAX_ATTEMPTS_PER_USER = '2';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '2';
+      process.env.ACCOUNT_CODE_GENERATE_MAX_PER_USER = '50';
+      process.env.RATE_LIMIT_MAX_ATTEMPTS = '50';
+      const { sessionToken } = await createUser('61.0.0.1');
+      for (let i = 0; i < 6; i++) {
+        const gen = await callUsers(
+          { action: 'generateCode', sessionToken },
+          { 'x-forwarded-for': `61.0.1.${i}` }
+        );
+        const link = await callUsers(
+          { action: 'linkDevice', accountCode: gen.body.data.accountCode },
+          { 'x-forwarded-for': '61.0.2.1' } // same client address every time
+        );
+        expect([i, link.statusCode]).toEqual([i, 200]);
+      }
+    });
+  });
+
+  describe('limiters that see guesses at unknown codes (M1)', () => {
+    const guess = (ip: string, code = 'ZZZZZZZZZZ') =>
+      callUsers({ action: 'linkDevice', accountCode: code }, { 'x-forwarded-for': ip });
+
+    it('limits failed guesses per client address, then answers 429 (other clients unaffected)', async () => {
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '3';
+      for (let i = 0; i < 3; i++) expect((await guess('62.0.0.1')).statusCode).toBe(400);
+      expect((await guess('62.0.0.1')).statusCode).toBe(429);
+      expect((await guess('62.0.0.2')).statusCode).toBe(400);
+    });
+
+    it('a burst of parallel guesses cannot slip under the limit', async () => {
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '5';
+      const results = await Promise.all(Array.from({ length: 20 }, () => guess('62.1.0.1')));
+      const answered = results.filter(r => r.statusCode === 400).length;
+      expect(answered).toBe(5);
+      expect(results.filter(r => r.statusCode === 429)).toHaveLength(15);
+    });
+
+    it('a global limit stops guessing from rotating addresses', async () => {
+      process.env.ACCOUNT_LINK_MAX_FAILED_GLOBAL = '5';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      // a window of its own, so counters from other tests do not leak in
+      const realNow = Date.now();
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(realNow + 40 * 3_600_000);
+      try {
+        for (let i = 0; i < 5; i++) expect((await guess(`63.0.0.${i}`)).statusCode).toBe(400);
+        expect((await guess('63.0.1.1')).statusCode).toBe(429);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+  });
+
+  describe('legacy 8-character codes (M2)', () => {
+    it('redeems a code issued before the length change, until its TTL passes', async () => {
+      const { userId } = await createUser('64.0.0.1');
+      const db = await getDb();
+      await db.set(`${KEY_PREFIX}code:ABCD2345`, { userId, createdAt: Date.now() }, { ex: 600 });
+      await db.set(`${KEY_PREFIX}usercode:${userId}`, 'ABCD2345', { ex: 600 });
+      const link = await callUsers(
+        { action: 'linkDevice', accountCode: 'abcd 2345' },
+        { 'x-forwarded-for': '64.0.0.2' }
+      );
+      expect(link.statusCode).toBe(200);
+      expect(link.body.data.userId).toBe(userId);
+    });
+
+    it.each(['ABCD234', 'ABCD23456', 'ABCD2345G', 'ABCD2345GHJ'])(
+      'still rejects the length of %s',
+      async code => {
+        const link = await callUsers(
+          { action: 'linkDevice', accountCode: code },
+          { 'x-forwarded-for': '64.0.1.1' }
+        );
+        expect(link.statusCode).toBe(400);
+      }
+    );
+  });
+
+  describe('generation limits (L3)', () => {
+    it('a request refused by the account limit does not use up the client-address budget', async () => {
+      process.env.ACCOUNT_CODE_GENERATE_MAX_PER_USER = '1';
+      process.env.RATE_LIMIT_MAX_ATTEMPTS = '10';
+      const a = await createUser('65.0.0.1');
+      const b = await createUser('65.0.0.2');
+      const gen = (token: string) =>
+        callUsers(
+          { action: 'generateCode', sessionToken: token },
+          { 'x-forwarded-for': '65.9.9.9' }
+        );
+      expect((await gen(a.sessionToken)).statusCode).toBe(200);
+      for (let i = 0; i < 9; i++) expect((await gen(a.sessionToken)).statusCode).toBe(429);
+      expect((await gen(b.sessionToken)).statusCode).toBe(200);
+    });
+
+    it('signing out other devices clears the account counters', async () => {
+      process.env.ACCOUNT_CODE_GENERATE_MAX_PER_USER = '1';
+      const { sessionToken } = await createUser('66.0.0.1');
+      const ip = { 'x-forwarded-for': '66.0.0.2' };
+      expect((await callUsers({ action: 'generateCode', sessionToken }, ip)).statusCode).toBe(200);
+      expect((await callUsers({ action: 'generateCode', sessionToken }, ip)).statusCode).toBe(429);
+      const revoke = await callUsers({ action: 'revokeSessions', sessionToken }, ip);
+      expect(revoke.statusCode).toBe(200);
+      expect(
+        (
+          await callUsers(
+            { action: 'generateCode', sessionToken: revoke.body.data.sessionToken },
+            ip
+          )
+        ).statusCode
+      ).toBe(200);
+    });
+  });
 });

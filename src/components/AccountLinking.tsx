@@ -418,7 +418,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
           type="text"
           placeholder="Enter code (e.g., A3B7K9M2X4)"
           value={linkCode}
-          onChange={e => setLinkCode(e.target.value.toUpperCase())}
+          onChange={e => setLinkCode(e.target.value.toUpperCase().replace(/\s/g, ''))}
           maxLength={10}
           disabled={!environmentConfig.enableRemoteStorage}
         />
