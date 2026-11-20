@@ -75,7 +75,9 @@ const Overlay = styled.div<{ isExiting: boolean }>`
   justify-content: center;
   z-index: 10000;
   ${props => css`
-    animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out;
+    /* forwards: the exit keeps its final (invisible) state until the 800ms unmount timer fires,
+       including under reduced motion where the animation is shortened to ~0ms */
+    animation: ${props.isExiting ? levelUpExit : levelUpEntrance} 0.8s ease-out forwards;
   `}
 `;
 
