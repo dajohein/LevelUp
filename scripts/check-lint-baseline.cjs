@@ -1,4 +1,5 @@
 const fs = require('node:fs/promises');
+const { existsSync } = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { ESLint } = require('eslint');
@@ -73,30 +74,75 @@ async function baselineFromCommit(eslint, commit, cwd) {
   return { version: 1, warnings: report.current };
 }
 
+const USAGE =
+  'Usage: node scripts/check-lint-baseline.cjs [--prune | --base-ref COMMIT_SHA | --files FILE...]';
+
+/**
+ * Command-line modes:
+ * - no arguments: lint all of src against the recorded baseline (CI)
+ * - --prune: same, then drop resolved warnings from the baseline
+ * - --base-ref SHA: compare against the warnings at an immutable commit
+ * - --files FILE...: lint only these files (the pre-commit hook), same "no new warnings" rule
+ */
+function parseArgs(args, cwd = process.cwd()) {
+  if (args.length === 0) return { mode: 'all' };
+  if (args.length === 1 && args[0] === '--prune') return { mode: 'prune' };
+  if (args.length === 2 && args[0] === '--base-ref') return { mode: 'base', ref: args[1] };
+  if (args[0] === '--files') {
+    const rest = args.slice(1);
+    // `--files --prune` and the like would silently do nothing; make the mistake visible
+    if (rest.some(arg => arg.startsWith('--'))) throw new Error(USAGE);
+    // Only source files the project lints (src/**/*.ts|tsx, judged relative to the repository
+    // root, not by a `src` directory somewhere above it); lint-staged may pass other staged files
+    const files = rest.filter(file => {
+      const relative = path.relative(cwd, path.resolve(cwd, file)).split(path.sep).join('/');
+      return /^src\/.+\.tsx?$/.test(relative);
+    });
+    return { mode: 'files', files };
+  }
+  throw new Error(USAGE);
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  const useBase = args.length === 2 && args[0] === '--base-ref';
-  if (!useBase && !(args.length === 0 || (args.length === 1 && args[0] === '--prune'))) {
-    throw new Error(
-      'Usage: node scripts/check-lint-baseline.cjs [--prune | --base-ref COMMIT_SHA]'
-    );
-  }
+  const options = parseArgs(args);
+  const useBase = options.mode === 'base';
+  const filesMode = options.mode === 'files';
+  if (filesMode && options.files.length === 0) return; // nothing to lint: do not fail a commit
   let baseline = JSON.parse(await fs.readFile(baselinePath, 'utf8'));
   compareWarnings([], baseline, process.cwd());
   const eslint = new ESLint({ extensions: ['.ts', '.tsx'] });
-  if (useBase) {
-    baseline = await baselineFromCommit(eslint, args[1], process.cwd());
-    console.log(`Comparing lint warnings against base commit ${args[1]}.`);
+  let filesToLint = ['src'];
+  if (filesMode) {
+    // Skip what cannot or should not be linted: ESLint throws for a path it cannot find (a deleted
+    // or renamed file) and reports a bogus warning for a file its own config ignores
+    filesToLint = [];
+    for (const file of options.files) {
+      if (existsSync(file) && !(await eslint.isPathIgnored(file))) filesToLint.push(file);
+    }
+    if (filesToLint.length === 0) return;
   }
-  const results = await eslint.lintFiles(['src']);
+  if (useBase) {
+    baseline = await baselineFromCommit(eslint, options.ref, process.cwd());
+    console.log(`Comparing lint warnings against base commit ${options.ref}.`);
+  }
+  const results = await eslint.lintFiles(filesToLint);
   const report = compareWarnings(results, baseline, process.cwd());
   const formatter = await eslint.loadFormatter('stylish');
-  // Keep all existing debt visible in the CI log, not just the regressions.
-  console.log(formatter.format(results));
-  console.log(
-    `Lint debt: ${report.warnings} warnings, ${report.errors} errors; ` +
-      `${report.resolved} baseline warnings resolved; ${report.regressions.length} regressions.`
-  );
+  if (filesMode) {
+    // A commit only needs to hear about what it introduced
+    console.log(
+      `Lint (changed files): ${report.regressions.length} new warnings or errors in ` +
+        `${filesToLint.length} file(s).`
+    );
+  } else {
+    // Keep all existing debt visible in the CI log, not just the regressions.
+    console.log(formatter.format(results));
+    console.log(
+      `Lint debt: ${report.warnings} warnings, ${report.errors} errors; ` +
+        `${report.resolved} baseline warnings resolved; ${report.regressions.length} regressions.`
+    );
+  }
   for (const { file, message } of report.regressions) {
     console.error(
       `${path.relative(process.cwd(), file)}:${message.line}:${message.column} ` +
@@ -107,7 +153,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  if (args[0] === '--prune') {
+  if (options.mode === 'prune') {
     const warnings = Object.fromEntries(
       Object.entries(report.current).sort(([left], [right]) => left.localeCompare(right))
     );
@@ -116,7 +162,7 @@ async function main() {
   }
 }
 
-module.exports = { warningKey, compareWarnings, baselineFromCommit };
+module.exports = { warningKey, compareWarnings, baselineFromCommit, parseArgs };
 
 if (require.main === module) {
   main().catch(error => {

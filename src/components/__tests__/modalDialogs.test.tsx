@@ -13,6 +13,13 @@ import { remoteStorage } from '../../services/storage/remoteStorage';
 jest.mock('../../config/environment', () => ({
   environmentConfig: { enableRemoteStorage: true },
 }));
+jest.mock('../../services/progressSync/startProgressSync', () => ({
+  syncActiveLanguageProgress: jest.fn(async () => ({
+    status: 'uploaded',
+    takenFromRemote: 0,
+    uploaded: true,
+  })),
+}));
 jest.mock('../Navigation', () => ({ Navigation: () => null }));
 jest.mock('../DirectionalStats', () => ({ DirectionalStats: () => null }));
 jest.mock('../UserProfile', () => ({ UserProfile: () => null }));
@@ -115,7 +122,7 @@ describe('accessible dialogs', () => {
     }
   });
 
-  it('opens demo device linking with a named dialog and restores the trigger on Escape or close', async () => {
+  it('opens device linking with a named dialog and restores the trigger on Escape or close', async () => {
     const user = userEvent.setup();
     render(
       <ThemeProvider theme={theme}>
@@ -126,14 +133,14 @@ describe('accessible dialogs', () => {
     );
     const opener = screen.getByRole('button', { name: 'Check Sync Availability' });
     await user.click(opener);
-    let dialog = screen.getByRole('dialog', { name: /Device Linking \(Demo Only\)/ });
+    let dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     const close = within(dialog).getByRole('button', { name: 'Close device linking' });
     expect(close).toHaveFocus();
     fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
     expect(opener).toHaveFocus();
 
     await user.click(opener);
-    dialog = screen.getByRole('dialog', { name: /Device Linking \(Demo Only\)/ });
+    dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     await user.click(within(dialog).getByRole('button', { name: 'Close device linking' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
@@ -158,7 +165,7 @@ describe('accessible dialogs', () => {
     );
     const opener = screen.getByRole('button', { name: 'Check Sync Availability' });
     await user.click(opener);
-    let dialog = screen.getByRole('dialog', { name: /Device Linking \(Demo Only\)/ });
+    let dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     await user.type(within(dialog).getByRole('textbox'), 'A3B7K9M2');
     await user.click(within(dialog).getByRole('button', { name: 'Link This Device' }));
     expect(linkDevice).toHaveBeenCalledTimes(1);
@@ -167,7 +174,7 @@ describe('accessible dialogs', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Close device linking' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(opener);
-    dialog = screen.getByRole('dialog', { name: /Device Linking \(Demo Only\)/ });
+    dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     expect(within(dialog).getByRole('button', { name: /Linking/ })).toBeDisabled();
     await user.clear(within(dialog).getByRole('textbox'));
     await user.type(within(dialog).getByRole('textbox'), 'B4C8L0N3');
@@ -178,9 +185,11 @@ describe('accessible dialogs', () => {
     await act(async () => finishLink({ success: true, linkedDevices: 2 }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(opener);
-    dialog = screen.getByRole('dialog', { name: /Device Linking \(Demo Only\)/ });
+    dialog = screen.getByRole('dialog', { name: /Device Linking/ });
     expect(
-      within(dialog).getByText(/Demo account linked\. Progress was not transferred/)
+      within(dialog).getByText(
+        /Device linked to your account\. Your progress for the current language was synced/
+      )
     ).toBeInTheDocument();
     await user.type(within(dialog).getByRole('textbox'), 'B4C8L0N3');
     expect(within(dialog).getByRole('button', { name: 'Link This Device' })).toBeEnabled();

@@ -22,7 +22,7 @@ jest.mock('../../services/optionGenerationUtils', () => ({
   generateScrambledVersions: jest.fn(() => ['suaH']),
 }));
 
-import gameReducer, { checkAnswer, nextWord, setCurrentWord, submitAnswer } from '../gameSlice';
+import gameReducer, { checkAnswer, nextWord, setCurrentWord } from '../gameSlice';
 import { deepDiveAdapter } from '../../services/challengeServiceAdapters';
 import { deepDiveService } from '../../services/deepDiveService';
 import { selectWordForMixedPractice } from '../../services/wordSelectionManager';
@@ -57,38 +57,32 @@ describe('Start Learning / Deep Dive production progression', () => {
     });
   });
 
-  it.each([
-    { answerAction: checkAnswer, xp: 36 },
-    { answerAction: submitAnswer, xp: 84 },
-  ])(
-    'enforces the sequence and preserves existing XP with $answerAction.type',
-    async ({ answerAction, xp }) => {
-      let state = initialState();
-      const presented: string[] = [];
-      for (let encounter = 0; encounter < 3; encounter++) {
-        const result = await deepDiveAdapter.getNextWord({
-          languageCode: 'de',
-          wordsCompleted: encounter,
-          currentStreak: encounter,
-          targetWords: 20,
-          wordProgress: state.wordProgress,
-          allWords: [word],
-        });
-        presented.push(result.quizMode);
-        state = gameReducer(state, setCurrentWord(result));
-        state = gameReducer(state, answerAction({ answer: 'Haus', progressiveLearning: true }));
-      }
-      expect(presented).toEqual(['multiple-choice', 'letter-scramble', 'fill-in-the-blank']);
-      expect(state).toMatchObject({ score: 42, correctAnswers: 3, totalAttempts: 3, lives: 3 });
-      expect(state.wordProgress.house).toMatchObject({
-        xp,
-        timesCorrect: 3,
-        timesIncorrect: 0,
-        learningMode: 'fill-in-the-blank',
+  it('enforces the sequence and advances learningMode on correct answers with checkAnswer', async () => {
+    let state = initialState();
+    const presented: string[] = [];
+    for (let encounter = 0; encounter < 3; encounter++) {
+      const result = await deepDiveAdapter.getNextWord({
+        languageCode: 'de',
+        wordsCompleted: encounter,
+        currentStreak: encounter,
+        targetWords: 20,
+        wordProgress: state.wordProgress,
+        allWords: [word],
       });
-      expect(deepDiveService.getNextDeepDiveWord).toHaveBeenCalledTimes(3);
+      presented.push(result.quizMode);
+      state = gameReducer(state, setCurrentWord(result));
+      state = gameReducer(state, checkAnswer({ answer: 'Haus', progressiveLearning: true }));
     }
-  );
+    expect(presented).toEqual(['multiple-choice', 'letter-scramble', 'fill-in-the-blank']);
+    expect(state).toMatchObject({ score: 42, correctAnswers: 3, totalAttempts: 3, lives: 3 });
+    expect(state.wordProgress.house).toMatchObject({
+      xp: 36,
+      timesCorrect: 3,
+      timesIncorrect: 0,
+      learningMode: 'fill-in-the-blank',
+    });
+    expect(deepDiveService.getNextDeepDiveWord).toHaveBeenCalledTimes(3);
+  });
 
   it('keeps mistakes and skips at the same stage without advancing another word', () => {
     let state = initialState();

@@ -7,6 +7,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Word } from '../../services/wordService';
+import { getContentLanguages } from '../../services/contentLanguage';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 
@@ -174,6 +175,7 @@ interface LearningCardProps {
   autoAdvance?: boolean;
   autoAdvanceDelay?: number;
   reason?: 'new' | 'reinforcement'; // Why the learning card is shown
+  languageCode?: string; // Course language, to mark the word and example with their language
 }
 
 export const LearningCard: React.FC<LearningCardProps> = ({
@@ -186,7 +188,18 @@ export const LearningCard: React.FC<LearningCardProps> = ({
   autoAdvance = true,
   autoAdvanceDelay = 3000, // 3 seconds default
   reason = 'new',
+  languageCode,
 }) => {
+  const contentLanguages = getContentLanguages(languageCode, word);
+  const askTermFirst = word.direction === 'term-to-definition';
+  // The example sentence is in the term's language and its translation in the definition's
+  // language. A plain-string context has no reliable language in the data, so it stays unmarked.
+  const contextLanguage =
+    typeof word.context === 'object' && word.context
+      ? word.context.sentence
+        ? contentLanguages.term
+        : contentLanguages.definition
+      : undefined;
   const onContinueRef = useRef(onContinue);
   // timeLeft is initialized from autoAdvanceDelay and counted down in the interval
   // callback. Using a local `remaining` closure avoids synchronous setState in the
@@ -250,22 +263,26 @@ export const LearningCard: React.FC<LearningCardProps> = ({
       <CardHeader>
         {reason === 'new' ? (
           <>
-            <span>🌱</span>
+            <span aria-hidden="true">🌱</span>
             Learning New Word
           </>
         ) : (
           <>
-            <span>📝</span>
+            <span aria-hidden="true">📝</span>
             Practice Time - Let&apos;s Review!
           </>
         )}
       </CardHeader>
 
       <WordDisplay>
-        <MainWord>{getQuestionWord(word)}</MainWord>
-        <Translation>{getAnswerWord(word)}</Translation>
+        <MainWord lang={askTermFirst ? contentLanguages.term : contentLanguages.definition}>
+          {getQuestionWord(word)}
+        </MainWord>
+        <Translation lang={askTermFirst ? contentLanguages.definition : contentLanguages.term}>
+          {getAnswerWord(word)}
+        </Translation>
         {word.context && (
-          <Context>
+          <Context lang={contextLanguage}>
             {'"'}
             {typeof word.context === 'string'
               ? word.context

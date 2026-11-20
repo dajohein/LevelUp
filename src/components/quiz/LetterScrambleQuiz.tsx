@@ -425,7 +425,8 @@ interface LetterScrambleQuizProps {
   totalWords: number;
   level?: number;
   xp?: number;
-  onAnswer: (isCorrect: boolean) => void;
+  /** `hintsUsed` lets the caller withhold mastery credit for assisted answers. */
+  onAnswer: (isCorrect: boolean, hintsUsed: number) => void;
   disabled?: boolean;
 }
 
@@ -440,13 +441,17 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
   onAnswer,
   disabled = false,
 }) => {
-  const [state, dispatch] = useReducer(scrambleReducer, word, (initialWord): ScrambleState => ({
-    userAnswer: [],
-    availableLetters: buildInitialAvailableLetters(initialWord),
-    showResult: false,
-    isCorrect: false,
-    hintsUsed: 0,
-  }));
+  const [state, dispatch] = useReducer(
+    scrambleReducer,
+    word,
+    (initialWord): ScrambleState => ({
+      userAnswer: [],
+      availableLetters: buildInitialAvailableLetters(initialWord),
+      showResult: false,
+      isCorrect: false,
+      hintsUsed: 0,
+    })
+  );
 
   const { userAnswer, availableLetters, showResult, isCorrect, hintsUsed } = state;
   const targetLetters = useMemo(() => getScrambleLetters(word), [word]);
@@ -572,7 +577,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         logger.debug('🎯 LetterScrambleQuiz: Answer check:', { userWord, targetWord, correct });
 
         dispatch({ type: 'SHOW_RESULT', isCorrect: correct });
-        onAnswer(correct);
+        onAnswer(correct, hintsUsed);
 
         checkTimeoutRef.current = null;
       }, 300);
@@ -585,7 +590,7 @@ export const LetterScrambleQuiz: React.FC<LetterScrambleQuizProps> = ({
         checkTimeoutRef.current = null;
       }
     };
-  }, [userAnswer.length, targetLetters, showResult, disabled, userAnswer, onAnswer]);
+  }, [userAnswer.length, targetLetters, showResult, disabled, userAnswer, onAnswer, hintsUsed]);
 
   // Keyboard typing support
   useEffect(() => {

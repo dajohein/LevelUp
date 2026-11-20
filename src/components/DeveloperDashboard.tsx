@@ -207,13 +207,6 @@ export const DeveloperDashboard: React.FC = () => {
                   Interactive demo of all loading states, skeletons, and transitions
                 </FeatureDescription>
               </FeatureButton>
-
-              <FeatureButton color="#4a90e2" onClick={() => navigate('/simple-ai-demo')}>
-                <FeatureTitle>🤖 Simple AI Demo</FeatureTitle>
-                <FeatureDescription>
-                  AI learning coach demonstration with analytics and insights
-                </FeatureDescription>
-              </FeatureButton>
             </ButtonGrid>
           </Section>
 
@@ -235,40 +228,6 @@ export const DeveloperDashboard: React.FC = () => {
                 <FeatureTitle>🚀 Run All Tests</FeatureTitle>
                 <FeatureDescription>
                   Execute comprehensive test suite including storage, performance, and services
-                </FeatureDescription>
-              </FeatureButton>
-
-              <FeatureButton
-                color="#e17055"
-                onClick={() =>
-                  runTest(
-                    'Storage Optimization',
-                    () =>
-                      (window as any).LevelUpDev?.testing?.saveOptimization?.() ||
-                      Promise.resolve('Tools not loaded')
-                  )
-                }
-              >
-                <FeatureTitle>💾 Storage Tests</FeatureTitle>
-                <FeatureDescription>
-                  Test storage optimization, save frequency, and data integrity
-                </FeatureDescription>
-              </FeatureButton>
-
-              <FeatureButton
-                color="#a29bfe"
-                onClick={() =>
-                  runTest(
-                    'Performance Analysis',
-                    () =>
-                      (window as any).LevelUpDev?.testing?.gameServicesPerformance?.() ||
-                      Promise.resolve('Tools not loaded')
-                  )
-                }
-              >
-                <FeatureTitle>⚡ Performance Tests</FeatureTitle>
-                <FeatureDescription>
-                  Benchmark all game services and analyze performance metrics
                 </FeatureDescription>
               </FeatureButton>
 

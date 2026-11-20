@@ -6,6 +6,7 @@ import { RootState } from '../store/store';
 import { setLanguage, setCurrentModule } from '../store/gameSlice';
 import { resetSession, startSession } from '../store/sessionSlice';
 import { getModule, getModuleStats } from '../services/moduleService';
+import { getContentLanguages } from '../services/contentLanguage';
 import { Navigation } from './Navigation';
 
 const Container = styled.div`
@@ -274,22 +275,27 @@ export const ModuleProgressView: React.FC = () => {
         </StatsOverview>
 
         <WordsList>
-          {wordsWithProgress.map(word => (
-            <WordCard key={word.id} mastery={word.mastery}>
-              <WordInfo>
-                <WordTerm>{word.term}</WordTerm>
-                <WordDefinition>{word.definition}</WordDefinition>
-              </WordInfo>
-              <MasteryInfo>
-                <MasteryLevel level={word.mastery}>
-                  {word.practiced ? `${word.mastery}%` : 'Not practiced'}
-                </MasteryLevel>
-                <MasteryBar>
-                  <MasteryFill progress={word.mastery} />
-                </MasteryBar>
-              </MasteryInfo>
-            </WordCard>
-          ))}
+          {wordsWithProgress.map(word => {
+            const contentLanguages = getContentLanguages(languageCode, word);
+            return (
+              <WordCard key={word.id} mastery={word.mastery}>
+                <WordInfo>
+                  <WordTerm lang={contentLanguages.term}>{word.term}</WordTerm>
+                  <WordDefinition lang={contentLanguages.definition}>
+                    {word.definition}
+                  </WordDefinition>
+                </WordInfo>
+                <MasteryInfo>
+                  <MasteryLevel level={word.mastery}>
+                    {word.practiced ? `${word.mastery}%` : 'Not practiced'}
+                  </MasteryLevel>
+                  <MasteryBar>
+                    <MasteryFill progress={word.mastery} />
+                  </MasteryBar>
+                </MasteryInfo>
+              </WordCard>
+            );
+          })}
         </WordsList>
       </ContentWrapper>
     </Container>

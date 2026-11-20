@@ -156,6 +156,11 @@ interface MultipleChoiceQuizProps {
     translation: string;
     audio?: string;
   };
+  /** BCP 47 languages of the learning content, for screen readers (the UI stays English). */
+  promptLanguage?: string;
+  answerLanguage?: string;
+  contextLanguage?: string;
+  contextTranslationLanguage?: string;
 }
 
 const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
@@ -172,6 +177,10 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
   originalQuizMode: _originalQuizMode, // Prefix with underscore to indicate intentionally unused
   sessionProgress: _sessionProgress = 0, // Prefix with underscore to indicate intentionally unused
   context,
+  promptLanguage,
+  answerLanguage,
+  contextLanguage,
+  contextTranslationLanguage,
 }) => {
   // Show enhancement indicator when session has progressed (indicating advanced modes are active)
   // Removed unused variables: isEnhanced, enhancementText
@@ -194,12 +203,14 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
 
   return (
     <Container>
-      <Word>{word}</Word>
+      <Word lang={promptLanguage}>{word}</Word>
       {shouldShowContext && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
-          <ContextSentence>{context.sentence}</ContextSentence>
-          <ContextTranslation>{context.translation}</ContextTranslation>
+          <ContextSentence lang={contextLanguage}>{context.sentence}</ContextSentence>
+          <ContextTranslation lang={contextTranslationLanguage}>
+            {context.translation}
+          </ContextTranslation>
         </ContextSection>
       )}
       <OptionsGrid>
@@ -210,6 +221,7 @@ const MultipleChoiceQuizComponent: React.FC<MultipleChoiceQuizProps> = ({
             disabled={disabled}
             isCorrect={isCorrect && option === selectedOption}
             isError={!isCorrect && option === selectedOption}
+            lang={answerLanguage}
           >
             {option}
           </Option>

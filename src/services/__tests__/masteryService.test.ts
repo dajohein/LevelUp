@@ -1,4 +1,5 @@
 import {
+  calculateMasteryDecay,
   calculateMasteryGain,
   getMasteryQuizMode,
   isWordLearned,
@@ -255,5 +256,47 @@ describe('Mastery Service', () => {
 
       expect(xp).toBeGreaterThan(0);
     });
+  });
+});
+
+describe('assisted answers', () => {
+  it('earn no mastery when correct, but still lose mastery when wrong', () => {
+    expect(calculateMasteryGain(40, true, 'multiple-choice', true)).toBe(40);
+    expect(calculateMasteryGain(40, true, 'multiple-choice')).toBeGreaterThan(40);
+    expect(calculateMasteryGain(40, false, 'multiple-choice', true)).toBeLessThan(40);
+  });
+});
+
+describe('beginner decay interval', () => {
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
+
+  it('does not decay a new word within its first day', () => {
+    expect(calculateMasteryDecay(hoursAgo(23), 20)).toBe(20);
+  });
+
+  it('decays 20% per day after that', () => {
+    expect(calculateMasteryDecay(hoursAgo(48), 20)).toBeCloseTo(12.8, 5);
+  });
+});
+
+describe('decay with unusable timestamps', () => {
+  it.each(['not a date', '', 'undefined'])('leaves mastery unchanged for %p', bad => {
+    expect(calculateMasteryDecay(bad, 80)).toBe(80);
+  });
+
+  it('never raises mastery for a timestamp in the future', () => {
+    const future = new Date(Date.now() + 30 * 24 * 3_600_000).toISOString();
+    expect(calculateMasteryDecay(future, 50)).toBe(50);
+  });
+});
+
+describe('decay with unusable mastery or small clock skew', () => {
+  it.each([NaN, undefined as unknown as number, Infinity])('repairs mastery %p to 0', bad => {
+    expect(calculateMasteryDecay(new Date().toISOString(), bad)).toBe(0);
+  });
+
+  it('a timestamp a few minutes in the future does not raise mastery', () => {
+    const slightlyAhead = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    expect(calculateMasteryDecay(slightlyAhead, 50)).toBe(50);
   });
 });

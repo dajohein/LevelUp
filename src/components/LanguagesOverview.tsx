@@ -5,6 +5,8 @@ import { FaGlobeAmericas } from 'react-icons/fa';
 import { getAvailableLanguages, getModulesForLanguage } from '../services/moduleService';
 import { calculateCurrentLevel, getLevelInfo } from '../services/levelService';
 import { DataMigrationService } from '../services/dataMigrationService';
+import { getDueWords } from '../services/spacedRepetitionService';
+import type { Word } from '../services/wordService';
 import { Navigation } from './Navigation';
 
 const Container = styled.div`
@@ -244,6 +246,13 @@ const ModuleCount = styled.div`
   text-align: center;
 `;
 
+const DueLabel = styled.div`
+  margin-top: ${props => props.theme.spacing.xs};
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.primary};
+`;
+
 const ActivityIndicator = styled.div<{ active: boolean }>`
   position: absolute;
   top: 12px;
@@ -316,6 +325,16 @@ const BrainProgress: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
+/** Number of practiced words in a language whose review is due (words shared by modules count once). */
+const countDueWords = (
+  modules: ReturnType<typeof getModulesForLanguage>,
+  progress: ReturnType<typeof DataMigrationService.safeLoadWordProgress>
+): number => {
+  const unique = new Map<string, Word>();
+  modules.forEach(module => module.words?.forEach(word => unique.set(word.id, word)));
+  return getDueWords([...unique.values()], progress).length;
+};
+
 export const LanguagesOverview: React.FC = () => {
   const navigate = useNavigate();
   const languages = getAvailableLanguages();
@@ -336,15 +355,16 @@ export const LanguagesOverview: React.FC = () => {
       }).length;
       const totalXP = Object.values(progress).reduce((sum, prog) => sum + (prog?.xp || 0), 0);
 
-      return { totalWords, practicedWords, totalXP };
+      return { totalWords, practicedWords, totalXP, dueWords: countDueWords(modules, progress) };
     });
 
     const totalWords = allLanguagesProgress.reduce((sum, lang) => sum + lang.totalWords, 0);
     const totalPracticed = allLanguagesProgress.reduce((sum, lang) => sum + lang.practicedWords, 0);
     const totalXP = allLanguagesProgress.reduce((sum, lang) => sum + lang.totalXP, 0);
     const languagesStarted = allLanguagesProgress.filter(lang => lang.totalXP > 0).length;
+    const totalDue = allLanguagesProgress.reduce((sum, lang) => sum + lang.dueWords, 0);
 
-    return { totalWords, totalPracticed, totalXP, languagesStarted };
+    return { totalWords, totalPracticed, totalXP, languagesStarted, totalDue };
   }, [languages]);
 
   return (
@@ -361,17 +381,28 @@ export const LanguagesOverview: React.FC = () => {
             achievements, and level up your skills across multiple languages!
           </Subtitle>
 
-          {overallStats.totalXP > 0 && (
+          {(overallStats.totalXP > 0 || overallStats.totalDue > 0) && (
             <StatsOverview>
-              <StatBadge>
-                <span>🏆</span>
-                {overallStats.totalXP.toLocaleString()} XP
-              </StatBadge>
-              <StatBadge>
-                <span>🌍</span>
-                {overallStats.languagesStarted} Language
-                {overallStats.languagesStarted !== 1 ? 's' : ''}
-              </StatBadge>
+              {overallStats.totalXP > 0 && (
+                <>
+                  <StatBadge>
+                    <span>🏆</span>
+                    {overallStats.totalXP.toLocaleString()} XP
+                  </StatBadge>
+                  <StatBadge>
+                    <span>🌍</span>
+                    {overallStats.languagesStarted} Language
+                    {overallStats.languagesStarted !== 1 ? 's' : ''}
+                  </StatBadge>
+                </>
+              )}
+              {overallStats.totalDue > 0 && (
+                <StatBadge>
+                  <span>🔄</span>
+                  {overallStats.totalDue} word{overallStats.totalDue !== 1 ? 's' : ''} due for
+                  review
+                </StatBadge>
+              )}
             </StatsOverview>
           )}
         </Header>
@@ -404,6 +435,7 @@ export const LanguagesOverview: React.FC = () => {
               return progress && progress.xp > 0;
             }).length;
 
+            const dueWords = countDueWords(actualModules, languageWordProgress);
             const overallProgress = totalWords > 0 ? (practicedWords / totalWords) * 100 : 0;
             const hasRecentActivity = Object.values(languageWordProgress).some(progress => {
               if (!progress.lastPracticed) return false;
@@ -450,6 +482,8 @@ export const LanguagesOverview: React.FC = () => {
                       </ModuleCount>
                     </ProgressSection>
                   )}
+                  {/* Independent of XP: failed or assisted answers can leave practiced words at 0 xp */}
+                  {dueWords > 0 && <DueLabel>🔄 {dueWords} due for review</DueLabel>}
                 </CardContent>
               </LanguageCard>
             );

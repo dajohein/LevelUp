@@ -5,7 +5,12 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { ESLint } = require('eslint');
-const { compareWarnings, warningKey, baselineFromCommit } = require('./check-lint-baseline.cjs');
+const {
+  compareWarnings,
+  warningKey,
+  baselineFromCommit,
+  parseArgs,
+} = require('./check-lint-baseline.cjs');
 
 const cwd = '/repo';
 const message = {
@@ -157,4 +162,96 @@ test('invalid and unavailable base commits fail closed', async () => {
   for (const commit of ['main', '', 'HEAD', '--prune', '0'.repeat(40)]) {
     await assert.rejects(baselineFromCommit({}, commit, process.cwd()));
   }
+});
+
+test('command-line modes are parsed strictly', () => {
+  assert.deepEqual(parseArgs([]), { mode: 'all' });
+  assert.deepEqual(parseArgs(['--prune']), { mode: 'prune' });
+  assert.deepEqual(parseArgs(['--base-ref', 'abc']), { mode: 'base', ref: 'abc' });
+  for (const bad of [['--nope'], ['--prune', 'x'], ['--base-ref'], ['src/a.ts']]) {
+    assert.throws(() => parseArgs(bad), /Usage/);
+  }
+});
+
+test('--files keeps only linted source files and tolerates an empty list', () => {
+  assert.deepEqual(parseArgs(['--files'], '/repo'), { mode: 'files', files: [] });
+  const staged = [
+    '/repo/src/a.ts',
+    '/repo/src/deep/b.tsx',
+    'src/relative.ts',
+    '/repo/api/c.ts',
+    '/repo/src/style.css',
+    '/repo/README.md',
+    '/repo/scripts/src/x.cjs',
+  ];
+  assert.deepEqual(parseArgs(['--files', ...staged], '/repo').files, [
+    '/repo/src/a.ts',
+    '/repo/src/deep/b.tsx',
+    'src/relative.ts',
+  ]);
+});
+
+test('--files judges paths relative to the repository, not by any `src` directory above it', () => {
+  // the checkout itself lives under a directory called src
+  assert.deepEqual(
+    parseArgs(
+      ['--files', '/home/u/src/app/api/c.ts', '/home/u/src/app/src/a.ts'],
+      '/home/u/src/app'
+    ).files,
+    ['/home/u/src/app/src/a.ts']
+  );
+  // a path that climbs out of the repository is never a source file
+  assert.deepEqual(parseArgs(['--files', '../other/src/a.ts'], '/repo').files, []);
+});
+
+test('--files refuses other flags instead of silently doing nothing', () => {
+  for (const bad of [
+    ['--files', '--prune'],
+    ['--files', 'src/a.ts', '--base-ref', 'abc'],
+  ]) {
+    assert.throws(() => parseArgs(bad, '/repo'), /Usage/);
+  }
+});
+
+const script = path.join(__dirname, 'check-lint-baseline.cjs');
+const runFiles = (...files) => {
+  try {
+    execFileSync(process.execPath, [script, '--files', ...files], {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'pipe',
+    });
+    return { status: 0, stderr: '' };
+  } catch (error) {
+    return { status: error.status, stderr: String(error.stderr) };
+  }
+};
+
+test('--files passes on a file whose warnings are already in the baseline', () => {
+  // This file carries recorded lint debt; committing a change to it must not be blocked by it
+  assert.equal(runFiles('src/utils/errorHandling.ts').status, 0);
+});
+
+test('--files fails because of a newly introduced warning, and only then', async () => {
+  const probe = path.join(__dirname, '..', 'src', '__lint_probe__.ts');
+  await fs.writeFile(probe, 'export const probe: any = 1;\n');
+  try {
+    const result = runFiles(probe);
+    assert.equal(result.status, 1);
+    // a crash or an unrelated failure would also exit non-zero; require the actual reason
+    assert.match(result.stderr, /__lint_probe__\.ts:1:\d+ @typescript-eslint\/no-explicit-any/);
+    assert.equal(runFiles('package.json', 'README.md').status, 0);
+  } finally {
+    await fs.rm(probe, { force: true });
+  }
+});
+
+test('--files skips files that are ESLint-ignored or no longer exist instead of failing', () => {
+  // ignored by .eslintrc: ESLint answers an explicit ignored path with a synthetic warning
+  assert.equal(runFiles('src/utils/testImmediateImprovements.ts').status, 0);
+  // deleted or renamed in the commit: ESLint would throw NoFilesFoundError
+  const missing = runFiles('src/utils/does-not-exist.ts');
+  assert.equal(missing.status, 0);
+  assert.doesNotMatch(missing.stderr, /NoFilesFoundError/);
+  // a mix: the missing file is skipped, the real one is still linted
+  assert.equal(runFiles('src/utils/does-not-exist.ts', 'src/utils/errorHandling.ts').status, 0);
 });

@@ -7,9 +7,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { LoadingButton } from './feedback/UnifiedLoading';
-import { remoteStorage } from '../services/storage/remoteStorage';
+import {
+  remoteStorage,
+  RemoteNetworkError,
+  RemoteSessionError,
+} from '../services/storage/remoteStorage';
 import { logger } from '../services/logger';
 import { environmentConfig } from '../config/environment';
+import { syncActiveLanguageProgress } from '../services/progressSync/startProgressSync';
 
 const Container = styled.div`
   max-width: 500px;
@@ -140,6 +145,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   } | null>(null);
   const [linkedDevices, setLinkedDevices] = useState(0);
   const [codeExpires, setCodeExpires] = useState<number | null>(null);
+  // The saved sync session was refused by the server; the user can start a new one explicitly
+  const [sessionLost, setSessionLost] = useState(false);
 
   useEffect(() => {
     if (environmentConfig.enableRemoteStorage) {
@@ -174,9 +181,13 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const generateCode = async () => {
     setLoading(true);
     setMessage(null);
+    // sessionLost is decided by the outcome below, not cleared up front: during a reset-and-retry
+    // the reset button must stay on screen (showing its progress) instead of vanishing under the
+    // user's finger, which also drops keyboard focus
 
     try {
       const result = await remoteStorage.generateAccountCode();
+      setSessionLost(false);
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({
@@ -184,14 +195,46 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         type: 'success',
       });
     } catch (error) {
-      setMessage({
-        text: 'Failed to generate account code. Please try again.',
-        type: 'error',
-      });
+      setSessionLost(error instanceof RemoteSessionError);
+      if (error instanceof RemoteSessionError) {
+        // Say what happened and offer the way out instead of a generic failure
+        setMessage({
+          text: 'Your saved sync session is no longer valid (it may have expired). Your progress on this device is safe. Reset the sync session to continue.',
+          type: 'error',
+        });
+      } else if (error instanceof RemoteNetworkError || !navigator.onLine) {
+        setMessage({
+          text: 'Could not reach the sync server. Check your connection and try again.',
+          type: 'error',
+        });
+      } else {
+        setMessage({
+          text: 'Failed to generate account code. Please try again.',
+          type: 'error',
+        });
+      }
       logger.error('Failed to generate account code:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetSessionAndRetry = async () => {
+    if (loading) return; // a double tap must not reset (and generate) twice
+    setLoading(true);
+    try {
+      // Only the sync session is replaced; progress stored on this device is never touched
+      await remoteStorage.resetSession();
+    } catch (error) {
+      logger.error('Failed to reset the sync session:', error);
+      setMessage({
+        text: 'Could not reset the sync session. Your progress on this device is safe.',
+        type: 'error',
+      });
+      setLoading(false);
+      return;
+    }
+    await generateCode();
   };
 
   const linkDevice = async () => {
@@ -202,13 +245,31 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
     setLoading(true);
     setMessage(null);
+    setSessionLost(false); // a stale reset button would otherwise stay with no message explaining it
 
     try {
       const result = await remoteStorage.linkDeviceWithCode(linkCode.trim());
-      setLinkedDevices(result.linkedDevices);
+      if (typeof result.linkedDevices === 'number') setLinkedDevices(result.linkedDevices);
       setLinkCode('');
+      const devices =
+        typeof result.linkedDevices === 'number' ? ` Total devices: ${result.linkedDevices}` : '';
+      // The account is linked either way; say truthfully what happened to the progress
+      let synced: Awaited<ReturnType<typeof syncActiveLanguageProgress>>;
+      try {
+        synced = await syncActiveLanguageProgress();
+      } catch (syncError) {
+        // the link worked; only the progress sync did not
+        logger.warn('Progress sync after linking failed', {
+          error: syncError instanceof Error ? syncError.name : 'Error',
+        });
+        synced = undefined;
+      }
+      const progressNote =
+        synced && synced.status !== 'failed' && synced.status !== 'skipped'
+          ? 'Your progress for the current language was synced; other languages sync when you open them.'
+          : 'Your progress could not be synced right now; it stays on this device.';
       setMessage({
-        text: `Demo account linked. Progress was not transferred. Total devices: ${result.linkedDevices}`,
+        text: `Device linked to your account. ${progressNote}${devices}`,
         type: 'success',
       });
     } catch (error) {
@@ -217,6 +278,64 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         type: 'error',
       });
       logger.error('Failed to link device:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    // Without a session token nothing can reach the cloud copy again except a link code from a
+    // device that is still signed in, so this must be a deliberate choice.
+    if (
+      !window.confirm(
+        'Log out on this device? To reconnect to your cloud copy you will need a link code from ' +
+          'another device that is still signed in; otherwise a new cloud account is created. ' +
+          'Your local progress stays on this device.'
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.logout();
+      setAccountCode('');
+      setCodeExpires(null);
+      setLinkedDevices(0);
+      setSessionLost(false);
+      setMessage({
+        text: 'Logged out on this device. Your local progress has been preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to log out:', error);
+      setMessage({
+        text: 'Failed to log out. Your local progress is safe.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeSessions = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await remoteStorage.revokeSessions();
+      setAccountCode('');
+      setCodeExpires(null);
+      setSessionLost(false);
+      setMessage({
+        text: 'Signed out on all other devices. This device stays signed in; your local progress is preserved.',
+        type: 'success',
+      });
+    } catch (error) {
+      logger.error('Failed to revoke sessions:', error);
+      setMessage({
+        text: 'Could not sign out your other devices. You are still signed in here; please try again.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -235,7 +354,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
   return (
     <Container>
-      <Title id={titleId}>🔗 Device Linking (Demo Only)</Title>
+      <Title id={titleId}>🔗 Device Linking</Title>
 
       {linkedDevices > 1 && (
         <DeviceInfo>Account session linked across {linkedDevices} devices</DeviceInfo>
@@ -243,15 +362,15 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
       <StatusMessage type="info">
         {environmentConfig.enableRemoteStorage
-          ? 'Demo only: remote account and progress data is stored in process memory and can disappear when the server restarts. Linking identifies an account but does not transfer or reconcile progress. Your local progress remains saved on this device.'
+          ? 'Linked devices share one account. Learning progress syncs for the language you are using (other languages sync when you open them) and is merged per word, so nothing on this device is deleted. This device always keeps its own copy.'
           : 'Remote sync is unavailable. Progress is saved on this device only; linking is disabled until durable remote storage is available.'}
       </StatusMessage>
 
       <Section>
-        <SectionTitle>📱 Share Progress from This Device</SectionTitle>
+        <SectionTitle>📱 Link Another Device</SectionTitle>
         <Description>
-          Generate a code to link this device&apos;s demo account. This does not sync or copy
-          learning progress.
+          Generate a code, then enter it on your other device to link it to this account. Linking
+          does not sync or copy learning progress.
         </Description>
 
         {accountCode ? (
@@ -291,7 +410,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       <Section>
         <SectionTitle>💻 Link to Existing Account</SectionTitle>
         <Description>
-          Enter an account code to link a demo account. Progress is not transferred.
+          Enter the account code from your other device to link this device to that account. Your
+          progress will be merged with the progress already on that account.
         </Description>
 
         <Input
@@ -326,7 +446,84 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
         </LoadingButton>
       </Section>
 
-      {message && <StatusMessage type={message.type}>{message.text}</StatusMessage>}
+      <Section>
+        <SectionTitle>🔒 Sessions & Sign Out</SectionTitle>
+        <Description>
+          Sign out on this device, or sign out every other device (this one stays signed in). Local
+          learning progress is always preserved on this device.
+        </Description>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+          <LoadingButton
+            onClick={handleLogout}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Logging out..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: '1px solid #bdc3c7',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#ffffff',
+              color: '#34495e',
+            }}
+          >
+            Log Out on This Device
+          </LoadingButton>
+          <LoadingButton
+            onClick={handleRevokeSessions}
+            isLoading={loading}
+            disabled={!environmentConfig.enableRemoteStorage}
+            loadingText="Revoking sessions..."
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              background: '#e74c3c',
+              color: 'white',
+            }}
+          >
+            Sign Out Other Devices
+          </LoadingButton>
+        </div>
+      </Section>
+
+      {message && (
+        <StatusMessage
+          type={message.type}
+          role={message.type === 'error' ? 'alert' : 'status'}
+          aria-live={message.type === 'error' ? 'assertive' : 'polite'}
+        >
+          {message.text}
+        </StatusMessage>
+      )}
+
+      {sessionLost && (
+        <LoadingButton
+          onClick={resetSessionAndRetry}
+          isLoading={loading}
+          loadingText="Resetting..."
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            width: '100%',
+            background: '#e67e22',
+            color: 'white',
+          }}
+        >
+          Reset sync session and try again
+        </LoadingButton>
+      )}
     </Container>
   );
 };

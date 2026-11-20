@@ -53,7 +53,7 @@ This directory contains the development container configuration for the LevelUp 
 
 ### Lifecycle Hooks
 
-- **postCreateCommand**: Runs `npm ci` to install dependencies and fails if installation fails. The servers are not started or health-checked during container creation.
+- **postCreateCommand**: Installs Chromium (so `npm run test:sw`, the real-browser service worker update test, can run; `CHROME_BIN` points at it) and runs `npm ci`, and fails if either fails. The servers are not started or health-checked during container creation.
 - **postStartCommand**: Configures Git safe directory
 
 ### Shell Aliases

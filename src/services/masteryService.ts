@@ -13,7 +13,7 @@ export const QUIZ_MODE_THRESHOLDS = {
 } as const;
 
 export const TIME_INTERVALS = {
-  BEGINNER: 4, // 4 hours - shorter for new words
+  BEGINNER: 24, // 1 day: a new word is first reviewed after a day, so it must not decay faster
   FAMILIAR: 24, // 1 day
   INTERMEDIATE: 72, // 3 days
   ADVANCED: 168, // 1 week
@@ -25,6 +25,12 @@ export const calculateMasteryDecay = (
   lastPracticed: string | undefined,
   currentMastery: number
 ): number => {
+  // Corrupted or legacy progress can have no usable xp; NaN would otherwise survive every
+  // later gain and loss and be saved forever
+  if (!Number.isFinite(currentMastery)) {
+    return MASTERY_LEVELS.BEGINNER;
+  }
+
   if (!lastPracticed) {
     return currentMastery;
   }
@@ -32,6 +38,12 @@ export const calculateMasteryDecay = (
   const hoursSinceLastPractice = Math.floor(
     (Date.now() - new Date(lastPracticed).getTime()) / (1000 * 60 * 60)
   );
+
+  // An unparseable timestamp (imported or corrupted data) gives NaN, and a future one a negative
+  // elapsed time that would *raise* mastery. Neither is evidence of decay.
+  if (!Number.isFinite(hoursSinceLastPractice) || hoursSinceLastPractice <= 0) {
+    return currentMastery;
+  }
 
   // Determine decay rate based on current mastery level
   let decayRate: number;
@@ -85,8 +97,14 @@ export const getMasteryQuizMode = (quizMode: string): QuizMode =>
 export const calculateMasteryGain = (
   currentMastery: number,
   isCorrect: boolean,
-  quizMode: QuizMode
+  quizMode: QuizMode,
+  /** A correct answer given with hints is not evidence of recall, so it earns no mastery. */
+  assisted = false
 ): number => {
+  if (isCorrect && assisted) {
+    return currentMastery;
+  }
+
   // More aggressive learning progression for systematic approach
   const baseGain = quizMode === 'open-answer' ? 15 : 10;
   const baseLoss = quizMode === 'open-answer' ? 8 : 5;

@@ -35,14 +35,14 @@ export const Game: React.FC = () => {
       currentOptions: state.game.currentOptions,
       quizMode: state.game.quizMode,
       wordProgress: state.game.wordProgress,
-      capitalizationFeedback: state.game.capitalizationFeedback,
+      spellingFeedback: state.game.spellingFeedback,
       language: state.game.language,
     }),
     (left, right) =>
       left.currentWord?.id === right.currentWord?.id &&
       left.quizMode === right.quizMode &&
       left.language === right.language &&
-      left.capitalizationFeedback === right.capitalizationFeedback &&
+      left.spellingFeedback === right.spellingFeedback &&
       left.wordProgress === right.wordProgress
   );
 
@@ -64,7 +64,7 @@ export const Game: React.FC = () => {
     currentOptions,
     quizMode,
     wordProgress,
-    capitalizationFeedback,
+    spellingFeedback,
     language: gameLanguage,
   } = reduxGameState;
 
@@ -153,6 +153,7 @@ export const Game: React.FC = () => {
         wordProgress={wordProgress}
         isUsingSpacedRepetition={isUsingSpacedRepetition}
         getCurrentWordInfo={getCurrentWordInfo}
+        languageCode={languageCode}
         showLearningCard={showLearningCard}
         wordLearningStatus={wordLearningStatus}
         currentSession={currentSession}
@@ -264,7 +265,7 @@ export const Game: React.FC = () => {
         correctAnswer={feedbackWordInfo?.correctAnswer || ''}
         originalWord={feedbackWordInfo?.originalWord || ''}
         wordContext={feedbackWordInfo?.context || ''}
-        capitalizationFeedback={capitalizationFeedback}
+        spellingFeedback={spellingFeedback}
       />
       <AchievementManager />
 

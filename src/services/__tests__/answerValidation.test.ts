@@ -1,4 +1,4 @@
-import { validateAnswer, getCapitalizationFeedback } from '../answerValidation';
+import { getAnswerScoreMultiplier, getCloseMatchFeedback, validateAnswer, getCapitalizationFeedback } from '../answerValidation';
 
 describe('Answer Validation', () => {
   describe('Basic Answer Validation', () => {
@@ -82,6 +82,24 @@ describe('Answer Validation', () => {
   });
 
   describe('Diacritic and Accent Handling', () => {
+    it('treats decomposed and precomposed Unicode identically, including capitalization', () => {
+      const decomposed = 'Mu\u0308nchen';
+      const precomposed = 'M\u00fcnchen';
+
+      const result = validateAnswer(decomposed, precomposed, 'de');
+      expect(result.isCorrect).toBe(true);
+      expect(result.capitalizationCorrect).toBe(true);
+      expect(result.capitalizationPenalty).toBe(1);
+      expect(result.closeMatch).toBeUndefined();
+      expect(validateAnswer(precomposed, decomposed, 'de').capitalizationPenalty).toBe(1);
+    });
+
+    it('still penalizes wrong capitalization of a decomposed answer', () => {
+      const result = validateAnswer('mu\u0308nchen', 'M\u00fcnchen', 'de');
+      expect(result.isCorrect).toBe(true);
+      expect(result.capitalizationPenalty).toBeLessThan(1);
+    });
+
     it('should validate accented characters in Spanish', () => {
       const userAnswer = 'niño';
       const correctAnswer = 'niño';
@@ -290,5 +308,33 @@ describe('Answer Validation', () => {
       const result = validateAnswer(userAnswer, correctAnswer, 'en');
       expect(result.isCorrect).toBe(true);
     });
+  });
+});
+
+describe('spelling variants', () => {
+  it('accepts a missing Spanish accent, flags it and keeps the canonical spelling', () => {
+    const result = validateAnswer('cafe', 'café', 'es');
+    expect(result).toMatchObject({ isCorrect: true, closeMatch: 'accent', matchedAnswer: 'café' });
+    expect(getAnswerScoreMultiplier(result)).toBeCloseTo(0.9);
+    expect(getCloseMatchFeedback(result)).toContain('café');
+  });
+
+  it('does not accept ñ as n', () => {
+    expect(validateAnswer('ano', 'año', 'es').isCorrect).toBe(false);
+  });
+
+  it('accepts German transliteration but not a plain vowel for an umlaut', () => {
+    expect(validateAnswer('schoen', 'schön', 'de')).toMatchObject({
+      isCorrect: true,
+      closeMatch: 'accent',
+    });
+    expect(validateAnswer('schon', 'schön', 'de').isCorrect).toBe(false);
+  });
+
+  it('exact answers carry no close-match flag or penalty', () => {
+    const result = validateAnswer('café', 'café', 'es');
+    expect(result.closeMatch).toBeUndefined();
+    expect(getAnswerScoreMultiplier(result)).toBe(1);
+    expect(getCloseMatchFeedback(result)).toBeNull();
   });
 });

@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { pwaUpdateManager } from '../services/pwaUpdateManager';
+import { useState, useEffect, useSyncExternalStore } from 'react';
+import { pwaInstallManager, InstallResult } from '../services/pwaInstall';
 import { logger } from '../services/logger';
 
 /** Background Sync API — not in standard TypeScript lib. */
@@ -10,11 +12,6 @@ interface SyncManager {
 interface SyncServiceWorkerRegistration extends ServiceWorkerRegistration {
   readonly sync: SyncManager;
 }
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): void;
-  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
 /** navigator.connection (Network Information API — not in standard TS lib). */
 interface NetworkInformation {
   effectiveType: string;
@@ -22,36 +19,43 @@ interface NetworkInformation {
   removeEventListener(type: 'change', listener: () => void): void;
 }
 
-/** navigator.standalone is Safari/iOS only. */
-interface NavigatorIOS extends Navigator {
-  standalone?: boolean;
-}
+/**
+ * The push (VAPID) public key. Vite settings reach shared code through window.__APP_ENV (set in
+ * main.tsx); `import.meta` itself cannot be parsed by the test runner.
+ */
+const getVapidKey = (): string | undefined =>
+  (window as Window & { __APP_ENV?: Record<string, string | undefined> }).__APP_ENV
+    ?.VITE_VAPID_PUBLIC_KEY;
+
+/** Shared install state and the install action only (no service worker side effects). */
+export const useInstallPrompt = () => {
+  const install = useSyncExternalStore(pwaInstallManager.subscribe, pwaInstallManager.getState);
+  useEffect(() => {
+    pwaInstallManager.refreshInstalled();
+  }, []);
+  return {
+    isInstallable: install.installable,
+    isInstalled: install.installed,
+    installApp: (): Promise<InstallResult> => pwaInstallManager.promptInstall(),
+  };
+};
 
 // PWA installation and service worker management
 export const usePWA = () => {
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  // Install state is shared (the browser's install event fires once, before most screens mount)
+  const install = useSyncExternalStore(pwaInstallManager.subscribe, pwaInstallManager.getState);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  // One update detector: the manager's. It also sees a worker that was already waiting when the
+  // page started (this hook used to listen for `updatefound` only, which does not fire for that)
+  useEffect(() => pwaUpdateManager.onUpdateAvailable(() => setUpdateAvailable(true)), []);
 
   const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         setSwRegistration(registration);
-
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateAvailable(true);
-              }
-            });
-          }
-        });
 
         logger.debug('Service Worker registered successfully');
       } catch (error) {
@@ -61,65 +65,24 @@ export const usePWA = () => {
   };
 
   useEffect(() => {
-    // Check if already installed
-    const checkInstalled = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInApp = (window.navigator as NavigatorIOS).standalone === true;
-      setIsInstalled(isStandalone || isInApp);
-    };
-
-    checkInstalled();
-
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
-    };
-
-    // Listen for app installed event
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setIsInstallable(false);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    pwaInstallManager.refreshInstalled();
 
     // Register service worker
     registerServiceWorker();
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
   }, []);
 
-  const installApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-
-      if (outcome === 'accepted') {
-        logger.debug('PWA installed');
-      }
-
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    }
-  };
+  const installApp = (): Promise<InstallResult> => pwaInstallManager.promptInstall();
 
   const updateApp = async () => {
-    if (swRegistration?.waiting) {
-      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
-    }
+    // Reloading right after posting SKIP_WAITING would race the new worker's activation; the
+    // manager waits for it to take control, and reloads once (or just reloads if the update was
+    // already applied from another tab)
+    await pwaUpdateManager.applyUpdate();
   };
 
   return {
-    isInstallable,
-    isInstalled,
+    isInstallable: install.installable,
+    isInstalled: install.installed,
     installApp,
     updateAvailable,
     updateApp,
@@ -178,7 +141,7 @@ export const usePushNotifications = () => {
     }
 
     // Check if VAPID key is configured (you would set this in environment variables)
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = getVapidKey();
     setVapidKeyAvailable(!!vapidKey);
   }, []);
 
@@ -195,7 +158,7 @@ export const usePushNotifications = () => {
     if (!('PushManager' in window) || !registration) return;
 
     // Get VAPID key from environment variables
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const vapidKey = getVapidKey();
 
     if (!vapidKey) {
       logger.warn('VAPID key not configured for push notifications');

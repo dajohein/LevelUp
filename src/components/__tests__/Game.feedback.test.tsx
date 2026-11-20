@@ -42,12 +42,12 @@ describe('Game feedback updates', () => {
         currentOptions: [],
         quizMode: 'open-answer',
         wordProgress: { 'de-hund': { xp: 50 } },
-        capitalizationFeedback: '',
+        spellingFeedback: '',
         language: 'de',
       },
       reducers: {
         setFeedback: (state, action: PayloadAction<string>) => {
-          state.capitalizationFeedback = action.payload;
+          state.spellingFeedback = action.payload;
           state.wordProgress['de-hund'].xp += 1;
         },
       },

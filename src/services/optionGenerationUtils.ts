@@ -9,6 +9,7 @@ import { Word } from './wordService';
 import { getModulesForLanguage, getWordsForModule } from './moduleService';
 import { logger } from './logger';
 import { hasEquivalentTranslation } from './translationUtils';
+import { getContentLanguages } from './contentLanguage';
 
 /**
  * Generate multiple choice options scoped to the same module as the word
@@ -23,7 +24,19 @@ export function generateModuleScopedOptions(
   allWords: Word[]
 ): string[] {
   const direction = word.direction || 'definition-to-term';
-  const correctAnswer = direction === 'definition-to-term' ? word.term : word.definition;
+  const answerField = direction === 'definition-to-term' ? 'term' : 'definition';
+  const correctAnswer = word[answerField];
+  // In a module that mixes fields of different languages (Dutch term / German definition next
+  // to German term / Dutch definition) the answer's field name says nothing about its language,
+  // so distractors are taken from whichever field of the candidate has the answer's language.
+  const answerLanguage = getContentLanguages(languageCode, word)[answerField];
+  const distractorFor = (candidate: Word): string | null => {
+    if (!answerLanguage) return candidate[answerField];
+    const languages = getContentLanguages(languageCode, candidate);
+    if (languages[answerField] === answerLanguage) return candidate[answerField];
+    const other = answerField === 'term' ? 'definition' : 'term';
+    return languages[other] === answerLanguage ? candidate[other] : null;
+  };
 
   // Find which module this word belongs to
   const modules = getModulesForLanguage(languageCode);
@@ -59,9 +72,9 @@ export function generateModuleScopedOptions(
         candidate.id !== word.id &&
         !hasEquivalentTranslation(word.definition, candidate.definition)
       ) {
-        const incorrectAnswer =
-          direction === 'definition-to-term' ? candidate.term : candidate.definition;
+        const incorrectAnswer = distractorFor(candidate);
         if (
+          incorrectAnswer &&
           incorrectAnswer.toLowerCase().trim() !== correctAnswer.toLowerCase().trim() &&
           !incorrectOptions.some(
             option => option.toLowerCase().trim() === incorrectAnswer.toLowerCase().trim()

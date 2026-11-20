@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../services/sessionRequeue';
 import React from 'react';
 import styled from '@emotion/styled';
 import { MultipleChoiceQuiz } from './quiz/MultipleChoiceQuiz';
@@ -5,9 +6,10 @@ import { OpenQuestionQuiz } from './quiz/OpenQuestionQuiz';
 import { LetterScrambleQuiz } from './quiz/LetterScrambleQuiz';
 import { FillInTheBlankQuiz } from './quiz/FillInTheBlankQuiz';
 import { LearningCard } from './quiz/LearningCard';
+import { getContentLanguages } from '../services/contentLanguage';
 import { gameServices } from '../services/game';
 import { Word } from '../services/wordService';
-import { WordProgress } from '../store/types';
+import { SubmitOptions, WordProgress } from '../store/types';
 import { SessionType, SessionProgress } from '../store/sessionSlice';
 import { EnhancedWordInfo } from '../hooks/useEnhancedGame';
 
@@ -300,6 +302,9 @@ export interface QuizRendererProps {
   lastSelectedAnswer: string;
   feedbackQuestionKey: string;
 
+  // Course language code, used to mark vocabulary with its language for screen readers
+  languageCode?: string;
+
   // Context
   contextForWord: { sentence: string; translation: string; audio?: string } | null | undefined;
 
@@ -308,7 +313,7 @@ export interface QuizRendererProps {
   sessionTimer?: number | ReturnType<typeof setInterval>;
 
   // Main handlers
-  handleSubmit: (answer: string) => void;
+  handleSubmit: (answer: string, options?: SubmitOptions) => void;
   handleOpenQuestionSubmit: () => void;
   handleContinueFromLearningCard: () => void;
 
@@ -340,6 +345,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   lastAnswerCorrect,
   lastSelectedAnswer,
   feedbackQuestionKey,
+  languageCode,
   contextForWord,
   wordTimer: _wordTimer,
   sessionTimer: _sessionTimer,
@@ -383,12 +389,21 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
   }
 
   // Generate unique key for current question
-  const currentQuestionKey = `${wordToUse.id}-${gameServices.modeHandler.getQuestionWord(wordToUse)}`;
+  const currentQuestionKey = getQuestionKey(
+    wordToUse.id,
+    gameServices.modeHandler.getQuestionWord(wordToUse),
+    enhancedWordInfo?.isRetry === true
+  );
 
   // Only show feedback if it belongs to the current question instance
   const shouldShowFeedback = feedbackQuestionKey.startsWith(currentQuestionKey);
   const currentAnswerCorrect = shouldShowFeedback ? lastAnswerCorrect : null;
   const currentSelectedAnswer = shouldShowFeedback ? lastSelectedAnswer : '';
+
+  const contentLanguages = getContentLanguages(languageCode, wordToUse);
+  const quizFields = gameServices.modeHandler.getQuizFields(wordToUse, quizModeToUse);
+  const promptLanguage = contentLanguages[quizFields.question];
+  const answerLanguage = contentLanguages[quizFields.answer];
 
   const quizContent =
     showLearningCard && !isTransitioning ? ( // Don't show learning card during transitions
@@ -402,6 +417,7 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
         onContinue={handleContinueFromLearningCard}
         autoAdvance={false} // Simple: user controls when to continue
         reason={wordLearningStatus.isTrulyNewWord ? 'new' : 'reinforcement'}
+        languageCode={languageCode}
       />
     ) : (
       <>
@@ -420,6 +436,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
               sessionProgress?.wordsCompleted / Math.max(currentSession?.targetWords || 20, 1)
             }
             context={contextForWord ?? undefined}
+            promptLanguage={promptLanguage}
+            answerLanguage={answerLanguage}
+            contextLanguage={contentLanguages.term}
+            contextTranslationLanguage={contentLanguages.definition}
           />
         ) : quizModeToUse === 'letter-scramble' ? (
           <LetterScrambleQuiz
@@ -432,10 +452,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             disabled={isTransitioning}
-            onAnswer={correct => {
+            onAnswer={(correct, hintsUsed) => {
               // Use the unified handleSubmit for consistent word progress tracking
               const targetAnswer = gameServices.modeHandler.getQuizAnswer(wordToUse, quizModeToUse);
-              handleSubmit(correct ? targetAnswer : 'incorrect_answer');
+              handleSubmit(correct ? targetAnswer : 'incorrect_answer', { hintsUsed });
             }}
           />
         ) : quizModeToUse === 'fill-in-the-blank' ? (
@@ -468,6 +488,10 @@ export const QuizRenderer: React.FC<QuizRendererProps> = ({
             level={Math.floor((wordProgress[wordToUse.id]?.xp || 0) / 100)}
             xp={wordProgress[wordToUse.id]?.xp || 0}
             context={contextForWord ?? undefined}
+            promptLanguage={promptLanguage}
+            answerLanguage={answerLanguage}
+            contextLanguage={contentLanguages.term}
+            contextTranslationLanguage={contentLanguages.definition}
           />
         )}
       </>

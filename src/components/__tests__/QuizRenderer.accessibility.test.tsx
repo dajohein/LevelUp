@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../../services/sessionRequeue';
 import { ThemeProvider } from '@emotion/react';
 import { render, screen } from '@testing-library/react';
 import { QuizRenderer } from '../QuizRenderer';
@@ -31,9 +32,10 @@ describe('QuizRenderer answer error accessibility', () => {
           translation: 'The dog plays.',
         },
       };
-      const questionKey = `${currentWord.id}-${gameServices.modeHandler.getQuestionWord(
-        currentWord
-      )}`;
+      const questionKey = getQuestionKey(
+        currentWord.id,
+        gameServices.modeHandler.getQuestionWord(currentWord)
+      );
 
       render(
         <ThemeProvider theme={theme}>

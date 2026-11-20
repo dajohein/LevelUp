@@ -8,6 +8,7 @@ import { setCurrentModule } from '../store/gameSlice';
 import { Navigation } from './Navigation';
 import { SessionAnalytics } from './SessionAnalytics';
 import { words } from '../services/wordService';
+import { getDifficultyBackground, DIFFICULTY_TEXT_COLOR } from '../styles/difficultyColors';
 
 const Container = styled.div`
   display: flex;
@@ -201,24 +202,11 @@ const SessionActions = styled.div`
 `;
 
 const PracticeButton = styled.button<{ difficulty: string }>`
-  background: ${props => {
-    switch (props.difficulty) {
-      case 'beginner':
-        return 'linear-gradient(45deg, #4CAF50, #66BB6A)';
-      case 'intermediate':
-        return 'linear-gradient(45deg, #FF9800, #FFB74D)';
-      case 'advanced':
-        return 'linear-gradient(45deg, #F44336, #EF5350)';
-      case 'expert':
-        return 'linear-gradient(45deg, #9C27B0, #BA68C8)';
-      default:
-        return 'linear-gradient(45deg, #4CAF50, #66BB6A)';
-    }
-  }};
+  background: ${props => getDifficultyBackground(props.difficulty)};
   border: none;
   border-radius: 12px;
   padding: 12px 20px;
-  color: white;
+  color: ${DIFFICULTY_TEXT_COLOR};
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

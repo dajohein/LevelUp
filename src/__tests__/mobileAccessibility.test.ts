@@ -20,7 +20,9 @@ describe('mobile accessibility defaults', () => {
     document.head.appendChild(style);
 
     try {
-      const rules = Array.from(style.sheet!.cssRules).filter(
+      const sheet = style.sheet;
+      if (!sheet) throw new Error('Stylesheet failed to attach');
+      const rules = Array.from(sheet.cssRules).filter(
         (rule): rule is CSSStyleRule => rule instanceof CSSStyleRule
       );
       for (const selector of ['html', 'body', '#root', '*']) {

@@ -13,6 +13,18 @@ describe('GameModeHandler', () => {
     handler = new GameModeHandler();
   });
 
+  describe('getQuizFields', () => {
+    const modes = ['multiple-choice', 'open-answer', 'fill-in-the-blank', 'letter-scramble'];
+    it.each(modes)('%s: shows and expects the fields getQuizQuestion/getQuizAnswer use', mode => {
+      for (const direction of ['term-to-definition', 'definition-to-term', undefined] as const) {
+        const word = makeWord({ term: 'der Hund', definition: 'de hond', direction });
+        const fields = handler.getQuizFields(word, mode);
+        expect(word[fields.question]).toBe(handler.getQuizQuestion(word, mode));
+        expect(word[fields.answer]).toBe(handler.getQuizAnswer(word, mode));
+      }
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // getCurrentQuizMode
   // ---------------------------------------------------------------------------

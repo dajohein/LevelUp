@@ -48,11 +48,13 @@ self.addEventListener('install', (event) => {
         
         return cache.addAll(STATIC_RESOURCES.map(url => new Request(url, { cache: 'reload' })));
       })
-      .then(() => {
-        // Force activation of new service worker
-        console.log('[ServiceWorker] Skipping waiting for immediate activation');
-        return self.skipWaiting();
-      })
+      // A new worker WAITS here. It must not skipWaiting() on install: that would activate it at
+      // once, delete the previous release's caches under pages that are still running that release
+      // (their lazy chunks would then fail), and switch those pages to the new worker without the
+      // user's consent. It activates when the user accepts the update (the SKIP_WAITING message
+      // below) or when no page controlled by the old release is left. On an installed iOS app
+      // pages are suspended rather than closed, so that is not guaranteed there: the banner is
+      // shown again on every launch while a worker waits.
   );
 });
 
@@ -87,20 +89,10 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         console.log('[ServiceWorker] ✅ Cache cleanup complete');
-        // Don't immediately claim control - wait for user consent
-        // return self.clients.claim(); // Removed: was too aggressive
-        
-        // Notify all clients about the update availability
-        return self.clients.matchAll().then((clients) => {
-          clients.forEach((client) => {
-            console.log('[ServiceWorker] 📢 Notifying client of update availability');
-            client.postMessage({
-              type: 'SW_UPDATE_AVAILABLE',
-              version: CACHE_VERSION,
-              cacheIdentifier: cacheIdentifier
-            });
-          });
-        });
+        // Pages claim control on the SKIP_WAITING path only (see the message handler). Nothing is
+        // broadcast here: by the time a worker activates the update has already been accepted, so an
+        // "update available" message would arrive after the fact. The page detects a waiting worker
+        // itself (registration.waiting / updatefound).
       })
   );
 });

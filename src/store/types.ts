@@ -13,6 +13,7 @@ export interface DirectionalProgress {
   lastPracticed: string;
   averageResponseTime?: number;
   consecutiveCorrect?: number;
+  streakUpdatedAt?: string; // ISO date of the last streak increase (see reviewStreak.ts)
   longestStreak?: number;
   difficultyLevel?: 'easy' | 'medium' | 'hard';
 }
@@ -27,6 +28,14 @@ export interface LegacyWordProgress {
 }
 
 // Enhanced WordProgress with backward compatibility
+/** Optional context for an answer submission. */
+export interface SubmitOptions {
+  /** Hints used; an assisted answer is still correct but earns no mastery. */
+  hintsUsed?: number;
+  /** A re-queued retry after a miss: practice only, earns no mastery. */
+  isRetry?: boolean;
+}
+
 export interface WordProgress {
   wordId: string;
 
@@ -35,6 +44,10 @@ export interface WordProgress {
   lastPracticed: string; // ISO date string
   timesCorrect: number; // Original correct count
   timesIncorrect: number; // Original incorrect count
+
+  // REVIEW SCHEDULING - OPTIONAL (absent on progress saved before streaks were tracked)
+  consecutiveCorrect?: number; // Reviews answered correctly in a row; a lapse resets it to 0
+  streakUpdatedAt?: string; // ISO date of the last streak increase (see reviewStreak.ts)
 
   // NEW FIELDS - OPTIONAL AND DEFAULTED
   totalXp?: number; // Aggregate XP across directions
@@ -111,7 +124,7 @@ export interface GameState {
   lastWordId?: string; // Track last word to prevent immediate repetition
   recentlyUsedWords?: string[]; // Track recently used words to prevent repetition
   wordProgress: { [key: string]: WordProgress }; // Track progress per word
-  capitalizationFeedback?: string; // Feedback for language-specific capitalization errors
+  spellingFeedback?: string; // Feedback for capitalization errors or accepted spelling variants
 }
 
 export interface Achievement {

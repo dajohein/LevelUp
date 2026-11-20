@@ -92,6 +92,11 @@ interface OpenQuestionQuizProps {
   level?: number;
   xp?: number;
   context?: { sentence: string; translation: string; audio?: string };
+  /** BCP 47 languages of the learning content, for screen readers (the UI stays English). */
+  promptLanguage?: string;
+  answerLanguage?: string;
+  contextLanguage?: string;
+  contextTranslationLanguage?: string;
 }
 
 const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
@@ -106,19 +111,25 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
   level = 1,
   xp = 0,
   context,
+  promptLanguage,
+  answerLanguage,
+  contextLanguage,
+  contextTranslationLanguage,
 }) => {
   return (
     <Container>
       <ModeIndicator>Open Answer Mode</ModeIndicator>
 
-      <Word>{word}</Word>
+      <Word lang={promptLanguage}>{word}</Word>
 
       {context && (
         <ContextSection>
           <ContextLabel>Example usage</ContextLabel>
-          <ContextSentence>{context.sentence}</ContextSentence>
+          <ContextSentence lang={contextLanguage}>{context.sentence}</ContextSentence>
           {userAnswer && (isCorrect === true || isError === true) ? (
-            <ContextTranslation>{context.translation}</ContextTranslation>
+            <ContextTranslation lang={contextTranslationLanguage}>
+              {context.translation}
+            </ContextTranslation>
           ) : (
             <ContextTranslation style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem' }}>
               Translation will appear after answering
@@ -136,6 +147,7 @@ const OpenQuestionQuizComponent: React.FC<OpenQuestionQuizProps> = ({
         hint={hint}
         disabled={disabled}
         placeholder="Type your translation..."
+        lang={answerLanguage}
       />
       <BrainProgress xp={xp} level={level} />
     </Container>

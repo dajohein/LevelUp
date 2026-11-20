@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useLocation } from 'react-router-dom';
 import { pwaUpdateManager, UpdateInfo } from '../services/pwaUpdateManager';
+import { reloadPage } from '../services/pageReload';
 
 const UpdateBanner = styled.div<{ visible: boolean }>`
   position: fixed;
@@ -88,128 +89,71 @@ const UpdateIcon = styled.span`
   }
 `;
 
+/**
+ * Routes where an answer may be in progress. The update banner waits until the learner leaves them,
+ * so an update is never offered (let alone applied) in the middle of a quiz.
+ */
+const LEARNING_ROUTES = ['/game/', '/challenge/', '/practice/', '/boss/', '/streak/'];
+export const isLearningRoute = (pathname: string): boolean =>
+  LEARNING_ROUTES.some(route => pathname.includes(route));
+
 export const PWAUpdateNotification: React.FC = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds to respond
   const location = useLocation();
 
-  // Check if user is in an active learning session
-  const isInLearningSession = () => {
-    const learningRoutes = ['/game/', '/challenge/', '/practice/', '/boss/', '/streak/'];
-    return learningRoutes.some(route => location.pathname.includes(route));
-  };
+  // Subscribe once and unsubscribe on unmount. (It used to re-subscribe on every route change and
+  // never unsubscribed, so callbacks piled up.) The manager replays an update found before this
+  // component mounted, so a fast update announcement is not lost.
+  useEffect(() => pwaUpdateManager.onUpdateAvailable(info => setUpdateInfo(info)), []);
 
-  useEffect(() => {
-    // Listen for update notifications
-    pwaUpdateManager.onUpdateAvailable(info => {
-      console.log('🔔 Update notification received:', info);
-
-      // If user is in a learning session, delay the notification longer
-      const delayTime = isInLearningSession() ? 30000 : 2000; // 30s vs 2s delay
-
-      setTimeout(() => {
-        setUpdateInfo(info);
-        setIsVisible(true);
-        setShowTimer(true);
-        setTimeLeft(15);
-      }, delayTime);
-    });
-  }, [location.pathname]);
-
-  // Auto-dismiss timer
-  useEffect(() => {
-    if (!isVisible || !showTimer) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          // Auto-dismiss after 15 seconds
-          setIsVisible(false);
-          setShowTimer(false);
-          setTimeout(() => {
-            // Store update info for later access
-            if (updateInfo) {
-              localStorage.setItem('pending-update', JSON.stringify(updateInfo));
-            }
-            setUpdateInfo(null);
-          }, 300);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isVisible, showTimer, updateInfo]);
+  const visible = updateInfo !== null && !dismissed && !isLearningRoute(location.pathname);
 
   const handleUpdate = async () => {
-    if (!updateInfo) return;
-
     setIsUpdating(true);
-    setShowTimer(false); // Stop the timer
-    console.log('🚀 User initiated update');
-
     try {
-      const success = await pwaUpdateManager.applyUpdate();
-      if (!success) {
-        console.log('ℹ️ Manual reload required');
-        // Fallback: manual reload
-        window.location.reload();
+      const applied = await pwaUpdateManager.applyUpdate();
+      if (!applied) {
+        // Nothing could be applied through the worker: a plain reload still loads the new version
+        reloadPage();
       }
     } catch (error) {
       console.error('❌ Update failed:', error);
       setIsUpdating(false);
-      // Fallback: manual reload
-      window.location.reload();
     }
   };
 
   const handleDismiss = () => {
-    console.log('👋 User dismissed update notification');
-    setIsVisible(false);
-    setShowTimer(false);
-
-    // Store update info for later access
-    if (updateInfo) {
-      localStorage.setItem('pending-update', JSON.stringify(updateInfo));
+    setDismissed(true);
+    // Settings shows a pending update the user chose to postpone
+    try {
+      if (updateInfo) localStorage.setItem('pending-update', JSON.stringify(updateInfo));
+    } catch {
+      /* storage unavailable: the banner is simply gone for this visit */
     }
-
-    setTimeout(() => setUpdateInfo(null), 300);
   };
 
-  // Note: handleRefresh function removed as it was unused
-  // const handleRefresh = () => {
-  //   console.log('🔄 User forced refresh');
-  //   window.location.reload();
-  // };
-
-  if (!updateInfo) return null;
+  // Not rendered while hidden: an off-screen banner would still be reachable by keyboard focus
+  if (!visible) return null;
 
   return (
-    <UpdateBanner visible={isVisible}>
+    <UpdateBanner visible role="status" aria-live="polite">
       <UpdateMessage>
-        <UpdateIcon>🚀</UpdateIcon>
-        <span>New version available!</span>
-        {updateInfo.version && <span className="version">v{updateInfo.version}</span>}
-        <span>
-          {isInLearningSession()
-            ? 'Update when you finish this session, or continue later'
-            : 'Boss battles & streak challenges now have progressive difficulty!'}
-        </span>
-        {showTimer && timeLeft > 0 && (
-          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Auto-dismiss in {timeLeft}s</span>
+        <UpdateIcon aria-hidden="true">🚀</UpdateIcon>
+        <span>A new version of LevelUp is ready.</span>
+        {updateInfo?.version && updateInfo.version !== 'unknown' && (
+          <span className="version">v{updateInfo.version}</span>
         )}
+        <span>Reload to get it.</span>
       </UpdateMessage>
 
       <UpdateActions>
         <UpdateButton variant="secondary" onClick={handleDismiss} disabled={isUpdating}>
-          {isInLearningSession() ? 'Continue Learning' : 'Later'}
+          Later
         </UpdateButton>
         <UpdateButton onClick={handleUpdate} disabled={isUpdating}>
-          {isUpdating ? '🔄 Updating...' : '✨ Update Now'}
+          {isUpdating ? '🔄 Updating...' : '✨ Update now'}
         </UpdateButton>
       </UpdateActions>
     </UpdateBanner>

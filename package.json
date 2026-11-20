@@ -26,6 +26,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "test": "jest",
     "test:sw": "node --test scripts/pwa/*.test.mjs",
+    "test:sw-lifecycle": "node --test scripts/pwa/service-worker.lifecycle.test.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "icons:generate": "bash scripts/pwa/generate-icons.sh",
@@ -33,9 +34,10 @@
     "prepare": "[ -d .git ] && husky install || true"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix --max-warnings 0",
-      "prettier --write"
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix --quiet",
+      "prettier --write",
+      "node scripts/check-lint-baseline.cjs --files"
     ],
     "*.{css,md,json}": [
       "prettier --write"
@@ -46,6 +48,7 @@
     "@emotion/styled": "^11.11.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/uuid": "^11.0.0",
+    "@upstash/redis": "^1.41.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "react": "^18.2.0",

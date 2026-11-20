@@ -12,7 +12,7 @@ be dismissed while the reset is running.
 then Fill in the Blank. A correct answer advances that word for its next encounter; mistakes
 and skips do not advance it. Words without sentence context use Open Answer after Letter Scramble.
 Free-play and other challenges retain their adaptive modes. See
-[learning progression](docs/AI_ADAPTIVE_LEARNING.md#start-learning--deep-dive-progression).
+[learning progression](docs/ADAPTIVE_LEARNING.md#start-learning--deep-dive-progression).
 
 ## 🚀 **Latest: Minimalistic UI with Brain Icon Progress (October 26, 2025)**
 
@@ -134,7 +134,7 @@ window.testPerformanceFix();
 ### ✨ **Local-First Learning Progress**
 
 - **📱 Reliable Local Progress**: Learning progress is stored on this device
-- **🌐 Remote Sync**: Not available; the existing API uses volatile process memory and is disabled in production
+- **🌐 Remote Sync**: Opt-in (`VITE_ENABLE_REMOTE_STORAGE=true`); the API keeps accounts, sessions and each language's learning progress in Upstash Redis (Vercel Marketplace). Progress syncs between linked devices and is merged per word; this device's copy stays the source of truth
 - **💾 IndexedDB Integration**: 50x storage increase (10MB → 500MB+) with intelligent tiered access
 - **📊 Real-time Analytics**: Health monitoring, cache performance, and optimization insights
 - **🧠 AI-Powered Learning**: ML-based behavioral pattern recognition and predictive recommendations
@@ -143,9 +143,9 @@ window.testPerformanceFix();
 ### 🌐 **Remote Storage Status**
 
 - **Local-first**: Progress remains available on this device
-- **Demo only**: Remote account and storage endpoints are opt-in for development and are not durable
-- **No progress transfer**: Device linking does not sync or reconcile learning progress
-- **Production behavior**: Remote account and storage endpoints return unavailable until durable shared storage is implemented
+- **Opt-in**: Remote account and storage endpoints are off by default; enable with `VITE_ENABLE_REMOTE_STORAGE=true`
+- **Cross-device progress**: With sync enabled, progress is uploaded shortly after you answer and merged into the other devices of the same account (per word, the more recently practiced entry wins; nothing is ever deleted). Only the language you are using syncs; others sync when you switch to them. If two devices answer the same word while both are offline, one of those answers is lost. Resetting progress removes the server copy too, but another linked device keeps its own copy and sends it back when it syncs
+- **Production behavior**: The API needs a connected Redis store (`KV_REST_API_URL`/`KV_REST_API_TOKEN`) and `SESSION_SECRET`; without Redis it fails closed (HTTP 500)
 
 ### 📈 **Performance Achievements**
 
@@ -163,8 +163,8 @@ window.testPerformanceFix();
 - **Smart word grouping** (5-7 words) for better focus and retention
 - **Mixed quiz modes** within sessions for engaging variety
 - **Four learning phases**: Introduction → Learning → Consolidation → Mastery
-- **AI Learning Coach** with real-time behavioral analytics and personalized coaching
-- **User Learning Profiles** automatically saved and synchronized across devices
+- **Adaptive practice**: spaced repetition with mode adaptation based on recent performance (see docs/ADAPTIVE_LEARNING.md)
+- **User Learning Profiles** saved on this device (cross-device sync covers word progress only)
 - **Personalized analytics** and ML-powered learning recommendations
 
 ### **Triple Quiz System**
@@ -274,7 +274,7 @@ Key tests:
 
 - **Development Workflow**: [`scripts/README.md`](./scripts/README.md) - Complete dev environment setup
 - **Technical Architecture**: [`docs/README.md`](./docs/README.md) - Implementation details and guides
-- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and development-only API demo
+- **Remote Storage Status**: [`docs/SERVER_SIDE_STORAGE.md`](./docs/SERVER_SIDE_STORAGE.md) - Local-first behavior and the current state of remote sync
 
 ## 🎮 How to Use
 
@@ -309,6 +309,7 @@ src/
 - **Responsive Design**: Optimized layouts for mobile, tablet, and desktop
 - **Touch Interface**: Native touch gestures and haptic feedback
 - **PWA Ready**: Service worker, offline support, and app-like experience
+- **Install as App**: Settings offers the browser's install prompt where available, shows "installed" once installed, and otherwise explains how to add the app (e.g. Share → Add to Home Screen on iOS)
 - **Keyboard Support**: Type accented letters in Letter Scramble mode; browser shortcuts and input fields remain unaffected
 - **Real-time Feedback**: Smooth animations and visual feedback
 
@@ -323,12 +324,12 @@ The application implements **strict language separation** to prevent data contam
 - **Storage Safeguards**: Multiple validation layers ensure data integrity
 - **Migration-Safe Design**: Robust data migration utilities for format changes
 
-### **Remote Storage Demo**
+### **Remote Storage**
 
 - **Endpoints**: [api/storage.ts](api/storage.ts), [api/users.ts](api/users.ts)
 - **Client**: [src/services/storage/remoteStorage.ts](src/services/storage/remoteStorage.ts)
 - **Tiered Orchestration**: [src/services/storage/enhancedStorage.ts](src/services/storage/enhancedStorage.ts), [src/services/storage/tieredStorage.ts](src/services/storage/tieredStorage.ts)
-- **Capability**: The process-local API is opt-in for development only; production rejects remote requests. It does not provide durable or cross-device progress sync.
+- **Capability**: The API is backed by Upstash Redis and is opt-in (`VITE_ENABLE_REMOTE_STORAGE`). The app creates a guest session, can link devices, and syncs learning progress through `src/services/progressSync/` (one `progress_v1` entry per language; the `tieredStorage` remote tier stays disabled).
 
 ### **Performance Monitoring**
 

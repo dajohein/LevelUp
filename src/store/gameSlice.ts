@@ -1,13 +1,23 @@
+import { nextReviewStreak } from '../services/reviewStreak';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   selectWordForRegularSession,
   selectWordForMixedPractice,
 } from '../services/wordSelectionManager';
-import { calculateMasteryGain, getMasteryQuizMode } from '../services/masteryService';
+import {
+  calculateMasteryDecay,
+  calculateMasteryGain,
+  getMasteryQuizMode,
+} from '../services/masteryService';
 import { gameStateStorage } from '../services/storageService';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { logger } from '../services/logger';
-import { getCapitalizationFeedback } from '../services/answerValidation';
+import { mergeWordProgress } from '../services/progressSync/mergeProgress';
+import {
+  getAnswerScoreMultiplier,
+  getCapitalizationFeedback,
+  getCloseMatchFeedback,
+} from '../services/answerValidation';
 import { getQuizAnswerDirection, validateQuizAnswer } from '../services/quizAnswerValidation';
 import {
   advanceLearningMode,
@@ -15,7 +25,7 @@ import {
   selectQuizMode,
 } from '../services/quizModeSelectionUtils';
 import type { Word } from '../services/wordService';
-import type { GameState } from './types';
+import type { GameState, WordProgress } from './types';
 import { generateModuleScopedOptions } from '../services/optionGenerationUtils';
 
 interface AnswerSubmission {
@@ -24,6 +34,10 @@ interface AnswerSubmission {
   quizMode?: string;
   languageCode?: string;
   progressiveLearning?: boolean;
+  /** Hints used for this answer; an assisted answer earns no mastery. */
+  hintsUsed?: number;
+  /** A re-queued retry after a miss: practice only, earns no mastery. */
+  isRetry?: boolean;
 }
 
 type CheckAnswerPayload = string | AnswerSubmission;
@@ -125,7 +139,7 @@ export const gameSlice = createSlice({
           }
           state.isCorrect = null;
           state.lastAnswer = undefined;
-          state.capitalizationFeedback = undefined;
+          state.spellingFeedback = undefined;
           state.lastWordId = result.word.id;
 
           // Update recently used words list
@@ -161,7 +175,7 @@ export const gameSlice = createSlice({
       state.quizMode = quizMode ?? selectQuizMode({ word, wordProgress: state.wordProgress });
       state.isCorrect = null;
       state.lastAnswer = undefined;
-      state.capitalizationFeedback = undefined;
+      state.spellingFeedback = undefined;
       state.lastWordId = word?.id;
 
       // Update recently used words list
@@ -190,15 +204,21 @@ export const gameSlice = createSlice({
 
       state.isCorrect = validation.isCorrect;
       state.lastAnswer = submission.answer;
-      state.totalAttempts += 1;
 
-      // Store capitalization feedback for languages that require it
-      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, languageCode);
-        state.capitalizationFeedback = feedback || undefined;
-      } else {
-        state.capitalizationFeedback = undefined;
-      }
+      // Spelling feedback: capitalization (German) or an accepted spelling variant
+      state.spellingFeedback =
+        getCloseMatchFeedback(validation) ??
+        (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect
+          ? getCapitalizationFeedback(validation, languageCode)
+          : null) ??
+        undefined;
+
+      // A re-queued retry is practice: the learner sees whether they got it, but nothing counts.
+      // No mastery, schedule, score, streak, life or attempt changes, in either direction,
+      // otherwise a missed word would be penalised twice and a retry would inflate the streak.
+      if (submission.isRetry === true) return;
+
+      state.totalAttempts += 1;
 
       // Update word progress with enhanced directional tracking
       const wordId = word.id;
@@ -234,21 +254,36 @@ export const gameSlice = createSlice({
       };
 
       // Calculate new mastery
+      const assisted = (submission.hintsUsed ?? 0) > 0;
+      // A correct answer with hints is not evidence of recall: it must change neither mastery nor
+      // the review schedule. Keeping `lastPracticed` matters: moving it to now would restart the
+      // whole review interval and could push an overdue word out by a week or more.
+      const hintedCorrect = validation.isCorrect && assisted;
+      const now = new Date().toISOString();
+      // Decay first: everything that reads mastery (selection, scheduling, the progress screens)
+      // sees the decayed value, so a gain must start from it. Applying the gain to the stored,
+      // undecayed value would erase all decay with a single answer.
+      const decayedMastery = calculateMasteryDecay(
+        currentProgress.lastPracticed,
+        currentProgress.xp
+      );
       const newMastery = calculateMasteryGain(
-        currentProgress.xp,
+        decayedMastery,
         validation.isCorrect,
-        masteryMode
+        masteryMode,
+        assisted
       );
 
       // Update overall progress (maintaining backward compatibility)
       const updatedProgress = {
         ...currentProgress,
-        xp: newMastery,
-        lastPracticed: new Date().toISOString(),
+        xp: hintedCorrect ? currentProgress.xp : newMastery,
+        lastPracticed: hintedCorrect ? currentProgress.lastPracticed : now,
         timesCorrect: currentProgress.timesCorrect + (validation.isCorrect ? 1 : 0),
         timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
-        totalXp: newMastery,
+        totalXp: hintedCorrect ? (currentProgress.totalXp ?? currentProgress.xp) : newMastery,
         version: 2,
+        ...nextReviewStreak(currentProgress, validation.isCorrect, assisted),
       };
 
       // Update directional progress if using enhanced format
@@ -257,27 +292,24 @@ export const gameSlice = createSlice({
         if (directionData) {
           // Calculate directional mastery gain
           const directionalMastery = calculateMasteryGain(
-            directionData.xp,
+            calculateMasteryDecay(directionData.lastPracticed, directionData.xp),
             validation.isCorrect,
-            masteryMode
+            masteryMode,
+            assisted
           );
 
-          // Update directional stats
+          // Update directional stats. Same rules as the overall progress: hinted correct answers
+          // change neither mastery nor schedule, and the streak uses the same gated rule.
+          const streak = nextReviewStreak(directionData, validation.isCorrect, assisted);
           updatedProgress.directions[direction] = {
             ...directionData,
-            xp: directionalMastery,
-            lastPracticed: new Date().toISOString(),
+            xp: hintedCorrect ? directionData.xp : directionalMastery,
+            lastPracticed: hintedCorrect ? directionData.lastPracticed : now,
             timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
             timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            consecutiveCorrect: validation.isCorrect
-              ? (directionData.consecutiveCorrect || 0) + 1
-              : 0,
-            longestStreak: validation.isCorrect
-              ? Math.max(
-                  directionData.longestStreak || 0,
-                  (directionData.consecutiveCorrect || 0) + 1
-                )
-              : directionData.longestStreak || 0,
+            consecutiveCorrect: streak.consecutiveCorrect,
+            streakUpdatedAt: streak.streakUpdatedAt,
+            longestStreak: Math.max(directionData.longestStreak || 0, streak.consecutiveCorrect),
           };
         }
 
@@ -288,6 +320,8 @@ export const gameSlice = createSlice({
           updatedProgress.learningPhase = 'mastery';
         } else if (updatedProgress.xp > 0) {
           updatedProgress.learningPhase = 'practice';
+        } else {
+          updatedProgress.learningPhase = 'introduction';
         }
       }
 
@@ -312,7 +346,7 @@ export const gameSlice = createSlice({
                 ? 1.7
                 : 1;
         const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
-        const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
+        const finalScore = Math.round(baseScore * getAnswerScoreMultiplier(validation));
 
         state.score += finalScore;
         state.streak += 1;
@@ -328,134 +362,16 @@ export const gameSlice = createSlice({
     },
 
     /**
-     * UNIFIED ACTION: Handle complete answer submission with word progress only
-     * Session updates should be handled by dispatching handleAnswerSubmission separately
-     * This reduces the number of actions but keeps concerns separated
+     * Fold progress downloaded from the server into the active language. Merged against the
+     * CURRENT state (answers given while the request was in flight survive) and ignored for any
+     * language that is no longer active (it is merged in storage instead).
      */
-    submitAnswer: (state, action: PayloadAction<AnswerSubmission>) => {
-      const { answer } = action.payload;
-      const word = action.payload.word || state.currentWord;
-      if (!word) return;
-      const quizMode = action.payload.quizMode || state.quizMode;
-      const languageCode = action.payload.languageCode || state.language || 'en';
-
-      // Reuse existing checkAnswer logic but keep it self-contained
-      const direction = getQuizAnswerDirection(word, quizMode);
-      const masteryMode = getMasteryQuizMode(quizMode);
-      const validation = validateQuizAnswer(answer, word, quizMode, languageCode);
-
-      state.isCorrect = validation.isCorrect;
-      state.lastAnswer = answer;
-      state.totalAttempts += 1;
-
-      // Store capitalization feedback for languages that require it
-      if (languageCode === 'de' && validation.isCorrect && !validation.capitalizationCorrect) {
-        const feedback = getCapitalizationFeedback(validation, languageCode);
-        state.capitalizationFeedback = feedback || undefined;
-      } else {
-        state.capitalizationFeedback = undefined;
-      }
-
-      // Update word progress with enhanced directional tracking
-      const wordId = word.id;
-      const currentProgress = state.wordProgress[wordId] || {
-        wordId,
-        xp: 0,
-        lastPracticed: new Date().toISOString(),
-        timesCorrect: 0,
-        timesIncorrect: 0,
-        version: 2,
-        totalXp: 0,
-        firstLearned: new Date().toISOString(),
-        directions: {
-          'term-to-definition': {
-            timesCorrect: 0,
-            timesIncorrect: 0,
-            xp: 0,
-            lastPracticed: new Date().toISOString(),
-          },
-          'definition-to-term': {
-            timesCorrect: 0,
-            timesIncorrect: 0,
-            xp: 0,
-            lastPracticed: new Date().toISOString(),
-          },
-        },
-      };
-
-      // Calculate mastery gain using the enhanced system
-      const masteryGain = calculateMasteryGain(
-        currentProgress.xp,
-        validation.isCorrect,
-        masteryMode
-      );
-
-      const newMastery = currentProgress.xp + masteryGain;
-
-      // Create updated progress
-      const updatedProgress = {
-        ...currentProgress,
-        xp: newMastery,
-        lastPracticed: new Date().toISOString(),
-        timesCorrect: currentProgress.timesCorrect + (validation.isCorrect ? 1 : 0),
-        timesIncorrect: currentProgress.timesIncorrect + (validation.isCorrect ? 0 : 1),
-        totalXp: newMastery,
-        version: 2,
-      };
-
-      // Update directional progress if using enhanced format
-      if (updatedProgress.directions) {
-        const directionData = updatedProgress.directions[direction];
-        if (directionData) {
-          // Calculate directional mastery gain
-          const directionalMastery = calculateMasteryGain(
-            directionData.xp,
-            validation.isCorrect,
-            masteryMode
-          );
-
-          // Update directional stats
-          updatedProgress.directions[direction] = {
-            ...directionData,
-            xp: directionalMastery,
-            timesCorrect: directionData.timesCorrect + (validation.isCorrect ? 1 : 0),
-            timesIncorrect: directionData.timesIncorrect + (validation.isCorrect ? 0 : 1),
-            lastPracticed: new Date().toISOString(),
-          };
-        }
-      }
-
-      if (action.payload.progressiveLearning) {
-        updatedProgress.learningMode = advanceLearningMode(
-          word,
-          currentProgress,
-          quizMode,
-          validation.isCorrect
-        );
-      }
-      state.wordProgress[wordId] = updatedProgress;
-
-      if (validation.isCorrect) {
-        // Update score based on streak, quiz mode, and capitalization penalty
-        const modeMultiplier =
-          quizMode === 'open-answer'
-            ? 2
-            : quizMode === 'letter-scramble'
-              ? 1.5
-              : quizMode === 'fill-in-the-blank'
-                ? 1.7
-                : 1;
-        const baseScore = 10 * modeMultiplier * (1 + Math.floor(state.streak / 5));
-        const finalScore = Math.round(baseScore * validation.capitalizationPenalty);
-
-        state.score += finalScore;
-        state.streak += 1;
-        state.correctAnswers += 1;
-        state.bestStreak = Math.max(state.streak, state.bestStreak);
-      } else {
-        state.lives -= 1;
-        state.streak = 0;
-      }
+    mergeRemoteProgress: (
+      state,
+      action: PayloadAction<{ languageCode: string; words: { [wordId: string]: WordProgress } }>
+    ) => {
+      if (state.language !== action.payload.languageCode) return;
+      state.wordProgress = mergeWordProgress(state.wordProgress, action.payload.words).merged;
     },
 
     setLanguage: (state, action: PayloadAction<string>) => {
@@ -566,11 +482,11 @@ export const {
   nextWord,
   setCurrentWord,
   checkAnswer,
-  submitAnswer,
   setLanguage,
   setCurrentModule,
   resetGame,
   updateWordProgress,
+  mergeRemoteProgress,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

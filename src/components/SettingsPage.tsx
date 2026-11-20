@@ -6,6 +6,8 @@ import { MobileButton } from './mobile/MobileButton';
 import { AccountLinking } from './AccountLinking';
 import { pwaUpdateManager } from '../services/pwaUpdateManager';
 import { logger } from '../services/logger';
+import { useInstallPrompt } from '../hooks/usePWA';
+import { getInstallGuidance } from '../services/pwaInstall';
 import { ModalDialog } from './ui/ModalDialog';
 import { DataTransfer } from './DataTransfer';
 
@@ -93,6 +95,14 @@ const OptionsGrid = styled.div`
   }
 `;
 
+const InstallNote = styled.p`
+  color: ${props => props.theme.colors.textSecondary};
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+  grid-column: 1 / -1;
+`;
+
 const ComingSoon = styled.div`
   text-align: center;
   padding: ${props => props.theme.spacing.xl};
@@ -137,6 +147,11 @@ export const SettingsPage: React.FC = () => {
   const closeAccountRef = useRef<HTMLButtonElement>(null);
   const [pendingUpdate, setPendingUpdate] = useState<any>(null);
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const { isInstallable, isInstalled, installApp } = useInstallPrompt();
+  const [installMessage, setInstallMessage] = useState<{
+    type: 'info' | 'error';
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     // Check for pending updates when component mounts
@@ -145,13 +160,26 @@ export const SettingsPage: React.FC = () => {
   }, []);
 
   const handleNavigation = (path: string) => {
-    if (path === '/install') {
-      // Trigger PWA install
-      window.location.reload();
-    } else if (path === '/account-linking') {
+    if (path === '/account-linking') {
       setShowAccountLinking(true);
     } else {
       navigate(path);
+    }
+  };
+
+  const handleInstall = async () => {
+    setInstallMessage(null);
+    const result = await installApp();
+    if (result === 'dismissed') {
+      setInstallMessage({
+        type: 'info',
+        text: 'Installation was cancelled. You can install later from this page or your browser menu.',
+      });
+    } else if (result === 'error' || result === 'unavailable') {
+      setInstallMessage({
+        type: 'error',
+        text: 'Installation could not be started. Try the browser menu instead.',
+      });
     }
   };
 
@@ -257,9 +285,22 @@ export const SettingsPage: React.FC = () => {
             App Settings
           </SectionTitle>
           <OptionsGrid>
-            <MobileButton variant="outline" onClick={() => handleNavigation('/install')} fullWidth>
-              Install as App
-            </MobileButton>
+            {isInstalled ? (
+              <InstallNote>✅ LevelUp is installed as an app on this device.</InstallNote>
+            ) : isInstallable ? (
+              <MobileButton variant="outline" onClick={handleInstall} fullWidth>
+                Install as App
+              </MobileButton>
+            ) : (
+              <InstallNote>
+                {getInstallGuidance(navigator.userAgent, navigator.maxTouchPoints).text}
+              </InstallNote>
+            )}
+            {installMessage && (
+              <InstallNote role={installMessage.type === 'error' ? 'alert' : 'status'}>
+                {installMessage.text}
+              </InstallNote>
+            )}
           </OptionsGrid>
         </SectionCard>
 

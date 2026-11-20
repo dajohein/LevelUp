@@ -12,22 +12,35 @@ import { AudioProvider } from './features/audio/AudioContext';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PWAManager, OfflineBanner } from './components/pwa/PWAManager';
 import { initializeStorage } from './services/storage/storageInitializer';
+import {
+  startProgressSync,
+  syncActiveLanguageProgress,
+} from './services/progressSync/startProgressSync';
 import { setupStorageSync } from './store/persistenceMiddleware';
 import { registerPWA } from './services/pwaService';
 import { developmentCacheManager } from './utils/developmentCacheManager';
 import { environmentConfig } from './config/environment';
 import { logger } from './services/logger';
-import './utils/developerToolsDashboard'; // Initialize developer tools globally
 import './index.css';
 
 // Expose Vite env to runtime for env-first configuration (frontend)
 // This avoids direct import.meta.env usage in shared modules used by tests.
 (window as any).__APP_ENV = import.meta.env;
 
-// Remote storage is opt-in for volatile development/demo environments only.
-initializeStorage().catch(error => {
-  logger.warn('Storage initialization failed, falling back to local storage', { error });
-});
+// Remote storage (Upstash Redis behind api/) is opt-in via VITE_ENABLE_REMOTE_STORAGE.
+// Cross-device progress sync (also opt-in): uploads progress shortly after answers and merges the
+// server's copy into local progress; local storage stays the source of truth.
+startProgressSync(store);
+initializeStorage()
+  .catch(error => {
+    logger.warn('Storage initialization failed, falling back to local storage', { error });
+  })
+  .then(() => syncActiveLanguageProgress())
+  .catch(error => {
+    logger.warn('Progress sync at startup failed', {
+      error: error instanceof Error ? error.name : 'Error',
+    });
+  });
 
 // Initialize development cache busting
 if (environmentConfig.cacheBusting.enabled) {
@@ -40,7 +53,8 @@ if (environmentConfig.cacheBusting.enabled) {
 }
 
 // Load debug helpers in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
+  import('./utils/developerToolsDashboard'); // Initialize developer tools globally
   import('./utils/debugHelpers');
   import('./utils/debugPerformanceHelper');
   import('./utils/testPerformanceFix');

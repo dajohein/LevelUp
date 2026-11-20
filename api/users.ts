@@ -1,21 +1,7 @@
 /**
- * Vercel Serverless API for Usinterface UserResponse {
-  success: boolean;
-  data?: {
-    userId?: string;
-    sessionToken?: string;
-    accountCode?: string;
-    expiresIn?: number; // Added for account code expiration
-    user?: any;
-    linkedDevices?: number;
-  };
-  error?: string;
-  metadata: {
-    timestamp: number;
-    action: string;
-  };
-}* 
- * Handles user authentication, profile management, and session handling
+ * Vercel Serverless API for User Management
+ *
+ * Handles user creation, profile management, session handling and device linking.
  */
 
 // TypeScript interfaces for Vercel runtime
@@ -32,10 +18,27 @@ interface VercelResponse {
   setHeader(name: string, value: string): VercelResponse;
   end(): VercelResponse;
 }
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
+import { getDb, KEY_PREFIX } from './_db.js';
+import {
+  createSessionToken,
+  readSessionToken,
+  isSessionActive,
+  readSessionVersion,
+  resolveCorsOrigin,
+} from './_auth.js';
+import { clientAddress, envPositiveInt } from './_config.js';
 
 interface UserRequest {
-  action: 'create' | 'get' | 'update' | 'authenticate' | 'generateCode' | 'linkDevice';
+  action:
+    | 'create'
+    | 'get'
+    | 'update'
+    | 'authenticate'
+    | 'generateCode'
+    | 'linkDevice'
+    | 'revokeSessions'
+    | 'signOutEverywhere';
   userId?: string;
   sessionToken?: string;
   accountCode?: string;
@@ -47,6 +50,16 @@ interface UserRequest {
   };
 }
 
+export type UserProfile = {
+  id: string;
+  username: string;
+  email?: string;
+  preferences: unknown;
+  createdAt: number;
+  lastActive: number;
+  sessionVersion?: number;
+};
+
 interface UserResponse {
   success: boolean;
   data?: {
@@ -55,6 +68,7 @@ interface UserResponse {
     accountCode?: string;
     user?: any;
     linkedDevices?: number;
+    sessionVersion?: number;
   };
   error?: string;
   metadata?: {
@@ -63,36 +77,48 @@ interface UserResponse {
   };
 }
 
-// Simple in-memory storage for development
-// In production, replace with proper database
-const users = new Map<string, any>();
-const sessions = new Map<string, { userId: string; expires: number }>();
-const accountCodes = new Map<
-  string,
-  {
-    userId: string;
-    expires: number;
-    used: boolean;
-    attempts: number;
-    createdAt: number;
-  }
->();
-const rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
+// Redis layout (see _db.ts):
+//   levelup:user:<id>           -> user profile (JSON)
+//   levelup:code:<CODE>         -> { userId, used, createdAt }, expires via TTL
+//   levelup:usercode:<id>       -> the user's current unused code (so a new one replaces it)
+//   levelup:codeattempts:<CODE> -> failed/total link attempts for one code (TTL)
+//   levelup:rl:<bucket>         -> fixed-window rate-limit counter (TTL)
+const userKey = (id: string) => `${KEY_PREFIX}user:${id}`;
+const codeKey = (code: string) => `${KEY_PREFIX}code:${code}`;
+const userCodeKey = (id: string) => `${KEY_PREFIX}usercode:${id}`;
+const codeAttemptsKey = (code: string) => `${KEY_PREFIX}codeattempts:${code}`;
 
-// Security constants (env-driven)
-const MAX_CODE_ATTEMPTS = Number(process.env.ACCOUNT_CODE_MAX_ATTEMPTS || 5); // Max attempts per code
-const MAX_RATE_LIMIT_ATTEMPTS = Number(process.env.RATE_LIMIT_MAX_ATTEMPTS || 10); // Max attempts per IP per window
-const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60 * 60 * 1000); // default 1 hour
-const CODE_EXPIRY = Number(process.env.ACCOUNT_CODE_EXPIRY_MS || 60 * 60 * 1000); // default 1 hour
+// Security limits (env-driven). A malformed value falls back to the default and is logged
+// (see envPositiveInt); it never disables a limit.
+const MAX_REVOKES_PER_WINDOW = () => envPositiveInt('REVOKE_MAX_PER_WINDOW', 5); // per account
+const MAX_CODE_ATTEMPTS = () => envPositiveInt('ACCOUNT_CODE_MAX_ATTEMPTS', 5); // per code
+const MAX_RATE_LIMIT_ATTEMPTS = () => envPositiveInt('RATE_LIMIT_MAX_ATTEMPTS', 10); // per client per window
+const MAX_CREATE_ATTEMPTS = () => envPositiveInt('CREATE_MAX_PER_WINDOW', 30); // new accounts per client per window
+const RATE_LIMIT_WINDOW = () => envPositiveInt('RATE_LIMIT_WINDOW_MS', 60 * 60 * 1000); // default 1 hour
+const CODE_EXPIRY = () => envPositiveInt('ACCOUNT_CODE_EXPIRY_MS', 60 * 60 * 1000); // default 1 hour
+
+const KNOWN_ACTIONS: ReadonlyArray<string> = [
+  'create',
+  'get',
+  'update',
+  'authenticate',
+  'generateCode',
+  'linkDevice',
+  'revokeSessions',
+  'signOutEverywhere',
+];
+const MAX_USERNAME_LENGTH = 64;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_PREFERENCES_BYTES = 16 * 1024;
+const ACCOUNT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
   // Use crypto.randomBytes for cryptographically secure randomness
-  const crypto = require('crypto');
 
   // Generate 6 random bytes and encode as base32-like string
   // This gives us 8 characters from a 32-character alphabet
-  const bytes = crypto.randomBytes(6);
+  const bytes = randomBytes(6);
 
   // Use a custom alphabet excluding confusing characters (0, O, I, 1, etc.)
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -121,80 +147,69 @@ function generateAccountCode(): string {
   return result.substring(0, 8);
 }
 
-// Helper function to generate session token
-function generateSessionToken(): string {
-  return randomUUID();
-}
-
-// Helper function to validate session
-function validateSession(token: string): string | null {
-  const session = sessions.get(token);
-  if (!session || session.expires < Date.now()) {
-    if (session) sessions.delete(token);
-    return null;
-  }
-  return session.userId;
-}
-
-// Helper function to create session
-function createSession(userId: string): string {
-  const token = generateSessionToken();
-  const ttlMs = Number(process.env.SESSION_TOKEN_TTL_MS || 24 * 60 * 60 * 1000);
-  const expires = Date.now() + ttlMs;
-  sessions.set(token, { userId, expires });
-  return token;
-}
-
-// Helper function to check rate limiting
-function isRateLimited(identifier: string): boolean {
-  const now = Date.now();
-  const rateLimit = rateLimitMap.get(identifier);
-
-  if (!rateLimit) {
-    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
-    return false;
-  }
-
-  // Reset counter if window expired
-  if (now - rateLimit.lastAttempt > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
-    return false;
-  }
-
-  // Check if over limit
-  if (rateLimit.attempts >= MAX_RATE_LIMIT_ATTEMPTS) {
-    return true;
-  }
-
-  // Increment counter
-  rateLimit.attempts++;
-  rateLimit.lastAttempt = now;
-  rateLimitMap.set(identifier, rateLimit);
-
-  return false;
-}
-
-// Helper function to get client identifier (IP-based)
-function getClientIdentifier(req: any): string {
-  // In production, use proper IP detection with proxy headers
-  return (
-    req.headers['x-forwarded-for'] ||
-    req.headers['x-real-ip'] ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    'unknown'
+/**
+ * How long after expiry a signed token can still be exchanged for a new one (default 30 days).
+ * Capped, so a mistyped value cannot turn the refresh into an open-ended window.
+ */
+const MAX_REFRESH_GRACE_MS = 90 * 24 * 60 * 60 * 1000;
+const refreshGraceMs = () =>
+  Math.min(
+    envPositiveInt('SESSION_REFRESH_GRACE_MS', 30 * 24 * 60 * 60 * 1000),
+    MAX_REFRESH_GRACE_MS
   );
+
+const sessionTtlMs = () => envPositiveInt('SESSION_TOKEN_TTL_MS', 24 * 60 * 60 * 1000);
+
+function createSession(userId: string, sessionVersion = 1): string {
+  return createSessionToken(userId, sessionTtlMs(), undefined, undefined, sessionVersion);
+}
+
+// Fixed-window rate limit: allows `max` attempts per window per identifier.
+// The window number is part of the key and EXPIRE is always (re)applied, so a request that
+// dies between INCR and EXPIRE can only leave a harmless stale bucket behind. The client
+// is never locked out beyond the current window.
+async function isRateLimited(
+  identifier: string,
+  max = MAX_RATE_LIMIT_ATTEMPTS()
+): Promise<boolean> {
+  const db = await getDb();
+  const window = RATE_LIMIT_WINDOW();
+  const key = `${KEY_PREFIX}rl:${identifier}:${Math.floor(Date.now() / window)}`;
+  const attempts = await db.incr(key);
+  await db.expire(key, Math.ceil((window * 2) / 1000));
+  return attempts > max;
+}
+
+// Client identity for rate limiting (parsed, validated and length-capped, see _config.ts)
+function getClientIdentifier(req: VercelRequest): string {
+  return clientAddress(req.headers);
+}
+
+/** Validates the client-supplied profile fields; returns an error message or null. */
+function validateUserData(userData: UserRequest['userData']): string | null {
+  if (userData === undefined) return null;
+  if (typeof userData !== 'object' || userData === null) return 'userData must be an object';
+  const { username, email, preferences } = userData;
+  if (
+    username !== undefined &&
+    (typeof username !== 'string' || username.length > MAX_USERNAME_LENGTH)
+  )
+    return `username must be a string of at most ${MAX_USERNAME_LENGTH} characters`;
+  if (email !== undefined && (typeof email !== 'string' || email.length > MAX_EMAIL_LENGTH))
+    return `email must be a string of at most ${MAX_EMAIL_LENGTH} characters`;
+  if (
+    preferences !== undefined &&
+    Buffer.byteLength(JSON.stringify(preferences ?? null), 'utf8') > MAX_PREFERENCES_BYTES
+  )
+    return 'preferences are too large';
+  return null;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS via environment configuration
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '*').split(',');
-  const origin = (req.headers['origin'] as string) || '*';
-  const corsOrigin =
-    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
-      ? origin
-      : allowedOrigins[0] || '*';
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  const corsOrigin = resolveCorsOrigin(req.headers['origin'] as string | undefined);
+  res.setHeader('Vary', 'Origin');
+  if (corsOrigin) res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -209,37 +224,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(503).json({
-      success: false,
-      error: 'Remote accounts are unavailable: this demo backend is process-local and not durable.',
-    });
+  // An empty or non-object body is a client error, not a 500 (and not an error-log entry)
+  if (typeof req.body !== 'object' || req.body === null || Array.isArray(req.body)) {
+    return res.status(400).json({ success: false, error: 'Request body must be a JSON object' });
   }
 
   try {
+    const db = await getDb();
     const request: UserRequest = req.body;
     const response: UserResponse = {
       success: false,
       metadata: {
         timestamp: Date.now(),
-        action: request.action,
+        action: KNOWN_ACTIONS.includes(request.action) ? request.action : 'unknown',
       },
     };
 
     switch (request.action) {
       case 'create': {
+        if (await isRateLimited(`create_${getClientIdentifier(req)}`, MAX_CREATE_ATTEMPTS())) {
+          response.error = 'Too many accounts created. Please try again later.';
+          return res.status(429).json(response);
+        }
+        const invalid = validateUserData(request.userData);
+        if (invalid) {
+          response.error = invalid;
+          return res.status(400).json(response);
+        }
         const userId = randomUUID();
-        const user = {
+        const user: UserProfile = {
           id: userId,
           username: request.userData?.username || `user_${userId.slice(0, 8)}`,
-          email: request.userData?.email,
           preferences: request.userData?.preferences || {},
           createdAt: Date.now(),
           lastActive: Date.now(),
+          sessionVersion: 1,
         };
+        if (request.userData?.email !== undefined) user.email = request.userData.email;
 
-        users.set(userId, user);
-        const sessionToken = createSession(userId);
+        await db.hset(userKey(userId), user);
+        const sessionToken = createSession(userId, 1);
 
         response.success = true;
         response.data = {
@@ -251,27 +275,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'get': {
-        if (!request.userId && !request.sessionToken) {
-          response.error = 'userId or sessionToken is required';
-          return res.status(400).json(response);
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
+          response.error = 'Valid sessionToken is required';
+          return res.status(401).json(response);
         }
 
-        let userId = request.userId;
-
-        // If session token provided, validate and get userId
-        if (request.sessionToken && !userId) {
-          const validatedUserId = validateSession(request.sessionToken);
-          if (!validatedUserId) {
-            response.error = 'Invalid or expired session';
-            return res.status(401).json(response);
-          }
-          userId = validatedUserId;
-        }
-
-        const user = users.get(userId!);
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
+        }
+
+        if (!isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
         }
 
         response.success = true;
@@ -280,36 +298,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'update': {
-        if (!request.userId && !request.sessionToken) {
-          response.error = 'userId or sessionToken is required';
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
+          response.error = 'Valid sessionToken is required';
+          return res.status(401).json(response);
+        }
+
+        const invalidUpdate = validateUserData(request.userData);
+        if (invalidUpdate) {
+          response.error = invalidUpdate;
           return res.status(400).json(response);
         }
-
-        let userId = request.userId;
-
-        if (request.sessionToken && !userId) {
-          const validatedUserId = validateSession(request.sessionToken);
-          if (!validatedUserId) {
-            response.error = 'Invalid or expired session';
-            return res.status(401).json(response);
-          }
-          userId = validatedUserId;
+        if (request.userData?.username !== undefined && !request.userData.username.trim()) {
+          response.error = 'username must not be empty';
+          return res.status(400).json(response);
         }
-
-        const user = users.get(userId!);
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
         if (!user) {
           response.error = 'User not found';
           return res.status(404).json(response);
         }
+        if (!isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
 
-        // Update user data
-        const updatedUser = {
-          ...user,
-          ...request.userData,
-          lastActive: Date.now(),
-        };
-
-        users.set(userId!, updatedUser);
+        // Write only the fields being changed (HSET is per-field), so concurrent updates
+        // and `authenticate` heartbeats never overwrite each other with a stale snapshot.
+        // `id` and `createdAt` are never client-writable.
+        const changes: Record<string, unknown> = { lastActive: Date.now() };
+        for (const field of ['username', 'email', 'preferences'] as const) {
+          if (request.userData?.[field] !== undefined) changes[field] = request.userData[field];
+        }
+        await db.hset(userKey(claims.userId), changes);
+        const updatedUser = await db.hgetall<UserProfile>(userKey(claims.userId));
 
         response.success = true;
         response.data = { user: updatedUser };
@@ -322,26 +344,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const userId = validateSession(request.sessionToken);
-        if (!userId) {
+        // The one place an expired token is still honoured: a validly signed token that expired
+        // within the refresh grace period is exchanged for a fresh one. Without this a client that
+        // was away for longer than the token lifetime could never recover its session.
+        const now = Date.now();
+        const claims = readSessionToken(request.sessionToken, now, refreshGraceMs());
+        const user = claims ? await db.hgetall<UserProfile>(userKey(claims.userId)) : null;
+        // A missing user gets the same answer as a bad token: this must not reveal which user ids exist
+        if (!claims || !user || !isSessionActive(claims, user)) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
         }
+        const userId = claims.userId;
 
-        const user = users.get(userId);
-        if (!user) {
-          response.error = 'User not found';
-          return res.status(404).json(response);
-        }
-
-        // Update last active
-        user.lastActive = Date.now();
-        users.set(userId, user);
+        // Touch only lastActive (single-field write; see `update`)
+        await db.hset(userKey(userId), { lastActive: Date.now() });
+        const updatedUser = await db.hgetall<UserProfile>(userKey(userId));
+        // isSessionActive passed above, so the version is readable
+        const activeVersion = readSessionVersion(user) ?? 1;
 
         response.success = true;
         response.data = {
           userId,
-          user,
+          user: updatedUser,
+          // A fresh token keeps an active session alive, but it inherits the absolute end of the
+          // session, so refreshing can never extend it past that. A token issued before sessions
+          // had an absolute age gets one (grandfathered) full window.
+          sessionToken: createSessionToken(
+            userId,
+            sessionTtlMs(),
+            now,
+            claims.absoluteExpiry ?? undefined,
+            activeVersion
+          ),
         };
         break;
       }
@@ -352,126 +387,190 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json(response);
         }
 
-        const userId = validateSession(request.sessionToken);
-        if (!userId) {
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
           response.error = 'Invalid or expired session';
           return res.status(401).json(response);
         }
 
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
+        if (!user || !isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+        const userId = claims.userId;
+
         // Check rate limiting for code generation
         const clientId = getClientIdentifier(req);
-        if (isRateLimited(`generate_${clientId}`)) {
+        if (await isRateLimited(`generate_${clientId}`)) {
           response.error = 'Too many code generation attempts. Please try again later.';
           return res.status(429).json(response);
         }
 
-        // Invalidate any existing unused codes for this user (security best practice)
-        for (const [code, data] of accountCodes.entries()) {
-          if (data.userId === userId && !data.used) {
-            accountCodes.delete(code);
-          }
+        const expirySeconds = Math.ceil(CODE_EXPIRY() / 1000);
+        const previousCode = await db.get<string>(userCodeKey(userId));
+
+        // NX: never overwrite a live code that belongs to someone else (a 40-bit collision is
+        // unlikely, but a plain SET would silently hand the other user's code to this one)
+        let accountCode = '';
+        for (let attempt = 0; attempt < 5 && !accountCode; attempt++) {
+          const candidate = generateAccountCode();
+          const stored = await db.set(
+            codeKey(candidate),
+            { userId, createdAt: Date.now(), sessionVersion: readSessionVersion(user) ?? 1 },
+            { ex: expirySeconds, nx: true }
+          );
+          if (stored) accountCode = candidate;
         }
-
-        // Generate cryptographically secure account code
-        const accountCode = generateAccountCode();
-        const expires = Date.now() + CODE_EXPIRY; // 1 hour
-
-        accountCodes.set(accountCode, {
-          userId,
-          expires,
-          used: false,
-          attempts: 0,
-          createdAt: Date.now(),
-        });
+        if (!accountCode) {
+          throw new Error('Could not generate a unique account code');
+        }
+        // The pointer is what makes a code redeemable: linkDevice requires the code to match
+        // it. One SET replaces the previous pointer, so the newest code always wins, even if
+        // two generateCode calls race (the loser's code simply never validates).
+        await db.set(userCodeKey(userId), accountCode, { ex: expirySeconds });
+        // Hygiene only. Security does not depend on this delete.
+        if (previousCode && previousCode !== accountCode) {
+          await db.del(codeKey(previousCode), codeAttemptsKey(previousCode));
+        }
 
         response.success = true;
         response.data = {
           accountCode,
-          expiresIn: CODE_EXPIRY / 1000, // Return seconds for client
+          expiresIn: CODE_EXPIRY() / 1000, // Return seconds for client
         } as any; // Type assertion for Vercel response compatibility
         break;
       }
 
       case 'linkDevice': {
-        if (!request.accountCode) {
-          response.error = 'accountCode is required to link device';
-          return res.status(400).json(response);
-        }
-
-        // Normalize the code (uppercase, remove spaces)
-        const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
-
-        // Check rate limiting for link attempts
+        // Rate limit first, so malformed and unknown guesses all count against the client
         const clientId = getClientIdentifier(req);
-        if (isRateLimited(`link_${clientId}`)) {
+        if (await isRateLimited(`link_${clientId}`)) {
           response.error = 'Too many linking attempts. Please try again later.';
           return res.status(429).json(response);
         }
 
-        const codeData = accountCodes.get(normalizedCode);
-        if (!codeData) {
-          response.error = 'Invalid account code';
+        // Every failure below returns this same message so a response never reveals whether a
+        // code is unknown, expired, superseded, used or exhausted.
+        const invalidCode = () => {
+          response.error = 'Invalid or expired account code';
           return res.status(400).json(response);
+        };
+
+        if (typeof request.accountCode !== 'string') return invalidCode();
+        // Normalize the code (uppercase, remove spaces), then require the exact code format
+        const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
+        if (!ACCOUNT_CODE_PATTERN.test(normalizedCode)) return invalidCode();
+
+        const codeData = await db.get<{ userId: string; sessionVersion?: number }>(
+          codeKey(normalizedCode)
+        );
+        if (!codeData) return invalidCode(); // unknown or expired (TTL elapsed)
+
+        // Check code-specific attempt limit (EXPIRE always re-applied, see isRateLimited)
+        const codeAttempts = await db.incr(codeAttemptsKey(normalizedCode));
+        await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY() / 1000));
+        if (codeAttempts > MAX_CODE_ATTEMPTS()) {
+          await db.del(codeKey(normalizedCode), codeAttemptsKey(normalizedCode));
+          return invalidCode();
         }
 
-        // Check code-specific attempt limit
-        codeData.attempts = (codeData.attempts || 0) + 1;
-        if (codeData.attempts > MAX_CODE_ATTEMPTS) {
-          accountCodes.delete(normalizedCode);
-          response.error = 'Too many attempts for this code. Code has been invalidated.';
-          return res.status(400).json(response);
+        // Only the user's most recently generated code is redeemable
+        const currentCode = await db.get<string>(userCodeKey(codeData.userId));
+        if (currentCode !== normalizedCode) return invalidCode();
+
+        // Single use: DEL is atomic, so only one concurrent request can consume the code.
+        // The user's pointer is left to expire: it now names a consumed code, which can
+        // never validate again, and deleting it here could race with a newer generateCode.
+        // Look the user up first: if the account is gone or the read fails, the one-time code
+        // must not be burned without issuing a session.
+        const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
+        if (!user) return invalidCode();
+
+        // A code is bound to the session version it was minted at (a code without the field was
+        // minted at version 1). If the account was signed out everywhere since, or the version is
+        // unreadable, the code is dead: this also closes the race where a generateCode that read
+        // the profile before a revoke stores its code after it.
+        const activeVersion = readSessionVersion(user);
+        if (activeVersion === null || (codeData.sessionVersion ?? 1) !== activeVersion) {
+          return invalidCode();
         }
 
-        if (codeData.expires < Date.now()) {
-          accountCodes.delete(normalizedCode);
-          response.error = 'Account code has expired';
-          return res.status(400).json(response);
-        }
+        const consumed = await db.del(codeKey(normalizedCode));
+        if (!consumed) return invalidCode();
+        await db.del(codeAttemptsKey(normalizedCode));
 
-        if (codeData.used) {
-          response.error = 'Account code has already been used';
-          return res.status(400).json(response);
-        }
-
-        // Mark code as used and update attempts
-        codeData.used = true;
-        accountCodes.set(normalizedCode, codeData);
-
-        // Clean up the code after successful use (single-use only)
-        setTimeout(() => {
-          accountCodes.delete(normalizedCode);
-        }, 5000); // 5 second grace period for response
-
-        // Get the user associated with the code
-        const user = users.get(codeData.userId);
-        if (!user) {
-          response.error = 'Associated user not found';
-          return res.status(404).json(response);
-        }
-
-        // Create new session for this device
-        const newSessionToken = createSession(codeData.userId);
-
-        // Count linked devices (sessions)
-        let linkedDevices = 0;
-        for (const [_, sessionData] of sessions) {
-          if (sessionData.userId === codeData.userId && sessionData.expires > Date.now()) {
-            linkedDevices++;
-          }
-        }
+        // Create new session for this device with the user's active session version
+        const newSessionToken = createSession(codeData.userId, activeVersion);
 
         response.success = true;
         response.data = {
           userId: codeData.userId,
           sessionToken: newSessionToken,
           user,
-          linkedDevices,
+        };
+        break;
+      }
+
+      case 'signOutEverywhere':
+      case 'revokeSessions': {
+        if (!request.sessionToken) {
+          response.error = 'sessionToken is required to revoke sessions';
+          return res.status(400).json(response);
+        }
+
+        const claims = readSessionToken(request.sessionToken);
+        if (!claims) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+
+        const user = await db.hgetall<UserProfile>(userKey(claims.userId));
+        if (!user || !isSessionActive(claims, user)) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
+        }
+        const userId = claims.userId;
+
+        // Too many sign-outs per account and hour: a stolen token must not be able to loop this
+        if (await isRateLimited(`revoke_${userId}`, MAX_REVOKES_PER_WINDOW())) {
+          response.error = 'Too many sign-out requests. Please try again later.';
+          return res.status(429).json(response);
+        }
+
+        // HINCRBY is atomic, so concurrent revokes can never lose a bump. A profile without the
+        // field is version 1 and HINCRBY would start it at 0 -> 1 (no change): bump once more.
+        let nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        if (nextVersion <= 1) {
+          nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        }
+        await db.hset(userKey(userId), { lastActive: Date.now() });
+
+        // Invalidate any pending unused link code for this user
+        const previousCode = await db.get<string>(userCodeKey(userId));
+        if (previousCode) {
+          await db.del(userCodeKey(userId), codeKey(previousCode), codeAttemptsKey(previousCode));
+        }
+
+        response.success = true;
+        // The caller signs out the OTHER sessions: it gets a token at the new version (same absolute
+        // session end), so the account stays reachable and its remote data is never orphaned.
+        response.data = {
+          userId,
+          sessionVersion: nextVersion,
+          sessionToken: createSessionToken(
+            userId,
+            sessionTtlMs(),
+            undefined,
+            claims.absoluteExpiry ?? undefined,
+            nextVersion
+          ),
         };
         break;
       }
 
       default:
-        response.error = `Unknown action: ${request.action}`;
+        response.error = 'Unknown action';
         return res.status(400).json(response);
     }
 
@@ -483,7 +582,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       metadata: {
         timestamp: Date.now(),
-        action: req.body?.action || 'unknown',
+        action: 'unknown',
       },
     });
   }

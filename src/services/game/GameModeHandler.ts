@@ -51,6 +51,24 @@ export class GameModeHandler {
   }
 
   /**
+   * Which field (`term` or `definition`) getQuizQuestion shows for a plain quiz mode, and
+   * which one getQuizAnswer expects. Used to look up each side's language: comparing the
+   * texts instead would confuse words spelled the same in both fields (e.g. "interessant").
+   */
+  getQuizFields(
+    word: Word,
+    quizMode: string
+  ): { question: 'term' | 'definition'; answer: 'term' | 'definition' } {
+    if (quizMode === 'fill-in-the-blank') return { question: 'definition', answer: 'term' };
+    const termIsQuestion = this.isUnidirectionalMode(quizMode)
+      ? word.direction === 'term-to-definition'
+      : (word.direction || 'definition-to-term') === 'term-to-definition';
+    return termIsQuestion
+      ? { question: 'term', answer: 'definition' }
+      : { question: 'definition', answer: 'term' };
+  }
+
+  /**
    * Get the question text based on quiz mode and word direction
    */
   getQuizQuestion(word: Word, quizMode: string): string {

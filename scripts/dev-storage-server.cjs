@@ -144,6 +144,12 @@ app.post('/api/storage', (req, res) => {
       });
     }
 
+    // Mirror api/storage.ts: token must be valid and belong to userId
+    const authedUserId = validateSession(request.sessionToken);
+    if (!authedUserId || authedUserId !== request.userId) {
+      return res.status(401).json({ success: false, error: 'Invalid or missing session token' });
+    }
+
     if (request.languageCode && !isValidLanguageCode(request.languageCode)) {
       return res.status(400).json({
         success: false,

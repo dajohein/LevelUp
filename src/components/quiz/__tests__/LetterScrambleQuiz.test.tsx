@@ -38,7 +38,18 @@ describe('LetterScrambleQuiz keyboard input', () => {
 
     expect(screen.getByRole('button', { name: 'Remove letter ß' })).toBeInTheDocument();
     act(() => jest.advanceTimersByTime(300));
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    expect(onAnswer).toHaveBeenCalledWith(true, 0);
+  });
+
+  it('reports hints used so assisted answers can be withheld from mastery', () => {
+    jest.useFakeTimers();
+    const onAnswer = renderQuiz('ab');
+
+    fireEvent.click(screen.getByRole('button', { name: /Hint/ }));
+    typeLetters('b');
+    act(() => jest.advanceTimersByTime(300));
+
+    expect(onAnswer).toHaveBeenCalledWith(true, 1);
   });
 
   it('matches Spanish combining marks without treating the unaccented letter as equivalent', () => {
@@ -50,7 +61,7 @@ describe('LetterScrambleQuiz keyboard input', () => {
 
     expect(screen.getByRole('button', { name: 'Remove letter ñ' })).toBeInTheDocument();
     act(() => jest.advanceTimersByTime(300));
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    expect(onAnswer).toHaveBeenCalledWith(true, 0);
   });
 
   it('keeps combining marks attached in the parse-safe segmenter fallback', () => {
@@ -94,6 +105,6 @@ describe('LetterScrambleQuiz keyboard input', () => {
     expect(fireEvent.keyDown(document, { key: 'Backspace' })).toBe(true);
     act(() => jest.advanceTimersByTime(300));
 
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    expect(onAnswer).toHaveBeenCalledWith(true, 0);
   });
 });

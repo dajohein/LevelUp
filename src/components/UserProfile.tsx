@@ -15,8 +15,6 @@ import { wordProgressStorage } from '../services/storageService';
 import { getAvailableLanguages } from '../services/moduleService';
 import { useUserLearningProfile } from '../hooks/useUserLearningProfile';
 import { LearningProfileDisplay } from './LearningProfileSection';
-import { testLearningProfileStorage } from '../utils/testLearningProfile';
-import { inspectStoredProfile } from '../utils/debugProfileInspector';
 
 // Animations
 const xpCountUp = keyframes`
@@ -323,7 +321,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     profile: learningProfile,
     isLoading: profileLoading,
     error: profileError,
-    refreshProfile,
   } = useUserLearningProfile(userId);
 
   // Debug logging
@@ -595,81 +592,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 color: '#9333ea',
               }}
             >
-              🤖 AI Learning Coach will create your profile after a few learning sessions
-              <br />
-              <small style={{ opacity: 0.7 }}>
-                Debug: userId=&quot;{userId}&quot;, profileLoading={String(profileLoading)}
-              </small>
-              <br />
-              <div
-                style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}
-              >
-                <button
-                  style={{
-                    marginTop: '8px',
-                    padding: '6px 12px',
-                    background: '#9333ea',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                  }}
-                  onClick={async () => {
-                    logger.debug('Manually creating fresh profile...');
-                    // Clear any existing incomplete profile first
-                    const storage = new (
-                      await import('../services/storage/userLearningProfile')
-                    ).UserLearningProfileStorage();
-                    try {
-                      await storage.deleteProfile(userId);
-                      logger.debug('Old profile cleared');
-                    } catch (e) {
-                      logger.debug('No old profile to clear or error clearing:', e);
-                    }
-                    // Trigger refresh to create new profile
-                    refreshProfile();
-                  }}
-                >
-                  🔄 Create New
-                </button>
-                <button
-                  style={{
-                    marginTop: '8px',
-                    padding: '6px 12px',
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                  }}
-                  onClick={() => {
-                    logger.debug('Running storage test...');
-                    testLearningProfileStorage();
-                  }}
-                >
-                  🧪 Test
-                </button>
-                <button
-                  style={{
-                    marginTop: '8px',
-                    padding: '6px 12px',
-                    background: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                  }}
-                  onClick={() => {
-                    logger.debug('Inspecting stored profile...');
-                    inspectStoredProfile(userId);
-                  }}
-                >
-                  🔍 Inspect
-                </button>
-              </div>
+              Your learning profile will appear after a few learning sessions.
             </div>
           )}
         </>

@@ -1,3 +1,4 @@
+import { getQuestionKey } from '../services/sessionRequeue';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +26,7 @@ import { words, Word } from '../services/wordService';
 import { gameServices } from '../services/game';
 import { challengeServiceManager } from '../services/challengeServiceManager';
 import { logger } from '../services/logger';
-import { WordProgress } from '../store/types';
+import { SubmitOptions, WordProgress } from '../store/types';
 
 /** Shape of the feedback overlay shown after each answer. */
 export interface FeedbackWordInfo {
@@ -74,7 +75,7 @@ export interface GameState {
 }
 
 export interface GameHandlers {
-  handleSubmit: (answer: string) => void;
+  handleSubmit: (answer: string, options?: SubmitOptions) => void;
   handleOpenQuestionSubmit: () => void;
   handleWordTransition: (
     transitionType?: 'enhanced' | 'standard' | 'quiz' | 'batch-complete',
@@ -402,10 +403,13 @@ export const useEnhancedGameState = ({
 
   // Main submission handler
   const handleSubmit = useCallback(
-    (answer: string) => {
+    (answer: string, options?: SubmitOptions) => {
       if (submissionGuardRef.current) return;
 
       const enhancedWordInfo = getCurrentWordInfo();
+      // One source of truth for "this is a re-queued retry": the progress update, the feedback key
+      // and the active session must never disagree about it
+      const isRetry = (options?.isRetry ?? enhancedWordInfo?.isRetry) === true;
       const currentWordToUse = gameServices.modeHandler.getCurrentWord(
         enhancedWordInfo,
         currentWord
@@ -434,7 +438,7 @@ export const useEnhancedGameState = ({
       setAnswerSequence(sequence => sequence + 1);
       setLastSelectedAnswer(answer);
       setFeedbackQuestionKey(
-        gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord)
+        gameServices.progressTracker.generateFeedbackKey(currentWordToUse, getQuestionWord, isRetry)
       );
 
       // Play audio feedback
@@ -453,6 +457,8 @@ export const useEnhancedGameState = ({
           quizMode: quizModeToUse,
           languageCode,
           progressiveLearning: currentSession?.id === 'deep-dive',
+          hintsUsed: options?.hintsUsed,
+          isRetry,
         })
       );
 
@@ -488,13 +494,17 @@ export const useEnhancedGameState = ({
       setInputValue('');
       setIsTransitioning(true);
 
-      gameServices.sessionManager.handleAnswerSubmission(
-        validationResult.isCorrect,
-        currentSession,
-        isSessionActive,
-        sessionTimer,
-        sessionProgress
-      );
+      // A re-queued retry is practice: it must not add words completed, bonuses or counters to the
+      // active session (a correct retry would otherwise count twice towards session completion)
+      if (!isRetry) {
+        gameServices.sessionManager.handleAnswerSubmission(
+          validationResult.isCorrect,
+          currentSession,
+          isSessionActive,
+          sessionTimer,
+          sessionProgress
+        );
+      }
 
       // Trigger delayed transition via ref so this callback doesn't need
       // handleWordTransition in its dep array (handleWordTransition re-creates on every
@@ -549,9 +559,11 @@ export const useEnhancedGameState = ({
   useEffect(() => {
     const enhancedWordInfo = getCurrentWordInfo();
     const wordToUse = enhancedWordInfo?.word || currentWord;
-    const currentQuestionKey = `${wordToUse?.id || 'unknown'}-${
-      wordToUse ? getQuestionWord(wordToUse) : 'unknown'
-    }`;
+    const currentQuestionKey = getQuestionKey(
+      wordToUse?.id || 'unknown',
+      wordToUse ? getQuestionWord(wordToUse) : 'unknown',
+      enhancedWordInfo?.isRetry === true
+    );
 
     if (previousWordRef.current && previousWordRef.current !== currentQuestionKey) {
       transitionIdRef.current += 1;
