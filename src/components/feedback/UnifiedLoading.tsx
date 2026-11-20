@@ -353,6 +353,13 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ type, count = 1,
       animation-iteration-count: infinite !important;
       animation-name: ${shimmer} !important;
     }
+
+    /* These !important rules outrank the global reduced-motion rule, so repeat it here */
+    @media (prefers-reduced-motion: reduce) {
+      & * {
+        animation: none !important;
+      }
+    }
   `;
 
   return (

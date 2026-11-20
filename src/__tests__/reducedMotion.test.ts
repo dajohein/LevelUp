@@ -39,4 +39,23 @@ describe('reduced motion', () => {
   it('hides decorative confetti', () => {
     expect(reducedBlock(confetti)).toMatch(/display:\s*none/);
   });
+
+  it('skeleton loaders with !important animation rules repeat the reduced-motion override', () => {
+    const loading = fs.readFileSync(
+      path.join(__dirname, '..', 'components', 'feedback', 'UnifiedLoading.tsx'),
+      'utf8'
+    );
+    const synced = loading.slice(loading.indexOf('const SyncedSkeletonContainer'));
+    expect(synced).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)\s*\{\s*&\s*\*\s*\{\s*animation:\s*none\s*!important/
+    );
+  });
+
+  it('keeps the level-up exit state until the notification unmounts', () => {
+    const levelUp = fs.readFileSync(
+      path.join(__dirname, '..', 'components', 'animations', 'LevelUpNotification.tsx'),
+      'utf8'
+    );
+    expect(levelUp).toMatch(/levelUpExit : levelUpEntrance\} 0\.8s ease-out forwards/);
+  });
 });
