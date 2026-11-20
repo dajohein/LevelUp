@@ -123,7 +123,7 @@ Configuration is controlled via environment variables to follow Twelve-Factor pr
 - `SESSION_REFRESH_GRACE_MS` — How long after expiry a signed token can still be refreshed (default 30 days, maximum 90)
 - `SESSION_MAX_AGE_MS` — Absolute lifetime of a session however often it is refreshed (default 90 days)
 - `RATE_LIMIT_MAX_ATTEMPTS`, `RATE_LIMIT_WINDOW_MS` — Rate limit controls
-- `ACCOUNT_CODE_MAX_ATTEMPTS`, `ACCOUNT_CODE_EXPIRY_MS` — Device linking code policy
+- `ACCOUNT_CODE_MAX_ATTEMPTS`, `ACCOUNT_CODE_EXPIRY_MS`, `ACCOUNT_CODE_GENERATE_MAX_PER_USER`, `ACCOUNT_LINK_MAX_ATTEMPTS_PER_USER` — Device linking code policy (10-character codes with 50 bits of entropy, short TTL expiry, per-code attempt limit, per-account generation rate limit, per-account linking lockout, and uniform failure responses)
 
 Set frontend variables in `.env` locally and in Vercel’s Project Settings for production. Server-side variables should be set only in Vercel.
 

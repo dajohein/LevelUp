@@ -66,7 +66,7 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
     const service = new RemoteStorageService({ retries: 1 });
     const code = await service.generateAccountCode();
 
-    expect(code.code).toHaveLength(8);
+    expect(code.code).toHaveLength(10);
     const stored = JSON.parse(localStorage.getItem(KEY) as string);
     expect(stored.userId).toBe(created.userId);
     expect(stored.sessionToken).not.toBe(expired);
@@ -104,7 +104,7 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
     expect(localStorage.getItem(KEY)).toBeNull();
 
     const code = await service.generateAccountCode();
-    expect(code.code).toHaveLength(8);
+    expect(code.code).toHaveLength(10);
     expect(JSON.parse(localStorage.getItem(KEY) as string).userId).not.toBe('someone');
   });
 

@@ -191,7 +191,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({
-        text: 'Secure account code generated! Share this 8-character code with your other device.',
+        text: 'Secure account code generated! Share this 10-character code with your other device.',
         type: 'success',
       });
     } catch (error) {
@@ -358,10 +358,10 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
         <Input
           type="text"
-          placeholder="Enter code (e.g., A3B7K9M2)"
+          placeholder="Enter code (e.g., A3B7K9M2X4)"
           value={linkCode}
           onChange={e => setLinkCode(e.target.value.toUpperCase())}
-          maxLength={8}
+          maxLength={10}
           disabled={!environmentConfig.enableRemoteStorage}
         />
 

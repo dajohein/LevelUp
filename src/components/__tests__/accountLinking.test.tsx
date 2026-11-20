@@ -82,11 +82,21 @@ describe('AccountLinking', () => {
       mockEnv.enableRemoteStorage = true;
     });
 
-    it('shows the generated code', async () => {
-      mocked.generateAccountCode.mockResolvedValue(code('ABCD2345'));
+    it('shows the generated code and informs user of 10-character code', async () => {
+      mocked.generateAccountCode.mockResolvedValue(code('ABCD2345GH'));
       renderIt();
       await userEvent.click(generate());
-      expect(await screen.findByText('ABCD2345')).toBeInTheDocument();
+      expect(await screen.findByText('ABCD2345GH')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Share this 10-character code with your other device/)
+      ).toBeInTheDocument();
+    });
+
+    it('configures linking input with 10-character maxLength and updated placeholder', () => {
+      renderIt();
+      const input = screen.getByRole('textbox');
+      expect(input).toHaveAttribute('maxLength', '10');
+      expect(input).toHaveAttribute('placeholder', 'Enter code (e.g., A3B7K9M2X4)');
     });
 
     describe('a lost session', () => {
