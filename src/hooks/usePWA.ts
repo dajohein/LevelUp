@@ -1,5 +1,6 @@
 import { pwaUpdateManager } from '../services/pwaUpdateManager';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
+import { pwaInstallManager, InstallResult } from '../services/pwaInstall';
 import { logger } from '../services/logger';
 
 /** Background Sync API — not in standard TypeScript lib. */
@@ -11,21 +12,11 @@ interface SyncManager {
 interface SyncServiceWorkerRegistration extends ServiceWorkerRegistration {
   readonly sync: SyncManager;
 }
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): void;
-  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
 /** navigator.connection (Network Information API — not in standard TS lib). */
 interface NetworkInformation {
   effectiveType: string;
   addEventListener(type: 'change', listener: () => void): void;
   removeEventListener(type: 'change', listener: () => void): void;
-}
-
-/** navigator.standalone is Safari/iOS only. */
-interface NavigatorIOS extends Navigator {
-  standalone?: boolean;
 }
 
 /**
@@ -36,12 +27,24 @@ const getVapidKey = (): string | undefined =>
   (window as Window & { __APP_ENV?: Record<string, string | undefined> }).__APP_ENV
     ?.VITE_VAPID_PUBLIC_KEY;
 
+/** Shared install state and the install action only (no service worker side effects). */
+export const useInstallPrompt = () => {
+  const install = useSyncExternalStore(pwaInstallManager.subscribe, pwaInstallManager.getState);
+  useEffect(() => {
+    pwaInstallManager.refreshInstalled();
+  }, []);
+  return {
+    isInstallable: install.installable,
+    isInstalled: install.installed,
+    installApp: (): Promise<InstallResult> => pwaInstallManager.promptInstall(),
+  };
+};
+
 // PWA installation and service worker management
 export const usePWA = () => {
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  // Install state is shared (the browser's install event fires once, before most screens mount)
+  const install = useSyncExternalStore(pwaInstallManager.subscribe, pwaInstallManager.getState);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   // One update detector: the manager's. It also sees a worker that was already waiting when the
@@ -62,54 +65,13 @@ export const usePWA = () => {
   };
 
   useEffect(() => {
-    // Check if already installed
-    const checkInstalled = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInApp = (window.navigator as NavigatorIOS).standalone === true;
-      setIsInstalled(isStandalone || isInApp);
-    };
-
-    checkInstalled();
-
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
-    };
-
-    // Listen for app installed event
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setIsInstallable(false);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    pwaInstallManager.refreshInstalled();
 
     // Register service worker
     registerServiceWorker();
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
   }, []);
 
-  const installApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-
-      if (outcome === 'accepted') {
-        logger.debug('PWA installed');
-      }
-
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    }
-  };
+  const installApp = (): Promise<InstallResult> => pwaInstallManager.promptInstall();
 
   const updateApp = async () => {
     // Reloading right after posting SKIP_WAITING would race the new worker's activation; the
@@ -119,8 +81,8 @@ export const usePWA = () => {
   };
 
   return {
-    isInstallable,
-    isInstalled,
+    isInstallable: install.installable,
+    isInstalled: install.installed,
     installApp,
     updateAvailable,
     updateApp,

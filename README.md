@@ -303,6 +303,7 @@ src/
 - **Responsive Design**: Optimized layouts for mobile, tablet, and desktop
 - **Touch Interface**: Native touch gestures and haptic feedback
 - **PWA Ready**: Service worker, offline support, and app-like experience
+- **Install as App**: Settings offers the browser's install prompt where available, shows "installed" once installed, and otherwise explains how to add the app (e.g. Share → Add to Home Screen on iOS)
 - **Keyboard Support**: Type accented letters in Letter Scramble mode; browser shortcuts and input fields remain unaffected
 - **Real-time Feedback**: Smooth animations and visual feedback
 
