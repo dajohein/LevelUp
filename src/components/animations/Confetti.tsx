@@ -15,6 +15,10 @@ const Container = styled.div`
   height: 100vh;
   pointer-events: none;
   z-index: 1000;
+
+  @media (prefers-reduced-motion: reduce) {
+    display: none;
+  }
 `;
 
 interface Particle {

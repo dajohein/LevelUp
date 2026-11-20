@@ -93,6 +93,15 @@ timers are introduced; disclosure event listeners exist only while open.
 - Loading states and accessibility features
 - Support for reduced motion preferences
 
+#### Reduced motion (app-wide)
+
+`src/index.css` has a global `@media (prefers-reduced-motion: reduce)` rule: animations run once for
+~0ms (no infinite pulses, shimmer, shake or entrance movement), transitions are instant and smooth
+scrolling is off. Animations still reach their end state and fire `animationend`, so correctness,
+progress and achievement information stays visible. Confetti is hidden. Without the preference
+nothing changes. Checked by `src/__tests__/reducedMotion.test.ts` (CSS assertions); browser
+emulation and an OS-level check have not been done.
+
 #### `MobileModal.tsx`
 - Bottom sheet style modals on mobile
 - Swipe-to-dismiss functionality

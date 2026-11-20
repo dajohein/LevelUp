@@ -53,6 +53,29 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Reduced motion: people who ask the OS for less motion get no infinite pulses, shimmer,
+ * shake or entrance movement anywhere in the app (quizzes, profile, notifications).
+ * Animations are shortened to a single instant frame rather than removed, so they still
+ * reach their final state and `animationend` handlers keep firing; static correctness,
+ * progress and achievement information is unaffected.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
 /* Mobile-specific utility classes */
 .mobile-only {
   display: none;
