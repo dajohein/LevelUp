@@ -986,21 +986,24 @@ export class RemoteStorageService implements AsyncStorageProvider {
   }
 
   /**
-   * Revoke all sessions across all devices for this account, invalidating existing tokens on the server,
-   * and clears the local session. Local progress is preserved.
+   * Sign out every OTHER session of this account. The server returns a fresh token at the new
+   * session version and this device keeps it, so the account (and its remote data) stays
+   * reachable from here. If the call fails the current session is left untouched, so the user can
+   * retry: nothing is signed out locally unless the server really revoked the others.
    */
   async revokeSessions(): Promise<void> {
-    try {
-      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (this.userSession || stored) {
-        await this.authedCall('/api/users', current => ({
-          action: 'revokeSessions',
-          sessionToken: current.sessionToken,
-        }));
-      }
-    } finally {
-      await this.resetSession();
+    const epoch = this.sessionEpoch;
+    const { result, session } = await this.authedCall('/api/users', current => ({
+      action: 'revokeSessions',
+      sessionToken: current.sessionToken,
+    }));
+    const sessionToken = result?.data?.sessionToken;
+    if (!result?.success || typeof sessionToken !== 'string' || !sessionToken) {
+      throw new Error('The server did not confirm the sign-out');
     }
+    // The others are already signed out; if the new token cannot be adopted this device must not
+    // keep a dead one silently, so adoptSession's reset check throws to the caller.
+    this.adoptSession({ ...session, sessionToken }, epoch);
   }
 
   /**

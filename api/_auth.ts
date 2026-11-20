@@ -100,24 +100,36 @@ export function readSessionToken(
 }
 
 /**
- * Checks whether the token's session version matches the user's active session version in the profile.
- * Legacy tokens without a version claim inherit version 1; profiles without a sessionVersion
- * default to version 1. Returns false if claims is null or if versions mismatch.
+ * The session version stored in a profile: a positive whole number. A profile that never had the
+ * field (created before revocation existed) is version 1. A profile that is missing, or whose
+ * field is present but corrupt (a string, zero, a float, null), has NO usable version: null.
+ * Callers must treat null as "deny", never as "version 1", otherwise a corrupt or re-created
+ * profile would revive every revoked version-1 token.
+ */
+export function readSessionVersion(
+  user: { sessionVersion?: unknown } | null | undefined
+): number | null {
+  if (!user || typeof user !== 'object') return null;
+  const raw = user.sessionVersion;
+  if (raw === undefined) return 1;
+  if (typeof raw === 'number' && Number.isSafeInteger(raw) && raw > 0) return raw;
+  console.warn('Session check failed closed: the profile has an invalid sessionVersion field');
+  return null;
+}
+
+/**
+ * The one session check every endpoint uses. A token is active only if its profile exists, the
+ * profile's version is readable and the token carries exactly that version (a token without a
+ * `v` claim is a legacy version-1 token). Fails closed on every other input.
  */
 export function isSessionActive(
   claims: SessionClaims | null,
   user: { sessionVersion?: unknown } | null | undefined
 ): boolean {
   if (!claims) return false;
-  const expectedVersion =
-    user &&
-    typeof user.sessionVersion === 'number' &&
-    Number.isSafeInteger(user.sessionVersion) &&
-    user.sessionVersion > 0
-      ? user.sessionVersion
-      : 1;
-  const tokenVersion = claims.sessionVersion ?? 1;
-  return tokenVersion === expectedVersion;
+  const expectedVersion = readSessionVersion(user);
+  if (expectedVersion === null) return false;
+  return (claims.sessionVersion ?? 1) === expectedVersion;
 }
 
 /** Returns the userId for a valid, unexpired token, otherwise null. */

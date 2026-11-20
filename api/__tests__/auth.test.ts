@@ -46,7 +46,15 @@ describe('CORS', () => {
   });
 });
 
+// Storage calls now require the account to exist (a deleted user's token is refused)
+async function seedUsers(...ids: string[]) {
+  const { getDb, userKey } = await import('../_db.js');
+  const db = await getDb();
+  for (const id of ids) await db.hset(userKey(id), { id, sessionVersion: 1 });
+}
+
 describe('storage handler auth', () => {
+  beforeAll(() => seedUsers('u1', 'u2', 'u3'));
   it('rejects requests without a token', async () => {
     const res = await call({ action: 'get', userId: 'u1', languageCode: 'es', key: 'k' });
     expect(res.statusCode).toBe(401);

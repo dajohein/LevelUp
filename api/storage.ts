@@ -141,7 +141,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const db = await getDb();
-    const user = await db.hgetall<{ sessionVersion?: number }>(userKey(claims.userId));
+    // Only the version is needed (not the whole profile with its preferences). HMGET of id +
+    // sessionVersion also tells a deleted account (null) from a legacy profile without the field.
+    const fields = await db.hmget(userKey(claims.userId), 'id', 'sessionVersion');
+    // Redis reports a field the profile never had as null: that is a legacy profile (version 1)
+    const user = fields ? { sessionVersion: fields.sessionVersion ?? undefined } : null;
     if (!isSessionActive(claims, user)) {
       return res.status(401).json({
         success: false,

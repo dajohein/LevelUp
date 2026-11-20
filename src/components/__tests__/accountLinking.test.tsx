@@ -368,11 +368,14 @@ describe('AccountLinking', () => {
 
     describe('session logout and revocation', () => {
       it('logs out on this device and confirms local progress is preserved', async () => {
+        const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
         renderIt();
         const logoutBtn = screen.getByRole('button', { name: 'Log Out on This Device' });
         await userEvent.click(logoutBtn);
 
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
         expect(mocked.logout).toHaveBeenCalledTimes(1);
+        confirmSpy.mockRestore();
         expect(
           await screen.findByText(
             /Logged out on this device. Your local progress has been preserved./
@@ -380,16 +383,24 @@ describe('AccountLinking', () => {
         ).toBeInTheDocument();
       });
 
-      it('revokes all sessions everywhere and confirms revocation', async () => {
+      it('does not log out when the user declines the warning', async () => {
+        const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+        renderIt();
+        await userEvent.click(screen.getByRole('button', { name: 'Log Out on This Device' }));
+        expect(mocked.logout).not.toHaveBeenCalled();
+        confirmSpy.mockRestore();
+      });
+
+      it('signs out the other devices and confirms revocation', async () => {
         renderIt();
         const revokeBtn = screen.getByRole('button', {
-          name: 'Sign Out Everywhere (Revoke All Sessions)',
+          name: 'Sign Out Other Devices',
         });
         await userEvent.click(revokeBtn);
 
         expect(mocked.revokeSessions).toHaveBeenCalledTimes(1);
         expect(
-          await screen.findByText(/Signed out everywhere. All active sessions have been revoked/)
+          await screen.findByText(/Signed out on all other devices. This device stays signed in/)
         ).toBeInTheDocument();
       });
 
@@ -397,12 +408,14 @@ describe('AccountLinking', () => {
         mocked.revokeSessions.mockRejectedValueOnce(new Error('Network error'));
         renderIt();
         const revokeBtn = screen.getByRole('button', {
-          name: 'Sign Out Everywhere (Revoke All Sessions)',
+          name: 'Sign Out Other Devices',
         });
         await userEvent.click(revokeBtn);
 
         expect(
-          await screen.findByText(/Failed to revoke all sessions on the server/)
+          await screen.findByText(
+            /Could not sign out your other devices. You are still signed in here/
+          )
         ).toBeInTheDocument();
       });
     });

@@ -284,6 +284,17 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   };
 
   const handleLogout = async () => {
+    // Without a session token nothing can reach the cloud copy again except a link code from a
+    // device that is still signed in, so this must be a deliberate choice.
+    if (
+      !window.confirm(
+        'Log out on this device? To reconnect to your cloud copy you will need a link code from ' +
+          'another device that is still signed in; otherwise a new cloud account is created. ' +
+          'Your local progress stays on this device.'
+      )
+    ) {
+      return;
+    }
     setLoading(true);
     setMessage(null);
     try {
@@ -314,16 +325,15 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       await remoteStorage.revokeSessions();
       setAccountCode('');
       setCodeExpires(null);
-      setLinkedDevices(0);
       setSessionLost(false);
       setMessage({
-        text: 'Signed out everywhere. All active sessions have been revoked; your local progress is preserved.',
+        text: 'Signed out on all other devices. This device stays signed in; your local progress is preserved.',
         type: 'success',
       });
     } catch (error) {
       logger.error('Failed to revoke sessions:', error);
       setMessage({
-        text: 'Failed to revoke all sessions on the server. You have been logged out on this device.',
+        text: 'Could not sign out your other devices. You are still signed in here; please try again.',
         type: 'error',
       });
     } finally {
@@ -439,8 +449,8 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       <Section>
         <SectionTitle>🔒 Sessions & Sign Out</SectionTitle>
         <Description>
-          Sign out on this device or revoke all active sessions across all devices. Local learning
-          progress is always preserved on this device.
+          Sign out on this device, or sign out every other device (this one stays signed in). Local
+          learning progress is always preserved on this device.
         </Description>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
           <LoadingButton
@@ -479,7 +489,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
               color: 'white',
             }}
           >
-            Sign Out Everywhere (Revoke All Sessions)
+            Sign Out Other Devices
           </LoadingButton>
         </div>
       </Section>

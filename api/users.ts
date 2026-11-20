@@ -24,6 +24,7 @@ import {
   createSessionToken,
   readSessionToken,
   isSessionActive,
+  readSessionVersion,
   resolveCorsOrigin,
 } from './_auth.js';
 import { clientAddress, envPositiveInt } from './_config.js';
@@ -89,6 +90,7 @@ const codeAttemptsKey = (code: string) => `${KEY_PREFIX}codeattempts:${code}`;
 
 // Security limits (env-driven). A malformed value falls back to the default and is logged
 // (see envPositiveInt); it never disables a limit.
+const MAX_REVOKES_PER_WINDOW = () => envPositiveInt('REVOKE_MAX_PER_WINDOW', 5); // per account
 const MAX_CODE_ATTEMPTS = () => envPositiveInt('ACCOUNT_CODE_MAX_ATTEMPTS', 5); // per code
 const MAX_RATE_LIMIT_ATTEMPTS = () => envPositiveInt('RATE_LIMIT_MAX_ATTEMPTS', 10); // per client per window
 const MAX_CREATE_ATTEMPTS = () => envPositiveInt('CREATE_MAX_PER_WINDOW', 30); // new accounts per client per window
@@ -358,12 +360,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Touch only lastActive (single-field write; see `update`)
         await db.hset(userKey(userId), { lastActive: Date.now() });
         const updatedUser = await db.hgetall<UserProfile>(userKey(userId));
-        const activeVersion =
-          typeof user.sessionVersion === 'number' &&
-          Number.isSafeInteger(user.sessionVersion) &&
-          user.sessionVersion > 0
-            ? user.sessionVersion
-            : 1;
+        // isSessionActive passed above, so the version is readable
+        const activeVersion = readSessionVersion(user) ?? 1;
 
         response.success = true;
         response.data = {
@@ -419,7 +417,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const candidate = generateAccountCode();
           const stored = await db.set(
             codeKey(candidate),
-            { userId, createdAt: Date.now() },
+            { userId, createdAt: Date.now(), sessionVersion: readSessionVersion(user) ?? 1 },
             { ex: expirySeconds, nx: true }
           );
           if (stored) accountCode = candidate;
@@ -464,7 +462,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
         if (!ACCOUNT_CODE_PATTERN.test(normalizedCode)) return invalidCode();
 
-        const codeData = await db.get<{ userId: string }>(codeKey(normalizedCode));
+        const codeData = await db.get<{ userId: string; sessionVersion?: number }>(
+          codeKey(normalizedCode)
+        );
         if (!codeData) return invalidCode(); // unknown or expired (TTL elapsed)
 
         // Check code-specific attempt limit (EXPIRE always re-applied, see isRateLimited)
@@ -487,17 +487,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const user = await db.hgetall<UserProfile>(userKey(codeData.userId));
         if (!user) return invalidCode();
 
+        // A code is bound to the session version it was minted at (a code without the field was
+        // minted at version 1). If the account was signed out everywhere since, or the version is
+        // unreadable, the code is dead: this also closes the race where a generateCode that read
+        // the profile before a revoke stores its code after it.
+        const activeVersion = readSessionVersion(user);
+        if (activeVersion === null || (codeData.sessionVersion ?? 1) !== activeVersion) {
+          return invalidCode();
+        }
+
         const consumed = await db.del(codeKey(normalizedCode));
         if (!consumed) return invalidCode();
         await db.del(codeAttemptsKey(normalizedCode));
 
         // Create new session for this device with the user's active session version
-        const activeVersion =
-          typeof user.sessionVersion === 'number' &&
-          Number.isSafeInteger(user.sessionVersion) &&
-          user.sessionVersion > 0
-            ? user.sessionVersion
-            : 1;
         const newSessionToken = createSession(codeData.userId, activeVersion);
 
         response.success = true;
@@ -529,14 +532,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         const userId = claims.userId;
 
-        const currentVersion =
-          typeof user.sessionVersion === 'number' &&
-          Number.isSafeInteger(user.sessionVersion) &&
-          user.sessionVersion > 0
-            ? user.sessionVersion
-            : 1;
-        const nextVersion = currentVersion + 1;
-        await db.hset(userKey(userId), { sessionVersion: nextVersion, lastActive: Date.now() });
+        // Too many sign-outs per account and hour: a stolen token must not be able to loop this
+        if (await isRateLimited(`revoke_${userId}`, MAX_REVOKES_PER_WINDOW())) {
+          response.error = 'Too many sign-out requests. Please try again later.';
+          return res.status(429).json(response);
+        }
+
+        // HINCRBY is atomic, so concurrent revokes can never lose a bump. A profile without the
+        // field is version 1 and HINCRBY would start it at 0 -> 1 (no change): bump once more.
+        let nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        if (nextVersion <= 1) {
+          nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        }
+        await db.hset(userKey(userId), { lastActive: Date.now() });
 
         // Invalidate any pending unused link code for this user
         const previousCode = await db.get<string>(userCodeKey(userId));
@@ -545,9 +553,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         response.success = true;
+        // The caller signs out the OTHER sessions: it gets a token at the new version (same absolute
+        // session end), so the account stays reachable and its remote data is never orphaned.
         response.data = {
           userId,
           sessionVersion: nextVersion,
+          sessionToken: createSessionToken(
+            userId,
+            sessionTtlMs(),
+            undefined,
+            claims.absoluteExpiry ?? undefined,
+            nextVersion
+          ),
         };
         break;
       }

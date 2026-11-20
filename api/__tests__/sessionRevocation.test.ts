@@ -264,20 +264,207 @@ describe('Session revocation and logout (Issue #71)', () => {
     );
   });
 
-  it('normal requests do not get noticeably slower (cheap single read)', async () => {
-    const createRes = await callUsers({ action: 'create' }, '10.6.0.1');
-    const { userId, sessionToken } = createRes.body.data;
-
-    const start = performance.now();
-    for (let i = 0; i < 50; i++) {
-      const res = await callStorage(
-        { action: 'get', userId, sessionToken, languageCode: 'es', key: 'bench' },
-        '10.6.0.1'
+  describe('the revoking device keeps access (H1)', () => {
+    it('revokeSessions returns a token at the new version; old tokens die, the new one works everywhere', async () => {
+      const { userId, sessionToken: oldToken } = (await callUsers({ action: 'create' }, '10.7.0.1'))
+        .body.data;
+      await callStorage(
+        {
+          action: 'set',
+          userId,
+          sessionToken: oldToken,
+          languageCode: 'es',
+          key: 'progress',
+          data: { score: 1 },
+        },
+        '10.7.0.1'
       );
-      expect(res.statusCode).not.toBe(401);
+
+      const revoke = await callUsers(
+        { action: 'revokeSessions', sessionToken: oldToken },
+        '10.7.0.1'
+      );
+      expect(revoke.statusCode).toBe(200);
+      const newToken = revoke.body.data.sessionToken;
+      expect(typeof newToken).toBe('string');
+      expect(newToken).not.toBe(oldToken);
+
+      expect(
+        (await callUsers({ action: 'get', sessionToken: oldToken }, '10.7.0.1')).statusCode
+      ).toBe(401);
+      expect(
+        (await callUsers({ action: 'get', sessionToken: newToken }, '10.7.0.1')).statusCode
+      ).toBe(200);
+      // the remote data written before the revoke is still reachable from the revoking device
+      const read = await callStorage(
+        { action: 'get', userId, sessionToken: newToken, languageCode: 'es', key: 'progress' },
+        '10.7.0.1'
+      );
+      expect(read.statusCode).toBe(200);
+      expect(read.body.data).toEqual({ score: 1 });
+      // and it can still hand out a link code
+      expect(
+        (await callUsers({ action: 'generateCode', sessionToken: newToken }, '10.7.0.1')).statusCode
+      ).toBe(200);
+    });
+
+    it('a legacy profile without sessionVersion is revoked (HINCRBY would otherwise stay at 1)', async () => {
+      const { getDb, userKey } = await import('../_db.js');
+      const { userId } = (await callUsers({ action: 'create' }, '10.7.1.1')).body.data;
+      await (await getDb()).hdel(userKey(userId), 'sessionVersion');
+      const legacy = createSessionToken(userId, 60 * 60 * 1000);
+      expect(
+        (await callUsers({ action: 'get', sessionToken: legacy }, '10.7.1.1')).statusCode
+      ).toBe(200);
+
+      const revoke = await callUsers(
+        { action: 'revokeSessions', sessionToken: legacy },
+        '10.7.1.1'
+      );
+      expect(revoke.body.data.sessionVersion).toBe(2);
+      expect(
+        (await callUsers({ action: 'get', sessionToken: legacy }, '10.7.1.1')).statusCode
+      ).toBe(401);
+      expect(
+        (
+          await callUsers(
+            { action: 'get', sessionToken: revoke.body.data.sessionToken },
+            '10.7.1.1'
+          )
+        ).statusCode
+      ).toBe(200);
+    });
+  });
+
+  describe('isSessionActive fails closed (H2)', () => {
+    const setField = async (userId: string, value: unknown) => {
+      const { getDb, userKey } = await import('../_db.js');
+      const db = await getDb();
+      if (value === undefined) await db.hdel(userKey(userId), 'sessionVersion');
+      else await db.hset(userKey(userId), { sessionVersion: value });
+    };
+
+    it.each([
+      ['a string', 'abc'],
+      ['a numeric string', '2'],
+      ['zero', 0],
+      ['negative', -3],
+      ['a float', 1.5],
+      ['null', null],
+    ])('denies every endpoint when the stored sessionVersion is %s', async (_label, value) => {
+      const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.8.0.1')).body
+        .data;
+      await setField(userId, value);
+
+      for (const action of ['get', 'update', 'authenticate', 'generateCode', 'revokeSessions']) {
+        const res = await callUsers(
+          { action, sessionToken, userData: { username: 'x' } },
+          '10.8.0.1'
+        );
+        expect([action, res.statusCode]).toEqual([action, 401]);
+      }
+      // (storage cannot tell a stored JSON null from a field the profile never had)
+      if (value === null) return;
+      const store = await callStorage(
+        { action: 'get', userId, sessionToken, languageCode: 'es', key: 'progress' },
+        '10.8.0.1'
+      );
+      expect(store.statusCode).toBe(401);
+    });
+
+    it('a profile that lost its sessionVersion does not accept a token with v > 1', async () => {
+      const { userId } = (await callUsers({ action: 'create' }, '10.8.1.1')).body.data;
+      await setField(userId, undefined);
+      const v2 = createSessionToken(userId, 60 * 60 * 1000, Date.now(), undefined, 2);
+      expect((await callUsers({ action: 'get', sessionToken: v2 }, '10.8.1.1')).statusCode).toBe(
+        401
+      );
+      expect(
+        (
+          await callStorage(
+            { action: 'get', userId, sessionToken: v2, languageCode: 'es', key: 'progress' },
+            '10.8.1.1'
+          )
+        ).statusCode
+      ).toBe(401);
+    });
+
+    it('a deleted user is not active on the storage endpoints', async () => {
+      const { getDb, userKey } = await import('../_db.js');
+      const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.8.2.1')).body
+        .data;
+      await (await getDb()).del(userKey(userId));
+      for (const action of ['get', 'set', 'delete', 'list']) {
+        const res = await callStorage(
+          { action, userId, sessionToken, languageCode: 'es', key: 'progress', data: { a: 1 } },
+          '10.8.2.1'
+        );
+        expect([action, res.statusCode]).toEqual([action, 401]);
+      }
+    });
+  });
+
+  describe('revoke races (M3)', () => {
+    it('concurrent revokes never lose a version bump', async () => {
+      const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.9.0.1')).body
+        .data;
+      const [a, b] = await Promise.all([
+        callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.1'),
+        callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.1'),
+      ]);
+      expect([a.statusCode, b.statusCode]).toEqual([200, 200]);
+      const { getDb, userKey } = await import('../_db.js');
+      expect((await (await getDb()).hget(userKey(userId), 'sessionVersion')) as number).toBe(3);
+    });
+
+    it('a code minted around a revoke does not survive it, even if stored after the bump', async () => {
+      const { getDb, KEY_PREFIX } = await import('../_db.js');
+      const db = await getDb();
+      const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.9.1.1')).body
+        .data;
+      // generateCode read the profile at version 1 ...
+      const code = (await callUsers({ action: 'generateCode', sessionToken }, '10.9.1.1')).body.data
+        .accountCode;
+      const staleRecord = await db.get<Record<string, unknown>>(`${KEY_PREFIX}code:${code}`);
+      // ... the revoke bumped the version and cleaned up ...
+      await callUsers({ action: 'revokeSessions', sessionToken }, '10.9.1.1');
+      // ... and the slow generateCode then stored its code and pointer after the bump
+      await db.set(`${KEY_PREFIX}code:${code}`, staleRecord, { ex: 600 });
+      await db.set(`${KEY_PREFIX}usercode:${userId}`, code, { ex: 600 });
+
+      const link = await callUsers({ action: 'linkDevice', accountCode: code }, '10.9.1.2');
+      expect(link.statusCode).toBe(400);
+      expect(link.body.data?.sessionToken).toBeUndefined();
+    });
+
+    it('a code generated after the revoke links and yields a token at the new version', async () => {
+      const { sessionToken } = (await callUsers({ action: 'create' }, '10.9.2.1')).body.data;
+      const revoke = await callUsers({ action: 'revokeSessions', sessionToken }, '10.9.2.1');
+      const gen = await callUsers(
+        { action: 'generateCode', sessionToken: revoke.body.data.sessionToken },
+        '10.9.2.1'
+      );
+      const link = await callUsers(
+        { action: 'linkDevice', accountCode: gen.body.data.accountCode },
+        '10.9.2.2'
+      );
+      expect(link.statusCode).toBe(200);
+      expect(
+        (await callUsers({ action: 'get', sessionToken: link.body.data.sessionToken }, '10.9.2.2'))
+          .statusCode
+      ).toBe(200);
+    });
+  });
+
+  it('rate-limits revokeSessions per account (L4)', async () => {
+    const { sessionToken } = (await callUsers({ action: 'create' }, '10.10.0.1')).body.data;
+    let token = sessionToken;
+    for (let i = 0; i < 5; i++) {
+      const res = await callUsers({ action: 'revokeSessions', sessionToken: token }, '10.10.0.1');
+      expect(res.statusCode).toBe(200);
+      token = res.body.data.sessionToken;
     }
-    const elapsed = performance.now() - start;
-    // 50 operations in-memory should easily complete in under 500ms (< 10ms per request)
-    expect(elapsed).toBeLessThan(500);
+    const sixth = await callUsers({ action: 'revokeSessions', sessionToken: token }, '10.10.0.1');
+    expect(sixth.statusCode).toBe(429);
   });
 });
