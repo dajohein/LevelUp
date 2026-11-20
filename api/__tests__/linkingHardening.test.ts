@@ -268,26 +268,28 @@ describe('Issue #72: account linking code hardening', () => {
       const redeem = (code: string, ip: string) =>
         callUsers({ action: 'linkDevice', accountCode: code }, { 'x-forwarded-for': ip });
 
+      // the code is generated first: generating one starts the account's count over
+      const gen = await callUsers(
+        { action: 'generateCode', sessionToken },
+        { 'x-forwarded-for': '60.0.0.2' }
+      );
       // two failed redemptions against the account
       for (let i = 0; i < 2; i++) {
         await plantStaleCode(userId, newCode(i));
         expect((await redeem(newCode(i), `60.1.0.${i}`)).statusCode).toBe(400);
       }
       // a successful redemption in between: not counted, and it must not erase the failures
-      const gen = await callUsers(
-        { action: 'generateCode', sessionToken },
-        { 'x-forwarded-for': '60.0.0.2' }
-      );
       expect((await redeem(gen.body.data.accountCode, '60.1.0.9')).statusCode).toBe(200);
-      // third failure is still within the limit of 3 ...
+      // third failure is still within the limit of 3 (the stale code survives, the limit is not hit) ...
       await plantStaleCode(userId, newCode(5));
       expect((await redeem(newCode(5), '60.1.0.5')).statusCode).toBe(400);
-      // ... so the next redemption (even a valid code) is over it: the lockout survived the success
-      const gen2 = await callUsers(
-        { action: 'generateCode', sessionToken },
-        { 'x-forwarded-for': '60.0.0.3' }
-      );
-      expect((await redeem(gen2.body.data.accountCode, '60.1.0.6')).statusCode).toBe(400);
+      // ... and the fourth failure is over it: the account's code and pointer are locked away.
+      // (Had the success reset the count, this fourth failure would only be the second.)
+      await plantStaleCode(userId, newCode(6));
+      expect((await redeem(newCode(6), '60.1.0.6')).statusCode).toBe(400);
+      const db = await getDb();
+      expect(await db.get(`${KEY_PREFIX}code:${newCode(6)}`)).toBeNull();
+      expect(await db.get(`${KEY_PREFIX}usercode:${userId}`)).toBeNull();
     });
 
     it('a user who redeems many codes in a row is never locked out by successes alone', async () => {
@@ -329,15 +331,103 @@ describe('Issue #72: account linking code hardening', () => {
       expect(results.filter(r => r.statusCode === 429)).toHaveLength(15);
     });
 
-    it('a global limit stops guessing from rotating addresses', async () => {
-      process.env.ACCOUNT_LINK_MAX_FAILED_GLOBAL = '5';
-      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
-      // a window of its own, so counters from other tests do not leak in
-      const realNow = Date.now();
-      const spy = jest.spyOn(Date, 'now').mockReturnValue(realNow + 40 * 3_600_000);
+    // A window of its own (Date.now shifted), so counters from other tests do not leak in
+    const inOwnWindow = async (hours: number, body: () => Promise<void>) => {
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(Date.now() + hours * 3_600_000);
       try {
-        for (let i = 0; i < 5; i++) expect((await guess(`63.0.0.${i}`)).statusCode).toBe(400);
-        expect((await guess('63.0.1.1')).statusCode).toBe(429);
+        await body();
+      } finally {
+        spy.mockRestore();
+      }
+    };
+
+    it('one client flooding requests cannot switch off linking for everyone else', async () => {
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '3';
+      // neither the removed hard global limit (old name) nor the warning threshold may block
+      process.env.ACCOUNT_LINK_MAX_FAILED_GLOBAL = '5';
+      process.env.ACCOUNT_LINK_WARN_FAILED_GLOBAL = '5';
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        await inOwnWindow(40, async () => {
+          const { sessionToken } = await createUser('63.9.0.1');
+          for (let i = 0; i < 50; i++) await guess('63.0.0.1');
+          for (let i = 0; i < 8; i++) expect((await guess(`63.0.1.${i}`)).statusCode).toBe(400);
+          const gen = await callUsers(
+            { action: 'generateCode', sessionToken },
+            { 'x-forwarded-for': '63.9.0.2' }
+          );
+          const link = await callUsers(
+            { action: 'linkDevice', accountCode: gen.body.data.accountCode },
+            { 'x-forwarded-for': '63.9.0.3' }
+          );
+          expect(link.statusCode).toBe(200);
+        });
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('logs one warning per window when failures from many addresses pass the threshold', async () => {
+      process.env.ACCOUNT_LINK_WARN_FAILED_GLOBAL = '4';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        await inOwnWindow(80, async () => {
+          for (let i = 0; i < 4; i++) expect((await guess(`63.1.0.${i}`)).statusCode).toBe(400);
+          expect(warn).not.toHaveBeenCalled(); // at the threshold, not past it
+          for (let i = 4; i < 9; i++)
+            expect((await guess(`63.1.0.${i}`, 'QQQQQQQQQQ')).statusCode).toBe(400);
+          expect(warn).toHaveBeenCalledTimes(1);
+          expect(JSON.stringify(warn.mock.calls)).not.toMatch(/ZZZZZZZZZZ|QQQQQQQQQQ|63\.1\.0\./);
+        });
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('a request the address limit refuses does not use up the global count', async () => {
+      process.env.ACCOUNT_LINK_WARN_FAILED_GLOBAL = '5';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '2';
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        await inOwnWindow(120, async () => {
+          for (let i = 0; i < 30; i++) await guess('63.2.0.1'); // 2 counted, 28 refused
+          for (let i = 0; i < 3; i++) await guess(`63.2.1.${i}`); // 2 + 3 = 5: at the threshold
+          expect(warn).not.toHaveBeenCalled();
+          await guess('63.2.2.1'); // 6th counted request passes it
+          expect(warn).toHaveBeenCalledTimes(1);
+        });
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
+
+  describe('per-code limit follows the code lifetime (M)', () => {
+    it('is not reset when a wall-clock window boundary passes during the code lifetime', async () => {
+      process.env.ACCOUNT_CODE_MAX_ATTEMPTS = '3';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      const win = 60 * 60 * 1000; // default window and code lifetime
+      const boundary = (Math.floor(Date.now() / win) + 400) * win;
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(boundary - 60_000); // minted 1 minute before
+      try {
+        const { sessionToken, userId } = await createUser('67.0.0.1');
+        const gen = await callUsers(
+          { action: 'generateCode', sessionToken },
+          { 'x-forwarded-for': '67.0.0.2' }
+        );
+        const code = gen.body.data.accountCode;
+        const db = await getDb();
+        await db.del(`${KEY_PREFIX}usercode:${userId}`); // every redemption is a failed attempt
+        const redeem = (ip: string) =>
+          callUsers({ action: 'linkDevice', accountCode: code }, { 'x-forwarded-for': ip });
+        for (let i = 0; i < 3; i++) expect((await redeem(`67.0.1.${i}`)).statusCode).toBe(400);
+
+        spy.mockReturnValue(boundary + 120_000); // next window, the code is still live
+        expect(await db.get(`${KEY_PREFIX}code:${code}`)).not.toBeNull();
+        expect((await redeem('67.0.1.9')).statusCode).toBe(400);
+        // the fourth guess exceeded the 3 allowed for this code: it is gone
+        expect(await db.get(`${KEY_PREFIX}code:${code}`)).toBeNull();
       } finally {
         spy.mockRestore();
       }
@@ -384,6 +474,34 @@ describe('Issue #72: account linking code hardening', () => {
       expect((await gen(a.sessionToken)).statusCode).toBe(200);
       for (let i = 0; i < 9; i++) expect((await gen(a.sessionToken)).statusCode).toBe(429);
       expect((await gen(b.sessionToken)).statusCode).toBe(200);
+    });
+
+    it('a new code starts the account failed-redemption count over (LOW)', async () => {
+      process.env.ACCOUNT_LINK_MAX_ATTEMPTS_PER_USER = '3';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      process.env.ACCOUNT_CODE_GENERATE_MAX_PER_USER = '50';
+      const { sessionToken, userId } = await createUser('68.0.0.1');
+      const db = await getDb();
+      for (let i = 0; i < 3; i++) {
+        // stale live codes of the account: each redemption is a failure counted against it
+        const stale = `STALEXCDE${'ABC'[i]}`;
+        await db.set(`${KEY_PREFIX}code:${stale}`, { userId, createdAt: Date.now() }, { ex: 600 });
+        const res = await callUsers(
+          { action: 'linkDevice', accountCode: stale },
+          { 'x-forwarded-for': `68.0.1.${i}` }
+        );
+        expect(res.statusCode).toBe(400);
+      }
+      // account is now at its limit; a fresh code must still link
+      const gen = await callUsers(
+        { action: 'generateCode', sessionToken },
+        { 'x-forwarded-for': '68.0.0.2' }
+      );
+      const link = await callUsers(
+        { action: 'linkDevice', accountCode: gen.body.data.accountCode },
+        { 'x-forwarded-for': '68.0.2.1' }
+      );
+      expect(link.statusCode).toBe(200);
     });
 
     it('signing out other devices clears the account counters', async () => {
