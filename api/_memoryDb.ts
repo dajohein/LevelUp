@@ -127,6 +127,22 @@ export class MemoryDb {
     return next;
   }
 
+  /** Same contract as BUMP_SESSION_VERSION_LUA in _db.ts; atomic here (no await in between). */
+  bumpSessionVersion(key: string, expected: number): number {
+    const hash = this.hashes.get(key);
+    if (!hash || hash.size === 0) return 0;
+    const raw = hash.get('sessionVersion');
+    let current = 1;
+    if (raw !== undefined) {
+      const parsed: unknown = JSON.parse(raw);
+      if (typeof parsed !== 'number' || !Number.isSafeInteger(parsed) || parsed < 1) return 0;
+      current = parsed;
+    }
+    if (current !== expected) return 0;
+    hash.set('sessionVersion', JSON.stringify(current + 1));
+    return current + 1;
+  }
+
   async hgetall<T extends Record<string, unknown>>(key: string): Promise<T | null> {
     const hash = this.hashes.get(key);
     if (!hash || hash.size === 0) return null;

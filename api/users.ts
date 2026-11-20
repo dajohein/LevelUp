@@ -19,7 +19,7 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 import { randomBytes, randomUUID } from 'crypto';
-import { getDb, KEY_PREFIX } from './_db.js';
+import { bumpSessionVersion, getDb, KEY_PREFIX } from './_db.js';
 import {
   createSessionToken,
   readSessionToken,
@@ -558,7 +558,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           codeAttempt.count > MAX_CODE_ATTEMPTS() ||
           userAttempt.count > MAX_USER_LINK_ATTEMPTS()
         ) {
-          await db.del(codeKey(normalizedCode), userCodeKey(codeData.userId));
+          // Only the exhausted code: the account's pointer may name a different, newer code (this
+          // one can be superseded), and the pointer of a dead code just expires.
+          await db.del(codeKey(normalizedCode));
           return invalidCode();
         }
 
@@ -627,11 +629,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(429).json(response);
         }
 
-        // HINCRBY is atomic, so concurrent revokes can never lose a bump. A profile without the
-        // field is version 1 and HINCRBY would start it at 0 -> 1 (no change): bump once more.
-        let nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
-        if (nextVersion <= 1) {
-          nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        // Compare-and-increment, atomic in Redis: bump only if the stored version is still the one
+        // this request's token carries. A request that passed the check above and then lost a race
+        // to another revoke is refused instead of bumping again and receiving a fresh token from a
+        // credential that has just been revoked. (A profile without the field is version 1.)
+        const nextVersion = await bumpSessionVersion(userKey(userId), claims.sessionVersion ?? 1);
+        if (!nextVersion) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
         }
         await db.hset(userKey(userId), { lastActive: Date.now() });
 

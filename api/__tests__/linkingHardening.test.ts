@@ -212,6 +212,35 @@ describe('Issue #72: account linking code hardening', () => {
     });
   });
 
+  describe('exhausting a superseded code', () => {
+    it('does not delete the pointer to the account current code', async () => {
+      process.env.ACCOUNT_CODE_MAX_ATTEMPTS = '2';
+      process.env.ACCOUNT_LINK_MAX_FAILED_PER_IP = '100';
+      const { sessionToken, userId } = await createUser('69.0.0.1');
+      const gen = await callUsers(
+        { action: 'generateCode', sessionToken },
+        { 'x-forwarded-for': '69.0.0.2' }
+      );
+      const current = gen.body.data.accountCode;
+      const db = await getDb();
+      // a live code that is not the current one (e.g. left over from a racing generateCode)
+      await db.set(`${KEY_PREFIX}code:STALEXCDEQ`, { userId, createdAt: Date.now() }, { ex: 600 });
+      for (let i = 0; i < 3; i++) {
+        const res = await callUsers(
+          { action: 'linkDevice', accountCode: 'STALEXCDEQ' },
+          { 'x-forwarded-for': `69.0.1.${i}` }
+        );
+        expect(res.statusCode).toBe(400);
+      }
+      expect(await db.get(`${KEY_PREFIX}code:STALEXCDEQ`)).toBeNull(); // exhausted: gone
+      const link = await callUsers(
+        { action: 'linkDevice', accountCode: current },
+        { 'x-forwarded-for': '69.0.2.1' }
+      );
+      expect(link.statusCode).toBe(200);
+    });
+  });
+
   describe('per-account attempt lockout on device linking', () => {
     it('locks out the account when cumulative link attempts exceed account threshold', async () => {
       process.env.ACCOUNT_CODE_MAX_ATTEMPTS = '10';
@@ -246,9 +275,8 @@ describe('Issue #72: account linking code hardening', () => {
       expect(res4.statusCode).toBe(400);
       expect(res4.body.error).toBe('Invalid or expired account code');
 
-      // Code is deleted and user pointer is deleted
+      // The exhausted code is deleted; the pointer is left to expire (it may name a newer code)
       expect(await db.get(`${KEY_PREFIX}code:${code}`)).toBeNull();
-      expect(await db.get(`${KEY_PREFIX}usercode:${userId}`)).toBeNull();
     });
   });
 
@@ -289,7 +317,6 @@ describe('Issue #72: account linking code hardening', () => {
       expect((await redeem(newCode(6), '60.1.0.6')).statusCode).toBe(400);
       const db = await getDb();
       expect(await db.get(`${KEY_PREFIX}code:${newCode(6)}`)).toBeNull();
-      expect(await db.get(`${KEY_PREFIX}usercode:${userId}`)).toBeNull();
     });
 
     it('a user who redeems many codes in a row is never locked out by successes alone', async () => {
