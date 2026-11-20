@@ -15,6 +15,7 @@ import { Navigation } from './Navigation';
 import { getLanguageInfo, getModulesForLanguage, getModuleStats } from '../services/moduleService';
 import { logger } from '../services/logger';
 import { DataMigrationService } from '../services/dataMigrationService';
+import { getDifficultyBackground, DIFFICULTY_TEXT_COLOR } from '../styles/difficultyColors';
 
 const OverviewContainer = styled.div`
   min-height: 100vh;
@@ -534,19 +535,8 @@ const DifficultyBadge = styled.span<{ difficulty: string }>`
   white-space: nowrap;
   flex-shrink: 0;
   align-self: flex-start;
-  background-color: ${props => {
-    switch (props.difficulty) {
-      case 'beginner':
-        return '#4caf50';
-      case 'intermediate':
-        return '#ff9800';
-      case 'advanced':
-        return '#f44336';
-      default:
-        return '#9e9e9e';
-    }
-  }};
-  color: white;
+  background: ${props => getDifficultyBackground(props.difficulty)};
+  color: ${DIFFICULTY_TEXT_COLOR};
 
   /* Small tablets */
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
