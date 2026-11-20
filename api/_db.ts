@@ -39,3 +39,31 @@ export async function getDb(): Promise<Redis> {
   client = new UpstashRedis({ url, token });
   return client;
 }
+
+// Compare-and-increment of a profile's sessionVersion, atomic on the server (one Lua script).
+// Returns the new version, or 0 when the profile is gone, the stored version is unreadable, or it
+// is no longer the one the caller presented (somebody else revoked in the meantime).
+// A profile without the field is version 1 and moves to 2.
+const BUMP_SESSION_VERSION_LUA = `
+if redis.call('EXISTS', KEYS[1]) == 0 then return 0 end
+local raw = redis.call('HGET', KEYS[1], 'sessionVersion')
+local current = 1
+if raw ~= false then
+  current = tonumber(raw)
+  if current == nil or current < 1 or current ~= math.floor(current) then return 0 end
+end
+if current ~= tonumber(ARGV[1]) then return 0 end
+redis.call('HSET', KEYS[1], 'sessionVersion', tostring(current + 1))
+return current + 1
+`;
+
+export async function bumpSessionVersion(userKeyName: string, expected: number): Promise<number> {
+  const db = await getDb();
+  if (db === (memoryDb as unknown)) return memoryDb.bumpSessionVersion(userKeyName, expected);
+  const result = await db.eval<[number], number>(
+    BUMP_SESSION_VERSION_LUA,
+    [userKeyName],
+    [expected]
+  );
+  return Number(result) || 0;
+}

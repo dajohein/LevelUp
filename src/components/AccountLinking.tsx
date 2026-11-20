@@ -135,6 +135,12 @@ interface AccountLinkingProps {
   titleId?: string;
 }
 
+const ACCOUNT_CODE_LENGTH = 10;
+const RAW_LINK_INPUT_MAX_LENGTH = 32;
+/** Uppercase, drop whitespace, then cap at the code length (so a pasted grouped code still fits). */
+const normalizeLinkCode = (raw: string) =>
+  raw.toUpperCase().replace(/\s/g, '').slice(0, ACCOUNT_CODE_LENGTH);
+
 export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
   const [accountCode, setAccountCode] = useState('');
   const [linkCode, setLinkCode] = useState('');
@@ -191,7 +197,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
       setAccountCode(result.code);
       setCodeExpires(result.expires);
       setMessage({
-        text: 'Secure account code generated! Share this 8-character code with your other device.',
+        text: 'Secure account code generated! Share this 10-character code with your other device.',
         type: 'success',
       });
     } catch (error) {
@@ -416,10 +422,13 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ titleId }) => {
 
         <Input
           type="text"
-          placeholder="Enter code (e.g., A3B7K9M2)"
+          placeholder="Enter code (e.g., A3B7K9M2X4)"
           value={linkCode}
-          onChange={e => setLinkCode(e.target.value.toUpperCase())}
-          maxLength={8}
+          onChange={e => setLinkCode(normalizeLinkCode(e.target.value))}
+          // The browser cuts the RAW text at maxLength before onChange runs, so a grouped code
+          // ("A3B7K 9M2X4") would lose characters. Keep a generous raw bound and enforce the
+          // 10-character limit on the normalized value instead.
+          maxLength={RAW_LINK_INPUT_MAX_LENGTH}
           disabled={!environmentConfig.enableRemoteStorage}
         />
 

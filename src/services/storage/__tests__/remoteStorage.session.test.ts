@@ -66,7 +66,7 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
     const service = new RemoteStorageService({ retries: 1 });
     const code = await service.generateAccountCode();
 
-    expect(code.code).toHaveLength(8);
+    expect(code.code).toHaveLength(10);
     const stored = JSON.parse(localStorage.getItem(KEY) as string);
     expect(stored.userId).toBe(created.userId);
     expect(stored.sessionToken).not.toBe(expired);
@@ -104,7 +104,7 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
     expect(localStorage.getItem(KEY)).toBeNull();
 
     const code = await service.generateAccountCode();
-    expect(code.code).toHaveLength(8);
+    expect(code.code).toHaveLength(10);
     expect(JSON.parse(localStorage.getItem(KEY) as string).userId).not.toBe('someone');
   });
 
@@ -239,6 +239,43 @@ describe('remote session recovery (real API handlers behind fetch)', () => {
 
       // The other device's old token is rejected by the server
       await expect(service2.generateAccountCode()).rejects.toBeInstanceOf(RemoteSessionError);
+    });
+
+    it('a refresh that was in flight across revokeSessions() cannot overwrite the new token', async () => {
+      const { created } = await createServerSession();
+      const service = new RemoteStorageService({ retries: 1 });
+      localStorage.setItem(KEY, JSON.stringify(created));
+      const before = await service.getUserSession();
+      await service.putValue('es', 'k', { a: 1 });
+
+      // an authenticate whose response is computed now (pre-revocation token) but delivered later
+      let release!: () => void;
+      const gate = new Promise<void>(resolve => (release = resolve));
+      const normalFetch = fetchMock.getMockImplementation() as (
+        url: string,
+        init?: RequestInit
+      ) => Promise<Response>;
+      fetchMock.mockImplementationOnce(async (url: string, init?: RequestInit) => {
+        const response = await normalFetch(url, init);
+        await gate;
+        return response;
+      });
+      const stale = service.initializeUser({
+        userId: before.userId,
+        sessionToken: before.sessionToken,
+      });
+      // let the gated request reach the server before the revoke
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      await service.revokeSessions();
+      const renewed = JSON.parse(localStorage.getItem(KEY) as string).sessionToken;
+      expect(renewed).not.toBe(before.sessionToken);
+
+      release();
+      await stale.catch(() => undefined); // its result is obsolete: it may be refused, never adopted
+      expect(JSON.parse(localStorage.getItem(KEY) as string).sessionToken).toBe(renewed);
+      expect((await service.getUserSession()).sessionToken).toBe(renewed);
+      await expect(service.getValue('es', 'k')).resolves.toEqual({ a: 1 });
     });
 
     it('revokeSessions() keeps the session when the server call fails, so the user can retry', async () => {

@@ -336,6 +336,38 @@ describe('Session revocation and logout (Issue #71)', () => {
     });
   });
 
+  describe('revoke is a compare-and-increment', () => {
+    it('refuses a request whose token was revoked between the session check and the bump', async () => {
+      const { getDb, userKey } = await import('../_db.js');
+      const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.9.0.1')).body
+        .data;
+      const db = await getDb();
+      const realIncr = db.incr.bind(db);
+      let winner: any;
+      // the first request has passed isSessionActive (version 1); before it bumps, another device
+      // finishes its own revocation (version 2)
+      const spy = jest.spyOn(db, 'incr').mockImplementationOnce(async (key: string) => {
+        winner = await callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.2');
+        return realIncr(key);
+      });
+      try {
+        const loser = await callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.1');
+        expect(winner.statusCode).toBe(200);
+        expect(loser.statusCode).toBe(401);
+        expect(loser.body.data?.sessionToken).toBeUndefined();
+      } finally {
+        spy.mockRestore();
+      }
+      // the version was bumped once (to 2), and the winner's token still works
+      expect((await db.hget(userKey(userId), 'sessionVersion')) as number).toBe(2);
+      const ok = await callUsers(
+        { action: 'get', sessionToken: winner.body.data.sessionToken },
+        '10.9.0.3'
+      );
+      expect(ok.statusCode).toBe(200);
+    });
+  });
+
   describe('isSessionActive fails closed (H2)', () => {
     const setField = async (userId: string, value: unknown) => {
       const { getDb, userKey } = await import('../_db.js');
@@ -363,8 +395,6 @@ describe('Session revocation and logout (Issue #71)', () => {
         );
         expect([action, res.statusCode]).toEqual([action, 401]);
       }
-      // (storage cannot tell a stored JSON null from a field the profile never had)
-      if (value === null) return;
       const store = await callStorage(
         { action: 'get', userId, sessionToken, languageCode: 'es', key: 'progress' },
         '10.8.0.1'
@@ -405,16 +435,16 @@ describe('Session revocation and logout (Issue #71)', () => {
   });
 
   describe('revoke races (M3)', () => {
-    it('concurrent revokes never lose a version bump', async () => {
+    it('two concurrent revokes with the same token: one wins, the other is refused, one bump', async () => {
       const { userId, sessionToken } = (await callUsers({ action: 'create' }, '10.9.0.1')).body
         .data;
       const [a, b] = await Promise.all([
         callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.1'),
         callUsers({ action: 'revokeSessions', sessionToken }, '10.9.0.1'),
       ]);
-      expect([a.statusCode, b.statusCode]).toEqual([200, 200]);
+      expect([a.statusCode, b.statusCode].sort()).toEqual([200, 401]);
       const { getDb, userKey } = await import('../_db.js');
-      expect((await (await getDb()).hget(userKey(userId), 'sessionVersion')) as number).toBe(3);
+      expect((await (await getDb()).hget(userKey(userId), 'sessionVersion')) as number).toBe(2);
     });
 
     it('a code minted around a revoke does not survive it, even if stored after the bump', async () => {

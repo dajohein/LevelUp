@@ -19,7 +19,7 @@ interface VercelResponse {
   end(): VercelResponse;
 }
 import { randomBytes, randomUUID } from 'crypto';
-import { getDb, KEY_PREFIX } from './_db.js';
+import { bumpSessionVersion, getDb, KEY_PREFIX } from './_db.js';
 import {
   createSessionToken,
   readSessionToken,
@@ -81,18 +81,25 @@ interface UserResponse {
 //   levelup:user:<id>           -> user profile (JSON)
 //   levelup:code:<CODE>         -> { userId, used, createdAt }, expires via TTL
 //   levelup:usercode:<id>       -> the user's current unused code (so a new one replaces it)
-//   levelup:codeattempts:<CODE> -> failed/total link attempts for one code (TTL)
-//   levelup:rl:<bucket>         -> fixed-window rate-limit counter (TTL)
+//   levelup:rl:<bucket>:<n>     -> fixed-window rate-limit counter (TTL)
+//   levelup:fail:<scope>:<n>    -> fixed-window count of FAILED link redemptions (TTL); a
+//                                  success hands its own attempt back (DECR) and never resets it
+//   levelup:codefail:<CODE>     -> failed redemptions of one code; its TTL is the code's own
+//                                  remaining lifetime, so no window boundary can reset it
 const userKey = (id: string) => `${KEY_PREFIX}user:${id}`;
 const codeKey = (code: string) => `${KEY_PREFIX}code:${code}`;
 const userCodeKey = (id: string) => `${KEY_PREFIX}usercode:${id}`;
-const codeAttemptsKey = (code: string) => `${KEY_PREFIX}codeattempts:${code}`;
 
 // Security limits (env-driven). A malformed value falls back to the default and is logged
 // (see envPositiveInt); it never disables a limit.
 const MAX_REVOKES_PER_WINDOW = () => envPositiveInt('REVOKE_MAX_PER_WINDOW', 5); // per account
 const MAX_CODE_ATTEMPTS = () => envPositiveInt('ACCOUNT_CODE_MAX_ATTEMPTS', 5); // per code
+const MAX_USER_LINK_ATTEMPTS = () => envPositiveInt('ACCOUNT_LINK_MAX_ATTEMPTS_PER_USER', 10); // failed redemptions per account and window
+const MAX_IP_LINK_FAILURES = () => envPositiveInt('ACCOUNT_LINK_MAX_FAILED_PER_IP', 10); // failed redemptions per client address and window
+// Not a limit: failed redemptions for everyone per window above which ONE warning is logged
+const WARN_GLOBAL_LINK_FAILURES = () => envPositiveInt('ACCOUNT_LINK_WARN_FAILED_GLOBAL', 1000);
 const MAX_RATE_LIMIT_ATTEMPTS = () => envPositiveInt('RATE_LIMIT_MAX_ATTEMPTS', 10); // per client per window
+const MAX_USER_GENERATE_ATTEMPTS = () => envPositiveInt('ACCOUNT_CODE_GENERATE_MAX_PER_USER', 10); // per account code generations
 const MAX_CREATE_ATTEMPTS = () => envPositiveInt('CREATE_MAX_PER_WINDOW', 30); // new accounts per client per window
 const RATE_LIMIT_WINDOW = () => envPositiveInt('RATE_LIMIT_WINDOW_MS', 60 * 60 * 1000); // default 1 hour
 const CODE_EXPIRY = () => envPositiveInt('ACCOUNT_CODE_EXPIRY_MS', 60 * 60 * 1000); // default 1 hour
@@ -110,21 +117,20 @@ const KNOWN_ACTIONS: ReadonlyArray<string> = [
 const MAX_USERNAME_LENGTH = 64;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PREFERENCES_BYTES = 16 * 1024;
-const ACCOUNT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
+const ACCOUNT_CODE_LENGTH = 10;
+const ACCOUNT_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+// Codes are 10 characters. 8-character codes (issued before the length change) stay redeemable
+// until their TTL (default 1 hour) has passed after the deploy: a one-time compatibility window.
+// Remove the `{8}` branch once ACCOUNT_CODE_EXPIRY_MS has elapsed since the release.
+const ACCOUNT_CODE_PATTERN = /^(?:[2-9A-HJ-NP-Z]{10}|[2-9A-HJ-NP-Z]{8})$/;
 
 // Helper function to generate cryptographically secure account code
 function generateAccountCode(): string {
   // Use crypto.randomBytes for cryptographically secure randomness
-
-  // Generate 6 random bytes and encode as base32-like string
-  // This gives us 8 characters from a 32-character alphabet
-  const bytes = randomBytes(6);
-
-  // Use a custom alphabet excluding confusing characters (0, O, I, 1, etc.)
-  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  // Generate 8 random bytes (64 bits) to encode 10 characters from a 32-character alphabet (50 bits)
+  const bytes = randomBytes(8);
+  const alphabet = ACCOUNT_CODE_ALPHABET;
   let result = '';
-
-  // Convert bytes to base32-like encoding
   let value = 0;
   let bits = 0;
 
@@ -135,16 +141,13 @@ function generateAccountCode(): string {
     while (bits >= 5) {
       result += alphabet[(value >> (bits - 5)) & 31];
       bits -= 5;
+      if (result.length === ACCOUNT_CODE_LENGTH) {
+        return result;
+      }
     }
   }
 
-  // Add remaining bits if any
-  if (bits > 0) {
-    result += alphabet[(value << (5 - bits)) & 31];
-  }
-
-  // Return first 8 characters for consistent length
-  return result.substring(0, 8);
+  return result.substring(0, ACCOUNT_CODE_LENGTH);
 }
 
 /**
@@ -168,16 +171,73 @@ function createSession(userId: string, sessionVersion = 1): string {
 // The window number is part of the key and EXPIRE is always (re)applied, so a request that
 // dies between INCR and EXPIRE can only leave a harmless stale bucket behind. The client
 // is never locked out beyond the current window.
+const windowKey = (prefix: string, identifier: string, windowMs: number) =>
+  `${KEY_PREFIX}${prefix}:${identifier}:${Math.floor(Date.now() / windowMs)}`;
+
 async function isRateLimited(
   identifier: string,
   max = MAX_RATE_LIMIT_ATTEMPTS()
 ): Promise<boolean> {
   const db = await getDb();
   const window = RATE_LIMIT_WINDOW();
-  const key = `${KEY_PREFIX}rl:${identifier}:${Math.floor(Date.now() / window)}`;
+  const key = windowKey('rl', identifier, window);
   const attempts = await db.incr(key);
   await db.expire(key, Math.ceil((window * 2) / 1000));
   return attempts > max;
+}
+
+/**
+ * Counts one link redemption in a fixed window BEFORE it is evaluated (INCR is atomic, so a burst
+ * of parallel guesses cannot all slip under the limit). `undo()` hands the attempt back when the
+ * redemption succeeds, so only FAILED redemptions stay counted and a success never resets what
+ * others (or earlier failures) have accumulated. The window is fixed: EXPIRE does not slide it.
+ */
+async function startLinkAttempt(scope: string, windowMs = RATE_LIMIT_WINDOW()) {
+  const db = await getDb();
+  const key = windowKey('fail', scope, windowMs);
+  const count = await db.incr(key);
+  await db.expire(key, Math.ceil((windowMs * 2) / 1000));
+  return { count, undo: () => db.decr(key) };
+}
+
+/**
+ * Like startLinkAttempt, but for one code: the counter lives exactly as long as the code does
+ * (TTL = the code's remaining lifetime, re-applied on every attempt, so it never slides past the
+ * code's expiry). A wall-clock window would reset the count at its boundary, in the middle of the
+ * code's life, and hand an attacker a fresh set of guesses.
+ */
+async function startCodeAttempt(code: string, createdAt: unknown) {
+  const db = await getDb();
+  const key = `${KEY_PREFIX}codefail:${code}`;
+  const lifetime = CODE_EXPIRY();
+  const age =
+    typeof createdAt === 'number' && Number.isFinite(createdAt) ? Date.now() - createdAt : 0;
+  // A missing or future createdAt counts as a code that has just been minted (full lifetime)
+  const remainingMs = Math.min(lifetime, Math.max(1000, lifetime - Math.max(0, age)));
+  const count = await db.incr(key);
+  await db.expire(key, Math.ceil(remainingMs / 1000));
+  return { count, undo: () => db.decr(key) };
+}
+
+/**
+ * Signal only, never a limit: when the failed redemptions of everyone pass a threshold in one
+ * window, log a single warning (no codes, no addresses). Blocking on a global total would let one
+ * client switch off linking for everybody; guessing is bounded by the per-address, per-code and
+ * per-account limits and by the 50 bits of each code.
+ */
+async function noteGlobalLinkFailures(count: number) {
+  if (count <= WARN_GLOBAL_LINK_FAILURES()) return;
+  const db = await getDb();
+  const window = RATE_LIMIT_WINDOW();
+  const first = await db.set(windowKey('warn', 'global_link_failures', window), 1, {
+    ex: Math.ceil((window * 2) / 1000),
+    nx: true,
+  });
+  if (first) {
+    console.warn(
+      `[users] ${count} account-link redemptions in one window (warning threshold ${WARN_GLOBAL_LINK_FAILURES()}): possible guessing from many addresses`
+    );
+  }
 }
 
 // Client identity for rate limiting (parsed, validated and length-capped, see _config.ts)
@@ -400,9 +460,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         const userId = claims.userId;
 
-        // Check rate limiting for code generation
+        // Check rate limiting for code generation (per client IP and per user account)
         const clientId = getClientIdentifier(req);
+        // A request refused by one limit must not use up the other, so an account hitting its own
+        // limit does not also burn the shared client-address budget (and the reverse).
+        const userLimited = await isRateLimited(`gen_user_${userId}`, MAX_USER_GENERATE_ATTEMPTS());
+        if (userLimited) {
+          response.error = 'Too many code generation attempts. Please try again later.';
+          return res.status(429).json(response);
+        }
         if (await isRateLimited(`generate_${clientId}`)) {
+          await db.decr(windowKey('rl', `gen_user_${userId}`, RATE_LIMIT_WINDOW()));
           response.error = 'Too many code generation attempts. Please try again later.';
           return res.status(429).json(response);
         }
@@ -410,8 +478,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const expirySeconds = Math.ceil(CODE_EXPIRY() / 1000);
         const previousCode = await db.get<string>(userCodeKey(userId));
 
-        // NX: never overwrite a live code that belongs to someone else (a 40-bit collision is
-        // unlikely, but a plain SET would silently hand the other user's code to this one)
+        // NX: never overwrite a live code that belongs to someone else (a 50-bit collision is
+        // practically impossible, but a plain SET would silently hand the other user's code to this one)
         let accountCode = '';
         for (let attempt = 0; attempt < 5 && !accountCode; attempt++) {
           const candidate = generateAccountCode();
@@ -431,8 +499,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await db.set(userCodeKey(userId), accountCode, { ex: expirySeconds });
         // Hygiene only. Security does not depend on this delete.
         if (previousCode && previousCode !== accountCode) {
-          await db.del(codeKey(previousCode), codeAttemptsKey(previousCode));
+          await db.del(codeKey(previousCode), `${KEY_PREFIX}codefail:${previousCode}`);
         }
+        // A fresh code starts the account's failed-redemption count over: mistyped attempts at
+        // earlier codes must not stop the user from linking with this one. Only the account's owner
+        // (a valid session) gets here, and generation is rate limited per account above.
+        await db.del(windowKey('fail', `user_${userId}`, RATE_LIMIT_WINDOW()));
 
         response.success = true;
         response.data = {
@@ -443,12 +515,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case 'linkDevice': {
-        // Rate limit first, so malformed and unknown guesses all count against the client
+        // Only FAILED redemptions count. Every request takes one attempt up front from a
+        // per-client-address and a global budget (the guesses at unknown codes, which never reach
+        // an account, are what these see); a success gives its attempt back at the end.
         const clientId = getClientIdentifier(req);
-        if (await isRateLimited(`link_${clientId}`)) {
+        const ipAttempt = await startLinkAttempt(`ip_${clientId}`);
+        // A request the address limit refuses touches no other budget
+        if (ipAttempt.count > MAX_IP_LINK_FAILURES()) {
           response.error = 'Too many linking attempts. Please try again later.';
           return res.status(429).json(response);
         }
+        const globalAttempt = await startLinkAttempt('global');
+        await noteGlobalLinkFailures(globalAttempt.count);
+        const giveBack: Array<() => Promise<unknown>> = [ipAttempt.undo, globalAttempt.undo];
 
         // Every failure below returns this same message so a response never reveals whether a
         // code is unknown, expired, superseded, used or exhausted.
@@ -462,16 +541,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const normalizedCode = request.accountCode.toUpperCase().replace(/\s/g, '');
         if (!ACCOUNT_CODE_PATTERN.test(normalizedCode)) return invalidCode();
 
-        const codeData = await db.get<{ userId: string; sessionVersion?: number }>(
-          codeKey(normalizedCode)
-        );
+        const codeData = await db.get<{
+          userId: string;
+          createdAt?: number;
+          sessionVersion?: number;
+        }>(codeKey(normalizedCode));
         if (!codeData) return invalidCode(); // unknown or expired (TTL elapsed)
 
-        // Check code-specific attempt limit (EXPIRE always re-applied, see isRateLimited)
-        const codeAttempts = await db.incr(codeAttemptsKey(normalizedCode));
-        await db.expire(codeAttemptsKey(normalizedCode), Math.ceil(CODE_EXPIRY() / 1000));
-        if (codeAttempts > MAX_CODE_ATTEMPTS()) {
-          await db.del(codeKey(normalizedCode), codeAttemptsKey(normalizedCode));
+        // A live code: count this attempt against the code (for the code's own lifetime) and its
+        // account (fixed window), independent of the client address, and lock the code once either
+        // budget is spent.
+        const codeAttempt = await startCodeAttempt(normalizedCode, codeData.createdAt);
+        const userAttempt = await startLinkAttempt(`user_${codeData.userId}`);
+        giveBack.push(codeAttempt.undo, userAttempt.undo);
+        if (
+          codeAttempt.count > MAX_CODE_ATTEMPTS() ||
+          userAttempt.count > MAX_USER_LINK_ATTEMPTS()
+        ) {
+          // Only the exhausted code: the account's pointer may name a different, newer code (this
+          // one can be superseded), and the pointer of a dead code just expires.
+          await db.del(codeKey(normalizedCode));
           return invalidCode();
         }
 
@@ -498,7 +587,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const consumed = await db.del(codeKey(normalizedCode));
         if (!consumed) return invalidCode();
-        await db.del(codeAttemptsKey(normalizedCode));
+        // A success is not a failure: hand every attempt back (nothing is reset, so failures
+        // accumulated earlier in the window stay counted)
+        await Promise.all(giveBack.map(undo => undo()));
 
         // Create new session for this device with the user's active session version
         const newSessionToken = createSession(codeData.userId, activeVersion);
@@ -538,19 +629,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(429).json(response);
         }
 
-        // HINCRBY is atomic, so concurrent revokes can never lose a bump. A profile without the
-        // field is version 1 and HINCRBY would start it at 0 -> 1 (no change): bump once more.
-        let nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
-        if (nextVersion <= 1) {
-          nextVersion = await db.hincrby(userKey(userId), 'sessionVersion', 1);
+        // Compare-and-increment, atomic in Redis: bump only if the stored version is still the one
+        // this request's token carries. A request that passed the check above and then lost a race
+        // to another revoke is refused instead of bumping again and receiving a fresh token from a
+        // credential that has just been revoked. (A profile without the field is version 1.)
+        const nextVersion = await bumpSessionVersion(userKey(userId), claims.sessionVersion ?? 1);
+        if (!nextVersion) {
+          response.error = 'Invalid or expired session';
+          return res.status(401).json(response);
         }
         await db.hset(userKey(userId), { lastActive: Date.now() });
 
-        // Invalidate any pending unused link code for this user
+        // Invalidate any pending unused link code for this user, and clear the per-account
+        // generation and failed-link counters so the user can start over right away (the revoke
+        // itself is rate limited above, so this cannot be used to reset them in a loop)
         const previousCode = await db.get<string>(userCodeKey(userId));
         if (previousCode) {
-          await db.del(userCodeKey(userId), codeKey(previousCode), codeAttemptsKey(previousCode));
+          await db.del(
+            userCodeKey(userId),
+            codeKey(previousCode),
+            `${KEY_PREFIX}codefail:${previousCode}`
+          );
         }
+        await db.del(
+          windowKey('rl', `gen_user_${userId}`, RATE_LIMIT_WINDOW()),
+          windowKey('fail', `user_${userId}`, RATE_LIMIT_WINDOW())
+        );
 
         response.success = true;
         // The caller signs out the OTHER sessions: it gets a token at the new version (same absolute

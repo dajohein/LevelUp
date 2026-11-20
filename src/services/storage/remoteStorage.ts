@@ -376,6 +376,11 @@ export class RemoteStorageService implements AsyncStorageProvider {
     try {
       return await this.pendingRefresh;
     } catch (error) {
+      // The session was replaced while this refresh was in flight (sign-out of the other devices
+      // installed a newer token): the refresh result is obsolete, use the current session
+      if (this.userSession && this.userSession.sessionToken !== stale.sessionToken) {
+        return this.userSession;
+      }
       // Refused: forget the cached, dead session so the lost-session state takes over (otherwise
       // every later call would reuse the stale token and fail the same way)
       if (error instanceof RemoteSessionError && this.userSession === stale) {
@@ -1004,6 +1009,12 @@ export class RemoteStorageService implements AsyncStorageProvider {
     // The others are already signed out; if the new token cannot be adopted this device must not
     // keep a dead one silently, so adoptSession's reset check throws to the caller.
     this.adoptSession({ ...session, sessionToken }, epoch);
+    // Everything still in flight was started with the pre-revocation token (a refresh or restore
+    // that already got a response at the old version would otherwise be delivered after this and
+    // overwrite the new token with a revoked one): a new epoch makes adoptSession reject it.
+    this.sessionEpoch += 1;
+    this.pendingSession = null;
+    this.pendingRefresh = null;
   }
 
   /**

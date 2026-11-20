@@ -84,11 +84,33 @@ describe('AccountLinking', () => {
       mockEnv.enableRemoteStorage = true;
     });
 
-    it('shows the generated code', async () => {
-      mocked.generateAccountCode.mockResolvedValue(code('ABCD2345'));
+    it('shows the generated code and informs user of 10-character code', async () => {
+      mocked.generateAccountCode.mockResolvedValue(code('ABCD2345GH'));
       renderIt();
       await userEvent.click(generate());
-      expect(await screen.findByText('ABCD2345')).toBeInTheDocument();
+      expect(await screen.findByText('ABCD2345GH')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Share this 10-character code with your other device/)
+      ).toBeInTheDocument();
+    });
+
+    it('configures the linking input with the updated placeholder', () => {
+      renderIt();
+      expect(screen.getByRole('textbox')).toHaveAttribute(
+        'placeholder',
+        'Enter code (e.g., A3B7K9M2X4)'
+      );
+    });
+
+    it('keeps a pasted grouped code whole, and still caps the code at 10 characters', async () => {
+      renderIt();
+      const input = screen.getByRole('textbox');
+      await userEvent.click(input);
+      await userEvent.paste('a3b7k 9m2x4');
+      expect(input).toHaveValue('A3B7K9M2X4');
+      await userEvent.clear(input);
+      await userEvent.paste('A3B7 K9M2 X4ZZ ZZ');
+      expect(input).toHaveValue('A3B7K9M2X4');
     });
 
     describe('a lost session', () => {
