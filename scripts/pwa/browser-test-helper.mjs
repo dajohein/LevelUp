@@ -14,6 +14,18 @@ export const chromeBinary = [
   .filter(Boolean)
   .find(binary => spawnSync(binary, ['--version']).status === 0);
 
+/**
+ * Remove a Chrome profile. Failure here is only a warning: it must never fail the test run,
+ * and it is never reached for test assertions.
+ */
+async function removeProfile(profile) {
+  try {
+    await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch (error) {
+    console.warn(`Could not remove Chrome profile ${profile}: ${error.message}`);
+  }
+}
+
 /** Start an isolated real browser and communicate through its local CDP socket. */
 export async function openBrowser() {
   const profile = await mkdtemp(path.join(tmpdir(), 'levelup-sw-chrome-'));
@@ -31,6 +43,10 @@ export async function openBrowser() {
     ],
     { stdio: ['ignore', 'ignore', 'pipe'] }
   );
+  // Chrome spawns helper processes (zygote, renderers, GPU) that inherit the stderr pipe and can
+  // keep writing into the profile after the main process has exited. 'close' fires only once the
+  // pipe is released by all of them, so it is the point at which the profile is safe to delete.
+  const closed = new Promise(resolve => processHandle.once('close', resolve));
   let socket;
   try {
     const endpoint = await new Promise((resolve, reject) => {
@@ -111,23 +127,21 @@ export async function openBrowser() {
         });
       },
       async close() {
-        const exited = once(processHandle, 'exit');
         try {
           await send('Browser.close');
         } finally {
           socket.close();
           processHandle.kill();
-          await exited;
-          await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+          await Promise.race([closed, delay(10000)]);
+          await removeProfile(profile);
         }
       },
     };
   } catch (error) {
     socket?.close();
-    const exited = processHandle.exitCode === null ? once(processHandle, 'exit') : null;
     processHandle.kill();
-    if (exited) await exited;
-    await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await Promise.race([closed, delay(10000)]);
+    await removeProfile(profile);
     throw error;
   }
 }
