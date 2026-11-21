@@ -44,6 +44,13 @@
       "description": "Vocabulario sobre celebraciones, rasgos de personalidad, mascotas y animales.",
       "icon": "📖",
       "difficulty": "beginner"
+    },
+    {
+      "id": "citas-y-personalidad",
+      "name": "Citas y Personalidad",
+      "description": "Vocabulario sobre encuentros, citas, relaciones y rasgos de personalidad.",
+      "icon": "💞",
+      "difficulty": "beginner"
     }
   ]
 }

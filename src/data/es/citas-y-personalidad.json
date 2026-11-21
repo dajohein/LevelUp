@@ -1,0 +1,841 @@
+{
+  "id": "citas-y-personalidad",
+  "name": "Citas y Personalidad",
+  "description": "Vocabulario sobre encuentros, citas, relaciones y rasgos de personalidad.",
+  "icon": "💞",
+  "difficulty": "beginner",
+  "words": [
+    {
+      "id": "citas-y-personalidad:1",
+      "term": "el encuentro",
+      "definition": "de ontmoeting",
+      "direction": "definition-to-term",
+      "category": "encuentros",
+      "context": {
+        "sentence": "El encuentro con mis amigos fue muy divertido.",
+        "translation": "De ontmoeting met mijn vrienden was erg leuk.",
+        "sentenceWithBlank": "{BLANK} con mis amigos fue muy divertido."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:2",
+      "term": "la cita",
+      "definition": "de afspraak, de date",
+      "direction": "definition-to-term",
+      "category": "encuentros",
+      "context": {
+        "sentence": "Esta noche tengo una cita con mi novia.",
+        "translation": "Vanavond heb ik een date met mijn vriendin.",
+        "sentenceWithBlank": "Esta noche tengo una {BLANK} con mi novia."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:3",
+      "term": "el lugar",
+      "definition": "de plek, de plaats",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "Este es un lugar muy tranquilo.",
+        "translation": "Dit is een heel rustige plek.",
+        "sentenceWithBlank": "Este es un {BLANK} muy tranquilo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:4",
+      "term": "el mensaje",
+      "definition": "het bericht",
+      "direction": "definition-to-term",
+      "category": "comunicación",
+      "context": {
+        "sentence": "Te mando un mensaje esta tarde.",
+        "translation": "Ik stuur je vanmiddag een berichtje.",
+        "sentenceWithBlank": "Te mando un {BLANK} esta tarde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:5",
+      "term": "la entrada",
+      "definition": "de ingang, het toegangsbewijs",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "La entrada del cine está a la derecha.",
+        "translation": "De ingang van de bioscoop is aan de rechterkant.",
+        "sentenceWithBlank": "{BLANK} del cine está a la derecha."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:6",
+      "term": "la salida",
+      "definition": "de uitgang",
+      "direction": "definition-to-term",
+      "category": "lugares",
+      "context": {
+        "sentence": "La salida está al final del pasillo.",
+        "translation": "De uitgang is aan het einde van de gang.",
+        "sentenceWithBlank": "{BLANK} está al final del pasillo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:7",
+      "term": "quedar",
+      "definition": "afspreken (om elkaar te zien)",
+      "direction": "definition-to-term",
+      "category": "encuentros",
+      "context": {
+        "sentence": "Vamos a quedar el sábado en el centro.",
+        "translation": "Laten we zaterdag in het centrum afspreken.",
+        "sentenceWithBlank": "Vamos a {BLANK} el sábado en el centro."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:8",
+      "term": "esperar",
+      "definition": "wachten, hopen",
+      "direction": "definition-to-term",
+      "category": "actividades",
+      "context": {
+        "sentence": "Tenemos que esperar a mi hermana en la entrada.",
+        "translation": "We moeten bij de ingang op mijn zus wachten.",
+        "sentenceWithBlank": "Tenemos que {BLANK} a mi hermana en la entrada."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:9",
+      "term": "tardar",
+      "definition": "lang duren, er lang over doen",
+      "direction": "definition-to-term",
+      "category": "tiempo",
+      "context": {
+        "sentence": "Voy a tardar un poco en llegar.",
+        "translation": "Het duurt even voordat ik er ben.",
+        "sentenceWithBlank": "Voy a {BLANK} un poco en llegar."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:10",
+      "term": "tomar",
+      "definition": "nemen, drinken",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Vamos a tomar un café después del trabajo.",
+        "translation": "Laten we na het werk een kopje koffie drinken.",
+        "sentenceWithBlank": "Vamos a {BLANK} un café después del trabajo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:11",
+      "term": "sentir (ie)",
+      "definition": "voelen",
+      "direction": "definition-to-term",
+      "category": "sentimientos",
+      "context": {
+        "sentence": "Es bonito sentir que alguien te espera.",
+        "translation": "Het is fijn te voelen dat iemand op je wacht.",
+        "sentenceWithBlank": "Es bonito {BLANK} que alguien te espera."
+      },
+      "synonyms": ["sentir"]
+    },
+    {
+      "id": "citas-y-personalidad:12",
+      "term": "chocar",
+      "definition": "botsen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Dos coches pueden chocar en el cruce.",
+        "translation": "Twee auto's kunnen op het kruispunt botsen.",
+        "sentenceWithBlank": "Dos coches pueden {BLANK} en el cruce."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:13",
+      "term": "parar",
+      "definition": "stoppen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Tenemos que parar aquí un momento.",
+        "translation": "We moeten hier even stoppen.",
+        "sentenceWithBlank": "Tenemos que {BLANK} aquí un momento."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:14",
+      "term": "a través de",
+      "definition": "door, via",
+      "direction": "definition-to-term",
+      "category": "preposiciones",
+      "context": {
+        "sentence": "Nos conocimos a través de unos amigos.",
+        "translation": "We hebben elkaar leren kennen via vrienden.",
+        "sentenceWithBlank": "Nos conocimos {BLANK} unos amigos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:15",
+      "term": "desde hace",
+      "definition": "sinds (een periode), al ... lang",
+      "direction": "definition-to-term",
+      "category": "tiempo",
+      "context": {
+        "sentence": "Vivo aquí desde hace tres años.",
+        "translation": "Ik woon hier al drie jaar.",
+        "sentenceWithBlank": "Vivo aquí {BLANK} tres años."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:16",
+      "term": "después",
+      "definition": "daarna",
+      "direction": "definition-to-term",
+      "category": "tiempo",
+      "context": {
+        "sentence": "Primero cenamos y después vamos al cine.",
+        "translation": "Eerst eten we en daarna gaan we naar de bioscoop.",
+        "sentenceWithBlank": "Primero cenamos y {BLANK} vamos al cine."
+      },
+      "synonyms": ["luego"]
+    },
+    {
+      "id": "citas-y-personalidad:17",
+      "term": "inmediatamente",
+      "definition": "onmiddellijk",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Tienes que llamarme inmediatamente.",
+        "translation": "Je moet me onmiddellijk bellen.",
+        "sentenceWithBlank": "Tienes que llamarme {BLANK}."
+      },
+      "synonyms": ["enseguida"]
+    },
+    {
+      "id": "citas-y-personalidad:18",
+      "term": "seguramente",
+      "definition": "waarschijnlijk, vast wel",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Seguramente mi amigo llegará tarde.",
+        "translation": "Mijn vriend komt vast te laat.",
+        "sentenceWithBlank": "{BLANK} mi amigo llegará tarde."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:19",
+      "term": "para nada",
+      "definition": "helemaal niet",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "No me gusta para nada ese plan.",
+        "translation": "Dat plan bevalt me helemaal niet.",
+        "sentenceWithBlank": "No me gusta {BLANK} ese plan."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:20",
+      "term": "en compañía de",
+      "definition": "in gezelschap van",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Prefiero viajar en compañía de mis amigos.",
+        "translation": "Ik reis liever in gezelschap van mijn vrienden.",
+        "sentenceWithBlank": "Prefiero viajar {BLANK} mis amigos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:21",
+      "term": "el aspecto",
+      "definition": "het uiterlijk, het voorkomen",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Tu nuevo aspecto me gusta mucho.",
+        "translation": "Je nieuwe uiterlijk bevalt me erg.",
+        "sentenceWithBlank": "Tu nuevo {BLANK} me gusta mucho."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:22",
+      "term": "el defecto",
+      "definition": "de tekortkoming, het gebrek",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Todos tenemos algún defecto.",
+        "translation": "We hebben allemaal wel een tekortkoming.",
+        "sentenceWithBlank": "Todos tenemos algún {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:23",
+      "term": "el físico",
+      "definition": "de lichaamsbouw, het postuur",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi hermano tiene un físico muy atlético.",
+        "translation": "Mijn broer heeft een erg atletisch postuur.",
+        "sentenceWithBlank": "Mi hermano tiene un {BLANK} muy atlético."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:24",
+      "term": "el sueño",
+      "definition": "de droom, de slaap",
+      "direction": "definition-to-term",
+      "category": "descanso",
+      "context": {
+        "sentence": "Tengo mucho sueño porque anoche dormí poco.",
+        "translation": "Ik ben erg slaperig, want ik heb vannacht weinig geslapen.",
+        "sentenceWithBlank": "Tengo mucho {BLANK} porque anoche dormí poco."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:25",
+      "term": "el/la fan",
+      "definition": "de fan",
+      "direction": "definition-to-term",
+      "category": "personas",
+      "context": {
+        "sentence": "Soy un gran fan de esta banda.",
+        "translation": "Ik ben een grote fan van deze band.",
+        "sentenceWithBlank": "Soy un gran {BLANK} de esta banda."
+      },
+      "synonyms": ["el fan", "la fan"]
+    },
+    {
+      "id": "citas-y-personalidad:26",
+      "term": "el gusto",
+      "definition": "de smaak, het genoegen",
+      "direction": "definition-to-term",
+      "category": "opiniones",
+      "context": {
+        "sentence": "Es cuestión de gusto.",
+        "translation": "Het is een kwestie van smaak.",
+        "sentenceWithBlank": "Es cuestión de {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:27",
+      "term": "la discusión",
+      "definition": "de discussie, de woordenwisseling",
+      "direction": "definition-to-term",
+      "category": "comunicación",
+      "context": {
+        "sentence": "Tuvimos una discusión muy larga.",
+        "translation": "We hadden een erg lange discussie.",
+        "sentenceWithBlank": "Tuvimos una {BLANK} muy larga."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:28",
+      "term": "superficial",
+      "definition": "oppervlakkig",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "No me gusta la gente superficial.",
+        "translation": "Ik hou niet van oppervlakkige mensen.",
+        "sentenceWithBlank": "No me gusta la gente {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:29",
+      "term": "entusiasta",
+      "definition": "enthousiast",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi profesora es muy entusiasta.",
+        "translation": "Mijn lerares is erg enthousiast.",
+        "sentenceWithBlank": "Mi profesora es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:30",
+      "term": "exigente",
+      "definition": "veeleisend",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi jefe es muy exigente.",
+        "translation": "Mijn baas is erg veeleisend.",
+        "sentenceWithBlank": "Mi jefe es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:31",
+      "term": "fiel",
+      "definition": "trouw",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Un buen amigo siempre es fiel.",
+        "translation": "Een goede vriend is altijd trouw.",
+        "sentenceWithBlank": "Un buen amigo siempre es {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:32",
+      "term": "sensible",
+      "definition": "gevoelig",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi hermana es muy sensible.",
+        "translation": "Mijn zus is erg gevoelig.",
+        "sentenceWithBlank": "Mi hermana es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:33",
+      "term": "sociable",
+      "definition": "sociaal, gezellig",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi vecino es muy sociable.",
+        "translation": "Mijn buurman is erg sociaal.",
+        "sentenceWithBlank": "Mi vecino es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:34",
+      "term": "fuerte",
+      "definition": "sterk",
+      "direction": "definition-to-term",
+      "category": "apariencia",
+      "context": {
+        "sentence": "Mi padre es muy fuerte.",
+        "translation": "Mijn vader is erg sterk.",
+        "sentenceWithBlank": "Mi padre es muy {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:35",
+      "term": "creer",
+      "definition": "geloven, van mening zijn",
+      "direction": "definition-to-term",
+      "category": "opiniones",
+      "context": {
+        "sentence": "Es difícil creer esa historia.",
+        "translation": "Het is moeilijk om dat verhaal te geloven.",
+        "sentenceWithBlank": "Es difícil {BLANK} esa historia."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:36",
+      "term": "preferir (ie)",
+      "definition": "verkiezen, liever hebben",
+      "direction": "definition-to-term",
+      "category": "opiniones",
+      "context": {
+        "sentence": "Creo que vas a preferir esta película.",
+        "translation": "Ik denk dat je deze film leuker gaat vinden.",
+        "sentenceWithBlank": "Creo que vas a {BLANK} esta película."
+      },
+      "synonyms": ["preferir"]
+    },
+    {
+      "id": "citas-y-personalidad:37",
+      "term": "encontrar (ue)",
+      "definition": "tegenkomen, vinden",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Quiero encontrar un buen restaurante.",
+        "translation": "Ik wil een goed restaurant vinden.",
+        "sentenceWithBlank": "Quiero {BLANK} un buen restaurante."
+      },
+      "synonyms": ["encontrar"]
+    },
+    {
+      "id": "citas-y-personalidad:38",
+      "term": "llevar",
+      "definition": "dragen, meenemen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Me gusta llevar ropa cómoda.",
+        "translation": "Ik draag graag comfortabele kleding.",
+        "sentenceWithBlank": "Me gusta {BLANK} ropa cómoda."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:39",
+      "term": "ser capaz de",
+      "definition": "in staat zijn om",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "Quiero ser capaz de hablar español sin miedo.",
+        "translation": "Ik wil in staat zijn om zonder angst Spaans te spreken.",
+        "sentenceWithBlank": "Quiero {BLANK} hablar español sin miedo."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:40",
+      "term": "casi",
+      "definition": "bijna",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Casi siempre llego temprano.",
+        "translation": "Ik kom bijna altijd vroeg aan.",
+        "sentenceWithBlank": "{BLANK} siempre llego temprano."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:41",
+      "term": "en cuanto a",
+      "definition": "wat ... betreft",
+      "direction": "definition-to-term",
+      "category": "expresiones",
+      "context": {
+        "sentence": "En cuanto a la comida, no hay problema.",
+        "translation": "Wat het eten betreft, is er geen probleem.",
+        "sentenceWithBlank": "{BLANK} la comida, no hay problema."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:42",
+      "term": "incluso",
+      "definition": "zelfs",
+      "direction": "definition-to-term",
+      "category": "adverbios",
+      "context": {
+        "sentence": "Incluso mi abuela vino a la fiesta.",
+        "translation": "Zelfs mijn oma kwam naar het feest.",
+        "sentenceWithBlank": "{BLANK} mi abuela vino a la fiesta."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:43",
+      "term": "sin embargo",
+      "definition": "echter",
+      "direction": "definition-to-term",
+      "category": "conjunciones",
+      "context": {
+        "sentence": "Me gusta el plan; sin embargo, no tengo tiempo.",
+        "translation": "Ik vind het plan leuk; ik heb echter geen tijd.",
+        "sentenceWithBlank": "Me gusta el plan; {BLANK}, no tengo tiempo."
+      },
+      "synonyms": ["no obstante"]
+    },
+    {
+      "id": "citas-y-personalidad:44",
+      "term": "mandar",
+      "definition": "sturen",
+      "direction": "definition-to-term",
+      "category": "comunicación",
+      "context": {
+        "sentence": "Voy a mandar un paquete a mi tía.",
+        "translation": "Ik ga een pakket naar mijn tante sturen.",
+        "sentenceWithBlank": "Voy a {BLANK} un paquete a mi tía."
+      },
+      "synonyms": ["enviar"]
+    },
+    {
+      "id": "citas-y-personalidad:45",
+      "term": "elegir (i)",
+      "definition": "kiezen",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "Tienes que elegir un regalo para ella.",
+        "translation": "Je moet een cadeau voor haar kiezen.",
+        "sentenceWithBlank": "Tienes que {BLANK} un regalo para ella."
+      },
+      "synonyms": ["elegir"]
+    },
+    {
+      "id": "citas-y-personalidad:46",
+      "term": "pelearse",
+      "definition": "ruzie maken",
+      "direction": "definition-to-term",
+      "category": "relaciones",
+      "context": {
+        "sentence": "Es mejor no pelearse por tonterías.",
+        "translation": "Het is beter om geen ruzie te maken over onzin.",
+        "sentenceWithBlank": "Es mejor no {BLANK} por tonterías."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:47",
+      "term": "ocurrir",
+      "definition": "gebeuren",
+      "direction": "definition-to-term",
+      "category": "verbos",
+      "context": {
+        "sentence": "¿Qué puede ocurrir si llegamos tarde?",
+        "translation": "Wat kan er gebeuren als we te laat komen?",
+        "sentenceWithBlank": "¿Qué puede {BLANK} si llegamos tarde?"
+      },
+      "synonyms": ["pasar", "suceder"]
+    },
+    {
+      "id": "citas-y-personalidad:48",
+      "term": "descansar",
+      "definition": "uitrusten",
+      "direction": "definition-to-term",
+      "category": "descanso",
+      "context": {
+        "sentence": "Después del trabajo necesito descansar.",
+        "translation": "Na het werk moet ik uitrusten.",
+        "sentenceWithBlank": "Después del trabajo necesito {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:49",
+      "term": "acordar (ue)",
+      "definition": "overeenkomen, besluiten",
+      "direction": "definition-to-term",
+      "category": "relaciones",
+      "context": {
+        "sentence": "Podemos acordar el precio mañana.",
+        "translation": "We kunnen morgen de prijs overeenkomen.",
+        "sentenceWithBlank": "Podemos {BLANK} el precio mañana."
+      },
+      "synonyms": ["acordar"]
+    },
+    {
+      "id": "citas-y-personalidad:50",
+      "term": "compartir",
+      "definition": "delen",
+      "direction": "definition-to-term",
+      "category": "relaciones",
+      "context": {
+        "sentence": "Me gusta compartir mis fotos con los amigos.",
+        "translation": "Ik deel mijn foto's graag met vrienden.",
+        "sentenceWithBlank": "Me gusta {BLANK} mis fotos con los amigos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:51",
+      "term": "la base",
+      "definition": "de basis",
+      "direction": "definition-to-term",
+      "category": "conceptos",
+      "context": {
+        "sentence": "La confianza es la base de una buena relación.",
+        "translation": "Vertrouwen is de basis van een goede relatie.",
+        "sentenceWithBlank": "La confianza es {BLANK} de una buena relación."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:52",
+      "term": "la decisión",
+      "definition": "het besluit, de beslissing",
+      "direction": "definition-to-term",
+      "category": "conceptos",
+      "context": {
+        "sentence": "Tomar una decisión no es fácil.",
+        "translation": "Een beslissing nemen is niet makkelijk.",
+        "sentenceWithBlank": "Tomar una {BLANK} no es fácil."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:53",
+      "term": "la solución",
+      "definition": "de oplossing",
+      "direction": "definition-to-term",
+      "category": "conceptos",
+      "context": {
+        "sentence": "Esta es la mejor solución.",
+        "translation": "Dit is de beste oplossing.",
+        "sentenceWithBlank": "Esta es la mejor {BLANK}."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:54",
+      "term": "la invitación",
+      "definition": "de uitnodiging",
+      "direction": "definition-to-term",
+      "category": "comunicación",
+      "context": {
+        "sentence": "Gracias por la invitación a tu fiesta.",
+        "translation": "Bedankt voor de uitnodiging voor je feest.",
+        "sentenceWithBlank": "Gracias por la {BLANK} a tu fiesta."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:55",
+      "term": "la libertad",
+      "definition": "de vrijheid",
+      "direction": "definition-to-term",
+      "category": "conceptos",
+      "context": {
+        "sentence": "Para mí, la libertad es muy importante.",
+        "translation": "Voor mij is vrijheid heel belangrijk.",
+        "sentenceWithBlank": "Para mí, {BLANK} es muy importante."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:56",
+      "term": "la relación",
+      "definition": "de relatie",
+      "direction": "definition-to-term",
+      "category": "relaciones",
+      "context": {
+        "sentence": "Tengo una buena relación con mis vecinos.",
+        "translation": "Ik heb een goede relatie met mijn buren.",
+        "sentenceWithBlank": "Tengo una buena {BLANK} con mis vecinos."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:57",
+      "term": "la decoración",
+      "definition": "de decoratie, de versiering",
+      "direction": "definition-to-term",
+      "category": "eventos",
+      "context": {
+        "sentence": "La decoración de la fiesta es preciosa.",
+        "translation": "De versiering van het feest is prachtig.",
+        "sentenceWithBlank": "{BLANK} de la fiesta es preciosa."
+      },
+      "synonyms": []
+    },
+    {
+      "id": "citas-y-personalidad:58",
+      "term": "espontáneo/-a",
+      "definition": "spontaan",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi novio es muy espontáneo.",
+        "translation": "Mijn vriend is erg spontaan.",
+        "sentenceWithBlank": "Mi novio es muy {BLANK}."
+      },
+      "synonyms": ["espontáneo", "espontánea"]
+    },
+    {
+      "id": "citas-y-personalidad:59",
+      "term": "aventurero/-a",
+      "definition": "avontuurlijk",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi primo es muy aventurero.",
+        "translation": "Mijn neef is erg avontuurlijk.",
+        "sentenceWithBlank": "Mi primo es muy {BLANK}."
+      },
+      "synonyms": ["aventurero", "aventurera"]
+    },
+    {
+      "id": "citas-y-personalidad:60",
+      "term": "cariñoso/-a",
+      "definition": "lief, aanhankelijk",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi perro es muy cariñoso.",
+        "translation": "Mijn hond is erg aanhankelijk.",
+        "sentenceWithBlank": "Mi perro es muy {BLANK}."
+      },
+      "synonyms": ["cariñoso", "cariñosa"]
+    },
+    {
+      "id": "citas-y-personalidad:61",
+      "term": "apasionado/-a",
+      "definition": "gepassioneerd, hartstochtelijk",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Es un músico muy apasionado.",
+        "translation": "Hij is een erg gepassioneerde muzikant.",
+        "sentenceWithBlank": "Es un músico muy {BLANK}."
+      },
+      "synonyms": ["apasionado", "apasionada"]
+    },
+    {
+      "id": "citas-y-personalidad:62",
+      "term": "sincero/-a",
+      "definition": "eerlijk, oprecht",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi mejor amigo es muy sincero.",
+        "translation": "Mijn beste vriend is erg eerlijk.",
+        "sentenceWithBlank": "Mi mejor amigo es muy {BLANK}."
+      },
+      "synonyms": ["sincero", "sincera"]
+    },
+    {
+      "id": "citas-y-personalidad:63",
+      "term": "celoso/-a",
+      "definition": "jaloers",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi hermano está celoso de mi bicicleta.",
+        "translation": "Mijn broer is jaloers op mijn fiets.",
+        "sentenceWithBlank": "Mi hermano está {BLANK} de mi bicicleta."
+      },
+      "synonyms": ["celoso", "celosa"]
+    },
+    {
+      "id": "citas-y-personalidad:64",
+      "term": "egoísta",
+      "definition": "egoïstisch",
+      "direction": "definition-to-term",
+      "category": "personalidad",
+      "context": {
+        "sentence": "Mi compañero es un poco egoísta.",
+        "translation": "Mijn collega is een beetje egoïstisch.",
+        "sentenceWithBlank": "Mi compañero es un poco {BLANK}."
+      },
+      "synonyms": []
+    }
+  ]
+}
